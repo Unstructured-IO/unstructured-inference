@@ -1,0 +1,4 @@
+fastapi
+layoutparser[layoutmodels,tesseract]
+python-multipart
+uvicorn
