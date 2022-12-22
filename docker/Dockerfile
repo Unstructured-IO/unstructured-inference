@@ -39,7 +39,6 @@ ENV PATH="/home/${NB_USER}/.local/bin:${PATH}"
 COPY requirements/dev.txt requirements-dev.txt
 COPY requirements/base.txt requirements-base.txt
 COPY unstructured_inference unstructured_inference
-COPY .models .models
 
 # NOTE(crag) - Cannot use an ARG in the dst= path (so it seems), hence no ${NB_USER}, ${NB_UID}
 RUN python3.8 -m pip install  --no-cache  -r requirements-base.txt \
