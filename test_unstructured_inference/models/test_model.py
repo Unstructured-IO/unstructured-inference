@@ -11,6 +11,15 @@ class MockModel:
 
 def test_get_model(monkeypatch):
     monkeypatch.setattr(models, "load_model", lambda *args, **kwargs: MockModel(*args, **kwargs))
+    monkeypatch.setattr(
+        models,
+        "_get_model_loading_info",
+        lambda *args, **kwargs: (
+            "fake-binary-path",
+            "fake-config-path",
+            {0: "Unchecked", 1: "Checked"},
+        ),
+    )
     assert isinstance(models.get_model("checkbox"), MockModel)
 
 
