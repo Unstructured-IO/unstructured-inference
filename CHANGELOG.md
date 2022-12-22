@@ -1,6 +1,6 @@
 ## 0.2.1
 
-* Update image link
+* Implement auto model downloading
 
 ## 0.2.0
 
