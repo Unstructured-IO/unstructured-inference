@@ -35,7 +35,9 @@ fonttools==4.37.4
 h11==0.14.0
     # via uvicorn
 huggingface-hub==0.10.1
-    # via timm
+    # via
+    #   -r requirements/base.in
+    #   timm
 idna==3.4
     # via
     #   anyio
