@@ -61,6 +61,7 @@ setup(
         "layoutparser[layoutmodels,tesseract]",
         "python-multipart",
         "uvicorn",
+        "huggingface-hub",
     ],
     extras_require={},
 )

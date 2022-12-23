@@ -26,6 +26,7 @@ class MockModel:
 
 def test_layout_parsing_pdf_api(sample_pdf_content, tmpdir, monkeypatch):
     monkeypatch.setattr(models, "load_model", lambda *args, **kwargs: MockModel(*args, **kwargs))
+    monkeypatch.setattr(models, "hf_hub_download", lambda *args, **kwargs: "fake-path")
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
     monkeypatch.setattr(
         DocumentLayout, "from_file", lambda *args, **kwargs: DocumentLayout.from_pages([])
