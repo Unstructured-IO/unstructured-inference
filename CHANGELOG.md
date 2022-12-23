@@ -1,5 +1,6 @@
-## 0.2.1
+## 0.2.1-dev0
 
+* Removes BasicConfig from logger configuration
 * Implement auto model downloading
 
 ## 0.2.0
