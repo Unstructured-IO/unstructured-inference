@@ -7,9 +7,8 @@ from layoutparser.models.detectron2.layoutmodel import (
 )
 from layoutparser.models.model_config import LayoutModelConfig
 
-from unstructured_inference.logger import get_logger
+from unstructured_inference.logger import logger
 
-logger = get_logger()
 
 DETECTRON_CONFIG: Final = "lp://PubLayNet/faster_rcnn_R_50_FPN_3x/config"
 DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {

@@ -1,10 +1,8 @@
 from layoutparser.ocr.tesseract_agent import is_pytesseract_available, TesseractAgent
 
-from unstructured_inference.logger import get_logger
+from unstructured_inference.logger import logger
 
 ocr_agent: TesseractAgent = None
-
-logger = get_logger()
 
 
 def load_agent():
