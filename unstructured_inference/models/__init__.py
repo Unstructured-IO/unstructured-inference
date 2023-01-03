@@ -29,4 +29,6 @@ def _get_model_loading_info(model: str) -> Tuple[str, str, Dict[int, str]]:
 
 
 class UnknownModelException(Exception):
+    """Exception for the case where a model is called for with an unrecognized identifier."""
+
     pass
