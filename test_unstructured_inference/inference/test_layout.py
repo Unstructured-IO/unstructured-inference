@@ -157,6 +157,18 @@ def test_process_file_with_model(monkeypatch, mock_page_layout, model_name):
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
+    monkeypatch.setattr(
+        models, "load_model", lambda *args, **kwargs: MockLayoutModel(mock_page_layout)
+    )
+    monkeypatch.setattr(
+        models,
+        "_get_model_loading_info",
+        lambda *args, **kwargs: (
+            "fake-binary-path",
+            "fake-config-path",
+            {0: "Unchecked", 1: "Checked"},
+        ),
+    )
     filename = ""
     assert layout.process_file_with_model(filename, model_name=model_name)
 
