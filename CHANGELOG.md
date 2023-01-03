@@ -1,5 +1,6 @@
-## 0.2.1-dev0
+## 0.2.1-dev1
 
+* Refactor to facilitate local inference
 * Removes BasicConfig from logger configuration
 * Implement auto model downloading
 
