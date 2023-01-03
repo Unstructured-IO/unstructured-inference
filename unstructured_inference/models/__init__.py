@@ -24,5 +24,9 @@ def _get_model_loading_info(model: str) -> Tuple[str, str, Dict[int, str]]:
         config_path = hf_hub_download(repo_id, config_fn)
         label_map = {0: "Unchecked", 1: "Checked"}
     else:
-        raise ValueError(f"Unknown model type: {model}")
+        raise UnknownModelException(f"Unknown model type: {model}")
     return model_path, config_path, label_map
+
+
+class UnknownModelException(Exception):
+    pass
