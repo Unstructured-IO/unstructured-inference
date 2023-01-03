@@ -24,5 +24,5 @@ def test_get_model(monkeypatch):
 
 
 def test_raises_invalid_model():
-    with pytest.raises(ValueError):
+    with pytest.raises(models.UnknownModelException):
         models.get_model("fake_model")
