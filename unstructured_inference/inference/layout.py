@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
+import tempfile
+from typing import List, Optional, Tuple, Union, BinaryIO
 
 import layoutparser as lp
 from layoutparser.models.detectron2.layoutmodel import Detectron2LayoutModel
@@ -10,6 +11,7 @@ from PIL import Image
 from unstructured_inference.logger import logger
 import unstructured_inference.models.tesseract as tesseract
 import unstructured_inference.models.detectron2 as detectron2
+from unstructured_inference.models import get_model
 
 
 @dataclass
@@ -136,3 +138,21 @@ class PageLayout:
         if self.image_array is None:
             self.image_array = np.array(self.image)
         return self.image_array
+
+
+def process_data_with_model(data: BinaryIO, model_name: str) -> DocumentLayout:
+    """Processes pdf file in the form of a file handler (supporting a read method) into a
+    DocumentLayout by using a model identified by model_name."""
+    with tempfile.NamedTemporaryFile() as tmp_file:
+        tmp_file.write(data.read())
+        layout = process_file_with_model(tmp_file.name, model_name)
+
+    return layout
+
+
+def process_file_with_model(filename: str, model_name: str) -> DocumentLayout:
+    """Processes pdf file with name filename into a DocumentLayout by using a model identified by
+    model_name."""
+    model = None if model_name is None else get_model(model_name)
+    layout = DocumentLayout.from_file(filename, model=model)
+    return layout

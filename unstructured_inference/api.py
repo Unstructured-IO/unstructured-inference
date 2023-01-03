@@ -1,8 +1,7 @@
 from fastapi import FastAPI, File, status, Request, UploadFile, Form, HTTPException
-from unstructured_inference.inference.layout import DocumentLayout
-from unstructured_inference.models import get_model
+from unstructured_inference.inference.layout import process_data_with_model
+from unstructured_inference.models import UnknownModelException
 from typing import List
-import tempfile
 
 app = FastAPI()
 
@@ -15,16 +14,10 @@ async def layout_parsing_pdf(
     include_elems: List[str] = Form(default=ALL_ELEMS),
     model: str = Form(default=None),
 ):
-    with tempfile.NamedTemporaryFile() as tmp_file:
-        tmp_file.write(file.file.read())
-        if model is None:
-            layout = DocumentLayout.from_file(tmp_file.name)
-        else:
-            try:
-                detector = get_model(model)
-            except ValueError as e:
-                raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
-            layout = DocumentLayout.from_file(tmp_file.name, model=detector)
+    try:
+        layout = process_data_with_model(file.file, model)
+    except UnknownModelException as e:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
     pages_layout = [
         {
             "number": page.number,
