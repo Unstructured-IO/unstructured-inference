@@ -17,12 +17,26 @@ These models are invoked via API as part of the partitioning bricks in the `unst
 
 ### Package
 
-Requires [`torch>=1.8`](https://pytorch.org/get-started/locally/). Once this is satisfied, run 
-`pip install unstructured-inference`.
+Run `pip install unstructured-inference`.
+
+### Detectron2
+
+[Detectron2](https://github.com/facebookresearch/detectron2) is required for most inference tasks 
+but is not automatically installed with this package. 
+For MacOS and Linux, build from source with:
+```shell
+pip install 'git+https://github.com/facebookresearch/detectron2.git@v0.4#egg=detectron2'
+```
+Other install options can be found in the 
+[Detectron2 installation guide](https://detectron2.readthedocs.io/en/latest/tutorials/install.html).
+
+Windows is not officially supported by Detectron2, but some users are able to install it anyway. 
+See discussion [here](https://layout-parser.github.io/tutorials/installation#for-windows-users) for 
+tips on installing Detectron2 on Windows.
 
 ### Repository
 
-Clone the repo and run `make install` to install dependencies.
+To install the repository for development, clone the repo and run `make install` to install dependencies.
 Run `make help` for a full list of install options.
 
 ## Getting Started
