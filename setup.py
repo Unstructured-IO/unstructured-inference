@@ -21,14 +21,6 @@ from setuptools import setup, find_packages
 
 from unstructured_inference.__version__ import __version__
 
-try:
-    import torch
-
-    torch_ver = [int(x) for x in torch.__version__.split(".")[:2]]
-    assert torch_ver >= [1, 8]
-except (ImportError, AssertionError) as e:
-    raise Exception("Requires PyTorch >= 1.8") from e
-
 setup(
     name="unstructured_inference",
     description="A library for performing inference using trained models.",
