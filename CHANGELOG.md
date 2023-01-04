@@ -1,4 +1,4 @@
-## 0.2.1-dev1
+## 0.2.1
 
 * Refactor to facilitate local inference
 * Removes BasicConfig from logger configuration
