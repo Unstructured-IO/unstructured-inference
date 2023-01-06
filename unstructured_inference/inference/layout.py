@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import re
 import tempfile
 from typing import List, Optional, Tuple, Union, BinaryIO
 
@@ -111,7 +112,7 @@ class PageLayout:
             for text_block in text_blocks:
                 # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
                 # already OCR'd and we have to send the snippet out for OCRing.
-                if text_block.text is None:
+                if (text_block.text is None) or cid_ratio(text_block.text) > 0.5:
                     text_block.text = self.ocr(text_block)
             text = " ".join([x for x in text_blocks.get_texts() if x])
 
@@ -156,3 +157,11 @@ def process_file_with_model(filename: str, model_name: str) -> DocumentLayout:
     model = None if model_name is None else get_model(model_name)
     layout = DocumentLayout.from_file(filename, model=model)
     return layout
+
+
+def cid_ratio(text: str) -> float:
+    """Gets ratio of unknown 'cid' characters extracted from text to all characters."""
+    cid_pattern = r"\(cid\:(\d+)\)"
+    unmatched, n_cid = re.subn(cid_pattern, "", text)
+    total = n_cid + len(unmatched)
+    return n_cid / total if total > 0 else 1.0
