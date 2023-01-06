@@ -50,14 +50,24 @@ pip-compile:
 	pip-compile requirements/dev.in
 	pip-compile requirements/test.in
 
-#########
-# Build #
-#########
+##########
+# Docker #
+##########
 
-## docker-build:            builds the docker container for detectron2
+# Docker targets are provided for convenience only and are not required in a standard development environment
+
+# Note that the current working directory is mounted under
+# /home/notebook-user/local/ when the image is started with
+# docker-start-api
+
 .PHONY: docker-build
 docker-build:
-	PIP_VERSION=${PIP_VERSION}  ./scripts/docker-build.sh
+	PIP_VERSION=${PIP_VERSION} ./scripts/docker-build.sh
+
+.PHONY: docker-start-api
+docker-start-api:
+	docker run -p 8000:8000 --mount type=bind,source=$(realpath .),target=/home/notebook-user/local -t --rm --entrypoint uvicorn unstructured-inference-dev:latest ${PACKAGE_NAME}.api:app --host 0.0.0.0 --port 8000
+
 
 #########
 # Local #
