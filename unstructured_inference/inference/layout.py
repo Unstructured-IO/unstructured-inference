@@ -109,10 +109,7 @@ class PageLayout:
             text_blocks = self.layout.filter_by(item, center=True)
             text = str()
             for text_block in text_blocks:
-                # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
-                # already OCR'd and we have to send the snippet out for OCRing.
-                if text_block.text is None:
-                    text_block.text = self.ocr(text_block)
+                text_block.text = self.interpret_text_block(text_block)
             text = " ".join([x for x in text_blocks.get_texts() if x])
 
             elements.append(
@@ -123,6 +120,16 @@ class PageLayout:
             self.elements = elements
             return None
         return elements
+
+    def interpret_text_block(self, text_block: lp.TextBlock) -> str:
+        """Interprets the text in a TextBlock."""
+        # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
+        # already OCR'd and we have to send the snippet out for OCRing.
+        if text_block.text is None:
+            out_text = self.ocr(text_block)
+        else:
+            out_text = text_block.text
+        return out_text
 
     def ocr(self, text_block: lp.TextBlock) -> str:
         """Runs a cropped text block image through and OCR agent."""
