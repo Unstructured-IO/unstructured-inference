@@ -176,3 +176,23 @@ def test_process_file_with_model(monkeypatch, mock_page_layout, model_name):
 def test_process_file_with_model_raises_on_invalid_model_name():
     with pytest.raises(models.UnknownModelException):
         layout.process_file_with_model("", model_name="fake")
+
+
+class MockPageLayout(layout.PageLayout):
+    def __init__(self, ocr_text):
+        self.ocr_text = ocr_text
+
+    def ocr(self, text_block):
+        return self.ocr_text
+
+
+class MockTextBlock(lp.TextBlock):
+    def __init__(self, text):
+        self.text = text
+
+
+def test_interpret_text_block_use_ocr_when_text_symbols_cid():
+    fake_text = "(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)"
+    fake_ocr = "ocrme"
+    fake_text_block = MockTextBlock(fake_text)
+    assert MockPageLayout(fake_ocr).interpret_text_block(fake_text_block) == fake_ocr
