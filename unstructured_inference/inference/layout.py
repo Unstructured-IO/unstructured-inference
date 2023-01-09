@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import re
 import tempfile
 from typing import List, Optional, Tuple, Union, BinaryIO
 
@@ -109,10 +110,7 @@ class PageLayout:
             text_blocks = self.layout.filter_by(item, center=True)
             text = str()
             for text_block in text_blocks:
-                # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
-                # already OCR'd and we have to send the snippet out for OCRing.
-                if text_block.text is None:
-                    text_block.text = self.ocr(text_block)
+                text_block.text = self.interpret_text_block(text_block)
             text = " ".join([x for x in text_blocks.get_texts() if x])
 
             elements.append(
@@ -123,6 +121,16 @@ class PageLayout:
             self.elements = elements
             return None
         return elements
+
+    def interpret_text_block(self, text_block: lp.TextBlock) -> str:
+        """Interprets the text in a TextBlock."""
+        # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
+        # already OCR'd and we have to send the snippet out for OCRing.
+        if (text_block.text is None) or cid_ratio(text_block.text) > 0.5:
+            out_text = self.ocr(text_block)
+        else:
+            out_text = text_block.text
+        return out_text
 
     def ocr(self, text_block: lp.TextBlock) -> str:
         """Runs a cropped text block image through and OCR agent."""
@@ -156,3 +164,19 @@ def process_file_with_model(filename: str, model_name: str) -> DocumentLayout:
     model = None if model_name is None else get_model(model_name)
     layout = DocumentLayout.from_file(filename, model=model)
     return layout
+
+
+def cid_ratio(text: str) -> float:
+    """Gets ratio of unknown 'cid' characters extracted from text to all characters."""
+    if not is_cid_present(text):
+        return 0.0
+    cid_pattern = r"\(cid\:(\d+)\)"
+    unmatched, n_cid = re.subn(cid_pattern, "", text)
+    total = n_cid + len(unmatched)
+    return n_cid / total
+
+
+def is_cid_present(text: str) -> bool:
+    if len(text) < len("(cid:x)"):
+        return False
+    return text.find("(cid:") != -1

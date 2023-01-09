@@ -176,3 +176,39 @@ def test_process_file_with_model(monkeypatch, mock_page_layout, model_name):
 def test_process_file_with_model_raises_on_invalid_model_name():
     with pytest.raises(models.UnknownModelException):
         layout.process_file_with_model("", model_name="fake")
+
+
+class MockPageLayout(layout.PageLayout):
+    def __init__(self, ocr_text):
+        self.ocr_text = ocr_text
+
+    def ocr(self, text_block):
+        return self.ocr_text
+
+
+class MockTextBlock(lp.TextBlock):
+    def __init__(self, text):
+        self.text = text
+
+
+def test_interpret_text_block_use_ocr_when_text_symbols_cid():
+    fake_text = "(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)"
+    fake_ocr = "ocrme"
+    fake_text_block = MockTextBlock(fake_text)
+    assert MockPageLayout(fake_ocr).interpret_text_block(fake_text_block) == fake_ocr
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [("base", 0.0), ("", 0.0), ("(cid:2)", 1.0), ("(cid:1)a", 0.5), ("c(cid:1)ab", 0.25)],
+)
+def test_cid_ratio(text, expected):
+    assert layout.cid_ratio(text) == expected
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [("base", False), ("(cid:2)", True), ("(cid:1234567890)", True), ("jkl;(cid:12)asdf", True)],
+)
+def test_is_cid_present(text, expected):
+    assert layout.is_cid_present(text) == expected
