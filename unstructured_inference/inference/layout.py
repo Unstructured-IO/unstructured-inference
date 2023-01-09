@@ -173,7 +173,7 @@ def cid_ratio(text: str) -> float:
     cid_pattern = r"\(cid\:(\d+)\)"
     unmatched, n_cid = re.subn(cid_pattern, "", text)
     total = n_cid + len(unmatched)
-    return n_cid / total if total > 0 else 1.0
+    return n_cid / total
 
 
 def is_cid_present(text: str) -> bool:
