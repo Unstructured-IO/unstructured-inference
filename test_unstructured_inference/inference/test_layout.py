@@ -198,5 +198,17 @@ def test_interpret_text_block_use_ocr_when_text_symbols_cid():
     assert MockPageLayout(fake_ocr).interpret_text_block(fake_text_block) == fake_ocr
 
 
-def test_cid_ratio():
-    pass
+@pytest.mark.parametrize(
+    "text, expected",
+    [("base", 0.0), ("", 0.0), ("(cid:2)", 1.0), ("(cid:1)a", 0.5), ("c(cid:1)ab", 0.25)],
+)
+def test_cid_ratio(text, expected):
+    assert layout.cid_ratio(text) == expected
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [("base", False), ("(cid:2)", True), ("(cid:1234567890)", True), ("jkl;(cid:12)asdf", True)],
+)
+def test_is_cid_present(text, expected):
+    assert layout.is_cid_present(text) == expected
