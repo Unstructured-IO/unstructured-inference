@@ -6,10 +6,6 @@
 #
 anyio==3.6.1
     # via jupyter-server
-appnope==0.1.3
-    # via
-    #   ipykernel
-    #   ipython
 argon2-cffi==21.3.0
     # via
     #   jupyter-server
@@ -47,10 +43,6 @@ fastjsonschema==2.16.2
     # via nbformat
 idna==3.4
     # via anyio
-importlib-metadata==5.2.0
-    # via nbconvert
-importlib-resources==5.10.1
-    # via jsonschema
 ipykernel==6.16.0
     # via
     #   ipywidgets
@@ -59,9 +51,9 @@ ipykernel==6.16.0
     #   nbclassic
     #   notebook
     #   qtconsole
-ipython==8.7.0
+ipython==8.8.0
     # via
-    #   -r requirements/dev.in
+    #   -r dev.in
     #   ipykernel
     #   ipywidgets
     #   jupyter-console
@@ -83,7 +75,7 @@ jinja2==3.1.2
 jsonschema==4.16.0
     # via nbformat
 jupyter==1.0.0
-    # via -r requirements/dev.in
+    # via -r dev.in
 jupyter-client==7.4.2
     # via
     #   ipykernel
@@ -168,9 +160,7 @@ pexpect==4.8.0
 pickleshare==0.7.5
     # via ipython
 pip-tools==6.12.1
-    # via -r requirements/dev.in
-pkgutil-resolve-name==1.3.10
-    # via jsonschema
+    # via -r dev.in
 prometheus-client==0.15.0
     # via
     #   jupyter-server
@@ -237,10 +227,6 @@ terminado==0.16.0
     #   notebook
 tinycss2==1.2.1
     # via nbconvert
-tomli==2.0.1
-    # via
-    #   build
-    #   pep517
 tornado==6.2
     # via
     #   ipykernel
@@ -276,10 +262,6 @@ wheel==0.37.1
     # via pip-tools
 widgetsnbextension==4.0.3
     # via ipywidgets
-zipp==3.11.0
-    # via
-    #   importlib-metadata
-    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
