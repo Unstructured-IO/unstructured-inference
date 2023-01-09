@@ -196,3 +196,7 @@ def test_interpret_text_block_use_ocr_when_text_symbols_cid():
     fake_ocr = "ocrme"
     fake_text_block = MockTextBlock(fake_text)
     assert MockPageLayout(fake_ocr).interpret_text_block(fake_text_block) == fake_ocr
+
+
+def test_cid_ratio():
+    pass
