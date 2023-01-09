@@ -168,7 +168,15 @@ def process_file_with_model(filename: str, model_name: str) -> DocumentLayout:
 
 def cid_ratio(text: str) -> float:
     """Gets ratio of unknown 'cid' characters extracted from text to all characters."""
+    if not is_cid_present(text):
+        return 0.0
     cid_pattern = r"\(cid\:(\d+)\)"
     unmatched, n_cid = re.subn(cid_pattern, "", text)
     total = n_cid + len(unmatched)
     return n_cid / total if total > 0 else 1.0
+
+
+def is_cid_present(text: str) -> bool:
+    if len(text) < len("(cid:x)"):
+        return False
+    return text.find("(cid:") != -1
