@@ -178,24 +178,37 @@ def test_process_file_with_model_raises_on_invalid_model_name():
         layout.process_file_with_model("", model_name="fake")
 
 
-class MockPageLayout(layout.PageLayout):
-    def __init__(self, ocr_text):
-        self.ocr_text = ocr_text
-
-    def ocr(self, text_block):
-        return self.ocr_text
+class MockPoints:
+    def tolist(self):
+        return [1, 2, 3, 4]
 
 
 class MockTextBlock(lp.TextBlock):
-    def __init__(self, text):
+    def __init__(self, type=None, text=None, ocr_text=None):
+        self.type = type
         self.text = text
+        self.ocr_text = ocr_text
+
+    @property
+    def points(self):
+        return MockPoints()
+
+
+class MockPageLayout(layout.PageLayout):
+    def __init__(self, layout=None, model=None):
+        self.image = None
+        self.layout = layout
+        self.model = model
+
+    def ocr(self, text_block: MockTextBlock):
+        return text_block.ocr_text
 
 
 def test_interpret_text_block_use_ocr_when_text_symbols_cid():
     fake_text = "(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)"
     fake_ocr = "ocrme"
-    fake_text_block = MockTextBlock(fake_text)
-    assert MockPageLayout(fake_ocr).interpret_text_block(fake_text_block) == fake_ocr
+    fake_text_block = MockTextBlock(text=fake_text, ocr_text=fake_ocr)
+    assert MockPageLayout().interpret_text_block(fake_text_block) == fake_ocr
 
 
 @pytest.mark.parametrize(
@@ -212,3 +225,32 @@ def test_cid_ratio(text, expected):
 )
 def test_is_cid_present(text, expected):
     assert layout.is_cid_present(text) == expected
+
+
+class MockLayout:
+    def __init__(self, *elements):
+        self.elements = elements
+
+    def sort(self, key, inplace):
+        return self.elements
+
+    def __iter__(self):
+        return iter(self.elements)
+
+    def get_texts(self):
+        return [el.text for el in self.elements]
+
+
+def test_():
+    mock_layout = MockLayout(
+        MockTextBlock(text=None, ocr_text="textblock1"),
+        MockTextBlock(text=None, ocr_text="textblock2"),
+    )
+
+    pl = MockPageLayout(model=MockLayoutModel(mock_layout), layout=None)
+    # el1, el2 = pl.get_elements(inplace=False)
+
+    print([el.text for el in pl.get_elements(inplace=False)])
+    assert [el.text for el in pl.get_elements(inplace=False)] == [
+        el.ocr_text for el in MockLayoutModel(mock_layout).detect(None)
+    ]
