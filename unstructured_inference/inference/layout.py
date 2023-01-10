@@ -72,6 +72,15 @@ class DocumentLayout:
             pages.append(page)
         return cls.from_pages(pages)
 
+    @classmethod
+    def from_image_file(cls, filename: str, model: Optional[Detectron2LayoutModel] = None):
+        """Creates a DocumentLayout from an image file."""
+        logger.info(f"Reading image file: {filename} ...")
+        image = Image.open(filename)
+        page = PageLayout(number=0, image=image, layout=None, model=model)
+        page.get_elements()
+        return cls.from_pages([page])
+
 
 class PageLayout:
     """Class for an individual PDF page."""
@@ -80,7 +89,7 @@ class PageLayout:
         self,
         number: int,
         image: Image,
-        layout: lp.Layout,
+        layout: Optional[lp.Layout],
         model: Optional[Detectron2LayoutModel] = None,
     ):
         self.image = image
@@ -107,12 +116,16 @@ class PageLayout:
         # sophisticated ordering logic for more complicated layouts.
         image_layout.sort(key=lambda element: element.coordinates[1], inplace=True)
         for item in image_layout:
-            text_blocks = self.layout.filter_by(item, center=True)
             text = str()
-            for text_block in text_blocks:
-                text_block.text = self.interpret_text_block(text_block)
-            text = " ".join([x for x in text_blocks.get_texts() if x])
-
+            if self.layout is None:
+                text = self.interpret_text_block(item)
+            else:
+                text_blocks = (
+                    item if self.layout is None else self.layout.filter_by(item, center=True)
+                )
+                for text_block in text_blocks:
+                    text_block.text = self.interpret_text_block(text_block)
+                text = " ".join([x for x in text_blocks.get_texts() if x])
             elements.append(
                 LayoutElement(type=item.type, text=text, coordinates=item.points.tolist())
             )
