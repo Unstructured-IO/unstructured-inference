@@ -241,16 +241,15 @@ class MockLayout:
         return [el.text for el in self.elements]
 
 
-def test_():
+def test_pagelayout_without_layout():
     mock_layout = MockLayout(
         MockTextBlock(text=None, ocr_text="textblock1"),
         MockTextBlock(text=None, ocr_text="textblock2"),
     )
 
-    pl = MockPageLayout(model=MockLayoutModel(mock_layout), layout=None)
-    # el1, el2 = pl.get_elements(inplace=False)
+    model = MockLayoutModel(mock_layout)
+    pl = MockPageLayout(model=model, layout=None)
 
-    print([el.text for el in pl.get_elements(inplace=False)])
     assert [el.text for el in pl.get_elements(inplace=False)] == [
-        el.ocr_text for el in MockLayoutModel(mock_layout).detect(None)
+        el.ocr_text for el in model.detect(None)
     ]
