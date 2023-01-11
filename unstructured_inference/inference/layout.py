@@ -120,9 +120,7 @@ class PageLayout:
             if self.layout is None:
                 text = self.interpret_text_block(item)
             else:
-                text_blocks = (
-                    item if self.layout is None else self.layout.filter_by(item, center=True)
-                )
+                text_blocks = self.layout.filter_by(item, center=True)
                 for text_block in text_blocks:
                     text_block.text = self.interpret_text_block(text_block)
                 text = " ".join([x for x in text_blocks.get_texts() if x])
