@@ -255,10 +255,15 @@ def test_pagelayout_without_layout():
     ]
 
 
-def test_from_image_file(monkeypatch, mock_page_layout):
+@pytest.mark.parametrize("filetype", ("png", "jpg"))
+def test_from_image_file(monkeypatch, mock_page_layout, filetype):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_page_layout]
 
     monkeypatch.setattr(layout.PageLayout, "get_elements", mock_get_elements)
-    elements = layout.DocumentLayout.from_image_file("sample-docs/loremipsum.png").pages[0].elements
+    elements = (
+        layout.DocumentLayout.from_image_file(f"sample-docs/loremipsum.{filetype}")
+        .pages[0]
+        .elements
+    )
     assert elements[0] == mock_page_layout
