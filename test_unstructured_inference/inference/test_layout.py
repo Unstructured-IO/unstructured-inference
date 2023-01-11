@@ -253,3 +253,13 @@ def test_pagelayout_without_layout():
     assert [el.text for el in pl.get_elements(inplace=False)] == [
         el.ocr_text for el in model.detect(None)
     ]
+
+
+def test_from_image_file(monkeypatch, mock_page_layout):
+    def mock_get_elements(self, *args, **kwargs):
+        self.elements = [mock_page_layout]
+
+    monkeypatch.setattr(layout.PageLayout, "get_elements", mock_get_elements)
+    elements = layout.DocumentLayout.from_image_file("sample-docs/loremipsum.png").pages[0].elements
+    # assert elements[0] == mock_page_layout
+    assert elements[0] == mock_page_layout
