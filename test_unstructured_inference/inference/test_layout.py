@@ -261,5 +261,4 @@ def test_from_image_file(monkeypatch, mock_page_layout):
 
     monkeypatch.setattr(layout.PageLayout, "get_elements", mock_get_elements)
     elements = layout.DocumentLayout.from_image_file("sample-docs/loremipsum.png").pages[0].elements
-    # assert elements[0] == mock_page_layout
     assert elements[0] == mock_page_layout
