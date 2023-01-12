@@ -160,7 +160,7 @@ class PageLayout:
 
 
 def process_data_with_model(
-    data: BinaryIO, model_name: str, is_image: bool = False
+    data: BinaryIO, model_name: Optional[str], is_image: bool = False
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
@@ -172,7 +172,7 @@ def process_data_with_model(
 
 
 def process_file_with_model(
-    filename: str, model_name: str, is_image: bool = False
+    filename: str, model_name: Optional[str], is_image: bool = False
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
