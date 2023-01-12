@@ -9,15 +9,6 @@ from unstructured_inference.inference.layout import DocumentLayout
 import unstructured_inference.models.detectron2 as detectron2
 
 
-@pytest.fixture
-def sample_pdf_content():
-    return """
-    this is the content of a sample pdf file.
-    Title: ...
-    Author: ...
-    """
-
-
 class MockModel:
     def __init__(self, *args, **kwargs):
         self.args = args
