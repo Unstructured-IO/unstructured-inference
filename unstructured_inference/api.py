@@ -6,24 +6,20 @@ from typing import List, BinaryIO, Optional, Union
 app = FastAPI()
 
 ALL_ELEMS = "_ALL"
+VALID_FILETYPES = ["pdf", "image"]
 
 
-@app.post("/layout/pdf")
-async def layout_parsing_pdf(
+@app.post("/layout/{filetype:path}")
+async def layout_parsing(
+    filetype: str,
     file: UploadFile = File(),
     include_elems: List[str] = Form(default=ALL_ELEMS),
     model: str = Form(default=None),
 ):
-    return get_pages_layout(file.file, model, include_elems)
-
-
-@app.post("/layout/image")
-async def layout_parsing_image(
-    file: UploadFile = File(),
-    include_elems: List[str] = Form(default=ALL_ELEMS),
-    model: str = Form(default=None),
-):
-    return get_pages_layout(file.file, model, include_elems, is_image=True)
+    if filetype not in VALID_FILETYPES:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+    is_image = filetype == "image"
+    return get_pages_layout(file.file, model, include_elems, is_image=is_image)
 
 
 def get_pages_layout(
