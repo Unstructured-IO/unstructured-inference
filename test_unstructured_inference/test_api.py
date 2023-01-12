@@ -2,7 +2,6 @@ import pytest
 import os
 
 from fastapi.testclient import TestClient
-from fastapi import HTTPException
 
 from unstructured_inference.api import app
 from unstructured_inference import models
@@ -51,7 +50,7 @@ def test_layout_parsing_api(monkeypatch, filetype, ext):
 
 def test_bad_route_404():
     client = TestClient(app)
-    filename = os.path.join("sample-docs", f"loremipsum.pdf")
+    filename = os.path.join("sample-docs", "loremipsum.pdf")
     response = client.post("/layout/badroute", files={"file": (filename, open(filename, "rb"))})
     assert response.status_code == 404
 
