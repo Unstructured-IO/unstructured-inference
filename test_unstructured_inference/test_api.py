@@ -2,6 +2,7 @@ import pytest
 import os
 
 from fastapi.testclient import TestClient
+from fastapi import HTTPException
 
 from unstructured_inference.api import app
 from unstructured_inference import models
@@ -46,6 +47,13 @@ def test_layout_parsing_api(monkeypatch, filetype, ext):
         data={"model": "fake_model"},
     )
     assert response.status_code == 422
+
+
+def test_bad_route_404():
+    client = TestClient(app)
+    filename = os.path.join("sample-docs", f"loremipsum.pdf")
+    response = client.post("/layout/badroute", files={"file": (filename, open(filename, "rb"))})
+    assert response.status_code == 404
 
 
 def test_healthcheck(monkeypatch):
