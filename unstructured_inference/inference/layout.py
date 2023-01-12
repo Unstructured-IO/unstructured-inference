@@ -196,6 +196,7 @@ def cid_ratio(text: str) -> float:
 
 
 def is_cid_present(text: str) -> bool:
+    """Checks if a cid code is present in a text selection."""
     if len(text) < len("(cid:x)"):
         return False
     return text.find("(cid:") != -1
