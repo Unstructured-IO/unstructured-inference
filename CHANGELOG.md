@@ -1,4 +1,4 @@
-## 0.2.2-dev1
+## 0.2.2
 
 * Add capability to process image files
 * Add logic to use OCR when layout text is full of unknown characters
