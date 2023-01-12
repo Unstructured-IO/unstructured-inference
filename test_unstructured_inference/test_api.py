@@ -24,29 +24,33 @@ class MockModel:
         self.kwargs = kwargs
 
 
-def test_layout_parsing_pdf_api(sample_pdf_content, tmpdir, monkeypatch):
+@pytest.mark.parametrize("filetype, ext", [("pdf", "pdf"), ("image", "png")])
+def test_layout_parsing_api(monkeypatch, filetype, ext):
     monkeypatch.setattr(models, "load_model", lambda *args, **kwargs: MockModel(*args, **kwargs))
     monkeypatch.setattr(models, "hf_hub_download", lambda *args, **kwargs: "fake-path")
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
     monkeypatch.setattr(
         DocumentLayout, "from_file", lambda *args, **kwargs: DocumentLayout.from_pages([])
     )
+    monkeypatch.setattr(
+        DocumentLayout, "from_image_file", lambda *args, **kwargs: DocumentLayout.from_pages([])
+    )
 
-    filename = os.path.join(tmpdir.dirname, "sample.pdf")
-    with open(filename, "w") as f:
-        f.write(sample_pdf_content)
+    filename = os.path.join("sample-docs", f"loremipsum.{ext}")
 
     client = TestClient(app)
-    response = client.post("/layout/pdf", files={"file": (filename, open(filename, "rb"))})
+    response = client.post(f"/layout/{filetype}", files={"file": (filename, open(filename, "rb"))})
     assert response.status_code == 200
 
     response = client.post(
-        "/layout/pdf", files={"file": (filename, open(filename, "rb"))}, data={"model": "checkbox"}
+        f"/layout/{filetype}",
+        files={"file": (filename, open(filename, "rb"))},
+        data={"model": "checkbox"},
     )
     assert response.status_code == 200
 
     response = client.post(
-        "/layout/pdf",
+        f"/layout/{filetype}",
         files={"file": (filename, open(filename, "rb"))},
         data={"model": "fake_model"},
     )
