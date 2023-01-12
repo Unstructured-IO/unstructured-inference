@@ -6,6 +6,7 @@ FROM centos:centos7.9.2009
 #             https://mybinder.readthedocs.io/en/latest/tutorials/dockerfile.html
 ARG NB_USER=notebook-user
 ARG NB_UID=1000
+ARG PIP_VERSION
 
 RUN yum -y update && \
   yum -y install poppler-utils xz-devel which
