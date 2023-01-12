@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, status, Request, UploadFile, Form, HTTPException
-from unstructured_inference.inference.layout import process_data_with_model
+from unstructured_inference.inference.layout import process_data_with_model, DocumentLayout
 from unstructured_inference.models import UnknownModelException
-from typing import List
+from typing import List, BinaryIO, Optional, Union
 
 app = FastAPI()
 
@@ -14,8 +14,26 @@ async def layout_parsing_pdf(
     include_elems: List[str] = Form(default=ALL_ELEMS),
     model: str = Form(default=None),
 ):
+    return get_pages_layout(file.file, model, include_elems)
+
+
+@app.post("/layout/image")
+async def layout_parsing_image(
+    file: UploadFile = File(),
+    include_elems: List[str] = Form(default=ALL_ELEMS),
+    model: str = Form(default=None),
+):
+    return get_pages_layout(file.file, model, include_elems, is_image=True)
+
+
+def get_pages_layout(
+    file: BinaryIO,
+    model: Optional[str],
+    include_elems: Union[List[str], str] = ALL_ELEMS,
+    is_image=False,
+):
     try:
-        layout = process_data_with_model(file.file, model)
+        layout = process_data_with_model(file, model, is_image)
     except UnknownModelException as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
     pages_layout = [
