@@ -19,17 +19,8 @@ async def layout_parsing(
     if filetype not in VALID_FILETYPES:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
     is_image = filetype == "image"
-    return get_pages_layout(file.file, model, include_elems, is_image=is_image)
-
-
-def get_pages_layout(
-    file: BinaryIO,
-    model: Optional[str],
-    include_elems: Union[List[str], str] = ALL_ELEMS,
-    is_image=False,
-):
     try:
-        layout = process_data_with_model(file, model, is_image)
+        layout = process_data_with_model(file.file, model, is_image)
     except UnknownModelException as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
     pages_layout = [
