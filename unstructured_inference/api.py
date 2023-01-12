@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, status, Request, UploadFile, Form, HTTPException
 from unstructured_inference.inference.layout import process_data_with_model
 from unstructured_inference.models import UnknownModelException
-from typing import List, BinaryIO, Optional, Union
+from typing import List
 
 app = FastAPI()
 
