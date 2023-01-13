@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import os
 import re
 import tempfile
 from typing import List, Optional, Tuple, Union, BinaryIO
@@ -76,7 +77,13 @@ class DocumentLayout:
     def from_image_file(cls, filename: str, model: Optional[Detectron2LayoutModel] = None):
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
-        image = Image.open(filename)
+        try:
+            image = Image.open(filename)
+        except Exception as e:
+            if os.path.isdir(filename) or os.path.isfile(filename):
+                raise e
+            else:
+                raise FileNotFoundError(f"File {filename} not found!") from e
         page = PageLayout(number=0, image=image, layout=None, model=model)
         page.get_elements()
         return cls.from_pages([page])
