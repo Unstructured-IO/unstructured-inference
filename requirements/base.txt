@@ -73,7 +73,7 @@ packaging==21.3
     #   pytesseract
 pandas==1.5.0
     # via layoutparser
-pdf2image==1.16.0
+pdf2image==1.16.2
     # via layoutparser
 pdfminer-six==20220524
     # via pdfplumber
