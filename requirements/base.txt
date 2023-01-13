@@ -30,7 +30,7 @@ fastapi==0.85.1
     # via unstructured-inference (setup.py)
 filelock==3.8.0
     # via huggingface-hub
-fonttools==4.37.4
+fonttools==4.38.0
     # via matplotlib
 h11==0.14.0
     # via uvicorn
