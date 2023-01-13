@@ -1,3 +1,7 @@
+## 0.2.4-dev0
+
+* Requirements bumps (delete this line with first real CHANGELOG cahnge)
+
 ## 0.2.3
 
 * Pins the version of `opencv-python` for linux compatibility
