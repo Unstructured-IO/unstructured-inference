@@ -83,7 +83,7 @@ class DocumentLayout:
             if os.path.isdir(filename) or os.path.isfile(filename):
                 raise e
             else:
-                raise FileNotFoundError(f"File {filename} not found!") from e
+                raise FileNotFoundError(f'File "{filename}" not found!') from e
         page = PageLayout(number=0, image=image, layout=None, model=model)
         page.get_elements()
         return cls.from_pages([page])
