@@ -1,3 +1,7 @@
+## 0.2.3
+
+* Pins the version of `opencv-python` for linux compatibility
+
 ## 0.2.2
 
 * Add capability to process image files
