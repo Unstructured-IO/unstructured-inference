@@ -6,7 +6,7 @@ FROM centos:centos7.9.2009
 #             https://mybinder.readthedocs.io/en/latest/tutorials/dockerfile.html
 ARG NB_USER=notebook-user
 ARG NB_UID=1000
-ARG PIP_VERSION
+ARG PIP_VERSION=22.3.1
 
 RUN yum -y update && \
   yum -y install poppler-utils xz-devel which
@@ -42,9 +42,10 @@ COPY requirements/base.txt requirements-base.txt
 COPY unstructured_inference unstructured_inference
 
 # NOTE(crag) - Cannot use an ARG in the dst= path (so it seems), hence no ${NB_USER}, ${NB_UID}
-RUN python3.8 -m pip install  --no-cache  -r requirements-base.txt \
-  && python3.8 -m pip install  --no-cache  -r requirements-dev.txt \
-  &&  python3.8 -m pip install --no-cache "detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2" \
+RUN python3.8 -m pip install pip==${PIP_VERSION} \
+  && pip3.8 install  --no-cache  -r requirements-base.txt \
+  && pip3.8 install  --no-cache  -r requirements-dev.txt \
+  && pip3.8 install --no-cache "detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2" \
   && python3.8 -c "import unstructured_inference.models.detectron2 as detectron2; detectron2.load_default_model()"
 
 EXPOSE 5000
