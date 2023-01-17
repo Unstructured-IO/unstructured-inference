@@ -1,4 +1,5 @@
 import pytest
+import tempfile
 from unittest.mock import patch, mock_open
 
 import layoutparser as lp
@@ -267,3 +268,13 @@ def test_from_image_file(monkeypatch, mock_page_layout, filetype):
         .elements
     )
     assert elements[0] == mock_page_layout
+
+
+def test_from_image_file_raises_with_empty_fn():
+    with pytest.raises(FileNotFoundError):
+        layout.DocumentLayout.from_image_file("")
+
+
+def test_from_image_file_raises_isadirectoryerror_with_dir():
+    with tempfile.TemporaryDirectory() as tempdir, pytest.raises(IsADirectoryError):
+        layout.DocumentLayout.from_image_file(tempdir)

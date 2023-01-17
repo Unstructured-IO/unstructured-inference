@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import os
 import re
 import tempfile
 from typing import List, Optional, Tuple, Union, BinaryIO
@@ -76,7 +77,13 @@ class DocumentLayout:
     def from_image_file(cls, filename: str, model: Optional[Detectron2LayoutModel] = None):
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
-        image = Image.open(filename)
+        try:
+            image = Image.open(filename)
+        except Exception as e:
+            if os.path.isdir(filename) or os.path.isfile(filename):
+                raise e
+            else:
+                raise FileNotFoundError(f'File "{filename}" not found!') from e
         page = PageLayout(number=0, image=image, layout=None, model=model)
         page.get_elements()
         return cls.from_pages([page])
@@ -159,21 +166,29 @@ class PageLayout:
         return self.image_array
 
 
-def process_data_with_model(data: BinaryIO, model_name: str) -> DocumentLayout:
+def process_data_with_model(
+    data: BinaryIO, model_name: Optional[str], is_image: bool = False
+) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
     with tempfile.NamedTemporaryFile() as tmp_file:
         tmp_file.write(data.read())
-        layout = process_file_with_model(tmp_file.name, model_name)
+        layout = process_file_with_model(tmp_file.name, model_name, is_image=is_image)
 
     return layout
 
 
-def process_file_with_model(filename: str, model_name: str) -> DocumentLayout:
+def process_file_with_model(
+    filename: str, model_name: Optional[str], is_image: bool = False
+) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
     model = None if model_name is None else get_model(model_name)
-    layout = DocumentLayout.from_file(filename, model=model)
+    layout = (
+        DocumentLayout.from_image_file(filename, model=model)
+        if is_image
+        else DocumentLayout.from_file(filename, model=model)
+    )
     return layout
 
 
@@ -188,6 +203,7 @@ def cid_ratio(text: str) -> float:
 
 
 def is_cid_present(text: str) -> bool:
+    """Checks if a cid code is present in a text selection."""
     if len(text) < len("(cid:x)"):
         return False
     return text.find("(cid:") != -1

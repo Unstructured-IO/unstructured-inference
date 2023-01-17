@@ -1,4 +1,12 @@
-## 0.2.2-dev1
+## 0.2.4-dev1
+
+* Clarify error when trying to open file that doesn't exist as an image
+
+## 0.2.3
+
+* Pins the version of `opencv-python` for linux compatibility
+
+## 0.2.2
 
 * Add capability to process image files
 * Add logic to use OCR when layout text is full of unknown characters
