@@ -1,6 +1,6 @@
-## 0.2.4-dev0
+## 0.2.4-dev1
 
-* Requirements bumps (delete this line with first real CHANGELOG cahnge)
+* Clarify error when trying to open file that doesn't exist as an image
 
 ## 0.2.3
 

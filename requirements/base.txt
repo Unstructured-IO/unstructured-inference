@@ -34,7 +34,7 @@ fonttools==4.38.0
     # via matplotlib
 h11==0.14.0
     # via uvicorn
-huggingface-hub==0.10.1
+huggingface-hub==0.11.1
     # via
     #   timm
     #   unstructured-inference (setup.py)
@@ -79,7 +79,7 @@ pdfminer-six==20220524
     # via pdfplumber
 pdfplumber==0.7.5
     # via layoutparser
-pillow==9.2.0
+pillow==9.4.0
     # via
     #   layoutparser
     #   matplotlib
@@ -87,7 +87,7 @@ pillow==9.2.0
     #   pdfplumber
     #   pytesseract
     #   torchvision
-portalocker==2.5.1
+portalocker==2.6.0
     # via iopath
 pycocotools==2.0.5
     # via effdet
@@ -158,5 +158,5 @@ urllib3==1.26.12
     # via requests
 uvicorn==0.19.0
     # via unstructured-inference (setup.py)
-wand==0.6.10
+wand==0.6.11
     # via pdfplumber
