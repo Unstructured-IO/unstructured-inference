@@ -8,6 +8,7 @@ from unstructured_inference import models
 from unstructured_inference.inference.layout import DocumentLayout
 import unstructured_inference.models.detectron2 as detectron2
 
+import jsons
 
 class MockModel:
     def __init__(self, *args, **kwargs):
@@ -54,6 +55,67 @@ def test_bad_route_404():
     response = client.post("/layout/badroute", files={"file": (filename, open(filename, "rb"))})
     assert response.status_code == 404
 
+def test_layout_v02_api_parsing_image():
+
+    filename = os.path.join("sample-docs", "test-image.jpg")
+
+    client = TestClient(app)
+    response = client.post(
+        "/layout/v0.2/image",
+        headers={"Accept": "multipart/mixed"},
+        files=[("files", (filename, open(filename, "rb"), "image/png"))],
+    )
+    doc_layout = jsons.load(response.json(), DocumentLayout)
+    assert len(doc_layout.pages) == 1
+    # The example sent to the test contains 13 detections
+    assert len(doc_layout.pages[0]["layout"]) == 13
+    # Each detection should have (x1,y1,x2,y2,probability,class) format
+    # assert len(response.json()['Detections'][0])==6
+    assert response.status_code == 200
+
+
+def test_layout_v02_api_parsing_pdf():
+
+    filename = os.path.join("sample-docs", "loremipsum.pdf")
+
+    client = TestClient(app)
+    response = client.post(
+        "/layout/v0.2/pdf",
+        headers={"Accept": "multipart/mixed"},
+        files=[("files", (filename, open(filename, "rb"), "application/pdf"))],
+    )
+    doc_layout = jsons.load(response.json(), DocumentLayout)
+    assert len(doc_layout.pages) == 1
+    # The example sent to the test contains 5 detections
+    assert len(doc_layout.pages[0]["layout"]) == 5
+    # Each detection should have (x1,y1,x2,y2,probability,class) format
+    # assert len(response.json()['Detections'][0])==6
+    assert response.status_code == 200
+
+
+def test_layout_v02_local_parsing_image():
+    filename = os.path.join("sample-docs", "test-image.jpg")
+    from unstructured_inference.layout_model import local_inference
+
+    detections = local_inference(filename, type="image")
+    # The example image should result in one page result
+    assert len(detections.pages) == 1
+    # The example sent to the test contains 13 detections
+    assert len(detections.pages[0].layout) == 13
+    # Each detection should have (x1,y1,x2,y2,probability,class) format
+    # assert len(detections['Detections'][0])==6
+
+
+def test_layout_v02_local_parsing_pdf():
+    filename = os.path.join("sample-docs", "loremipsum.pdf")
+    from unstructured_inference.layout_model import local_inference
+
+    detections = local_inference(filename, type="pdf")
+    assert len(detections.pages) == 1
+    # The example sent to the test contains 5 detections
+    assert len(detections.pages[0].layout) == 5
+    # Each detection should have (x1,y1,x2,y2,probability,class) format
+    # assert len(detections['Detections'][0])==6
 
 def test_healthcheck(monkeypatch):
     client = TestClient(app)
