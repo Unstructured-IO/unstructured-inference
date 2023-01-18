@@ -10,6 +10,7 @@ import unstructured_inference.models.detectron2 as detectron2
 
 import jsons
 
+
 class MockModel:
     def __init__(self, *args, **kwargs):
         self.args = args
@@ -54,6 +55,7 @@ def test_bad_route_404():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
     response = client.post("/layout/badroute", files={"file": (filename, open(filename, "rb"))})
     assert response.status_code == 404
+
 
 def test_layout_v02_api_parsing_image():
 
@@ -115,6 +117,7 @@ def test_layout_v02_local_parsing_pdf():
     assert len(detections.pages[0].layout) == 5
     # Each detection should have (x1,y1,x2,y2,probability,class) format
     # assert len(detections['Detections'][0])==6
+
 
 def test_healthcheck(monkeypatch):
     client = TestClient(app)

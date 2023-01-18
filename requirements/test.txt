@@ -28,6 +28,8 @@ idna==3.4
     #   yarl
 iniconfig==1.1.1
     # via pytest
+jsons==1.6.3
+    # via -r requirements/test.in
 label-studio-sdk==0.0.15
     # via -r requirements/test.in
 lxml==4.9.1
@@ -46,6 +48,10 @@ packaging==21.3
     # via pytest
 pathspec==0.10.1
     # via black
+pdf2image==1.16.2
+    # via -r requirements/test.in
+pillow==9.4.0
+    # via pdf2image
 platformdirs==2.5.2
     # via black
 pluggy==1.0.0
@@ -81,6 +87,8 @@ typing-extensions==4.4.0
     #   black
     #   mypy
     #   pydantic
+typish==1.9.3
+    # via jsons
 urllib3==1.26.12
     # via requests
 vcrpy==4.2.1

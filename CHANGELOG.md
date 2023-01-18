@@ -1,3 +1,7 @@
+## 0.2.5-dev1
+
+* Added YoloX model for layout detection
+
 ## 0.2.4-dev1
 
 * Clarify error when trying to open file that doesn't exist as an image

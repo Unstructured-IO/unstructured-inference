@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, status, Request, UploadFile, Form, HTTPException
 from unstructured_inference.inference.layout import process_data_with_model
 from unstructured_inference.models import UnknownModelException
-from typing import List, Union
+from typing import List
 import tempfile
 
 from unstructured_inference.layout_model import local_inference
@@ -44,7 +44,7 @@ async def layout_parsing(
 @app.post("/layout_v1/image")
 async def layout_v02_parsing_image(
     request: Request,
-    files: Union[List[UploadFile], None] = File(default=None),
+    files: List[UploadFile] = File(default=None),
 ):
 
     with tempfile.NamedTemporaryFile() as tmp_file:
@@ -57,7 +57,7 @@ async def layout_v02_parsing_image(
 @app.post("/layout_v1/pdf")
 async def layout_v02_parsing_pdf(
     request: Request,
-    files: Union[List[UploadFile], None] = File(default=None),
+    files: List[UploadFile] = File(default=None),
 ):
 
     with tempfile.NamedTemporaryFile() as tmp_file:
@@ -65,6 +65,7 @@ async def layout_v02_parsing_pdf(
         detections = local_inference(tmp_file.name, type="pdf", to_json=True)
 
     return detections
+
 
 @app.get("/healthcheck", status_code=status.HTTP_200_OK)
 async def healthcheck(request: Request):
