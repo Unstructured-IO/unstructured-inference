@@ -61,7 +61,7 @@ def test_layout_v02_api_parsing_image():
 
     client = TestClient(app)
     response = client.post(
-        "/layout/v0.2/image",
+        "/layout_v1/image",
         headers={"Accept": "multipart/mixed"},
         files=[("files", (filename, open(filename, "rb"), "image/png"))],
     )
@@ -80,9 +80,8 @@ def test_layout_v02_api_parsing_pdf():
 
     client = TestClient(app)
     response = client.post(
-        "/layout/v0.2/pdf",
-        headers={"Accept": "multipart/mixed"},
-        files=[("files", (filename, open(filename, "rb"), "application/pdf"))],
+        "/layout_v1/pdf",
+        files={"files": (filename, open(filename, "rb"))},
     )
     doc_layout = jsons.load(response.json(), DocumentLayout)
     assert len(doc_layout.pages) == 1

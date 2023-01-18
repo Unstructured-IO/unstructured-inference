@@ -36,8 +36,8 @@ class DocumentLayout:
     document image analysis (DIA) model detects the layout of the page prior to extracting
     element."""
 
-    def __init__(self):
-        self._pages = None
+    def __init__(self, pages=None):
+        self._pages = pages
 
     def __str__(self) -> str:
         return "\n\n".join([str(page) for page in self.pages])

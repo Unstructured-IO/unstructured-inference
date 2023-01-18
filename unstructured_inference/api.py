@@ -3,9 +3,9 @@ from unstructured_inference.inference.layout import process_data_with_model
 from unstructured_inference.models import UnknownModelException
 from typing import List, Union
 import tempfile
-#from unstructured_inference.inference.layout import DocumentLayout
+
 from unstructured_inference.layout_model import local_inference
-from unstructured_inference.models import get_model
+
 app = FastAPI()
 
 ALL_ELEMS = "_ALL"
@@ -41,7 +41,7 @@ async def layout_parsing(
     return {"pages": pages_layout}
 
 
-@app.post("/layout/v0.2/image")
+@app.post("/layout_v1/image")
 async def layout_v02_parsing_image(
     request: Request,
     files: Union[List[UploadFile], None] = File(default=None),
@@ -54,7 +54,7 @@ async def layout_v02_parsing_image(
     return detections
 
 
-@app.post("/layout/v0.2/pdf")
+@app.post("/layout_v1/pdf")
 async def layout_v02_parsing_pdf(
     request: Request,
     files: Union[List[UploadFile], None] = File(default=None),
