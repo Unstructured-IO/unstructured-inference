@@ -1,4 +1,4 @@
-## 0.2.5-dev1
+## 0.3.0
 
 * Added YoloX model for layout detection
 
