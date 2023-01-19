@@ -13,11 +13,10 @@ from unstructured_inference.visualize import vis
 from unstructured_inference.yolox_functions import demo_postprocess, multiclass_nms
 from unstructured_inference.yolox_functions import preproc as preprocess
 
+# NOTE(benjamin) Repository and file to download from hugging_face
 REPO_ID = "unstructuredio/yolo_x_layout"
 FILENAME = "yolox_l0.05.onnx"
-S3_SOURCE = (
-    "https://utic-dev-tech-fixtures.s3.us-east-2.amazonaws.com/layout_model/yolox_l0.05.onnx"
-)
+
 LAYOUT_CLASSES = [
     "Caption",
     "Footnote",
@@ -31,14 +30,14 @@ LAYOUT_CLASSES = [
     "Text",
     "Title",
 ]
-YOLOX_MODEL = "/Users/benjamin/Documents/unstructured-inference/.models/yolox_l0.05.onnx"
+# Path of the model, will be filled in local_inference
+YOLOX_MODEL = ""
 output_dir = "outputs/"
 
 
 def local_inference(filename, type="image", to_json=False):
     global YOLOX_MODEL
-    if not os.path.exists(".models/yolox_l0.05.onnx"):
-        YOLOX_MODEL = hf_hub_download(REPO_ID, FILENAME)
+    YOLOX_MODEL = hf_hub_download(REPO_ID, FILENAME)
 
     pages_paths = []
     detections = []
