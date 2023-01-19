@@ -69,7 +69,7 @@ def test_layout_v02_api_parsing_image():
     )
     doc_layout = jsons.load(response.json(), DocumentLayout)
     assert len(doc_layout.pages) == 1
-    # The example sent to the test contains 13 detections
+    # NOTE(benjamin) The example sent to the test contains 13 detections
     assert len(doc_layout.pages[0]["layout"]) == 13
     # Each detection should have (x1,y1,x2,y2,probability,class) format
     # assert len(response.json()['Detections'][0])==6
@@ -87,7 +87,7 @@ def test_layout_v02_api_parsing_pdf():
     )
     doc_layout = jsons.load(response.json(), DocumentLayout)
     assert len(doc_layout.pages) == 1
-    # The example sent to the test contains 5 detections
+    # NOTE(benjamin) The example sent to the test contains 5 detections
     assert len(doc_layout.pages[0]["layout"]) == 5
     # Each detection should have (x1,y1,x2,y2,probability,class) format
     # assert len(response.json()['Detections'][0])==6
@@ -99,9 +99,9 @@ def test_layout_v02_local_parsing_image():
     from unstructured_inference.layout_model import local_inference
 
     detections = local_inference(filename, type="image")
-    # The example image should result in one page result
+    # NOTE(benjamin) The example image should result in one page result
     assert len(detections.pages) == 1
-    # The example sent to the test contains 13 detections
+    # NOTE(benjamin) The example sent to the test contains 13 detections
     assert len(detections.pages[0].layout) == 13
     # Each detection should have (x1,y1,x2,y2,probability,class) format
     # assert len(detections['Detections'][0])==6
@@ -113,7 +113,7 @@ def test_layout_v02_local_parsing_pdf():
 
     detections = local_inference(filename, type="pdf")
     assert len(detections.pages) == 1
-    # The example sent to the test contains 5 detections
+    # NOTE(benjamin) The example sent to the test contains 5 detections
     assert len(detections.pages[0].layout) == 5
     # Each detection should have (x1,y1,x2,y2,probability,class) format
     # assert len(detections['Detections'][0])==6
