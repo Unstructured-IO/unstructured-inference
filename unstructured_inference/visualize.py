@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # Copyright (c) Megvii Inc. All rights reserved.
+# Modifications copyright (C) 2023 by Unstructured
 
 import cv2
 import numpy as np
