@@ -6,10 +6,6 @@ import numpy as np
 import cv2
 
 
-def format_output(detections):
-    pass
-
-
 def preproc(img, input_size, swap=(2, 0, 1)):
     if len(img.shape) == 3:
         padded_img = np.ones((input_size[0], input_size[1], 3), dtype=np.uint8) * 114
