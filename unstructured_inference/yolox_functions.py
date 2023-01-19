@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Code based on data_augment.py, demo_utils.py from yolox
 # Copyright (c) Megvii, Inc. and its affiliates.
