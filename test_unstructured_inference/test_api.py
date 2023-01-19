@@ -71,8 +71,6 @@ def test_layout_v02_api_parsing_image():
     assert len(doc_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 13 detections
     assert len(doc_layout.pages[0]["layout"]) == 13
-    # Each detection should have (x1,y1,x2,y2,probability,class) format
-    # assert len(response.json()['Detections'][0])==6
     assert response.status_code == 200
 
 
@@ -89,8 +87,6 @@ def test_layout_v02_api_parsing_pdf():
     assert len(doc_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 5 detections
     assert len(doc_layout.pages[0]["layout"]) == 5
-    # Each detection should have (x1,y1,x2,y2,probability,class) format
-    # assert len(response.json()['Detections'][0])==6
     assert response.status_code == 200
 
 
@@ -98,13 +94,15 @@ def test_layout_v02_local_parsing_image():
     filename = os.path.join("sample-docs", "test-image.jpg")
     from unstructured_inference.layout_model import local_inference
 
-    detections = local_inference(filename, type="image")
+    # NOTE(benjamin) keep_output = True create a file for each image in
+    # localstorage for visualization of the result
+    detections_1 = local_inference(filename, type="image", keep_output=True)
+    assert len(detections_1.pages) == 1
+    detections_2 = local_inference(filename, type="image", keep_output=False)
     # NOTE(benjamin) The example image should result in one page result
-    assert len(detections.pages) == 1
+    assert len(detections_2.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 13 detections
-    assert len(detections.pages[0].layout) == 13
-    # Each detection should have (x1,y1,x2,y2,probability,class) format
-    # assert len(detections['Detections'][0])==6
+    assert len(detections_2.pages[0].layout) == 13
 
 
 def test_layout_v02_local_parsing_pdf():
@@ -115,8 +113,6 @@ def test_layout_v02_local_parsing_pdf():
     assert len(detections.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 5 detections
     assert len(detections.pages[0].layout) == 5
-    # Each detection should have (x1,y1,x2,y2,probability,class) format
-    # assert len(detections['Detections'][0])==6
 
 
 def test_healthcheck(monkeypatch):

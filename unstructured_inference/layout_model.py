@@ -35,7 +35,7 @@ YOLOX_MODEL = ""
 output_dir = "outputs/"
 
 
-def local_inference(filename, type="image", to_json=False):
+def local_inference(filename, type="image", to_json=False, keep_output=False):
     global YOLOX_MODEL
     YOLOX_MODEL = hf_hub_download(REPO_ID, FILENAME)
 
@@ -49,11 +49,11 @@ def local_inference(filename, type="image", to_json=False):
             )
             for i, path in enumerate(pages_paths):
                 # Return a dict of {n-->PageLayoutDocument}
-                detections.append(image_processing(path, page_number=i))
+                detections.append(image_processing(path, page_number=i, keep_output=keep_output))
             detectedDocument = DocumentLayout(detections)
     else:
         # Return a PageLayoutDocument
-        detections = image_processing(filename)
+        detections = image_processing(filename, keep_output=keep_output)
         detectedDocument = DocumentLayout([detections])
 
     # NOTE (Benjamin): This version don't send images in json, could be
@@ -65,14 +65,14 @@ def local_inference(filename, type="image", to_json=False):
     return detectedDocument
 
 
-def image_processing(page, page_number=0):
+def image_processing(page, page_number=0, keep_output=False):
 
     # The model was trained and exported with this shape
     # TODO: check other shapes for inference
     input_shape = (1024, 768)
     origin_img = cv2.imread(page)
     img, ratio = preprocess(origin_img, input_shape)
-
+    page_orig = page
     session = onnxruntime.InferenceSession(YOLOX_MODEL)
 
     ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
@@ -91,7 +91,7 @@ def image_processing(page, page_number=0):
     dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.45, score_thr=0.1)
     if dets is not None:
         final_boxes, final_scores, final_cls_inds = dets[:, :4], dets[:, 4], dets[:, 5]
-        origin_img = vis(
+        annotated_image = vis(
             origin_img,
             final_boxes,
             final_scores,
@@ -101,6 +101,7 @@ def image_processing(page, page_number=0):
         )
 
     elements = []
+    # Each detection should have (x1,y1,x2,y2,probability,class) format
     for det in dets:
         detection = det.tolist()
         detection[-1] = LAYOUT_CLASSES[int(detection[-1])]
@@ -116,11 +117,11 @@ def image_processing(page, page_number=0):
         number=page_number, image=None, layout=elements
     )  # TODO: encode image as base64?
 
-    # if not os.path.exists(output_dir):
-    #    os.makedirs(output_dir)
-    # #the  tmp_file laks of extension
-    # output_path = os.path.join(output_dir,
-    #                            os.path.basename(tmp_file.name),".jpg")
-    # cv2.imwrite(output_path, origin_img)
+    if keep_output:
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        # the  tmp_file laks of extension
+        output_path = os.path.join(output_dir, os.path.basename(page_orig))
+        cv2.imwrite(output_path, annotated_image)
 
     return page
