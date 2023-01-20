@@ -47,10 +47,3 @@ def load_model(
         device=device,
     )
     return model
-
-
-def load_default_model() -> Detectron2LayoutModel:
-    """Loads the detectron2 model using default parameters"""
-    return load_model(
-        config_path=DETECTRON_CONFIG, label_map=DEFAULT_LABEL_MAP, extra_config=DEFAULT_EXTRA_CONFIG
-    )
