@@ -111,10 +111,10 @@ class PageLayout:
     def get_elements(self, inplace=True) -> Optional[List[LayoutElement]]:
         """Uses a layoutparser model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
-
-        elements = list()
         if self.model is None:
             self.model = get_model()
+
+        elements = list()
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         image_layout = self.model.detect(self.image)
