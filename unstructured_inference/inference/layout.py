@@ -12,7 +12,6 @@ from PIL import Image
 
 from unstructured_inference.logger import logger
 import unstructured_inference.models.tesseract as tesseract
-import unstructured_inference.models.detectron2 as detectron2
 from unstructured_inference.models import get_model
 
 
@@ -112,10 +111,10 @@ class PageLayout:
     def get_elements(self, inplace=True) -> Optional[List[LayoutElement]]:
         """Uses a layoutparser model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
-        if self.model is None:
-            self.model = detectron2.load_default_model()
 
         elements = list()
+        if self.model is None:
+            self.model = get_model()
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         image_layout = self.model.detect(self.image)
@@ -183,7 +182,7 @@ def process_file_with_model(
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
-    model = None if model_name is None else get_model(model_name)
+    model = get_model(model_name)
     layout = (
         DocumentLayout.from_image_file(filename, model=model)
         if is_image
