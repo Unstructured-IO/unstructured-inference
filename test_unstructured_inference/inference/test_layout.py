@@ -66,7 +66,9 @@ class MockLayoutModel:
 
 
 def test_get_page_elements(monkeypatch, mock_page_layout):
-    monkeypatch.setattr(detectron2, "load_default_model", lambda: MockLayoutModel(mock_page_layout))
+    monkeypatch.setattr(
+        models, "load_model", lambda *args, **kwargs: MockLayoutModel(mock_page_layout)
+    )
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
     image = np.random.randint(12, 24, (40, 40))
@@ -88,7 +90,7 @@ def test_get_page_elements_with_ocr(monkeypatch):
     text_block = TextBlock(rectangle, text=None, type="Title")
     doc_layout = Layout([text_block])
 
-    monkeypatch.setattr(detectron2, "load_default_model", lambda: MockLayoutModel(doc_layout))
+    monkeypatch.setattr(models, "load_model", lambda *args, **kwargs: MockLayoutModel(doc_layout))
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
     image = np.random.randint(12, 24, (40, 40))
@@ -104,7 +106,9 @@ def test_read_pdf(monkeypatch, mock_page_layout):
 
     layouts = Layout([mock_page_layout, mock_page_layout])
 
-    monkeypatch.setattr(detectron2, "load_default_model", lambda: MockLayoutModel(mock_page_layout))
+    monkeypatch.setattr(
+        models, "load_model", lambda *args, **kwargs: MockLayoutModel(mock_page_layout)
+    )
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
     with patch.object(lp, "load_pdf", return_value=(layouts, images)):
@@ -138,6 +142,7 @@ def test_process_data_with_model(monkeypatch, mock_page_layout, model_name):
             "fake-binary-path",
             "fake-config-path",
             {0: "Unchecked", 1: "Checked"},
+            None,
         ),
     )
     with patch("builtins.open", mock_open(read_data=b"000000")):
@@ -168,6 +173,7 @@ def test_process_file_with_model(monkeypatch, mock_page_layout, model_name):
             "fake-binary-path",
             "fake-config-path",
             {0: "Unchecked", 1: "Checked"},
+            None,
         ),
     )
     filename = ""

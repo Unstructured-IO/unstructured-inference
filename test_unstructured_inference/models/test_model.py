@@ -18,6 +18,7 @@ def test_get_model(monkeypatch):
             "fake-binary-path",
             "fake-config-path",
             {0: "Unchecked", 1: "Checked"},
+            None,
         ),
     )
     assert isinstance(models.get_model("checkbox"), MockModel)
