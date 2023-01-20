@@ -1,5 +1,6 @@
-## 0.2.4-dev1
+## 0.2.4-dev2
 
+* Download default model from huggingface
 * Clarify error when trying to open file that doesn't exist as an image
 
 ## 0.2.3
