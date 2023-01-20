@@ -38,19 +38,21 @@ output_dir = "outputs/"
 def local_inference(filename, type="image", to_json=False, keep_output=False):
     global YOLOX_MODEL
     YOLOX_MODEL = hf_hub_download(REPO_ID, FILENAME)
-
+    DPI = 500
     pages_paths = []
     detections = []
     detectedDocument = None
     if type == "pdf":
         with tempfile.TemporaryDirectory() as tmp_folder:
             pages_paths = convert_from_path(
-                filename, dpi=500, output_folder=tmp_folder, paths_only=True
+                filename, dpi=DPI, output_folder=tmp_folder, paths_only=True
             )
             for i, path in enumerate(pages_paths):
                 # Return a dict of {n-->PageLayoutDocument}
                 detections.append(image_processing(path, page_number=i, keep_output=keep_output))
             detectedDocument = DocumentLayout(detections)
+            # Extract embedded text from PDF
+            detectedDocument.parse_elements(filename, DPI=DPI)
     else:
         # Return a PageLayoutDocument
         detections = image_processing(filename, keep_output=keep_output)
@@ -65,7 +67,10 @@ def local_inference(filename, type="image", to_json=False, keep_output=False):
     return detectedDocument
 
 
-def image_processing(page, page_number=0, keep_output=False):
+def image_processing(page, page_number=0, keep_output=False) -> PageLayout:
+    """
+    Method runing YoloX for layout detection, returns a PageLayout
+    """
 
     # The model was trained and exported with this shape
     # TODO: check other shapes for inference
@@ -102,6 +107,7 @@ def image_processing(page, page_number=0, keep_output=False):
 
     elements = []
     # Each detection should have (x1,y1,x2,y2,probability,class) format
+    # being (x1,y1) the top left and (x2,y2) the bottom right
     for det in dets:
         detection = det.tolist()
         detection[-1] = LAYOUT_CLASSES[int(detection[-1])]

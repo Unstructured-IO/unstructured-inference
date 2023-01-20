@@ -19,8 +19,9 @@ from unstructured_inference.models import get_model
 @dataclass
 class LayoutElement:
     type: str
-    # NOTE(robinson) - Coordinates are reported starting from the upper left and
-    # proceeding clockwise
+    # NOTE(robinson) - The list contain two elements, each a tuple
+    # in format (x1,y1), the first the upper left corner and the second
+    # the right bottom corner
     coordinates: List[Tuple[float, float]]
     text: Optional[str] = None
 
@@ -29,6 +30,14 @@ class LayoutElement:
 
     def to_dict(self):
         return self.__dict__
+
+    def get_width(self):
+        # i.e: y2-y1
+        return self.coordinates[1][0] - self.coordinates[0][0]
+
+    def get_height(self):
+        # i.e: x2-x1
+        return self.coordinates[1][1] - self.coordinates[0][1]
 
 
 class DocumentLayout:
@@ -41,6 +50,10 @@ class DocumentLayout:
 
     def __str__(self) -> str:
         return "\n\n".join([str(page) for page in self.pages])
+
+    def tostring(self):
+        # Temporary method, this should replace __str__
+        return "\n\n".join([element.tostring() for element in self.pages])
 
     @property
     def pages(self) -> List[PageLayout]:
@@ -88,6 +101,37 @@ class DocumentLayout:
         page.get_elements()
         return cls.from_pages([page])
 
+    def parse_elements(self, pdf_filename, DPI=500):
+        """
+        Fill the text of the document from embedded file
+        """
+        with tempfile.TemporaryDirectory() as tmp_folder:
+
+            for n_page, page in enumerate(self._pages):
+                new_layout = []
+                for n_element, element in enumerate(page.layout):
+
+                    (upper_left_x, upper_left_y) = element.coordinates[0]
+                    dest_file = os.path.join(tmp_folder, f"{n_page}-{n_element}.txt")
+
+                    cmd = (
+                        f"pdftotext -r {DPI} -x {int(upper_left_x)} -y {int(upper_left_y)} "
+                        + f"-W {int(element.get_width())} -H {int(element.get_height())} "
+                        + f"-f {page.number} -l {page.number} {pdf_filename} {dest_file}"
+                    )
+
+                    exit = os.system(cmd)
+
+                    if exit == 0:
+                        with open(dest_file) as file:
+                            content = file.read()
+                        element.text = content
+                        new_layout.append(element)
+                    else:
+                        continue
+                new_page = PageLayout(number=page.number, image=None, layout=new_layout)
+                self._pages[n_page] = new_page
+
 
 class PageLayout:
     """Class for an individual PDF page."""
@@ -96,7 +140,7 @@ class PageLayout:
         self,
         number: int,
         image: Image,
-        layout: Optional[lp.Layout],
+        layout: Optional[lp.Layout],  # Add: List[LayoutElement]],
         model: Optional[Detectron2LayoutModel] = None,
     ):
         self.image = image
@@ -108,6 +152,10 @@ class PageLayout:
 
     def __str__(self):
         return "\n\n".join([str(element) for element in self.elements])
+
+    def tostring(self):
+        # Temporary method, should replace __str__
+        return "\n\n".join([str(element) for element in self.layout])
 
     def get_elements(self, inplace=True) -> Optional[List[LayoutElement]]:
         """Uses a layoutparser model to detect the elements on the page."""

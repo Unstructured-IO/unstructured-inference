@@ -96,23 +96,25 @@ def test_layout_v02_local_parsing_image():
 
     # NOTE(benjamin) keep_output = True create a file for each image in
     # localstorage for visualization of the result
-    detections_1 = local_inference(filename, type="image", keep_output=True)
-    assert len(detections_1.pages) == 1
-    detections_2 = local_inference(filename, type="image", keep_output=False)
+    document_layout_1 = local_inference(filename, type="image", keep_output=True)
+    assert len(document_layout_1.pages) == 1
+    document_layout_2 = local_inference(filename, type="image", keep_output=False)
     # NOTE(benjamin) The example image should result in one page result
-    assert len(detections_2.pages) == 1
+    assert len(document_layout_2.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 13 detections
-    assert len(detections_2.pages[0].layout) == 13
+    assert len(document_layout_2.pages[0].layout) == 13
 
 
 def test_layout_v02_local_parsing_pdf():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
     from unstructured_inference.layout_model import local_inference
 
-    detections = local_inference(filename, type="pdf")
-    assert len(detections.pages) == 1
+    document_layout = local_inference(filename, type="pdf")
+    content = document_layout.tostring()
+    assert "Lorem ipsum" in content
+    assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 5 detections
-    assert len(detections.pages[0].layout) == 5
+    assert len(document_layout.pages[0].layout) == 5
 
 
 def test_healthcheck(monkeypatch):
