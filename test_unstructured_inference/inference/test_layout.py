@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image
 
 import unstructured_inference.inference.layout as layout
-import unstructured_inference.models as models
+import unstructured_inference.models.base as models
 
 import unstructured_inference.models.detectron2 as detectron2
 import unstructured_inference.models.tesseract as tesseract
