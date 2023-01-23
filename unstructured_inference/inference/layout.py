@@ -12,7 +12,7 @@ from PIL import Image
 
 from unstructured_inference.logger import logger
 import unstructured_inference.models.tesseract as tesseract
-from unstructured_inference.models import get_model
+from unstructured_inference.models.base import get_model
 
 
 @dataclass
