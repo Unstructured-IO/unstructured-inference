@@ -137,7 +137,7 @@ torch==1.12.1
     #   layoutparser
     #   timm
     #   torchvision
-torchvision==0.13.1
+torchvision==0.14.1
     # via
     #   effdet
     #   layoutparser
