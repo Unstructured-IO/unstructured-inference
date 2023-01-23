@@ -4,6 +4,9 @@ coverage
 # can remove after black drops support for Python 3.6
 # ref: https://github.com/psf/black/issues/2964
 click>=8.1
+# NOTE(alan) - Added to cover the fact that is isn't specified in
+# starlette even though it's required for TestClient
+httpx
 flake8
 mypy
 pytest-cov
