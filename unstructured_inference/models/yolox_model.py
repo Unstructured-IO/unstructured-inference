@@ -70,7 +70,7 @@ def image_processing(page, page_number=0, keep_output=False) -> PageLayout:
     """
     YOLOX_MODEL = hf_hub_download(REPO_ID, FILENAME)
     # The model was trained and exported with this shape
-    # TODO: check other shapes for inference
+    # TODO (benjamin): check other shapes for inference
     input_shape = (1024, 768)
     origin_img = cv2.imread(page)
     img, ratio = preprocess(origin_img, input_shape)
@@ -79,7 +79,7 @@ def image_processing(page, page_number=0, keep_output=False) -> PageLayout:
 
     ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
     output = session.run(None, ort_inputs)
-    predictions = demo_postprocess(output[0], input_shape, p6=False)[0]  # TODO: check for p6
+    predictions = demo_postprocess(output[0], input_shape, p6=False)[0]  # TODO(benjamin): check for p6
 
     boxes = predictions[:, :4]
     scores = predictions[:, 4:5] * predictions[:, 5:]
@@ -112,13 +112,13 @@ def image_processing(page, page_number=0, keep_output=False) -> PageLayout:
             type=detection[-1],
             coordinates=[(detection[0], detection[1]), (detection[2], detection[3])],
             text=" ",
-        )  # TODO: get text from document
+        )
 
         elements.append(element)
 
     page = PageLayout(
         number=page_number, image=None, layout=elements
-    )  # TODO: encode image as base64?
+    )  # TODO(benjamin): encode image as base64?
 
     if keep_output:
         if not os.path.exists(output_dir):

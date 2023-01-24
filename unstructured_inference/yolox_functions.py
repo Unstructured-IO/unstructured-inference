@@ -56,7 +56,7 @@ def demo_postprocess(outputs, img_size, p6=False):
 
 def multiclass_nms(boxes, scores, nms_thr, score_thr, class_agnostic=True):
     """Multiclass NMS implemented in Numpy"""
-    # TODO: check for non-class agnostic
+    # TODO(benjamin): check for non-class agnostic
     # if class_agnostic:
     nms_method = multiclass_nms_class_agnostic
     # else:
