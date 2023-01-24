@@ -53,7 +53,7 @@ class DocumentLayout:
 
     def tostring(self):
         # Temporary method, this should replace __str__
-        return "\n\n".join([element.tostring() for element in self.pages])
+        return "\n\n".join([element.to_string() for element in self.pages])
 
     @property
     def pages(self) -> List[PageLayout]:
@@ -153,7 +153,7 @@ class PageLayout:
     def __str__(self):
         return "\n\n".join([str(element) for element in self.elements])
 
-    def tostring(self):
+    def to_string(self):
         # Temporary method, should replace __str__
         return "\n\n".join([str(element) for element in self.layout])
 
