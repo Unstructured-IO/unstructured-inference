@@ -32,11 +32,11 @@ class LayoutElement:
         return self.__dict__
 
     def get_width(self):
-        # i.e: y2-y1
+        # NOTE(benjamin) i.e: y2-y1
         return self.coordinates[1][0] - self.coordinates[0][0]
 
     def get_height(self):
-        # i.e: x2-x1
+        # NOTE(benjamin) i.e: x2-x1
         return self.coordinates[1][1] - self.coordinates[0][1]
 
 

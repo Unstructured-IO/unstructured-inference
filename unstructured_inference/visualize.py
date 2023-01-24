@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding:utf-8 -*-
 # Copyright (c) Megvii Inc. All rights reserved.
-# Modifications copyright (C) 2023 by Unstructured
+# Unstructured modified the original source code found at
+# https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/visualize.py
 
 import cv2
 import numpy as np
@@ -10,7 +9,16 @@ __all__ = ["vis"]
 
 
 def vis(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
-
+    """
+    This function draws bounding boxes over the img argument, using
+    boxes from detections from YoloX.
+    img is a numpy array from cv2.imread()
+    Scores refers to the probability of each detection.
+    cls_ids are the class of each detection
+    conf is the confidence required to draw the bounding box
+    class_names is a list, where class_names[cls_ids[i]] should be the name
+        for the i-th bounding box.
+    """
     for i in range(len(boxes)):
         box = boxes[i]
         cls_id = int(cls_ids[i])

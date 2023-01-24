@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) Megvii, Inc. and its affiliates.
-# Modifications copyright (C) 2023 by Unstructured
+# MUnstructured modified the original source code found at:
+# https://github.com/Megvii-BaseDetection/YOLOX/blob/237e943ac64aa32eb32f875faa93ebb18512d41d/yolox/data/data_augment.py
+# https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
 import numpy as np
 import cv2
