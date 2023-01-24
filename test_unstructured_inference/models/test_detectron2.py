@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import patch
 
 import unstructured_inference.models.detectron2 as detectron2
+import unstructured_inference.models.base as models
 
 
 class MockDetectron2LayoutModel:
@@ -14,7 +15,7 @@ def test_load_default_model(monkeypatch):
     monkeypatch.setattr(detectron2, "Detectron2LayoutModel", MockDetectron2LayoutModel)
 
     with patch.object(detectron2, "is_detectron2_available", return_value=True):
-        model = detectron2.load_default_model()
+        model = models.get_model()
 
     assert isinstance(model, MockDetectron2LayoutModel)
 
@@ -22,7 +23,7 @@ def test_load_default_model(monkeypatch):
 def test_load_default_model_raises_when_not_available():
     with patch.object(detectron2, "is_detectron2_available", return_value=False):
         with pytest.raises(ImportError):
-            detectron2.load_default_model()
+            models.get_model()
 
 
 @pytest.mark.parametrize("config_path, model_path", [("asdf", "diufs"), ("dfaw", "hfhfhfh")])
