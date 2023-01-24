@@ -62,13 +62,9 @@ layoutparser[layoutmodels,tesseract]==0.3.4
     # via unstructured-inference (setup.py)
 matplotlib==3.6.3
     # via pycocotools
-<<<<<<< HEAD
-numpy==1.24.1
-=======
 mpmath==1.2.1
     # via sympy
 numpy==1.23.4
->>>>>>> 6d5d8dc3ddf47d361df4766b48349daecc4bf6ac
     # via
     #   contourpy
     #   layoutparser
