@@ -35,7 +35,7 @@ YOLOX_MODEL = ""
 output_dir = "outputs/"
 
 
-def local_inference(filename, type="image", to_json=False, keep_output=False):
+def yolox_local_inference(filename, type="image", to_json=False, keep_output=False):
     global YOLOX_MODEL
     YOLOX_MODEL = hf_hub_download(REPO_ID, FILENAME)
     DPI = 500

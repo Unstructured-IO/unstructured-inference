@@ -92,13 +92,13 @@ def test_layout_v02_api_parsing_pdf():
 
 def test_layout_v02_local_parsing_image():
     filename = os.path.join("sample-docs", "test-image.jpg")
-    from unstructured_inference.layout_model import local_inference
+    from unstructured_inference.layout_model import yolox_local_inference
 
     # NOTE(benjamin) keep_output = True create a file for each image in
     # localstorage for visualization of the result
-    document_layout_1 = local_inference(filename, type="image", keep_output=True)
+    document_layout_1 = yolox_local_inference(filename, type="image", keep_output=True)
     assert len(document_layout_1.pages) == 1
-    document_layout_2 = local_inference(filename, type="image", keep_output=False)
+    document_layout_2 = yolox_local_inference(filename, type="image", keep_output=False)
     # NOTE(benjamin) The example image should result in one page result
     assert len(document_layout_2.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 13 detections
@@ -107,9 +107,9 @@ def test_layout_v02_local_parsing_image():
 
 def test_layout_v02_local_parsing_pdf():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
-    from unstructured_inference.layout_model import local_inference
+    from unstructured_inference.layout_model import yolox_local_inference
 
-    document_layout = local_inference(filename, type="pdf")
+    document_layout = yolox_local_inference(filename, type="pdf")
     content = document_layout.tostring()
     assert "Lorem ipsum" in content
     assert len(document_layout.pages) == 1
