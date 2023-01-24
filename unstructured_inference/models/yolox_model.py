@@ -30,14 +30,11 @@ LAYOUT_CLASSES = [
     "Text",
     "Title",
 ]
-# Path of the model, will be filled in local_inference
-YOLOX_MODEL = ""
+
 output_dir = "outputs/"
 
 
 def yolox_local_inference(filename, type="image", to_json=False, keep_output=False):
-    global YOLOX_MODEL
-    YOLOX_MODEL = hf_hub_download(REPO_ID, FILENAME)
     DPI = 500
     pages_paths = []
     detections = []
@@ -71,7 +68,7 @@ def image_processing(page, page_number=0, keep_output=False) -> PageLayout:
     """
     Method runing YoloX for layout detection, returns a PageLayout
     """
-
+    YOLOX_MODEL = hf_hub_download(REPO_ID, FILENAME)
     # The model was trained and exported with this shape
     # TODO: check other shapes for inference
     input_shape = (1024, 768)
