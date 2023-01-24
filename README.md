@@ -78,6 +78,25 @@ If you are using an Apple M1 chip, use `make run-app-dev` instead of `make start
 start the API with hot reloading. The API will run at `http:/localhost:8000`.
 
 View the swagger documentation at `http://localhost:5000/docs`.
+
+## YoloX model
+
+For using the YoloX model the endpoints are: 
+```
+http://localhost:8000/layout_v1/pdf
+http://localhost:8000/layout_v1/image
+```
+For example:
+```
+curl -X 'POST' 'http://localhost:8000/layout_v1/image' \
+-F 'files=@sample-docs/test-image.jpg' \
+ | jq -C | less -R
+
+curl -X 'POST' 'http://localhost:8000/layout_v1/pdf' \
+-F 'files=@sample-docs/loremipsum.pdf' \
+ | jq -C | less -R
+```
+
 ## Security Policy
 
 See our [security policy](https://github.com/Unstructured-IO/unstructured-inference/security/policy) for

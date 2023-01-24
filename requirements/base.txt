@@ -18,7 +18,13 @@ charset-normalizer==3.0.1
     #   requests
 click==8.1.3
     # via uvicorn
+<<<<<<< HEAD
 contourpy==1.0.7
+=======
+coloredlogs==15.0.1
+    # via onnxruntime
+contourpy==1.0.5
+>>>>>>> 6d5d8dc3ddf47d361df4766b48349daecc4bf6ac
     # via matplotlib
 cryptography==39.0.0
     # via pdfminer-six
@@ -30,6 +36,8 @@ fastapi==0.89.1
     # via unstructured-inference (setup.py)
 filelock==3.9.0
     # via huggingface-hub
+flatbuffers==23.1.21
+    # via onnxruntime
 fonttools==4.38.0
     # via matplotlib
 h11==0.14.0
@@ -38,23 +46,34 @@ huggingface-hub==0.11.1
     # via
     #   timm
     #   unstructured-inference (setup.py)
+humanfriendly==10.0
+    # via coloredlogs
 idna==3.4
     # via
     #   anyio
     #   requests
 iopath==0.1.10
     # via layoutparser
+jsons==1.6.3
+    # via unstructured-inference (setup.py)
 kiwisolver==1.4.4
     # via matplotlib
 layoutparser[layoutmodels,tesseract]==0.3.4
     # via unstructured-inference (setup.py)
 matplotlib==3.6.3
     # via pycocotools
+<<<<<<< HEAD
 numpy==1.24.1
+=======
+mpmath==1.2.1
+    # via sympy
+numpy==1.23.4
+>>>>>>> 6d5d8dc3ddf47d361df4766b48349daecc4bf6ac
     # via
     #   contourpy
     #   layoutparser
     #   matplotlib
+    #   onnxruntime
     #   opencv-python
     #   pandas
     #   pycocotools
@@ -62,6 +81,8 @@ numpy==1.24.1
     #   torchvision
 omegaconf==2.3.0
     # via effdet
+onnxruntime==1.13.1
+    # via unstructured-inference (setup.py)
 opencv-python==4.6.0.66
     # via
     #   layoutparser
@@ -70,6 +91,7 @@ packaging==23.0
     # via
     #   huggingface-hub
     #   matplotlib
+    #   onnxruntime
     #   pytesseract
 pandas==1.5.3
     # via layoutparser
@@ -89,7 +111,13 @@ pillow==9.4.0
     #   torchvision
 portalocker==2.7.0
     # via iopath
+<<<<<<< HEAD
 pycocotools==2.0.6
+=======
+protobuf==4.21.12
+    # via onnxruntime
+pycocotools==2.0.5
+>>>>>>> 6d5d8dc3ddf47d361df4766b48349daecc4bf6ac
     # via effdet
 pycparser==2.21
     # via cffi
@@ -127,7 +155,13 @@ sniffio==1.3.0
     # via anyio
 starlette==0.22.0
     # via fastapi
+<<<<<<< HEAD
 timm==0.6.12
+=======
+sympy==1.11.1
+    # via onnxruntime
+timm==0.6.11
+>>>>>>> 6d5d8dc3ddf47d361df4766b48349daecc4bf6ac
     # via effdet
 torch==1.13.1
     # via
@@ -152,7 +186,13 @@ typing-extensions==4.4.0
     #   starlette
     #   torch
     #   torchvision
+<<<<<<< HEAD
 urllib3==1.26.14
+=======
+typish==1.9.3
+    # via jsons
+urllib3==1.26.12
+>>>>>>> 6d5d8dc3ddf47d361df4766b48349daecc4bf6ac
     # via requests
 uvicorn==0.20.0
     # via unstructured-inference (setup.py)

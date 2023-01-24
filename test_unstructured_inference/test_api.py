@@ -4,9 +4,16 @@ import os
 from fastapi.testclient import TestClient
 
 from unstructured_inference.api import app
+<<<<<<< HEAD
 from unstructured_inference.models import base as models
 from unstructured_inference.inference.layout import DocumentLayout
+=======
+from unstructured_inference import models
+from unstructured_inference.models.yolox_model import DocumentLayout
+>>>>>>> 6d5d8dc3ddf47d361df4766b48349daecc4bf6ac
 import unstructured_inference.models.detectron2 as detectron2
+
+import jsons
 
 
 class MockModel:
@@ -51,6 +58,66 @@ def test_bad_route_404():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
     response = client.post("/layout/badroute", files={"file": (filename, open(filename, "rb"))})
     assert response.status_code == 404
+
+
+def test_layout_v02_api_parsing_image():
+
+    filename = os.path.join("sample-docs", "test-image.jpg")
+
+    client = TestClient(app)
+    response = client.post(
+        "/layout_v1/image",
+        headers={"Accept": "multipart/mixed"},
+        files=[("files", (filename, open(filename, "rb"), "image/png"))],
+    )
+    doc_layout = jsons.load(response.json(), DocumentLayout)
+    assert len(doc_layout.pages) == 1
+    # NOTE(benjamin) The example sent to the test contains 13 detections
+    assert len(doc_layout.pages[0]["layout"]) == 13
+    assert response.status_code == 200
+
+
+def test_layout_v02_api_parsing_pdf():
+
+    filename = os.path.join("sample-docs", "loremipsum.pdf")
+
+    client = TestClient(app)
+    response = client.post(
+        "/layout_v1/pdf",
+        files={"files": (filename, open(filename, "rb"))},
+    )
+    doc_layout = jsons.load(response.json(), DocumentLayout)
+    assert len(doc_layout.pages) == 1
+    # NOTE(benjamin) The example sent to the test contains 5 detections
+    assert len(doc_layout.pages[0]["layout"]) == 5
+    assert response.status_code == 200
+
+
+def test_layout_v02_local_parsing_image():
+    filename = os.path.join("sample-docs", "test-image.jpg")
+    from unstructured_inference.models.yolox_model import yolox_local_inference
+
+    # NOTE(benjamin) keep_output = True create a file for each image in
+    # localstorage for visualization of the result
+    document_layout_1 = yolox_local_inference(filename, type="image", keep_output=True)
+    assert len(document_layout_1.pages) == 1
+    document_layout_2 = yolox_local_inference(filename, type="image", keep_output=False)
+    # NOTE(benjamin) The example image should result in one page result
+    assert len(document_layout_2.pages) == 1
+    # NOTE(benjamin) The example sent to the test contains 13 detections
+    assert len(document_layout_2.pages[0].layout) == 13
+
+
+def test_layout_v02_local_parsing_pdf():
+    filename = os.path.join("sample-docs", "loremipsum.pdf")
+    from unstructured_inference.models.yolox_model import yolox_local_inference
+
+    document_layout = yolox_local_inference(filename, type="pdf")
+    content = document_layout.tostring()
+    assert "Lorem ipsum" in content
+    assert len(document_layout.pages) == 1
+    # NOTE(benjamin) The example sent to the test contains 5 detections
+    assert len(document_layout.pages[0].layout) == 5
 
 
 def test_healthcheck(monkeypatch):

@@ -2,6 +2,9 @@ from fastapi import FastAPI, File, status, Request, UploadFile, Form, HTTPExcept
 from unstructured_inference.inference.layout import process_data_with_model
 from unstructured_inference.models.base import UnknownModelException
 from typing import List
+import tempfile
+
+from unstructured_inference.models.yolox_model import yolox_local_inference
 
 app = FastAPI()
 
@@ -36,6 +39,32 @@ async def layout_parsing(
     ]
 
     return {"pages": pages_layout}
+
+
+@app.post("/layout_v1/image")
+async def layout_v02_parsing_image(
+    request: Request,
+    files: List[UploadFile] = File(default=None),
+):
+
+    with tempfile.NamedTemporaryFile() as tmp_file:
+        tmp_file.write(files[0].file.read())
+        detections = yolox_local_inference(tmp_file.name, type="image", to_json=True)
+
+    return detections
+
+
+@app.post("/layout_v1/pdf")
+async def layout_v02_parsing_pdf(
+    request: Request,
+    files: List[UploadFile] = File(default=None),
+):
+
+    with tempfile.NamedTemporaryFile() as tmp_file:
+        tmp_file.write(files[0].file.read())
+        detections = yolox_local_inference(tmp_file.name, type="pdf", to_json=True)
+
+    return detections
 
 
 @app.get("/healthcheck", status_code=status.HTTP_200_OK)

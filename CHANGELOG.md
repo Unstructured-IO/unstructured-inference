@@ -1,4 +1,12 @@
+<<<<<<< HEAD
 ## 0.2.4
+=======
+## 0.3.0
+
+* Added YoloX model for layout detection
+
+## 0.2.4-dev1
+>>>>>>> 6d5d8dc3ddf47d361df4766b48349daecc4bf6ac
 
 * Download default model from huggingface
 * Clarify error when trying to open file that doesn't exist as an image
