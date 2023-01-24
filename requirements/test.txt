@@ -32,8 +32,6 @@ idna==3.4
     #   yarl
 iniconfig==1.1.1
     # via pytest
-jsons==1.6.3
-    # via -r requirements/test.in
 label-studio-sdk==0.0.15
     # via -r requirements/test.in
 lxml==4.9.1
@@ -100,8 +98,6 @@ typing-extensions==4.4.0
     #   huggingface-hub
     #   mypy
     #   pydantic
-typish==1.9.3
-    # via jsons
 urllib3==1.26.12
     # via requests
 vcrpy==4.2.1

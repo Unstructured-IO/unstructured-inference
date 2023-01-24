@@ -5,10 +5,9 @@ coverage
 # ref: https://github.com/psf/black/issues/2964
 click>=8.1
 flake8
-jsons
 mypy
 pytest-cov
-pdf2image==1.16.2
-huggingface_hub==0.11.1
+pdf2image>=1.16.2
+huggingface_hub>=0.11.1
 label_studio_sdk
 vcrpy

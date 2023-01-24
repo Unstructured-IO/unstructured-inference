@@ -4,7 +4,7 @@ from unstructured_inference.models import UnknownModelException
 from typing import List
 import tempfile
 
-from unstructured_inference.layout_model import yolox_local_inference
+from unstructured_inference.models.yolox_model import yolox_local_inference
 
 app = FastAPI()
 

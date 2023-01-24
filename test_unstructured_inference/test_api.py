@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from unstructured_inference.api import app
 from unstructured_inference import models
-from unstructured_inference.inference.layout import DocumentLayout
+from unstructured_inference.models.yolox_model import DocumentLayout
 import unstructured_inference.models.detectron2 as detectron2
 
 import jsons
@@ -92,7 +92,7 @@ def test_layout_v02_api_parsing_pdf():
 
 def test_layout_v02_local_parsing_image():
     filename = os.path.join("sample-docs", "test-image.jpg")
-    from unstructured_inference.layout_model import yolox_local_inference
+    from unstructured_inference.models.yolox_model import yolox_local_inference
 
     # NOTE(benjamin) keep_output = True create a file for each image in
     # localstorage for visualization of the result
@@ -107,7 +107,7 @@ def test_layout_v02_local_parsing_image():
 
 def test_layout_v02_local_parsing_pdf():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
-    from unstructured_inference.layout_model import yolox_local_inference
+    from unstructured_inference.models.yolox_model import yolox_local_inference
 
     document_layout = yolox_local_inference(filename, type="pdf")
     content = document_layout.tostring()
