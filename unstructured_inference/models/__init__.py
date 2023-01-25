@@ -5,6 +5,7 @@ from unstructured_inference.models.detectron2 import load_model, Detectron2Layou
 
 OUTPUT_DIR = "yolox_outputs/"
 
+
 def get_model(model: str) -> Detectron2LayoutModel:
     """Gets the model object by model name."""
     model_path, config_path, label_map = _get_model_loading_info(model)
@@ -29,19 +30,19 @@ def _get_model_loading_info(model: str) -> Tuple[str, str, Dict[int, str]]:
         repo_id = "unstructuredio/yolo_x_layout"
         binary_fn = "yolox_l0.05.onnx"
         model_path = hf_hub_download(repo_id, binary_fn)
-        label_map = LAYOUT_CLASSES = [
-            "Caption",
-            "Footnote",
-            "Formula",
-            "List-item",
-            "Page-footer",
-            "Page-header",
-            "Picture",
-            "Section-header",
-            "Table",
-            "Text",
-            "Title",
-        ]
+        label_map = {
+            0: "Caption",
+            1: "Footnote",
+            2: "Formula",
+            3: "List-item",
+            4: "Page-footer",
+            5: "Page-header",
+            6: "Picture",
+            7: "Section-header",
+            8: "Table",
+            9: "Text",
+            10: "Title",
+        }
         # NOTE(benjamin): just for acomplish with previous version of this function
         config_path = None
 
