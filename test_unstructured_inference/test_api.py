@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 import unstructured_inference.models.detectron2 as detectron2
 from unstructured_inference import models
 from unstructured_inference.api import app
-from unstructured_inference.models.yolox_model import DocumentLayout, yolox_local_inference
+from unstructured_inference.models.yolox import DocumentLayout, yolox_local_inference
 
 
 class MockModel:
@@ -92,14 +92,15 @@ def test_layout_v02_api_parsing_pdf():
 
 def test_layout_v02_local_parsing_image():
     filename = os.path.join("sample-docs", "test-image.jpg")
+    OUTPUT_DIR = "yolox_output"
     # NOTE(benjamin) keep_output = True create a file for each image in
     # localstorage for visualization of the result
-    if os.path.exists(models.OUTPUT_DIR):
+    if os.path.exists(OUTPUT_DIR):
         # NOTE(benjamin): should delete the default output folder on test?
-        shutil.rmtree(models.OUTPUT_DIR)
-    document_layout_1 = yolox_local_inference(filename, type="image", keep_output=True)
+        shutil.rmtree(OUTPUT_DIR)
+    document_layout_1 = yolox_local_inference(filename, type="image", output_directory=OUTPUT_DIR)
     assert len(document_layout_1.pages) == 1
-    document_layout_2 = yolox_local_inference(filename, type="image", keep_output=False)
+    document_layout_2 = yolox_local_inference(filename, type="image")
     # NOTE(benjamin) The example image should result in one page result
     assert len(document_layout_2.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 13 detections

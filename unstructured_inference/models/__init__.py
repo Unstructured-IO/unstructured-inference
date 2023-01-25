@@ -3,8 +3,6 @@ from huggingface_hub import hf_hub_download
 
 from unstructured_inference.models.detectron2 import load_model, Detectron2LayoutModel
 
-OUTPUT_DIR = "yolox_outputs/"
-
 
 def get_model(model: str) -> Detectron2LayoutModel:
     """Gets the model object by model name."""

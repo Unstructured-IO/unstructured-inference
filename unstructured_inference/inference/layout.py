@@ -140,7 +140,7 @@ class PageLayout:
         self,
         number: int,
         image: Image,
-        layout: Optional[lp.Layout],  # Add: List[LayoutElement]],
+        layout: Optional[lp.Layout],
         model: Optional[Detectron2LayoutModel] = None,
     ):
         self.image = image
@@ -154,7 +154,7 @@ class PageLayout:
         return "\n\n".join([str(element) for element in self.elements])
 
     def to_string(self):
-        # Temporary method, should replace __str__
+        """Temporary method, should replace __str__"""
         return "\n\n".join([str(element) for element in self.layout])
 
     def get_elements(self, inplace=True) -> Optional[List[LayoutElement]]:

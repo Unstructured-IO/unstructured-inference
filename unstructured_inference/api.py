@@ -4,7 +4,7 @@ from unstructured_inference.models import UnknownModelException
 from typing import List
 import tempfile
 
-from unstructured_inference.models.yolox_model import yolox_local_inference
+from unstructured_inference.models.yolox import yolox_local_inference
 
 app = FastAPI()
 
@@ -49,7 +49,7 @@ async def layout_v02_parsing_image(
 
     with tempfile.NamedTemporaryFile() as tmp_file:
         tmp_file.write(files[0].file.read())
-        detections = yolox_local_inference(tmp_file.name, type="image", to_json=True)
+        detections = yolox_local_inference(tmp_file.name, type="image")
 
     return detections
 
@@ -62,7 +62,7 @@ async def layout_v02_parsing_pdf(
 
     with tempfile.NamedTemporaryFile() as tmp_file:
         tmp_file.write(files[0].file.read())
-        detections = yolox_local_inference(tmp_file.name, type="pdf", to_json=True)
+        detections = yolox_local_inference(tmp_file.name, type="pdf")
 
     return detections
 

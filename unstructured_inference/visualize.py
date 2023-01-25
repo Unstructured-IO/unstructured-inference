@@ -5,10 +5,12 @@
 import cv2
 import numpy as np
 
-__all__ = ["vis"]
+__all__ = ["draw_bounding_boxes"]
+
+# NOTE: in original files from YoloX 'draw_bounding_boxes' function is named "vis"
 
 
-def vis(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
+def draw_bounding_boxes(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
     """
     This function draws bounding boxes over the img argument, using
     boxes from detections from YoloX.
