@@ -5,7 +5,6 @@ import cv2
 import jsons
 import numpy as np
 import onnxruntime
-from huggingface_hub import hf_hub_download
 from pdf2image import convert_from_path
 
 import unstructured_inference
@@ -14,6 +13,7 @@ from unstructured_inference.visualize import vis
 from unstructured_inference.yolox_functions import demo_postprocess, multiclass_nms
 from unstructured_inference.yolox_functions import preproc as preprocess
 from unstructured_inference.models import _get_model_loading_info
+
 
 def yolox_local_inference(
     filename: str, type: str = "image", to_json: bool = False, keep_output: bool = False
@@ -40,8 +40,8 @@ def yolox_local_inference(
             detectedDocument.parse_elements(filename, DPI=DPI)
     else:
         # Return a PageLayoutDocument
-        detections = image_processing(filename, keep_output=keep_output)
-        detectedDocument = DocumentLayout([detections])
+        detections = [image_processing(filename, keep_output=keep_output)]
+        detectedDocument = DocumentLayout(detections)
 
     # NOTE (Benjamin): This version don't send images in json, could be
     # done in base64 in line 88, also, the decoding isn't full, as jsons.load
@@ -86,8 +86,8 @@ def image_processing(page: str, page_number: int = 0, keep_output: bool = False)
     boxes_xyxy /= ratio
     dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.45, score_thr=0.1)
 
-    #If dets is None, the page is created empty, else this object will be replaced
-    page = PageLayout(number=page_number,image=None,layout=[])
+    # If dets is None, the page is created empty, else this object will be replaced
+    page_layout = PageLayout(number=page_number, image=None, layout=[])
 
     if dets is not None:
         final_boxes, final_scores, final_cls_inds = dets[:, :4], dets[:, 4], dets[:, 5]
@@ -103,7 +103,7 @@ def image_processing(page: str, page_number: int = 0, keep_output: bool = False)
         elements = []
         # Each detection should have (x1,y1,x2,y2,probability,class) format
         # being (x1,y1) the top left and (x2,y2) the bottom right
-        
+
         for det in dets:
             detection = det.tolist()
             detection[-1] = LAYOUT_CLASSES[int(detection[-1])]
@@ -115,14 +115,16 @@ def image_processing(page: str, page_number: int = 0, keep_output: bool = False)
 
             elements.append(element)
 
-        page = PageLayout(
+        page_layout = PageLayout(
             number=page_number, image=None, layout=elements
         )  # TODO(benjamin): encode image as base64?
         if keep_output:
             if not os.path.exists(unstructured_inference.models.OUTPUT_DIR):
                 os.makedirs(unstructured_inference.models.OUTPUT_DIR)
             # the  tmp_file laks of extension
-            output_path = os.path.join(unstructured_inference.models.OUTPUT_DIR, os.path.basename(page_orig))
+            output_path = os.path.join(
+                unstructured_inference.models.OUTPUT_DIR, os.path.basename(page_orig)
+            )
             cv2.imwrite(output_path, annotated_image)
 
-    return page
+    return page_layout
