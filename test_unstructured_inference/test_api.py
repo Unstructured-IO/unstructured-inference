@@ -7,7 +7,8 @@ from unstructured_inference.api import app
 from unstructured_inference import models
 from unstructured_inference.models.yolox_model import DocumentLayout
 import unstructured_inference.models.detectron2 as detectron2
-
+from unstructured_inference.models.yolox_model import yolox_local_inference
+import shutil
 import jsons
 
 
@@ -92,10 +93,11 @@ def test_layout_v02_api_parsing_pdf():
 
 def test_layout_v02_local_parsing_image():
     filename = os.path.join("sample-docs", "test-image.jpg")
-    from unstructured_inference.models.yolox_model import yolox_local_inference
-
     # NOTE(benjamin) keep_output = True create a file for each image in
     # localstorage for visualization of the result
+    if os.path.exists(models.OUTPUT_DIR):
+                # NOTE(benjamin): should delete the default output folder on test?
+                shutil.rmtree(models.OUTPUT_DIR)
     document_layout_1 = yolox_local_inference(filename, type="image", keep_output=True)
     assert len(document_layout_1.pages) == 1
     document_layout_2 = yolox_local_inference(filename, type="image", keep_output=False)
@@ -110,11 +112,21 @@ def test_layout_v02_local_parsing_pdf():
     from unstructured_inference.models.yolox_model import yolox_local_inference
 
     document_layout = yolox_local_inference(filename, type="pdf")
-    content = document_layout.tostring()
+    content = document_layout.to_string()
     assert "Lorem ipsum" in content
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 5 detections
     assert len(document_layout.pages[0].layout) == 5
+
+def test_layout_v02_local_parsing_empty_pdf():
+    filename = os.path.join("sample-docs", "empty-document.pdf")
+    from unstructured_inference.models.yolox_model import yolox_local_inference
+
+    document_layout = yolox_local_inference(filename, type="pdf")
+    content = document_layout.to_string()
+    assert len(document_layout.pages) == 1
+    # NOTE(benjamin) The example sent to the test contains 5 detections
+    assert len(document_layout.pages[0].layout) == 0
 
 
 def test_healthcheck(monkeypatch):
