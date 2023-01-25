@@ -12,24 +12,7 @@ from unstructured_inference.inference.layout import DocumentLayout, LayoutElemen
 from unstructured_inference.visualize import vis
 from unstructured_inference.yolox_functions import demo_postprocess, multiclass_nms
 from unstructured_inference.yolox_functions import preproc as preprocess
-
-# NOTE(benjamin) Repository and file to download from hugging_face
-REPO_ID = "unstructuredio/yolo_x_layout"
-FILENAME = "yolox_l0.05.onnx"
-
-LAYOUT_CLASSES = [
-    "Caption",
-    "Footnote",
-    "Formula",
-    "List-item",
-    "Page-footer",
-    "Page-header",
-    "Picture",
-    "Section-header",
-    "Table",
-    "Text",
-    "Title",
-]
+from unstructured_inference.models import _get_model_loading_info
 
 output_dir = "outputs/"
 
@@ -68,14 +51,15 @@ def image_processing(page, page_number=0, keep_output=False) -> PageLayout:
     """
     Method runing YoloX for layout detection, returns a PageLayout
     """
-    YOLOX_MODEL = hf_hub_download(REPO_ID, FILENAME)
     # The model was trained and exported with this shape
     # TODO (benjamin): check other shapes for inference
     input_shape = (1024, 768)
     origin_img = cv2.imread(page)
     img, ratio = preprocess(origin_img, input_shape)
     page_orig = page
-    session = onnxruntime.InferenceSession(YOLOX_MODEL)
+    # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
+    model_path, _ ,LAYOUT_CLASSES = _get_model_loading_info('yolox')
+    session = onnxruntime.InferenceSession(model_path)
 
     ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
     output = session.run(None, ort_inputs)
