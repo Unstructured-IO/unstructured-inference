@@ -51,7 +51,7 @@ class DocumentLayout:
     def __str__(self) -> str:
         return "\n\n".join([str(page) for page in self.pages])
 
-    def tostring(self):
+    def to_string(self):
         # Temporary method, this should replace __str__
         return "\n\n".join([element.to_string() for element in self.pages])
 
