@@ -32,18 +32,20 @@ def test_layout_parsing_api(monkeypatch, filetype, ext):
     filename = os.path.join("sample-docs", f"loremipsum.{ext}")
 
     client = TestClient(app)
-    response = client.post(f"/layout/{filetype}", files={"file": (filename, open(filename, "rb"))})
+    response = client.post(
+        f"/layout/detectron/v1/{filetype}", files={"file": (filename, open(filename, "rb"))}
+    )
     assert response.status_code == 200
 
     response = client.post(
-        f"/layout/{filetype}",
+        f"/layout/detectron/v1/{filetype}",
         files={"file": (filename, open(filename, "rb"))},
         data={"model": "checkbox"},
     )
     assert response.status_code == 200
 
     response = client.post(
-        f"/layout/{filetype}",
+        f"/layout/detectron/v1/{filetype}",
         files={"file": (filename, open(filename, "rb"))},
         data={"model": "fake_model"},
     )
@@ -63,7 +65,7 @@ def test_layout_v02_api_parsing_image():
 
     client = TestClient(app)
     response = client.post(
-        "/layout_v1/image",
+        "/layout/yolox/v1/image",
         headers={"Accept": "multipart/mixed"},
         files=[("files", (filename, open(filename, "rb"), "image/png"))],
     )
@@ -80,7 +82,7 @@ def test_layout_v02_api_parsing_pdf():
 
     client = TestClient(app)
     response = client.post(
-        "/layout_v1/pdf",
+        "/layout/yolox/v1/pdf",
         files={"files": (filename, open(filename, "rb"))},
     )
     doc_layout = jsons.load(response.json(), DocumentLayout)

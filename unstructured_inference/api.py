@@ -12,7 +12,7 @@ ALL_ELEMS = "_ALL"
 VALID_FILETYPES = ["pdf", "image"]
 
 
-@app.post("/layout/{filetype:path}")
+@app.post("/layout/detectron/v1/{filetype:path}")
 async def layout_parsing(
     filetype: str,
     file: UploadFile = File(),
@@ -41,28 +41,16 @@ async def layout_parsing(
     return {"pages": pages_layout}
 
 
-@app.post("/layout_v1/image")
-async def layout_v02_parsing_image(
+@app.post("/layout/yolox/v1/{filetype:path}")
+async def layout_parsing_yolox(
+    filetype: str,
     request: Request,
     files: List[UploadFile] = File(default=None),
 ):
 
     with tempfile.NamedTemporaryFile() as tmp_file:
         tmp_file.write(files[0].file.read())
-        detections = yolox_local_inference(tmp_file.name, type="image")
-
-    return detections
-
-
-@app.post("/layout_v1/pdf")
-async def layout_v02_parsing_pdf(
-    request: Request,
-    files: List[UploadFile] = File(default=None),
-):
-
-    with tempfile.NamedTemporaryFile() as tmp_file:
-        tmp_file.write(files[0].file.read())
-        detections = yolox_local_inference(tmp_file.name, type="pdf")
+        detections = yolox_local_inference(tmp_file.name, type=filetype)
 
     return detections
 
