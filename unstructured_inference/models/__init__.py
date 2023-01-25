@@ -23,23 +23,24 @@ def _get_model_loading_info(model: str) -> Tuple[str, str, Dict[int, str]]:
         model_path = hf_hub_download(repo_id, binary_fn)
         config_path = hf_hub_download(repo_id, config_fn)
         label_map = {0: "Unchecked", 1: "Checked"}
-    elif model=='yolox':
+    elif model == "yolox":
         # NOTE(benjamin) Repository and file to download from hugging_face
         repo_id = "unstructuredio/yolo_x_layout"
         binary_fn = "yolox_l0.05.onnx"
-        model_path = hf_hub_download(repo_id, binary_fn)        
+        model_path = hf_hub_download(repo_id, binary_fn)
         label_map = LAYOUT_CLASSES = [
-                    "Caption",
-                    "Footnote",
-                    "Formula",
-                    "List-item",
-                    "Page-footer",
-                    "Page-header",
-                    "Picture",
-                    "Section-header",
-                    "Table",
-                    "Text",
-                    "Title"]
+            "Caption",
+            "Footnote",
+            "Formula",
+            "List-item",
+            "Page-footer",
+            "Page-header",
+            "Picture",
+            "Section-header",
+            "Table",
+            "Text",
+            "Title",
+        ]
         # NOTE(benjamin): just for acomplish with previous version of this function
         config_path = None
 

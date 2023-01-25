@@ -17,7 +17,14 @@ from unstructured_inference.models import _get_model_loading_info
 output_dir = "outputs/"
 
 
-def yolox_local_inference(filename, type="image", to_json=False, keep_output=False):
+def yolox_local_inference(
+    filename: str, type: str = "image", to_json: bool = False, keep_output: bool = False
+):
+    """This function creates a DocumentLayout from a file in local storage.
+    type: accepted "image" and "pdf" files
+    to_json: boolean indicating if transform DocumentLayout to json.
+    keep_output: creates a folder with
+    """
     DPI = 500
     pages_paths = []
     detections = []
@@ -47,9 +54,12 @@ def yolox_local_inference(filename, type="image", to_json=False, keep_output=Fal
     return detectedDocument
 
 
-def image_processing(page, page_number=0, keep_output=False) -> PageLayout:
+def image_processing(page: str, page_number: int = 0, keep_output: bool = False) -> PageLayout:
     """
     Method runing YoloX for layout detection, returns a PageLayout
+    page: path for image file with the image to process
+    page_number: number asigned to the PageLayout returned
+    keep_output: boolean indicating if result will be stored
     """
     # The model was trained and exported with this shape
     # TODO (benjamin): check other shapes for inference
@@ -58,12 +68,14 @@ def image_processing(page, page_number=0, keep_output=False) -> PageLayout:
     img, ratio = preprocess(origin_img, input_shape)
     page_orig = page
     # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
-    model_path, _ ,LAYOUT_CLASSES = _get_model_loading_info('yolox')
+    model_path, _, LAYOUT_CLASSES = _get_model_loading_info("yolox")
     session = onnxruntime.InferenceSession(model_path)
 
     ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
     output = session.run(None, ort_inputs)
-    predictions = demo_postprocess(output[0], input_shape, p6=False)[0]  # TODO(benjamin): check for p6
+    predictions = demo_postprocess(output[0], input_shape, p6=False)[
+        0
+    ]  # TODO(benjamin): check for p6
 
     boxes = predictions[:, :4]
     scores = predictions[:, 4:5] * predictions[:, 5:]
