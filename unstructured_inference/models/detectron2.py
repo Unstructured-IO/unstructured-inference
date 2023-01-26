@@ -6,6 +6,7 @@ from layoutparser.models.detectron2.layoutmodel import (
     Detectron2LayoutModel,
 )
 from layoutparser.models.model_config import LayoutModelConfig
+from PIL import Image
 from huggingface_hub import hf_hub_download
 
 from unstructured_inference.logger import logger
@@ -57,7 +58,10 @@ MODEL_TYPES = {
 class UnstructuredDetectronModel(UnstructuredModel):
     """Unstructured model wrapper for Detectron2LayoutModel."""
 
-    def __call__(self, x):
+    def __init__(self, model: Detectron2LayoutModel):
+        super().__init__(model)
+
+    def __call__(self, x: Image):
         return self.model.detect(x)
 
 
