@@ -17,7 +17,7 @@ def test_load_default_model(monkeypatch):
     with patch.object(detectron2, "is_detectron2_available", return_value=True):
         model = models.get_model()
 
-    assert isinstance(model, MockDetectron2LayoutModel)
+    assert isinstance(model.model, MockDetectron2LayoutModel)
 
 
 def test_load_default_model_raises_when_not_available():
@@ -31,5 +31,5 @@ def test_load_model(monkeypatch, config_path, model_path):
     monkeypatch.setattr(detectron2, "Detectron2LayoutModel", MockDetectron2LayoutModel)
     with patch.object(detectron2, "is_detectron2_available", return_value=True):
         model = detectron2.load_model(config_path=config_path, model_path=model_path)
-    assert config_path == model.args[0]
-    assert model_path == model.kwargs["model_path"]
+    assert config_path == model.model.args[0]
+    assert model_path == model.model.kwargs["model_path"]
