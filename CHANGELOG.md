@@ -1,9 +1,10 @@
-## 0.3.0
+## 0.2.5-dev0
 
-* Added YoloX model for layout detection
+* Add generic model interface
 
-## 0.2.4-dev1
+## 0.2.4
 
+* Download default model from huggingface
 * Clarify error when trying to open file that doesn't exist as an image
 
 ## 0.2.3
