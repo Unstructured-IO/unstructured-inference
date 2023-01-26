@@ -6,8 +6,11 @@ from layoutparser.models.detectron2.layoutmodel import (
     Detectron2LayoutModel,
 )
 from layoutparser.models.model_config import LayoutModelConfig
+from huggingface_hub import hf_hub_download
 
 from unstructured_inference.logger import logger
+from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 
 
 DETECTRON_CONFIG: Final = "lp://PubLayNet/faster_rcnn_R_50_FPN_3x/config"
@@ -19,6 +22,41 @@ DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
     4: "Figure",
 }
 DEFAULT_EXTRA_CONFIG: Final[List[Any]] = ["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8]
+
+
+# NOTE(alan): Entries are implemented as LazyDicts so that models aren't downloaded until they are
+# needed.
+MODEL_TYPES = {
+    None: LazyDict(
+        model_path=LazyEvaluateInfo(
+            hf_hub_download,
+            "layoutparser/detectron2",
+            "PubLayNet/faster_rcnn_R_50_FPN_3x/model_final.pth",
+        ),
+        config_path=LazyEvaluateInfo(
+            hf_hub_download,
+            "layoutparser/detectron2",
+            "PubLayNet/faster_rcnn_R_50_FPN_3x/config.yml",
+        ),
+        label_map=DEFAULT_LABEL_MAP,
+        extra_config=DEFAULT_EXTRA_CONFIG,
+    ),
+    "checkbox": LazyDict(
+        model_path=LazyEvaluateInfo(
+            hf_hub_download, "unstructuredio/oer-checkbox", "detectron2_finetuned_oer_checkbox.pth"
+        ),
+        config_path=LazyEvaluateInfo(
+            hf_hub_download, "unstructuredio/oer-checkbox", "detectron2_oer_checkbox.json"
+        ),
+        label_map={0: "Unchecked", 1: "Checked"},
+        extra_config=None,
+    ),
+}
+
+
+class UnstructuredDetectronModel(UnstructuredModel):
+    def __call__(self, x):
+        return self.model.detect(x)
 
 
 def load_model(
@@ -46,4 +84,4 @@ def load_model(
         extra_config=extra_config,
         device=device,
     )
-    return model
+    return UnstructuredDetectronModel(model)
