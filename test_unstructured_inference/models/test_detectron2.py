@@ -11,7 +11,11 @@ class MockDetectron2LayoutModel:
         self.kwargs = kwargs
 
     def detect(self, x):
-        return "called"
+        return MockLayout()
+
+
+class MockLayout:
+    pass
 
 
 def test_load_default_model(monkeypatch):
@@ -40,4 +44,4 @@ def test_load_model(monkeypatch, config_path, model_path):
 
 def test_unstructured_detectron_model():
     model = detectron2.UnstructuredDetectronModel(MockDetectron2LayoutModel())
-    assert model(None) == "called"
+    assert isinstance(model(None), MockLayout)
