@@ -11,4 +11,4 @@ class UnstructuredModel(ABC):
 
     @abstractmethod
     def __call__(self, x: Image) -> Any:
-        pass
+        pass  # pragma: no cover
