@@ -55,6 +55,8 @@ MODEL_TYPES = {
 
 
 class UnstructuredDetectronModel(UnstructuredModel):
+    """Unstructured model wrapper for Detectron2LayoutModel."""
+
     def __call__(self, x):
         return self.model.detect(x)
 
