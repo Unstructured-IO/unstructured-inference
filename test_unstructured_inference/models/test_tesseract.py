@@ -11,6 +11,7 @@ class MockTesseractAgent:
 
 def test_load_agent(monkeypatch):
     monkeypatch.setattr(tesseract, "TesseractAgent", MockTesseractAgent)
+    monkeypatch.setattr(tesseract, "ocr_agent", None)
 
     with patch.object(tesseract, "is_pytesseract_available", return_value=True):
         tesseract.load_agent()
