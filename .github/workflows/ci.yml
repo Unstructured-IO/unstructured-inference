@@ -87,15 +87,12 @@ jobs:
     - name: Install Poppler
       run: |
         sudo apt-get update
-        sudo apt-get -y install poppler-utils
+        sudo apt-get -y install poppler-utils tesseract-ocr
     - name: Test
       run: |
         source .venv/bin/activate
         make test
         make check-coverage
-    - name: Setup tmate session
-      if: ${{ failure() }}
-      uses: mxschmitt/action-tmate@v3
 
   changelog:
     runs-on: ubuntu-latest
