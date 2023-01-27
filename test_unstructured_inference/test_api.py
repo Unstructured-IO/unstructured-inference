@@ -46,7 +46,7 @@ def test_layout_parsing_api(monkeypatch, filetype, ext, data, response_code):
 
     client = TestClient(app)
     response = client.post(
-        f"/layout/detectron/v1/{filetype}",
+        f"/layout/detectron/{filetype}",
         files={"file": (filename, open(filename, "rb"))},
         data=data,
     )
@@ -66,7 +66,7 @@ def test_layout_v02_api_parsing_image():
 
     client = TestClient(app)
     response = client.post(
-        "/layout/yolox/v1/image",
+        "/layout/yolox/image",
         headers={"Accept": "multipart/mixed"},
         files=[("files", (filename, open(filename, "rb"), "image/png"))],
     )
@@ -83,7 +83,7 @@ def test_layout_v02_api_parsing_pdf():
 
     client = TestClient(app)
     response = client.post(
-        "/layout/yolox/v1/pdf",
+        "/layout/yolox/pdf",
         files={"files": (filename, open(filename, "rb"))},
     )
     doc_layout = jsons.load(response.json(), DocumentLayout)

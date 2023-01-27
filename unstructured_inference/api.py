@@ -12,7 +12,7 @@ ALL_ELEMS = "_ALL"
 VALID_FILETYPES = ["pdf", "image"]
 
 
-@app.post("/layout/detectron/v1/{filetype:path}")
+@app.post("/layout/detectron/{filetype:path}")
 async def layout_parsing(
     filetype: str,
     file: UploadFile = File(),
@@ -41,7 +41,7 @@ async def layout_parsing(
     return {"pages": pages_layout}
 
 
-@app.post("/layout/yolox/v1/{filetype:path}")
+@app.post("/layout/yolox/{filetype:path}")
 async def layout_parsing_yolox(
     filetype: str,
     request: Request,
