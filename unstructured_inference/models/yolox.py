@@ -4,7 +4,8 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 import os
 import tempfile
-from typing import Optional
+from typing import Optional, Any
+from PIL import Image
 
 import cv2
 import numpy as np
@@ -14,6 +15,15 @@ from pdf2image import convert_from_path
 from unstructured_inference.inference.layout import DocumentLayout, LayoutElement, PageLayout
 from unstructured_inference.models import _get_model_loading_info
 from unstructured_inference.visualize import draw_bounding_boxes
+from .unstructuredmodel import UnstructuredModel
+
+
+class Yolox_model(UnstructuredModel):
+    def __init__(self, model):
+        super().__init__()
+
+    def __call__(self, x: Image) -> Any:
+        return image_processing(origin_img=x, page="")
 
 
 def yolox_local_inference(
@@ -50,14 +60,22 @@ def yolox_local_inference(
             detectedDocument.parse_elements(filename, DPI=DPI)
     else:
         # Return a PageLayoutDocument
-        detections = [image_processing(filename, page_number=0, output_directory=output_directory)]
+        detections = [
+            image_processing(
+                filename, origin_img=None, page_number=0, output_directory=output_directory
+            )
+        ]
         detectedDocument = DocumentLayout(detections)
+        detectedDocument.parse_image_elements(filename)
 
     return detectedDocument
 
 
 def image_processing(
-    page: str, page_number: int = 0, output_directory: Optional[str] = None
+    page: str,
+    origin_img: Image = None,
+    page_number: int = 0,
+    output_directory: Optional[str] = None,
 ) -> PageLayout:
     """Method runing YoloX for layout detection, returns a PageLayout
     parameters
@@ -72,7 +90,10 @@ def image_processing(
     # The model was trained and exported with this shape
     # TODO (benjamin): check other shapes for inference
     input_shape = (1024, 768)
-    origin_img = cv2.imread(page)
+    if origin_img and page:
+        raise ValueError("Just one of the arguments allowed 'page' or 'origin_img'")
+    if not origin_img:
+        origin_img = cv2.imread(page)
     img, ratio = preprocess(origin_img, input_shape)
     page_orig = page
     # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
