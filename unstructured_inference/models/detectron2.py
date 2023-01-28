@@ -58,36 +58,33 @@ MODEL_TYPES = {
 class UnstructuredDetectronModel(UnstructuredModel):
     """Unstructured model wrapper for Detectron2LayoutModel."""
 
-    def __init__(self, model: Detectron2LayoutModel):
-        super().__init__(model)
-
-    def __call__(self, x: Image):
+    def predict(self, x: Image):
+        super().predict(x)
         return self.model.detect(x)
 
+    def initialize(
+        self,
+        config_path: Union[str, Path, LayoutModelConfig],
+        model_path: Optional[Union[str, Path]] = None,
+        label_map: Optional[Dict[int, str]] = None,
+        extra_config: Optional[list] = None,
+        device: Optional[str] = None,
+    ):
+        """Loads the detectron2 model using the specified parameters"""
 
-def load_model(
-    config_path: Union[str, Path, LayoutModelConfig],
-    model_path: Optional[Union[str, Path]] = None,
-    label_map: Optional[Dict[int, str]] = None,
-    extra_config: Optional[list] = None,
-    device: Optional[str] = None,
-) -> Detectron2LayoutModel:
-    """Loads the detectron2 model using the specified parameters"""
+        if not is_detectron2_available():
+            raise ImportError(
+                "Failed to load the Detectron2 model. Ensure that the Detectron2 "
+                "module is correctly installed."
+            )
 
-    if not is_detectron2_available():
-        raise ImportError(
-            "Failed to load the Detectron2 model. Ensure that the Detectron2 "
-            "module is correctly installed."
+        config_path_str = str(config_path)
+        model_path_str: Optional[str] = None if model_path is None else str(model_path)
+        logger.info("Loading the Detectron2 layout model ...")
+        self.model = Detectron2LayoutModel(
+            config_path_str,
+            model_path=model_path_str,
+            label_map=label_map,
+            extra_config=extra_config,
+            device=device,
         )
-
-    config_path_str = str(config_path)
-    model_path_str: Optional[str] = None if model_path is None else str(model_path)
-    logger.info("Loading the Detectron2 layout model ...")
-    model = Detectron2LayoutModel(
-        config_path_str,
-        model_path=model_path_str,
-        label_map=label_map,
-        extra_config=extra_config,
-        device=device,
-    )
-    return UnstructuredDetectronModel(model)
