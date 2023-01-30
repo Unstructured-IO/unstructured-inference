@@ -62,7 +62,7 @@ numpy==1.24.1
     #   torchvision
 omegaconf==2.3.0
     # via effdet
-opencv-python==4.6.0.66
+opencv-python==4.7.0.68
     # via
     #   layoutparser
     #   unstructured-inference (setup.py)
