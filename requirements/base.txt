@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements/base.txt
 #
-antlr4-python3-runtime==4.9.3
+antlr4-python3-runtime==4.11.1
     # via omegaconf
 anyio==3.6.2
     # via starlette
