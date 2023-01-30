@@ -1,3 +1,4 @@
+from functools import partial
 import pytest
 import tempfile
 from unittest.mock import patch, mock_open
@@ -61,18 +62,18 @@ class MockLayoutModel:
     def __init__(self, layout):
         self.layout = layout
 
-    def detect(self, *args):
+    def __call__(self, *args):
         return self.layout
+
+    def initialize(self, *args, **kwargs):
+        pass
 
 
 def test_get_page_elements(monkeypatch, mock_page_layout):
-    monkeypatch.setattr(
-        models, "load_model", lambda *args, **kwargs: MockLayoutModel(mock_page_layout)
-    )
-    monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
-
     image = np.random.randint(12, 24, (40, 40))
-    page = layout.PageLayout(number=0, image=image, layout=mock_page_layout)
+    page = layout.PageLayout(
+        number=0, image=image, layout=mock_page_layout, model=MockLayoutModel(mock_page_layout)
+    )
 
     elements = page.get_elements(inplace=False)
 
@@ -84,17 +85,23 @@ def test_get_page_elements(monkeypatch, mock_page_layout):
 
 
 def test_get_page_elements_with_ocr(monkeypatch):
-    monkeypatch.setattr(layout.PageLayout, "ocr", lambda *args: "An Even Catchier Title")
 
     rectangle = Rectangle(2, 4, 6, 8)
     text_block = TextBlock(rectangle, text=None, type="Title")
     doc_layout = Layout([text_block])
 
-    monkeypatch.setattr(models, "load_model", lambda *args, **kwargs: MockLayoutModel(doc_layout))
+    monkeypatch.setattr(
+        detectron2,
+        "UnstructuredDetectronModel",
+        lambda *args, **kwargs: MockLayoutModel(doc_layout),
+    )
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
+    monkeypatch.setattr(layout.PageLayout, "ocr", lambda *args: "An Even Catchier Title")
 
     image = np.random.randint(12, 24, (40, 40))
-    page = layout.PageLayout(number=0, image=image, layout=doc_layout)
+    page = layout.PageLayout(
+        number=0, image=image, layout=doc_layout, model=MockLayoutModel(doc_layout)
+    )
     page.get_elements()
 
     assert str(page) == "An Even Catchier Title"
@@ -106,12 +113,15 @@ def test_read_pdf(monkeypatch, mock_page_layout):
 
     layouts = Layout([mock_page_layout, mock_page_layout])
 
+    def mock_initialize(self, *args, **kwargs):
+        self.model = MockLayoutModel(mock_page_layout)
+
     monkeypatch.setattr(
-        models, "load_model", lambda *args, **kwargs: MockLayoutModel(mock_page_layout)
+        models, "UnstructuredDetectronModel", partial(MockLayoutModel, layout=mock_page_layout)
     )
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
-    with patch.object(lp, "load_pdf", return_value=(layouts, images)):
+    with patch.object(layout, "load_pdf", return_value=(layouts, images)):
         doc = layout.DocumentLayout.from_file("fake-file.pdf")
 
         assert str(doc).startswith("A Catchy Title")
@@ -126,24 +136,11 @@ def test_read_pdf(monkeypatch, mock_page_layout):
 
 @pytest.mark.parametrize("model_name", [None, "checkbox", "fake"])
 def test_process_data_with_model(monkeypatch, mock_page_layout, model_name):
-    monkeypatch.setattr(models, "get_model", lambda x: MockLayoutModel(mock_page_layout))
+    monkeypatch.setattr(layout, "get_model", lambda x: MockLayoutModel(mock_page_layout))
     monkeypatch.setattr(
         layout.DocumentLayout,
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
-    )
-    monkeypatch.setattr(
-        models, "load_model", lambda *args, **kwargs: MockLayoutModel(mock_page_layout)
-    )
-    monkeypatch.setattr(
-        models,
-        "_get_model_loading_info",
-        lambda *args, **kwargs: (
-            "fake-binary-path",
-            "fake-config-path",
-            {0: "Unchecked", 1: "Checked"},
-            None,
-        ),
     )
     with patch("builtins.open", mock_open(read_data=b"000000")):
         assert layout.process_data_with_model(open(""), model_name=model_name)
@@ -157,25 +154,16 @@ def test_process_data_with_model_raises_on_invalid_model_name():
 
 @pytest.mark.parametrize("model_name", [None, "checkbox"])
 def test_process_file_with_model(monkeypatch, mock_page_layout, model_name):
+    def mock_initialize(self, *args, **kwargs):
+        self.model = MockLayoutModel(mock_page_layout)
+
     monkeypatch.setattr(models, "get_model", lambda x: MockLayoutModel(mock_page_layout))
     monkeypatch.setattr(
         layout.DocumentLayout,
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
-    monkeypatch.setattr(
-        models, "load_model", lambda *args, **kwargs: MockLayoutModel(mock_page_layout)
-    )
-    monkeypatch.setattr(
-        models,
-        "_get_model_loading_info",
-        lambda *args, **kwargs: (
-            "fake-binary-path",
-            "fake-config-path",
-            {0: "Unchecked", 1: "Checked"},
-            None,
-        ),
-    )
+    monkeypatch.setattr(models.UnstructuredDetectronModel, "initialize", mock_initialize)
     filename = ""
     assert layout.process_file_with_model(filename, model_name=model_name)
 
@@ -257,9 +245,7 @@ def test_pagelayout_without_layout():
     model = MockLayoutModel(mock_layout)
     pl = MockPageLayout(model=model, layout=None)
 
-    assert [el.text for el in pl.get_elements(inplace=False)] == [
-        el.ocr_text for el in model.detect(None)
-    ]
+    assert [el.text for el in pl.get_elements(inplace=False)] == [el.ocr_text for el in model(None)]
 
 
 @pytest.mark.parametrize("filetype", ("png", "jpg"))

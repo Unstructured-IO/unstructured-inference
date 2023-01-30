@@ -1,3 +1,7 @@
+## 0.2.5-dev0
+
+* Add generic model interface
+
 ## 0.2.4
 
 * Download default model from huggingface

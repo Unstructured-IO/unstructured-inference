@@ -5,7 +5,9 @@ import re
 import tempfile
 from typing import List, Optional, Tuple, Union, BinaryIO
 
-import layoutparser as lp
+from layoutparser.io.pdf import load_pdf
+from layoutparser.elements.layout_elements import TextBlock
+from layoutparser.elements.layout import Layout
 from layoutparser.models.detectron2.layoutmodel import Detectron2LayoutModel
 import numpy as np
 from PIL import Image
@@ -13,6 +15,7 @@ from PIL import Image
 from unstructured_inference.logger import logger
 import unstructured_inference.models.tesseract as tesseract
 from unstructured_inference.models.base import get_model
+from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 
 
 @dataclass
@@ -61,7 +64,7 @@ class DocumentLayout:
         # a locally instantiated model or an API. Maybe even just a callable that accepts an
         # image and returns a dict, or something.
         logger.info(f"Reading PDF for file: {filename} ...")
-        layouts, images = lp.load_pdf(filename, load_images=True)
+        layouts, images = load_pdf(filename, load_images=True)
         pages: List[PageLayout] = list()
         for i, layout in enumerate(layouts):
             image = images[i]
@@ -95,8 +98,8 @@ class PageLayout:
         self,
         number: int,
         image: Image,
-        layout: Optional[lp.Layout],
-        model: Optional[Detectron2LayoutModel] = None,
+        layout: Layout,
+        model: Optional[UnstructuredModel] = None,
     ):
         self.image = image
         self.image_array: Union[np.ndarray, None] = None
@@ -109,7 +112,7 @@ class PageLayout:
         return "\n\n".join([str(element) for element in self.elements])
 
     def get_elements(self, inplace=True) -> Optional[List[LayoutElement]]:
-        """Uses a layoutparser model to detect the elements on the page."""
+        """Uses specified model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
         if self.model is None:
             self.model = get_model()
@@ -117,7 +120,7 @@ class PageLayout:
         elements = list()
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
-        image_layout = self.model.detect(self.image)
+        image_layout = self.model(self.image)
         # NOTE(robinson) - This orders the page from top to bottom. We'll need more
         # sophisticated ordering logic for more complicated layouts.
         image_layout.sort(key=lambda element: element.coordinates[1], inplace=True)
@@ -139,7 +142,7 @@ class PageLayout:
             return None
         return elements
 
-    def interpret_text_block(self, text_block: lp.TextBlock) -> str:
+    def interpret_text_block(self, text_block: TextBlock) -> str:
         """Interprets the text in a TextBlock."""
         # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
         # already OCR'd and we have to send the snippet out for OCRing.
@@ -149,7 +152,7 @@ class PageLayout:
             out_text = text_block.text
         return out_text
 
-    def ocr(self, text_block: lp.TextBlock) -> str:
+    def ocr(self, text_block: TextBlock) -> str:
         """Runs a cropped text block image through and OCR agent."""
         logger.debug("Running OCR on text block ...")
         tesseract.load_agent()
