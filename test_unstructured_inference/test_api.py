@@ -102,7 +102,6 @@ def test_layout_v02_api_parsing_pdf_ocr():
     )
     doc_layout = jsons.load(response.json(), DocumentLayout)
     assert len(doc_layout.pages) == 10
-    # NOTE(benjamin) The example sent to the test contains 5 detections
     assert len(doc_layout.pages[0]["layout"]) > 1
     assert response.status_code == 200
 
