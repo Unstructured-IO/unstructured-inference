@@ -42,13 +42,13 @@ install-dev:
 ## pip-compile:             compiles all base/dev/test requirements
 .PHONY: pip-compile
 pip-compile:
-	pip-compile -o requirements/base.txt
+	pip-compile --upgrade -o requirements/base.txt
 	# NOTE(robinson) - We want the dependencies for detectron2 in the requirements.txt, but not
 	# the detectron2 repo itself. If detectron2 is in the requirements.txt file, an order of
 	# operations issue related to the torch library causes the install to fail
 	sed 's/^detectron2 @/# detectron2 @/g' requirements/base.txt
-	pip-compile requirements/dev.in
-	pip-compile requirements/test.in
+	pip-compile --upgrade requirements/dev.in
+	pip-compile --upgrade requirements/test.in
 
 ##########
 # Docker #
