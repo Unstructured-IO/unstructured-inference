@@ -17,6 +17,7 @@ import unstructured_inference.models.tesseract as tesseract
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 import cv2
+from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 
 
 @dataclass
@@ -78,6 +79,7 @@ class DocumentLayout:
         # a locally instantiated model or an API. Maybe even just a callable that accepts an
         # image and returns a dict, or something.
         logger.info(f"Reading PDF for file: {filename} ...")
+        layouts, images = load_pdf(filename, load_images=True)
         layouts, images = load_pdf(filename, load_images=True)
         pages: List[PageLayout] = list()
         for i, layout in enumerate(layouts):

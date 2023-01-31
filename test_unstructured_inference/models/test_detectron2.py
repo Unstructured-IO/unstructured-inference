@@ -11,7 +11,11 @@ class MockDetectron2LayoutModel:
         self.kwargs = kwargs
 
     def detect(self, x):
-        return "called"
+        return MockLayout()
+
+
+class MockLayout:
+    pass
 
 
 def test_load_default_model(monkeypatch):
@@ -33,11 +37,13 @@ def test_load_default_model_raises_when_not_available():
 def test_load_model(monkeypatch, config_path, model_path):
     monkeypatch.setattr(detectron2, "Detectron2LayoutModel", MockDetectron2LayoutModel)
     with patch.object(detectron2, "is_detectron2_available", return_value=True):
-        model = detectron2.load_model(config_path=config_path, model_path=model_path)
+        model = detectron2.UnstructuredDetectronModel()
+        model.initialize(config_path=config_path, model_path=model_path)
     assert config_path == model.model.args[0]
     assert model_path == model.model.kwargs["model_path"]
 
 
 def test_unstructured_detectron_model():
-    model = detectron2.UnstructuredDetectronModel(MockDetectron2LayoutModel())
-    assert model(None) == "called"
+    model = detectron2.UnstructuredDetectronModel()
+    model.model = MockDetectron2LayoutModel()
+    assert isinstance(model(None), MockLayout)
