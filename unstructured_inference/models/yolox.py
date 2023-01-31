@@ -4,7 +4,7 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 import os
 import tempfile
-from typing import Optional, Any
+from typing import Optional
 from PIL import Image
 
 import cv2
@@ -15,15 +15,6 @@ from pdf2image import convert_from_path
 from unstructured_inference.inference.layout import DocumentLayout, LayoutElement, PageLayout
 from unstructured_inference.models import _get_model_loading_info
 from unstructured_inference.visualize import draw_bounding_boxes
-from .unstructuredmodel import UnstructuredModel
-
-
-class Yolox_model(UnstructuredModel):
-    def __init__(self, model):
-        super().__init__()
-
-    def __call__(self, x: Image) -> Any:
-        return image_processing(origin_img=x, page="")
 
 
 def yolox_local_inference(
@@ -37,10 +28,12 @@ def yolox_local_inference(
     ----------
     type
         Accepted "image" and "pdf" files
-    to_json
-        Boolean indicating if transform DocumentLayout to json.
-    keep_output
-        Creates a folder with
+    use_ocr:
+        For pdf without embedded text, this function will use OCR for
+        text extraction
+    output_directory
+        Default 'None', if specified, the output of YoloX model will be
+        drawed over page images at this folder
     """
     DPI = 500
     pages_paths = []
@@ -58,8 +51,8 @@ def yolox_local_inference(
                 )
             detectedDocument = DocumentLayout(detections)
             if use_ocr:
-                for n,page_path in enumerate(pages_paths):
-                    detectedDocument.parse_image_elements(page_path,n)
+                for n, page_path in enumerate(pages_paths):
+                    detectedDocument.parse_image_elements(page_path, n)
             else:
                 # Extract embedded text from PDF
                 detectedDocument.parse_elements(filename, DPI=DPI)
@@ -71,7 +64,7 @@ def yolox_local_inference(
             )
         ]
         detectedDocument = DocumentLayout(detections)
-        detectedDocument.parse_image_elements(filename,0)
+        detectedDocument.parse_image_elements(filename, 0)
 
     return detectedDocument
 
@@ -87,9 +80,11 @@ def image_processing(
     ----------
     page
         Path for image file with the image to process
+    origin_img
+        If specified, an Image object for process with YoloX model
     page_number
         Number asigned to the PageLayout returned
-    keep_output
+    output_directory
         Boolean indicating if result will be stored
     """
     # The model was trained and exported with this shape

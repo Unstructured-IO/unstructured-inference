@@ -97,6 +97,12 @@ curl -X 'POST' 'http://localhost:8000/layout_v1/pdf' \
  | jq -C | less -R
 ```
 
+or in local:
+
+```
+layout = yolox_local_inference(filename, type="pdf")
+```
+
 ## Security Policy
 
 See our [security policy](https://github.com/Unstructured-IO/unstructured-inference/security/policy) for

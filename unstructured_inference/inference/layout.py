@@ -135,12 +135,12 @@ class DocumentLayout:
                 new_page = PageLayout(number=page.number, image=None, layout=new_layout)
                 self._pages[n_page] = new_page
 
-    def parse_image_elements(self, filename,num, DPI=500):
+    def parse_image_elements(self, filename, num, DPI=500):
         """
         Fill the text of the document from OCR
         """
         with tempfile.TemporaryDirectory() as tmp_folder:
-            n_page=num
+            n_page = num
             page = self._pages[n_page]
 
             new_layout = []
