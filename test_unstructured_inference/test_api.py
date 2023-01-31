@@ -68,7 +68,7 @@ def test_layout_v02_api_parsing_image():
     response = client.post(
         "/layout/yolox/image",
         headers={"Accept": "multipart/mixed"},
-        files=[("files", (filename, open(filename, "rb"), "image/png"))],
+        files=[("file", (filename, open(filename, "rb"), "image/png"))],
     )
     doc_layout = jsons.load(response.json(), DocumentLayout)
     assert len(doc_layout.pages) == 1
@@ -84,12 +84,29 @@ def test_layout_v02_api_parsing_pdf():
     client = TestClient(app)
     response = client.post(
         "/layout/yolox/pdf",
-        files={"files": (filename, open(filename, "rb"))},
+        files={"file": (filename, open(filename, "rb"))},
     )
     doc_layout = jsons.load(response.json(), DocumentLayout)
     assert len(doc_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 5 detections
     assert len(doc_layout.pages[0]["layout"]) == 5
+    assert response.status_code == 200
+
+
+def test_layout_v02_api_parsing_pdf_ocr():
+
+    filename = os.path.join("sample-docs", "non-embedded.pdf")
+
+    client = TestClient(app)
+    response = client.post(
+        "/layout/yolox/pdf",
+        files={"file": (filename, open(filename, "rb"))},
+        data={"force_ocr": True},
+    )
+    doc_layout = jsons.load(response.json(), DocumentLayout)
+    assert len(doc_layout.pages) == 10
+    # NOTE(benjamin) The example sent to the test contains 5 detections
+    assert len(doc_layout.pages[0]["layout"]) > 1
     assert response.status_code == 200
 
 

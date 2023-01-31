@@ -135,36 +135,37 @@ class DocumentLayout:
                 new_page = PageLayout(number=page.number, image=None, layout=new_layout)
                 self._pages[n_page] = new_page
 
-    def parse_image_elements(self, filename, DPI=500):
+    def parse_image_elements(self, filename,num, DPI=500):
         """
         Fill the text of the document from OCR
         """
         with tempfile.TemporaryDirectory() as tmp_folder:
+            n_page=num
+            page = self._pages[n_page]
 
-            for n_page, page in enumerate(self._pages):
-                new_layout = []
-                for n_element, element in enumerate(page.layout):
+            new_layout = []
+            for n_element, element in enumerate(page.layout):
 
-                    (upper_left_x, upper_left_y) = element.coordinates[0]
-                    upper_left_x = int(upper_left_x)
-                    upper_left_y = int(upper_left_y)
-                    width = upper_left_x + int(element.get_width())
-                    height = upper_left_y + int(element.get_height())
-                    dest_file = os.path.join(tmp_folder, f"{n_page}-{n_element}.jpg")
+                (upper_left_x, upper_left_y) = element.coordinates[0]
+                upper_left_x = int(upper_left_x)
+                upper_left_y = int(upper_left_y)
+                width = upper_left_x + int(element.get_width())
+                height = upper_left_y + int(element.get_height())
+                dest_file = os.path.join(tmp_folder, f"{n_page}-{n_element}.jpg")
 
-                    image = cv2.imread(filename)
-                    patch = image[upper_left_y:height, upper_left_x:width]
-                    cv2.imwrite(dest_file, patch)
-                    # Enabling this makes test_load_agent fails
-                    if not tesseract.ocr_agent:
-                        tesseract.load_agent()
-                    text = tesseract.ocr_agent.detect(patch)
+                image = cv2.imread(filename)
+                patch = image[upper_left_y:height, upper_left_x:width]
+                cv2.imwrite(dest_file, patch)
+                # Enabling this makes test_load_agent fails
+                if not tesseract.ocr_agent:
+                    tesseract.load_agent()
+                text = tesseract.ocr_agent.detect(patch)
 
-                    element.text = text
-                    new_layout.append(element)
+                element.text = text
+                new_layout.append(element)
 
-                new_page = PageLayout(number=page.number, image=None, layout=new_layout)
-                self._pages[n_page] = new_page
+            new_page = PageLayout(number=page.number, image=None, layout=new_layout)
+            self._pages[n_page] = new_page
 
 
 class PageLayout:

@@ -29,6 +29,7 @@ class Yolox_model(UnstructuredModel):
 def yolox_local_inference(
     filename: str,
     type: str = "image",
+    use_ocr=False,
     output_directory: Optional[str] = None,
 ) -> DocumentLayout:
     """This function creates a DocumentLayout from a file in local storage.
@@ -56,8 +57,12 @@ def yolox_local_inference(
                     image_processing(path, page_number=i, output_directory=output_directory)
                 )
             detectedDocument = DocumentLayout(detections)
-            # Extract embedded text from PDF
-            detectedDocument.parse_elements(filename, DPI=DPI)
+            if use_ocr:
+                for n,page_path in enumerate(pages_paths):
+                    detectedDocument.parse_image_elements(page_path,n)
+            else:
+                # Extract embedded text from PDF
+                detectedDocument.parse_elements(filename, DPI=DPI)
     else:
         # Return a PageLayoutDocument
         detections = [
@@ -66,7 +71,7 @@ def yolox_local_inference(
             )
         ]
         detectedDocument = DocumentLayout(detections)
-        detectedDocument.parse_image_elements(filename)
+        detectedDocument.parse_image_elements(filename,0)
 
     return detectedDocument
 
@@ -145,6 +150,8 @@ def image_processing(
             )
 
             elements.append(element)
+
+        elements.sort(key=lambda element: element.coordinates[0][1])
 
         page_layout = PageLayout(
             number=page_number, image=None, layout=elements
