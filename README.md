@@ -88,12 +88,12 @@ http://localhost:8000/layout_v1/image
 ```
 For example:
 ```
-curl -X 'POST' 'http://localhost:8000/layout_v1/image' \
--F 'files=@sample-docs/test-image.jpg' \
+curl -X 'POST' 'http://localhost:8000/layout/yolox/image' \
+-F 'file=@sample-docs/test-image.jpg' \
  | jq -C | less -R
 
-curl -X 'POST' 'http://localhost:8000/layout_v1/pdf' \
--F 'files=@sample-docs/loremipsum.pdf' \
+curl -X 'POST' 'http://localhost:8000/layout/yolox/pdf' \
+-F 'file=@sample-docs/loremipsum.pdf' \
  | jq -C | less -R
 ```
 
