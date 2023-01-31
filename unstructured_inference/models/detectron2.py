@@ -55,7 +55,6 @@ MODEL_TYPES = {
 }
 
 
-
 class UnstructuredDetectronModel(UnstructuredModel):
     """Unstructured model wrapper for Detectron2LayoutModel."""
 
@@ -82,7 +81,7 @@ class UnstructuredDetectronModel(UnstructuredModel):
         config_path_str = str(config_path)
         model_path_str: Optional[str] = None if model_path is None else str(model_path)
         logger.info("Loading the Detectron2 layout model ...")
-        model = Detectron2LayoutModel(
+        self.model = Detectron2LayoutModel(
             config_path_str,
             model_path=model_path_str,
             label_map=label_map,

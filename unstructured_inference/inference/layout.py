@@ -17,7 +17,6 @@ import unstructured_inference.models.tesseract as tesseract
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 import cv2
-from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 
 
 @dataclass

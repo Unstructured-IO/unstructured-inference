@@ -8,7 +8,6 @@ from fastapi.testclient import TestClient
 from unstructured_inference import api
 from unstructured_inference.models import base as models
 from unstructured_inference.inference.layout import DocumentLayout
-import unstructured_inference.models.detectron2 as detectron2
 from unstructured_inference.models.yolox import yolox_local_inference  # DocumentLayout #maybe
 
 

@@ -25,7 +25,7 @@ attrs==22.2.0
     # via jsonschema
 backcall==0.2.0
     # via ipython
-beautifulsoup4==4.11.1
+beautifulsoup4==4.11.2
     # via nbconvert
 bleach==6.0.0
     # via nbconvert
@@ -59,7 +59,7 @@ importlib-metadata==6.0.0
     #   nbconvert
 importlib-resources==5.10.2
     # via jsonschema
-ipykernel==6.21.0
+ipykernel==6.20.2
     # via
     #   ipywidgets
     #   jupyter
@@ -111,7 +111,6 @@ jupyter-console==6.4.4
     # via jupyter
 jupyter-core==5.2.0
     # via
-    #   ipykernel
     #   jupyter-client
     #   jupyter-server
     #   nbclassic
@@ -161,6 +160,7 @@ nbformat==5.7.3
     #   notebook
 nest-asyncio==1.5.6
     # via
+    #   ipykernel
     #   nbclassic
     #   notebook
 notebook==6.5.2
@@ -182,7 +182,7 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pip-tools==6.12.1
+pip-tools==6.12.2
     # via -r requirements/dev.in
 pkgutil-resolve-name==1.3.10
     # via jsonschema

@@ -1,16 +1,6 @@
 from typing import Tuple, Dict
 from huggingface_hub import hf_hub_download
 
-from unstructured_inference.models.detectron2 import load_model, Detectron2LayoutModel
-
-
-def get_model(model: str) -> Detectron2LayoutModel:
-    """Gets the model object by model name."""
-    model_path, config_path, label_map = _get_model_loading_info(model)
-    detector = load_model(config_path=config_path, model_path=model_path, label_map=label_map)
-
-    return detector
-
 
 def _get_model_loading_info(model: str) -> Tuple[str, str, Dict[int, str]]:
     """Gets local model binary and config locations and label map, downloading if necessary."""
