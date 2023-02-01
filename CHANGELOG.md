@@ -1,3 +1,7 @@
+## 0.2.5
+
+* Add YoloX model for images and PDFs
+
 ## 0.2.5-dev0
 
 * Add generic model interface

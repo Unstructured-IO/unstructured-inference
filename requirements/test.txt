@@ -27,6 +27,8 @@ coverage[toml]==7.1.0
     #   pytest-cov
 exceptiongroup==1.1.0
     # via pytest
+filelock==3.9.0
+    # via huggingface-hub
 flake8==6.0.0
     # via -r requirements/test.in
 h11==0.14.0
@@ -34,6 +36,8 @@ h11==0.14.0
 httpcore==0.16.3
     # via httpx
 httpx==0.23.3
+    # via -r requirements/test.in
+huggingface-hub==0.12.0
     # via -r requirements/test.in
 idna==3.4
     # via
@@ -58,9 +62,15 @@ mypy-extensions==0.4.3
     #   black
     #   mypy
 packaging==23.0
-    # via pytest
+    # via
+    #   huggingface-hub
+    #   pytest
 pathspec==0.11.0
     # via black
+pdf2image==1.16.2
+    # via -r requirements/test.in
+pillow==9.4.0
+    # via pdf2image
 platformdirs==2.6.2
     # via black
 pluggy==1.0.0
@@ -76,9 +86,13 @@ pytest==7.2.1
 pytest-cov==4.0.0
     # via -r requirements/test.in
 pyyaml==6.0
-    # via vcrpy
+    # via
+    #   huggingface-hub
+    #   vcrpy
 requests==2.28.2
-    # via label-studio-sdk
+    # via
+    #   huggingface-hub
+    #   label-studio-sdk
 rfc3986[idna2008]==1.5.0
     # via httpx
 six==1.16.0
@@ -94,9 +108,12 @@ tomli==2.0.1
     #   coverage
     #   mypy
     #   pytest
+tqdm==4.64.1
+    # via huggingface-hub
 typing-extensions==4.4.0
     # via
     #   black
+    #   huggingface-hub
     #   mypy
     #   pydantic
 urllib3==1.26.14
