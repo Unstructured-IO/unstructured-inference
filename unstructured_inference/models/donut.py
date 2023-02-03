@@ -1,6 +1,11 @@
 import torch
+import logging
+
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from transformers import DonutProcessor, VisionEncoderDecoderModel, VisionEncoderDecoderConfig
+from PIL import Image
+from typing import Union, Optional
+from pathlib import Path
 
 
 class UnstructuredDonutModel(UnstructuredModel):
@@ -27,13 +32,13 @@ class UnstructuredDonutModel(UnstructuredModel):
             if not isinstance(config, VisionEncoderDecoderModel):
                 config = VisionEncoderDecoderConfig.from_pretrained(config)
 
-            logger.info("Loading the Donut model and processor...")
+            logging.info("Loading the Donut model and processor...")
             self.processor = DonutProcessor.from_pretrained(processor)
             self.model = VisionEncoderDecoderModel.from_pretrained(model)
             
-        except EnvironmentError(
-                "Failed to initialize the model. Ensure that the Donut "
-                "parameters config, model and processor are correct."
+        except EnvironmentError:
+            loggging.CRITICAL(
+                "Failed to initialize the model. Ensure that the Donut parameters config, model and processor are correct"
             )
         self.model.to(device)
     
