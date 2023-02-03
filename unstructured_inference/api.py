@@ -15,7 +15,7 @@ VALID_FILETYPES = ["pdf", "image"]
 @app.post("/layout/detectron/{filetype:path}")
 async def layout_parsing(
     filetype: str,
-    file: UploadFile = File(),
+    file: UploadFile = File(default=None),
     include_elems: List[str] = Form(default=ALL_ELEMS),
     model: str = Form(default=None),
 ):
