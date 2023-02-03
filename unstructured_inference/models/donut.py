@@ -21,30 +21,34 @@ class UnstructuredDonutModel(UnstructuredModel):
         processor: Union[str, Path, DonutProcessor] = None,
         config: Optional[Union[str, Path, VisionEncoderDecoderConfig]] = None,
         task_prompt: Optional[str] = "<s>",
-        device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu"
+        device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         """Loads the donut model using the specified parameters"""
-        
+
         self.task_prompt = task_prompt
         self.device = device
-        
+
         try:
             if not isinstance(config, VisionEncoderDecoderModel):
                 config = VisionEncoderDecoderConfig.from_pretrained(config)
 
             logging.info("Loading the Donut model and processor...")
             self.processor = DonutProcessor.from_pretrained(processor)
-            self.model = VisionEncoderDecoderModel.from_pretrained(model)
-            
+            self.model = VisionEncoderDecoderModel.from_pretrained(model, config=config)
+
         except EnvironmentError:
-            loggging.CRITICAL(
-                "Failed to initialize the model. Ensure that the Donut parameters config, model and processor are correct"
+            logging.critical("Failed to initialize the model.")
+            logging.critical(
+                "Ensure that the Donut parameters config, model and processor are correct"
             )
+            raise ImportError("Review the parameters to initialize a UnstructuredDonutModel obj")
         self.model.to(device)
-    
+
     def run_prediction(self, x: Image):
         pixel_values = self.processor(x, return_tensors="pt").pixel_values
-        decoder_input_ids = self.processor.tokenizer(self.task_prompt, add_special_tokens=False, return_tensors="pt").input_ids
+        decoder_input_ids = self.processor.tokenizer(
+            self.task_prompt, add_special_tokens=False, return_tensors="pt"
+        ).input_ids
         outputs = self.model.generate(
             pixel_values.to(self.device),
             decoder_input_ids=decoder_input_ids.to(self.device),
