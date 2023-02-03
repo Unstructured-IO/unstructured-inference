@@ -58,7 +58,8 @@ setup(
         # ref: https://github.com/opencv/opencv-python/issues/772
         "opencv-python==4.6.0.66",
         "onnxruntime",
-        "jsons"
+        "jsons",
+        "transformers"
     ],
     extras_require={},
 )
