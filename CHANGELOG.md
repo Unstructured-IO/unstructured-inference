@@ -1,3 +1,8 @@
+## 0.2.6
+
+* Add donut model script for image prediction
+* Add sample receipt and test for donut prediction
+
 ## 0.2.5
 
 * Add YoloX model for images and PDFs
