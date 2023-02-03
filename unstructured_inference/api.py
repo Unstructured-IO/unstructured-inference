@@ -23,7 +23,7 @@ async def layout_parsing(
         raise HTTPException(status.HTTP_404_NOT_FOUND)
     is_image = filetype == "image"
     try:
-        layout = process_data_with_model(file.file, model, is_image)
+        layout = process_data_with_model(file.file, model, is_image)  # type: ignore
     except UnknownModelException as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
     pages_layout = [
