@@ -110,11 +110,9 @@ class DocumentLayout:
         Fill the text of the document from embedded file
         """
         with tempfile.TemporaryDirectory() as tmp_folder:
-
             for n_page, page in enumerate(self._pages):
                 new_layout = []
                 for n_element, element in enumerate(page.layout):
-
                     (upper_left_x, upper_left_y) = element.coordinates[0]
                     dest_file = os.path.join(tmp_folder, f"{n_page}-{n_element}.txt")
 
@@ -146,7 +144,6 @@ class DocumentLayout:
 
             new_layout = []
             for n_element, element in enumerate(page.layout):
-
                 (upper_left_x, upper_left_y) = element.coordinates[0]
                 upper_left_x = int(upper_left_x)
                 upper_left_y = int(upper_left_y)

@@ -85,7 +85,6 @@ def test_get_page_elements(monkeypatch, mock_page_layout):
 
 
 def test_get_page_elements_with_ocr(monkeypatch):
-
     rectangle = Rectangle(2, 4, 6, 8)
     text_block = TextBlock(rectangle, text=None, type="Title")
     doc_layout = Layout([text_block])
