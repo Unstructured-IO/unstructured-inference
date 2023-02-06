@@ -10,7 +10,6 @@ class MockModel:
 
 
 def test_get_model(monkeypatch):
-
     monkeypatch.setattr(
         models,
         "UnstructuredDetectronModel",

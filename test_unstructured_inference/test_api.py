@@ -58,7 +58,6 @@ def test_bad_route_404():
 
 
 def test_layout_v02_api_parsing_image():
-
     filename = os.path.join("sample-docs", "test-image.jpg")
 
     client = TestClient(api.app)
@@ -75,7 +74,6 @@ def test_layout_v02_api_parsing_image():
 
 
 def test_layout_v02_api_parsing_pdf():
-
     filename = os.path.join("sample-docs", "loremipsum.pdf")
 
     client = TestClient(api.app)
@@ -91,7 +89,6 @@ def test_layout_v02_api_parsing_pdf():
 
 
 def test_layout_v02_api_parsing_pdf_ocr():
-
     filename = os.path.join("sample-docs", "non-embedded.pdf")
 
     client = TestClient(api.app)

@@ -184,7 +184,6 @@ def preprocess(img, input_size, swap=(2, 0, 1)):
 
 
 def demo_postprocess(outputs, img_size, p6=False):
-
     grids = []
     expanded_strides = []
 

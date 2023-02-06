@@ -15,7 +15,7 @@ VALID_FILETYPES = ["pdf", "image"]
 @app.post("/layout/detectron/{filetype:path}")
 async def layout_parsing(
     filetype: str,
-    file: UploadFile = File(),
+    file: UploadFile = File(default=None),
     include_elems: List[str] = Form(default=ALL_ELEMS),
     model: str = Form(default=None),
 ):
@@ -23,7 +23,7 @@ async def layout_parsing(
         raise HTTPException(status.HTTP_404_NOT_FOUND)
     is_image = filetype == "image"
     try:
-        layout = process_data_with_model(file.file, model, is_image)
+        layout = process_data_with_model(file.file, model, is_image)  # type: ignore
     except UnknownModelException as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
     pages_layout = [
@@ -48,7 +48,6 @@ async def layout_parsing_yolox(
     file: List[UploadFile] = File(default=None),
     force_ocr=Form(default=False),
 ):
-
     with tempfile.NamedTemporaryFile() as tmp_file:
         tmp_file.write(file[0].file.read())
         detections = yolox_local_inference(tmp_file.name, type=filetype, use_ocr=force_ocr)
