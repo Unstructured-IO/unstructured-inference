@@ -21,6 +21,7 @@ def yolox_local_inference(
     filename: str,
     type: str = "image",
     use_ocr=False,
+    version: str = "yolox",
     output_directory: Optional[str] = None,
 ) -> DocumentLayout:
     """This function creates a DocumentLayout from a file in local storage.
@@ -47,7 +48,9 @@ def yolox_local_inference(
             for i, path in enumerate(pages_paths):
                 # Return a dict of {n-->PageLayoutDocument}
                 detections.append(
-                    image_processing(path, page_number=i, output_directory=output_directory)
+                    image_processing(
+                        path, page_number=i, output_directory=output_directory, version=version
+                    )
                 )
             detectedDocument = DocumentLayout(detections)
             if use_ocr:
@@ -60,7 +63,11 @@ def yolox_local_inference(
         # Return a PageLayoutDocument
         detections = [
             image_processing(
-                filename, origin_img=None, page_number=0, output_directory=output_directory
+                filename,
+                origin_img=None,
+                page_number=0,
+                output_directory=output_directory,
+                version=version,
             )
         ]
         detectedDocument = DocumentLayout(detections)
@@ -73,6 +80,7 @@ def image_processing(
     page: str,
     origin_img: Image = None,
     page_number: int = 0,
+    version: str = "yolox",
     output_directory: Optional[str] = None,
 ) -> PageLayout:
     """Method runing YoloX for layout detection, returns a PageLayout
@@ -97,7 +105,7 @@ def image_processing(
     img, ratio = preprocess(origin_img, input_shape)
     page_orig = page
     # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
-    model_path, _, LAYOUT_CLASSES = _get_model_loading_info("yolox")
+    model_path, _, LAYOUT_CLASSES = _get_model_loading_info(version)
     session = onnxruntime.InferenceSession(model_path)
 
     ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}

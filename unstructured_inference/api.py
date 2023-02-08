@@ -47,10 +47,13 @@ async def layout_parsing_yolox(
     request: Request,
     file: List[UploadFile] = File(default=None),
     force_ocr=Form(default=False),
+    version=Form(default="yolox"),
 ):
     with tempfile.NamedTemporaryFile() as tmp_file:
         tmp_file.write(file[0].file.read())
-        detections = yolox_local_inference(tmp_file.name, type=filetype, use_ocr=force_ocr)
+        detections = yolox_local_inference(
+            tmp_file.name, type=filetype, use_ocr=force_ocr, version=version
+        )
 
     return detections
 

@@ -33,7 +33,26 @@ def _get_model_loading_info(model: str) -> Tuple[str, str, Dict[int, str]]:
         }
         # NOTE(benjamin): just for acomplish with previous version of this function
         config_path = None
-
+    elif model == "yolox_tiny":
+        # NOTE(benjamin) Repository and file to download from hugging_face
+        repo_id = "unstructuredio/yolo_x_layout"
+        binary_fn = "yolox_tiny.onnx"
+        model_path = hf_hub_download(repo_id, binary_fn)
+        label_map = {
+            0: "Caption",
+            1: "Footnote",
+            2: "Formula",
+            3: "List-item",
+            4: "Page-footer",
+            5: "Page-header",
+            6: "Picture",
+            7: "Section-header",
+            8: "Table",
+            9: "Text",
+            10: "Title",
+        }
+        # NOTE(benjamin): just for acomplish with previous version of this function
+        config_path = None
     else:
         raise UnknownModelException(f"Unknown model type: {model}")
     # NOTE(benjamin): Maybe could return a dictionary intead this set of variables
