@@ -97,7 +97,7 @@ stop-app-local:
 test:
 	PYTHONPATH=. pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
-.PHONY: long
+.PHONY: test-long
 test-long:
 	PYTHONPATH=. TEST_LONG=1 pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
