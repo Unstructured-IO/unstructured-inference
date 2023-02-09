@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import os
 import re
 import tempfile
+from multiprocessing import Pool
 from typing import List, Optional, Tuple, Union, BinaryIO
 
 from layoutparser.io.pdf import load_pdf
@@ -143,27 +144,33 @@ class DocumentLayout:
             page = self._pages[n_page]
 
             new_layout = []
-            for n_element, element in enumerate(page.layout):
-                (upper_left_x, upper_left_y) = element.coordinates[0]
-                upper_left_x = int(upper_left_x)
-                upper_left_y = int(upper_left_y)
-                width = upper_left_x + int(element.get_width())
-                height = upper_left_y + int(element.get_height())
-                dest_file = os.path.join(tmp_folder, f"{n_page}-{n_element}.jpg")
-
-                image = cv2.imread(filename)
-                patch = image[upper_left_y:height, upper_left_x:width]
-                cv2.imwrite(dest_file, patch)
-                # Enabling this makes test_load_agent fails
-                if not tesseract.ocr_agent:
-                    tesseract.load_agent()
-                text = tesseract.ocr_agent.detect(patch)
-
-                element.text = text
-                new_layout.append(element)
-
+            pool = Pool()
+            call_tuples = [
+                (element, i, filename, tmp_folder, n_page) for i, element in enumerate(page.layout)
+            ]
+            new_layout = pool.starmap(DocumentLayout._OCR_by_element, call_tuples)
             new_page = PageLayout(number=page.number, image=None, layout=new_layout)
             self._pages[n_page] = new_page
+
+    @staticmethod
+    def _OCR_by_element(element, n_element, filename, tmp_folder, n_page):
+        (upper_left_x, upper_left_y) = element.coordinates[0]
+        upper_left_x = int(upper_left_x)
+        upper_left_y = int(upper_left_y)
+        width = upper_left_x + int(element.get_width())
+        height = upper_left_y + int(element.get_height())
+        dest_file = os.path.join(tmp_folder, f"{n_page}-{n_element}.jpg")
+
+        image = cv2.imread(filename)
+        patch = image[upper_left_y:height, upper_left_x:width]
+        cv2.imwrite(dest_file, patch)
+        # Enabling this makes test_load_agent fails
+        if not tesseract.ocr_agent:
+            tesseract.load_agent()
+        text = tesseract.ocr_agent.detect(patch)
+
+        element.text = text
+        return element
 
 
 class PageLayout:
