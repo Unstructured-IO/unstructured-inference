@@ -14,7 +14,7 @@ def _get_model_loading_info(model: str) -> Tuple[str, str, Dict[int, str]]:
     }
     try:
         repo_id = "unstructuredio/yolo_x_layout"
-        binary_fn, label_path = hf_names = hf_names[model]
+        binary_fn, label_path = hf_names[model]
         model_path = hf_hub_download(repo_id, binary_fn)
         # As JSON only encode keys as strings, we need to parse strings to ints
         label_map = json.load(
