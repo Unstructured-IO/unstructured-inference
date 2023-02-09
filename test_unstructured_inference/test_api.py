@@ -56,6 +56,7 @@ def test_bad_route_404():
     response = client.post("/layout/badroute", files={"file": (filename, open(filename, "rb"))})
     assert response.status_code == 404
 
+
 def test_healthcheck(monkeypatch):
     client = TestClient(api.app)
     response = client.get("/healthcheck")

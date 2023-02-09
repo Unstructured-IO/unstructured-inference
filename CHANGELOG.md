@@ -1,4 +1,6 @@
-## 0.2.7-dev0
+## 0.2.7
+
+* Improved testing time
 
 ## 0.2.6
 
