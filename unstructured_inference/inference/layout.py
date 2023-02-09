@@ -148,7 +148,11 @@ class DocumentLayout:
             call_tuples = [
                 (element, i, filename, tmp_folder, n_page) for i, element in enumerate(page.layout)
             ]
-            new_layout = pool.starmap(DocumentLayout._OCR_by_element, call_tuples)
+            try:
+                new_layout = pool.starmap(DocumentLayout._OCR_by_element, call_tuples)
+            finally:
+                pool.close()
+                pool.join()
             new_page = PageLayout(number=page.number, image=None, layout=new_layout)
             self._pages[n_page] = new_page
 
