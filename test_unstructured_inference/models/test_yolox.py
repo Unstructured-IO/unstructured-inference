@@ -7,7 +7,8 @@ from fastapi.testclient import TestClient
 
 from unstructured_inference import api
 from unstructured_inference.inference.layout import DocumentLayout
-from unstructured_inference.models.yolox import yolox_local_inference  # DocumentLayout #maybe
+from unstructured_inference.models.yolox import yolox_local_inference, _get_model_loading_info
+from unstructured_inference.models import UnknownModelException
 
 
 @pytest.mark.skipif(
@@ -117,6 +118,11 @@ def test_layout_v02_local_parsing_empty_pdf():
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 5 detections
     assert len(document_layout.pages[0].layout) == 0
+
+
+def test_invalid_model():
+    with pytest.raises(UnknownModelException):
+        _get_model_loading_info("invalidmodel")
 
 
 # Only short test below

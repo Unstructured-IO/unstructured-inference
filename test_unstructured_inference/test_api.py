@@ -50,7 +50,9 @@ def test_layout_parsing_api(monkeypatch, filetype, ext, data, process_func, expe
 def test_bad_route_404():
     client = TestClient(api.app)
     filename = os.path.join("sample-docs", "loremipsum.pdf")
-    response = client.post("/layout/badroute", files={"file": (filename, open(filename, "rb"))})
+    response = client.post(
+        "/layout/detectron/badroute", files={"file": (filename, open(filename, "rb"))}
+    )
     assert response.status_code == 404
 
 
