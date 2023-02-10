@@ -1,4 +1,5 @@
-## 0.2.7-dev0
+## 0.2.7
+* Fixed duplicated load_pdf call
 
 ## 0.2.6
 
