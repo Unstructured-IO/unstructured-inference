@@ -1,4 +1,3 @@
-import os
 import pytest
 import unstructured_inference.models.donut as donut
 
@@ -6,10 +5,6 @@ from transformers import DonutSwinModel
 from PIL import Image
 
 
-@pytest.mark.skipif(
-    os.environ.get("TEST_LONG") or not os.environ.get("TEST_LONG") == "1",
-    reason="Not need to run long test",
-)
 @pytest.mark.parametrize(
     "model_path, processor_path, config_path",
     [
@@ -25,10 +20,6 @@ def test_load_donut_model_raises_when_not_available(model_path, processor_path, 
         )
 
 
-@pytest.mark.skipif(
-    os.environ.get("TEST_LONG") or not os.environ.get("TEST_LONG") == "1",
-    reason="Not need to run long test",
-)
 @pytest.mark.parametrize(
     "model_path, processor_path, config_path",
     [
@@ -57,10 +48,6 @@ def sample_receipt_transcript():
     }
 
 
-@pytest.mark.skipif(
-    os.environ.get("TEST_LONG") or not os.environ.get("TEST_LONG") == "1",
-    reason="Not need to run long test",
-)
 @pytest.mark.parametrize(
     "model_path, processor_path, config_path",
     [
