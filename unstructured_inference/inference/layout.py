@@ -81,7 +81,7 @@ class DocumentLayout:
         layouts, images = load_pdf(filename, load_images=True)
         if len(layouts) > len(images):
             raise RuntimeError(
-                "Some images were not loaded. Check that poppler is installed and in PATH."
+                "Some images were not loaded. Check that poppler is installed and in your $PATH."
             )
         pages: List[PageLayout] = list()
         for i, layout in enumerate(layouts):
