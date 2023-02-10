@@ -166,7 +166,12 @@ class DocumentLayout:
 
         image = cv2.imread(filename)
         patch = image[upper_left_y:height, upper_left_x:width]
-        cv2.imwrite(dest_file, patch)
+        try:
+            cv2.imwrite(dest_file, patch)
+        except:
+            # In some cases the resulting patch is empty
+            # just return the existing element
+            return element
         # Enabling this makes test_load_agent fails
         if not tesseract.ocr_agent:
             tesseract.load_agent()
