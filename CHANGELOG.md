@@ -1,6 +1,10 @@
-## 0.2.7
+## 0.2.8
 
 * Improved testing time
+
+## 0.2.7
+
+* Fixed duplicated load_pdf call
 
 ## 0.2.6
 

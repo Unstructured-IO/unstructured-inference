@@ -80,7 +80,6 @@ class DocumentLayout:
         # image and returns a dict, or something.
         logger.info(f"Reading PDF for file: {filename} ...")
         layouts, images = load_pdf(filename, load_images=True)
-        layouts, images = load_pdf(filename, load_images=True)
         pages: List[PageLayout] = list()
         for i, layout in enumerate(layouts):
             image = images[i]
