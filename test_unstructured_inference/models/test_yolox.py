@@ -11,10 +11,7 @@ from unstructured_inference.models.yolox import yolox_local_inference, _get_mode
 from unstructured_inference.models import UnknownModelException
 
 
-@pytest.mark.skipif(
-    os.environ.get("TEST_LONG") or not os.environ.get("TEST_LONG") == "1",
-    reason="Not need to run long test",
-)
+@pytest.mark.long
 def test_layout_v02_api_parsing_image():
     filename = os.path.join("sample-docs", "test-image.jpg")
 
@@ -32,10 +29,7 @@ def test_layout_v02_api_parsing_image():
     assert response.status_code == 200
 
 
-@pytest.mark.skipif(
-    os.environ.get("TEST_LONG") or not os.environ.get("TEST_LONG") == "1",
-    reason="Not need to run long test",
-)
+@pytest.mark.long
 def test_layout_v02_api_parsing_pdf():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
 
@@ -52,10 +46,7 @@ def test_layout_v02_api_parsing_pdf():
     assert response.status_code == 200
 
 
-@pytest.mark.skipif(
-    os.environ.get("TEST_LONG") or not os.environ.get("TEST_LONG") == "1",
-    reason="Not need to run long test",
-)
+@pytest.mark.long
 def test_layout_v02_api_parsing_pdf_ocr():
     filename = os.path.join("sample-docs", "non-embedded.pdf")
 
@@ -71,10 +62,7 @@ def test_layout_v02_api_parsing_pdf_ocr():
     assert response.status_code == 200
 
 
-@pytest.mark.skipif(
-    os.environ.get("TEST_LONG") or not os.environ.get("TEST_LONG") == "1",
-    reason="Not need to run long test",
-)
+@pytest.mark.long
 def test_layout_v02_local_parsing_image():
     filename = os.path.join("sample-docs", "test-image.jpg")
     OUTPUT_DIR = "yolox_output"
@@ -94,10 +82,7 @@ def test_layout_v02_local_parsing_image():
     assert len(document_layout_2.pages[0].layout) == 13
 
 
-@pytest.mark.skipif(
-    os.environ.get("TEST_LONG") or not os.environ.get("TEST_LONG") == "1",
-    reason="Not need to run long test",
-)
+@pytest.mark.long
 def test_layout_v02_local_parsing_pdf():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
     document_layout = yolox_local_inference(filename, type="pdf", version="yolox")
@@ -108,10 +93,7 @@ def test_layout_v02_local_parsing_pdf():
     assert len(document_layout.pages[0].layout) == 5
 
 
-@pytest.mark.skipif(
-    os.environ.get("TEST_LONG") or not os.environ.get("TEST_LONG") == "1",
-    reason="Not need to run long test",
-)
+@pytest.mark.long
 def test_layout_v02_local_parsing_empty_pdf():
     filename = os.path.join("sample-docs", "empty-document.pdf")
     document_layout = yolox_local_inference(filename, type="pdf", version="yolox")
