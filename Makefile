@@ -95,10 +95,10 @@ stop-app-local:
 ## test:                    runs all unittests
 .PHONY: test
 test:
-	PYTHONPATH=. pytest -m "not long" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	PYTHONPATH=. pytest -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
-.PHONY: test-long
-test-long:
+.PHONY: test-slow
+test-slow:
 	PYTHONPATH=. pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 ## check:                   runs linters (includes tests)
