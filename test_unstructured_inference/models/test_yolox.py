@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 
 from unstructured_inference import api
 from unstructured_inference.inference.layout import DocumentLayout
-from unstructured_inference.models.yolox import yolox_local_inference, _get_model_loading_info
-from unstructured_inference.models import UnknownModelException
+from unstructured_inference.models.yolox import yolox_local_inference, get_model_loading_info
+from unstructured_inference.models.base import UnknownModelException
 
 
 @pytest.mark.slow
@@ -104,7 +104,7 @@ def test_layout_v02_local_parsing_empty_pdf():
 
 def test_invalid_model():
     with pytest.raises(UnknownModelException):
-        _get_model_loading_info("invalidmodel")
+        get_model_loading_info("invalidmodel")
 
 
 # Only short test below
