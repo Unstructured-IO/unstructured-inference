@@ -40,6 +40,11 @@ def yolox_local_inference(
     pages_paths = []
     detections = []
     detectedDocument = None
+
+    # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
+    model_path, _, LAYOUT_CLASSES = _get_model_loading_info(version)
+    session = onnxruntime.InferenceSession(model_path)
+
     if type == "pdf":
         with tempfile.TemporaryDirectory() as tmp_folder:
             pages_paths = convert_from_path(
@@ -49,7 +54,12 @@ def yolox_local_inference(
                 # Return a dict of {n-->PageLayoutDocument}
                 detections.append(
                     image_processing(
-                        path, page_number=i, output_directory=output_directory, version=version
+                        session,
+                        LAYOUT_CLASSES,
+                        path,
+                        page_number=i,
+                        output_directory=output_directory,
+                        version=version,
                     )
                 )
             detectedDocument = DocumentLayout(detections)
@@ -63,6 +73,8 @@ def yolox_local_inference(
         # Return a PageLayoutDocument
         detections = [
             image_processing(
+                session,
+                LAYOUT_CLASSES,
                 filename,
                 origin_img=None,
                 page_number=0,
@@ -77,6 +89,8 @@ def yolox_local_inference(
 
 
 def image_processing(
+    session: onnxruntime.InferenceSession,
+    layout_classes: dict,
     page: str,
     origin_img: Image = None,
     page_number: int = 0,
@@ -104,10 +118,6 @@ def image_processing(
         origin_img = cv2.imread(page)
     img, ratio = preprocess(origin_img, input_shape)
     page_orig = page
-    # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
-    model_path, _, LAYOUT_CLASSES = _get_model_loading_info(version)
-    session = onnxruntime.InferenceSession(model_path)
-
     ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
     output = session.run(None, ort_inputs)
     predictions = demo_postprocess(output[0], input_shape, p6=False)[
@@ -136,7 +146,7 @@ def image_processing(
             final_scores,
             final_cls_inds,
             conf=0.3,
-            class_names=LAYOUT_CLASSES,
+            class_names=layout_classes,
         )
 
         elements = []
@@ -145,7 +155,7 @@ def image_processing(
 
         for det in dets:
             detection = det.tolist()
-            detection[-1] = LAYOUT_CLASSES[int(detection[-1])]
+            detection[-1] = layout_classes[int(detection[-1])]
             element = LayoutElement(
                 type=detection[-1],
                 coordinates=[(detection[0], detection[1]), (detection[2], detection[3])],
