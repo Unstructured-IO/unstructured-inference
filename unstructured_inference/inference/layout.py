@@ -153,7 +153,7 @@ class DocumentLayout:
                 (element, i, filename, tmp_folder, n_page) for i, element in enumerate(page.layout)
             ]
             try:
-                # Send the arguments for each process to be executed in parallel 
+                # Send the arguments for each process to be executed in parallel
                 new_layout = pool.starmap(DocumentLayout._OCR_by_element, call_tuples)
             finally:
                 pool.close()
