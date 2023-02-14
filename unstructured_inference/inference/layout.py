@@ -143,11 +143,13 @@ class DocumentLayout:
             page = self._pages[n_page]
 
             new_layout = []
+            # Creates a Pool for concurrent processing of image elements by OCR
             pool = Pool()
             call_tuples = [
                 (element, i, filename, tmp_folder, n_page) for i, element in enumerate(page.layout)
             ]
             try:
+                # Send the arguments for each process to be executed in parallel 
                 new_layout = pool.starmap(DocumentLayout._OCR_by_element, call_tuples)
             finally:
                 pool.close()
