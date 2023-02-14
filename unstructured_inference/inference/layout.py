@@ -80,6 +80,10 @@ class DocumentLayout:
         # image and returns a dict, or something.
         logger.info(f"Reading PDF for file: {filename} ...")
         layouts, images = load_pdf(filename, load_images=True)
+        if len(layouts) > len(images):
+            raise RuntimeError(
+                "Some images were not loaded. Check that poppler is installed and in your $PATH."
+            )
         pages: List[PageLayout] = list()
         for i, layout in enumerate(layouts):
             image = images[i]
