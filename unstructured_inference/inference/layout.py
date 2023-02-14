@@ -170,8 +170,8 @@ class DocumentLayout:
         patch = image[upper_left_y:height, upper_left_x:width]
         try:
             cv2.imwrite(dest_file, patch)
-        except Exception as E:
-            print(E)
+        except cv2.error as e:
+            print(e)
             # In some cases the resulting patch is empty
             # just return the existing element
             return element
