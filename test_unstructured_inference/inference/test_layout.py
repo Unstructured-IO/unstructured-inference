@@ -269,3 +269,10 @@ def test_from_image_file_raises_with_empty_fn():
 def test_from_image_file_raises_isadirectoryerror_with_dir():
     with tempfile.TemporaryDirectory() as tempdir, pytest.raises(IsADirectoryError):
         layout.DocumentLayout.from_image_file(tempdir)
+
+
+def test_from_file_raises_on_length_mismatch(monkeypatch):
+    monkeypatch.setattr(layout, "load_pdf", lambda *args, **kwargs: ([None, None], []))
+    with pytest.raises(RuntimeError) as e:
+        layout.DocumentLayout.from_file("fake_file")
+    assert "poppler" in str(e).lower()
