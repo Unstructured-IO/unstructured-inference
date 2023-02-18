@@ -189,10 +189,11 @@ class MockTextBlock(lp.TextBlock):
 
 
 class MockPageLayout(layout.PageLayout):
-    def __init__(self, layout=None, model=None):
+    def __init__(self, layout=None, model=None, ocr_strategy="auto"):
         self.image = None
         self.layout = layout
         self.model = model
+        self.ocr_strategy = ocr_strategy
 
     def ocr(self, text_block: MockTextBlock):
         return text_block.ocr_text
