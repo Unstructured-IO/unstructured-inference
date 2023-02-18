@@ -18,6 +18,12 @@ from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 import cv2
 
+VALID_OCR_STRATEGIES = (
+    "auto",  # Use OCR when it looks like other methods have failed
+    "force",  # Always use OCR
+    "never",  # Never use OCR
+)
+
 
 @dataclass
 class LayoutElement:
@@ -54,10 +60,6 @@ class DocumentLayout:
     def __str__(self) -> str:
         return "\n\n".join([str(page) for page in self.pages])
 
-    def to_string(self):
-        # Temporary method, this should replace __str__
-        return "\n\n".join([element.to_string() for element in self.pages])
-
     @property
     def pages(self) -> List[PageLayout]:
         """Gets all elements from pages in sequential order."""
@@ -71,7 +73,9 @@ class DocumentLayout:
         return doc_layout
 
     @classmethod
-    def from_file(cls, filename: str, model: Optional[Detectron2LayoutModel] = None):
+    def from_file(
+        cls, filename: str, model: Optional[Detectron2LayoutModel] = None, ocr_strategy="auto"
+    ):
         """Creates a DocumentLayout from a pdf file."""
         # NOTE(alan): For now the model is a Detectron2LayoutModel but in the future it should
         # be an abstract class that supports some standard interface and can accomodate either
@@ -88,13 +92,17 @@ class DocumentLayout:
             image = images[i]
             # NOTE(robinson) - In the future, maybe we detect the page number and default
             # to the index if it is not detected
-            page = PageLayout(number=i, image=image, layout=layout, model=model)
+            page = PageLayout(
+                number=i, image=image, layout=layout, model=model, ocr_strategy=ocr_strategy
+            )
             page.get_elements()
             pages.append(page)
         return cls.from_pages(pages)
 
     @classmethod
-    def from_image_file(cls, filename: str, model: Optional[Detectron2LayoutModel] = None):
+    def from_image_file(
+        cls, filename: str, model: Optional[Detectron2LayoutModel] = None, ocr_strategy="auto"
+    ):
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
         try:
@@ -104,69 +112,11 @@ class DocumentLayout:
                 raise e
             else:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
-        page = PageLayout(number=0, image=image, layout=None, model=model)
+        page = PageLayout(
+            number=0, image=image, layout=None, model=model, ocr_strategy=ocr_strategy
+        )
         page.get_elements()
         return cls.from_pages([page])
-
-    def parse_elements(self, pdf_filename, DPI=500):
-        """
-        Fill the text of the document from embedded file
-        """
-        with tempfile.TemporaryDirectory() as tmp_folder:
-            for n_page, page in enumerate(self._pages):
-                new_layout = []
-                for n_element, element in enumerate(page.layout):
-                    (upper_left_x, upper_left_y) = element.coordinates[0]
-                    dest_file = os.path.join(tmp_folder, f"{n_page}-{n_element}.txt")
-
-                    cmd = (
-                        f"pdftotext -r {DPI} -x {int(upper_left_x)} -y {int(upper_left_y)} "
-                        + f"-W {int(element.get_width())} -H {int(element.get_height())} "
-                        + f"-f {page.number} -l {page.number} {pdf_filename} {dest_file}"
-                    )
-
-                    exit = os.system(cmd)
-
-                    if exit == 0:
-                        with open(dest_file) as file:
-                            content = file.read()
-                        element.text = content
-                        new_layout.append(element)
-                    else:
-                        continue
-                new_page = PageLayout(number=page.number, image=None, layout=new_layout)
-                self._pages[n_page] = new_page
-
-    def parse_image_elements(self, filename, num, DPI=500):
-        """
-        Fill the text of the document from OCR
-        """
-        with tempfile.TemporaryDirectory() as tmp_folder:
-            n_page = num
-            page = self._pages[n_page]
-
-            new_layout = []
-            for n_element, element in enumerate(page.layout):
-                (upper_left_x, upper_left_y) = element.coordinates[0]
-                upper_left_x = int(upper_left_x)
-                upper_left_y = int(upper_left_y)
-                width = upper_left_x + int(element.get_width())
-                height = upper_left_y + int(element.get_height())
-                dest_file = os.path.join(tmp_folder, f"{n_page}-{n_element}.jpg")
-
-                image = cv2.imread(filename)
-                patch = image[upper_left_y:height, upper_left_x:width]
-                cv2.imwrite(dest_file, patch)
-                # Enabling this makes test_load_agent fails
-                if not tesseract.ocr_agent:
-                    tesseract.load_agent()
-                text = tesseract.ocr_agent.detect(patch)
-
-                element.text = text
-                new_layout.append(element)
-
-            new_page = PageLayout(number=page.number, image=None, layout=new_layout)
-            self._pages[n_page] = new_page
 
 
 class PageLayout:
@@ -178,6 +128,7 @@ class PageLayout:
         image: Image,
         layout: Layout,
         model: Optional[UnstructuredModel] = None,
+        ocr_strategy: str = "auto",
     ):
         self.image = image
         self.image_array: Union[np.ndarray, None] = None
@@ -185,13 +136,12 @@ class PageLayout:
         self.number = number
         self.model = model
         self.elements: List[LayoutElement] = list()
+        if ocr_strategy not in VALID_OCR_STRATEGIES:
+            raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
+        self.ocr_strategy = ocr_strategy
 
     def __str__(self):
         return "\n\n".join([str(element) for element in self.elements])
-
-    def to_string(self):
-        """Temporary method, should replace __str__"""
-        return "\n\n".join([str(element) for element in self.layout])
 
     def get_elements(self, inplace=True) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
@@ -199,39 +149,48 @@ class PageLayout:
         if self.model is None:
             self.model = get_model()
 
-        elements = list()
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         image_layout = self.model(self.image)
+        return self.elements_from_layout(image_layout, inplace)
+
+    def elements_from_layout(self, layout: Layout, inplace=True, ocr_strategy="auto"):
         # NOTE(robinson) - This orders the page from top to bottom. We'll need more
         # sophisticated ordering logic for more complicated layouts.
-        image_layout.sort(key=lambda element: element.coordinates[1], inplace=True)
-        for item in image_layout:
-            text = str()
-            if self.layout is None:
-                text = self.interpret_text_block(item)
-            else:
-                text_blocks = self.layout.filter_by(item, center=True)
-                for text_block in text_blocks:
-                    text_block.text = self.interpret_text_block(text_block)
-                text = " ".join([x for x in text_blocks.get_texts() if x])
-            elements.append(
-                LayoutElement(type=item.type, text=text, coordinates=item.points.tolist())
-            )
-
+        layout.sort(key=lambda element: element.coordinates[1], inplace=True)
+        elements = [self.element_from_block(block) for block in layout]
         if inplace:
             self.elements = elements
             return None
         return elements
 
+    def element_from_block(self, block: TextBlock):
+        text = self.aggregate_by_block(block)
+        element = LayoutElement(type=block.type, text=text, coordinates=block.points.tolist())
+        return element
+
+    def aggregate_by_block(self, text_block: TextBlock) -> str:
+        if self.layout is None:
+            text = self.interpret_text_block(text_block)
+        else:
+            filtered_blocks = self.layout.filter_by(text_block, center=True)
+            for little_block in filtered_blocks:
+                little_block.text = self.interpret_text_block(little_block)
+            text = " ".join([x for x in filtered_blocks.get_texts() if x])
+        return text
+
     def interpret_text_block(self, text_block: TextBlock) -> str:
         """Interprets the text in a TextBlock."""
         # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
         # already OCR'd and we have to send the snippet out for OCRing.
-        if (text_block.text is None) or cid_ratio(text_block.text) > 0.5:
+
+        if (self.ocr_strategy == "force") or (
+            self.ocr_strategy == "auto"
+            and ((text_block.text is None) or cid_ratio(text_block.text) > 0.5)
+        ):
             out_text = self.ocr(text_block)
         else:
-            out_text = text_block.text
+            out_text = "" if text_block.text is None else text_block.text
         return out_text
 
     def ocr(self, text_block: TextBlock) -> str:
@@ -251,27 +210,29 @@ class PageLayout:
 
 
 def process_data_with_model(
-    data: BinaryIO, model_name: Optional[str], is_image: bool = False
+    data: BinaryIO, model_name: Optional[str], is_image: bool = False, ocr_strategy="auto"
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
     with tempfile.NamedTemporaryFile() as tmp_file:
         tmp_file.write(data.read())
-        layout = process_file_with_model(tmp_file.name, model_name, is_image=is_image)
+        layout = process_file_with_model(
+            tmp_file.name, model_name, is_image=is_image, ocr_strategy=ocr_strategy
+        )
 
     return layout
 
 
 def process_file_with_model(
-    filename: str, model_name: Optional[str], is_image: bool = False
+    filename: str, model_name: Optional[str], is_image: bool = False, ocr_strategy="auto"
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
     model = get_model(model_name)
     layout = (
-        DocumentLayout.from_image_file(filename, model=model)
+        DocumentLayout.from_image_file(filename, model=model, ocr_strategy=ocr_strategy)
         if is_image
-        else DocumentLayout.from_file(filename, model=model)
+        else DocumentLayout.from_file(filename, model=model, ocr_strategy=ocr_strategy)
     )
     return layout
 
