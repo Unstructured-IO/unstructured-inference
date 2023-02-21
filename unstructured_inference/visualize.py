@@ -8,6 +8,8 @@ import numpy as np
 __all__ = ["draw_bounding_boxes"]
 
 # NOTE: in original files from YoloX 'draw_bounding_boxes' function is named "vis"
+# TODO(alan): Need annotation that takes either layoutparser.Layout or DocumentLayout instead of YoloX detections
+# TODO(alan): Also need type hints here
 
 
 def draw_bounding_boxes(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
