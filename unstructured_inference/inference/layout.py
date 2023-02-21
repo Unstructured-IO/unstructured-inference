@@ -153,7 +153,7 @@ class PageLayout:
         image_layout = self.model(self.image)
         return self.elements_from_layout(image_layout, inplace)
 
-    def elements_from_layout(self, layout: Layout, inplace=True, ocr_strategy="auto"):
+    def elements_from_layout(self, layout: Layout, inplace=True):
         # NOTE(robinson) - This orders the page from top to bottom. We'll need more
         # sophisticated ordering logic for more complicated layouts.
         layout.sort(key=lambda element: element.coordinates[1], inplace=True)
