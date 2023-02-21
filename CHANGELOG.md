@@ -1,5 +1,7 @@
 ## 0.2.8-dev0
 
+* Improved testing time
+
 ## 0.2.7
 
 * Fixed duplicated load_pdf call

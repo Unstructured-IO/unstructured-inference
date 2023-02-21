@@ -13,14 +13,42 @@ import onnxruntime
 from pdf2image import convert_from_path
 
 from unstructured_inference.inference.layout import DocumentLayout, LayoutElement, PageLayout
-from unstructured_inference.models import _get_model_loading_info
 from unstructured_inference.visualize import draw_bounding_boxes
+from unstructured_inference.models.base import UnknownModelException
+import json
+from typing import Tuple, Dict
+from huggingface_hub import hf_hub_download
+
+
+def get_model_loading_info(model: str) -> Tuple[str, Dict[int, str]]:
+    """Gets local model binary and config locations and label map, downloading if necessary."""
+    # TODO(alan): Find the right way to map model name to retrieval. It seems off that testing
+    # needs to mock hf_hub_download.
+    # NOTE(benjamin) Repository and file to download from hugging_face
+    hf_names = {
+        "yolox": ("yolox_l0.05.onnx", "label_map.json"),
+        "yolox_tiny": ("yolox_tiny.onnx", "label_map.json"),
+    }
+    try:
+        repo_id = "unstructuredio/yolo_x_layout"
+        binary_fn, label_path = hf_names[model]
+        model_path = hf_hub_download(repo_id, binary_fn)
+        # As JSON only encode keys as strings, we need to parse strings to ints
+        label_map = json.load(
+            open(hf_hub_download(repo_id, label_path), "r"),
+            object_hook=lambda d: {int(k): v for k, v in d.items()},
+        )
+    except KeyError:
+        raise UnknownModelException(f"Unknown model type: {model}")
+    # NOTE(benjamin): Maybe could return a dictionary intead this set of variables
+    return model_path, label_map
 
 
 def yolox_local_inference(
     filename: str,
     type: str = "image",
     use_ocr=False,
+    version: str = "yolox",
     output_directory: Optional[str] = None,
 ) -> DocumentLayout:
     """This function creates a DocumentLayout from a file in local storage.
@@ -39,6 +67,11 @@ def yolox_local_inference(
     pages_paths = []
     detections = []
     detectedDocument = None
+
+    # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
+    model_path, LAYOUT_CLASSES = get_model_loading_info(version)
+    session = onnxruntime.InferenceSession(model_path)
+
     if type == "pdf":
         with tempfile.TemporaryDirectory() as tmp_folder:
             pages_paths = convert_from_path(
@@ -47,7 +80,14 @@ def yolox_local_inference(
             for i, path in enumerate(pages_paths):
                 # Return a dict of {n-->PageLayoutDocument}
                 detections.append(
-                    image_processing(path, page_number=i, output_directory=output_directory)
+                    image_processing(
+                        session,
+                        LAYOUT_CLASSES,
+                        path,
+                        page_number=i,
+                        output_directory=output_directory,
+                        version=version,
+                    )
                 )
             detectedDocument = DocumentLayout(detections)
             if use_ocr:
@@ -60,7 +100,13 @@ def yolox_local_inference(
         # Return a PageLayoutDocument
         detections = [
             image_processing(
-                filename, origin_img=None, page_number=0, output_directory=output_directory
+                session,
+                LAYOUT_CLASSES,
+                filename,
+                origin_img=None,
+                page_number=0,
+                output_directory=output_directory,
+                version=version,
             )
         ]
         detectedDocument = DocumentLayout(detections)
@@ -70,9 +116,12 @@ def yolox_local_inference(
 
 
 def image_processing(
+    session: onnxruntime.InferenceSession,
+    layout_classes: Dict[int, str],
     page: str,
     origin_img: Image = None,
     page_number: int = 0,
+    version: str = "yolox",
     output_directory: Optional[str] = None,
 ) -> PageLayout:
     """Method runing YoloX for layout detection, returns a PageLayout
@@ -96,10 +145,6 @@ def image_processing(
         origin_img = cv2.imread(page)
     img, ratio = preprocess(origin_img, input_shape)
     page_orig = page
-    # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
-    model_path, _, LAYOUT_CLASSES = _get_model_loading_info("yolox")
-    session = onnxruntime.InferenceSession(model_path)
-
     ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
     output = session.run(None, ort_inputs)
     predictions = demo_postprocess(output[0], input_shape, p6=False)[
@@ -128,7 +173,7 @@ def image_processing(
             final_scores,
             final_cls_inds,
             conf=0.3,
-            class_names=LAYOUT_CLASSES,
+            class_names=layout_classes,
         )
 
         elements = []
@@ -137,7 +182,7 @@ def image_processing(
 
         for det in dets:
             detection = det.tolist()
-            detection[-1] = LAYOUT_CLASSES[int(detection[-1])]
+            detection[-1] = layout_classes[int(detection[-1])]
             element = LayoutElement(
                 type=detection[-1],
                 coordinates=[(detection[0], detection[1]), (detection[2], detection[3])],
