@@ -65,22 +65,16 @@ class UnstructuredYoloXModel(UnstructuredModel):
         # The model was trained and exported with this shape
         # TODO (benjamin): check other shapes for inference
         input_shape = (1024, 768)
-        # if origin_img and page:
-        #     raise ValueError("Just one of the arguments allowed 'page' or 'origin_img'")
-        # if not origin_img:
-        #     origin_img = cv2.imread(page)
         origin_img = np.array(image)
         img, ratio = preprocess(origin_img, input_shape)
-        # page_orig = page
         # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
-        model_path, LAYOUT_CLASSES = self.model, self.layout_classes
+        model_path = self.model
         session = onnxruntime.InferenceSession(model_path)
 
         ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
         output = session.run(None, ort_inputs)
-        predictions = demo_postprocess(output[0], input_shape, p6=False)[
-            0
-        ]  # TODO(benjamin): check for p6
+        # TODO(benjamin): check for p6
+        predictions = demo_postprocess(output[0], input_shape, p6=False)[0]
 
         boxes = predictions[:, :4]
         scores = predictions[:, 4:5] * predictions[:, 5:]
@@ -99,7 +93,7 @@ class UnstructuredYoloXModel(UnstructuredModel):
             # Each detection should have (x1,y1,x2,y2,probability,class) format
             # being (x1,y1) the top left and (x2,y2) the bottom right
             x1, y1, x2, y2, _, class_id = det.tolist()
-            detected_class = LAYOUT_CLASSES[int(class_id)]
+            detected_class = self.layout_classes[int(class_id)]
             block = TextBlock(type=detected_class, text=None, block=Rectangle(x1, y1, x2, y2))
 
             blocks.append(block)
