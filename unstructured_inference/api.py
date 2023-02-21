@@ -24,7 +24,9 @@ async def layout_parsing(
     model = None if modeltype == "default" else modeltype
     ocr_strategy = "force" if force_ocr else "auto"
     try:
-        layout = process_data_with_model(file.file, model, is_image, ocr_strategy=ocr_strategy)  # type: ignore
+        layout = process_data_with_model(
+            file.file, model, is_image, ocr_strategy=ocr_strategy
+        )  # type: ignore
     except UnknownModelException as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
     pages_layout = [

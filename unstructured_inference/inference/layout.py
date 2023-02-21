@@ -16,7 +16,6 @@ from unstructured_inference.logger import logger
 import unstructured_inference.models.tesseract as tesseract
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
-import cv2
 
 VALID_OCR_STRATEGIES = (
     "auto",  # Use OCR when it looks like other methods have failed
