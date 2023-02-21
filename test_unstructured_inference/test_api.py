@@ -23,26 +23,27 @@ def raise_unknown_model_exception(*args, **kwargs):
 
 
 @pytest.mark.parametrize(
-    "filetype, ext, data, process_func, expected_response_code",
+    "filetype, ext, modeltype, process_func, expected_response_code",
     [
-        ("pdf", "pdf", None, get_doc_layout, 200),
-        ("pdf", "pdf", {"model": "checkbox"}, get_doc_layout, 200),
-        ("pdf", "pdf", {"model": "fake_model"}, raise_unknown_model_exception, 422),
-        ("image", "png", None, get_doc_layout, 200),
-        ("image", "png", {"model": "checkbox"}, get_doc_layout, 200),
-        ("image", "png", {"model": "fake_model"}, raise_unknown_model_exception, 422),
+        ("pdf", "pdf", "default", get_doc_layout, 200),
+        ("pdf", "pdf", "checkbox", get_doc_layout, 200),
+        ("pdf", "pdf", "fake_model", raise_unknown_model_exception, 422),
+        ("image", "png", "default", get_doc_layout, 200),
+        ("image", "png", "checkbox", get_doc_layout, 200),
+        ("image", "png", "fake_model", raise_unknown_model_exception, 422),
     ],
 )
-def test_layout_parsing_api(monkeypatch, filetype, ext, data, process_func, expected_response_code):
+def test_layout_parsing_api(
+    monkeypatch, filetype, ext, modeltype, process_func, expected_response_code
+):
     monkeypatch.setattr(api, "process_data_with_model", process_func)
 
     filename = os.path.join("sample-docs", f"loremipsum.{ext}")
 
     client = TestClient(api.app)
     response = client.post(
-        f"/layout/detectron/{filetype}",
+        f"/layout/{modeltype}/{filetype}",
         files={"file": (filename, open(filename, "rb"))},
-        data=data,
     )
     assert response.status_code == expected_response_code
 
@@ -70,7 +71,7 @@ def test_layout_yolox_api_parsing_image():
     assert response.status_code == 200
 
 
-def test_layout_v02_api_parsing_pdf():
+def test_layout_yolox_api_parsing_pdf():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
 
     client = TestClient(api.app)
