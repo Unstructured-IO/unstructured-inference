@@ -9,7 +9,6 @@ from typing import List, Dict, Optional, Tuple, Union, BinaryIO
 from layoutparser.io.pdf import load_pdf
 from layoutparser.elements.layout_elements import TextBlock
 from layoutparser.elements.layout import Layout
-from layoutparser.models.detectron2.layoutmodel import Detectron2LayoutModel
 import numpy as np
 from PIL import Image
 
@@ -26,6 +25,8 @@ VALID_OCR_STRATEGIES = (
 
 
 @dataclass
+# NOTE(alan): I notice this has (almost?) the same structure as a layoutparser TextBlock. Maybe we
+# don't need to make our own here?
 class LayoutElement:
     type: str
     # NOTE(robinson) - The list contain two elements, each a tuple
@@ -76,7 +77,7 @@ class DocumentLayout:
     def from_file(
         cls,
         filename: str,
-        model: Optional[Detectron2LayoutModel] = None,
+        model: Optional[UnstructuredModel] = None,
         fixed_layouts: Optional[Union[List[Layout], Dict[int, Layout]]] = None,
         ocr_strategy="auto",
     ) -> DocumentLayout:
