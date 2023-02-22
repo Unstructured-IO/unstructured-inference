@@ -34,17 +34,17 @@ class LayoutElement:
     coordinates: List[Tuple[float, float]]
     text: Optional[str] = None
 
-    def __str__(self):
-        return self.text
+    def __str__(self) -> str:
+        return str(self.text)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return self.__dict__
 
-    def get_width(self):
+    def get_width(self) -> float:
         # NOTE(benjamin) i.e: y2-y1
         return self.coordinates[1][0] - self.coordinates[0][0]
 
-    def get_height(self):
+    def get_height(self) -> float:
         # NOTE(benjamin) i.e: x2-x1
         return self.coordinates[1][1] - self.coordinates[0][1]
 
@@ -79,7 +79,7 @@ class DocumentLayout:
         model: Optional[Detectron2LayoutModel] = None,
         fixed_layouts: Optional[Union[List[Layout], Dict[int, Layout]]] = None,
         ocr_strategy="auto",
-    ):
+    ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         # NOTE(alan): For now the model is a Detectron2LayoutModel but in the future it should
         # be an abstract class that supports some standard interface and can accomodate either
@@ -109,7 +109,7 @@ class DocumentLayout:
     @classmethod
     def from_image_file(
         cls, filename: str, model: Optional[UnstructuredModel] = None, ocr_strategy="auto"
-    ):
+    ) -> DocumentLayout:
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
         try:
@@ -147,7 +147,7 @@ class PageLayout:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
 
     def get_elements(self, inplace=True) -> Optional[List[LayoutElement]]:
@@ -165,7 +165,7 @@ class PageLayout:
             return None
         return elements
 
-    def elements_from_layout(self, layout: Layout):
+    def elements_from_layout(self, layout: Layout) -> List[LayoutElement]:
         # NOTE(robinson) - This orders the page from top to bottom. We'll need more
         # sophisticated ordering logic for more complicated layouts.
         layout.sort(key=lambda element: element.coordinates[1], inplace=True)
@@ -178,7 +178,7 @@ class PageLayout:
             pool.join()
         return elements
 
-    def element_from_block(self, block: TextBlock):
+    def element_from_block(self, block: TextBlock) -> LayoutElement:
         text = self.aggregate_by_block(block)
         element = LayoutElement(type=block.type, text=text, coordinates=block.points.tolist())
         return element
