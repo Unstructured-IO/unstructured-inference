@@ -179,7 +179,6 @@ class PageLayout:
         return elements
 
     def element_from_block(self, block: TextBlock):
-        print(type(block))
         text = self.aggregate_by_block(block)
         element = LayoutElement(type=block.type, text=text, coordinates=block.points.tolist())
         return element
