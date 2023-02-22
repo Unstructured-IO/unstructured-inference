@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import os
 import re
 import tempfile
-from typing import List, Optional, Tuple, Union, BinaryIO
+from typing import List, Dict, Optional, Tuple, Union, BinaryIO
 
 from layoutparser.io.pdf import load_pdf
 from layoutparser.elements.layout_elements import TextBlock
@@ -73,7 +73,11 @@ class DocumentLayout:
 
     @classmethod
     def from_file(
-        cls, filename: str, model: Optional[Detectron2LayoutModel] = None, ocr_strategy="auto"
+        cls,
+        filename: str,
+        model: Optional[Detectron2LayoutModel] = None,
+        fixed_layouts: Optional[Union[List[Layout], Dict[int, Layout]]] = None,
+        ocr_strategy="auto",
     ):
         """Creates a DocumentLayout from a pdf file."""
         # NOTE(alan): For now the model is a Detectron2LayoutModel but in the future it should
@@ -94,13 +98,16 @@ class DocumentLayout:
             page = PageLayout(
                 number=i, image=image, layout=layout, model=model, ocr_strategy=ocr_strategy
             )
-            page.get_elements()
+            if fixed_layouts is None or fixed_layouts[i] is None:
+                page.get_elements()
+            else:
+                page.elements_from_layout(fixed_layouts[i])
             pages.append(page)
         return cls.from_pages(pages)
 
     @classmethod
     def from_image_file(
-        cls, filename: str, model: Optional[Detectron2LayoutModel] = None, ocr_strategy="auto"
+        cls, filename: str, model: Optional[UnstructuredModel] = None, ocr_strategy="auto"
     ):
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
