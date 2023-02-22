@@ -60,10 +60,10 @@ def test_ocr(monkeypatch):
 
 class MockLayoutModel:
     def __init__(self, layout):
-        self.layout = layout
+        self.layout_return = layout
 
     def __call__(self, *args):
-        return self.layout
+        return self.layout_return
 
     def initialize(self, *args, **kwargs):
         pass
@@ -84,20 +84,27 @@ def test_get_page_elements(monkeypatch, mock_page_layout):
     assert elements == page.elements
 
 
+class MockPool:
+    def map(self, f, xs):
+        return [f(x) for x in xs]
+
+    def close(self):
+        pass
+
+    def join(self):
+        pass
+
+
 def test_get_page_elements_with_ocr(monkeypatch):
     rectangle = Rectangle(2, 4, 6, 8)
     text_block = TextBlock(rectangle, text=None, type="Title")
     doc_layout = Layout([text_block])
 
-    monkeypatch.setattr(
-        detectron2,
-        "UnstructuredDetectronModel",
-        lambda *args, **kwargs: MockLayoutModel(doc_layout),
-    )
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
     monkeypatch.setattr(layout.PageLayout, "ocr", lambda *args: "An Even Catchier Title")
+    monkeypatch.setattr(layout, "Pool", MockPool)
 
-    image = np.random.randint(12, 24, (40, 40))
+    image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
     page = layout.PageLayout(
         number=0, image=image, layout=doc_layout, model=MockLayoutModel(doc_layout)
     )
