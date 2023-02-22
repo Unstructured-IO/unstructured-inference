@@ -63,7 +63,7 @@ def test_layout_yolox_local_parsing_pdf_soft():
     assert len(document_layout.pages[0].elements) > 0
 
 
-def test_layout_yolox_local_parsing_empty_pdf():
+def test_layout_yolox_local_parsing_empty_pdf_soft():
     filename = os.path.join("sample-docs", "empty-document.pdf")
     document_layout = process_file_with_model(filename, model_name="yolox_tiny")
     assert len(document_layout.pages) == 1
