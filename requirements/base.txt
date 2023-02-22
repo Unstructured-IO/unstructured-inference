@@ -28,7 +28,7 @@ cycler==0.11.0
     # via matplotlib
 effdet==0.3.0
     # via layoutparser
-fastapi==0.92.9
+fastapi==0.92.0
     # via unstructured-inference (setup.py)
 filelock==3.9.0
     # via
