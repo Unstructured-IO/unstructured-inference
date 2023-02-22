@@ -119,9 +119,6 @@ def test_read_pdf(monkeypatch, mock_page_layout):
 
     layouts = Layout([mock_page_layout, mock_page_layout])
 
-    def mock_initialize(self, *args, **kwargs):
-        self.model = MockLayoutModel(mock_page_layout)
-
     monkeypatch.setattr(
         models, "UnstructuredDetectronModel", partial(MockLayoutModel, layout=mock_page_layout)
     )
