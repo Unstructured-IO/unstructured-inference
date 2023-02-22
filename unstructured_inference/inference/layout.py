@@ -164,6 +164,7 @@ class PageLayout:
         # NOTE(robinson) - This orders the page from top to bottom. We'll need more
         # sophisticated ordering logic for more complicated layouts.
         layout.sort(key=lambda element: element.coordinates[1], inplace=True)
+        # NOTE(alan) - If we add multiprocessing this might be a good entrypoint
         elements = [self.element_from_block(block) for block in layout]
         if inplace:
             self.elements = elements

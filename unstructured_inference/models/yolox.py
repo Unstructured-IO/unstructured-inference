@@ -15,25 +15,33 @@ from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.visualize import draw_bounding_boxes
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 
+YOLOX_LABEL_MAP = {
+    0: "Caption",
+    1: "Footnote",
+    2: "Formula",
+    3: "List-item",
+    4: "Page-footer",
+    5: "Page-header",
+    6: "Picture",
+    7: "Section-header",
+    8: "Table",
+    9: "Text",
+    10: "Title",
+}
+
 MODEL_TYPES = {
     "yolox": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download, "unstructuredio/yolo_x_layout", "yolox_l0.05.onnx"
         ),
-        label_map={
-            0: "Caption",
-            1: "Footnote",
-            2: "Formula",
-            3: "List-item",
-            4: "Page-footer",
-            5: "Page-header",
-            6: "Picture",
-            7: "Section-header",
-            8: "Table",
-            9: "Text",
-            10: "Title",
-        },
-    )
+        label_map=YOLOX_LABEL_MAP,
+    ),
+    "yolox_tiny": LazyDict(
+        model_path=LazyEvaluateInfo(
+            hf_hub_download, "unstructuredio/yolo_x_layout", "yolox_tiny.onnx"
+        ),
+        label_map=YOLOX_LABEL_MAP,
+    ),
 }
 
 

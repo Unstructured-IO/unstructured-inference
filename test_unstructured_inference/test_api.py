@@ -51,10 +51,13 @@ def test_layout_parsing_api(
 def test_bad_route_404():
     client = TestClient(api.app)
     filename = os.path.join("sample-docs", "loremipsum.pdf")
-    response = client.post("/layout/badroute", files={"file": (filename, open(filename, "rb"))})
+    response = client.post(
+        "/layout/detectron/badroute", files={"file": (filename, open(filename, "rb"))}
+    )
     assert response.status_code == 404
 
 
+@pytest.mark.slow
 def test_layout_yolox_api_parsing_image():
     filename = os.path.join("sample-docs", "test-image.jpg")
 
@@ -71,6 +74,7 @@ def test_layout_yolox_api_parsing_image():
     assert response.status_code == 200
 
 
+@pytest.mark.slow
 def test_layout_yolox_api_parsing_pdf():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
 
@@ -86,6 +90,7 @@ def test_layout_yolox_api_parsing_pdf():
     assert response.status_code == 200
 
 
+@pytest.mark.slow
 def test_layout_yolox_api_parsing_pdf_ocr():
     filename = os.path.join("sample-docs", "non-embedded.pdf")
 
@@ -104,4 +109,50 @@ def test_layout_yolox_api_parsing_pdf_ocr():
 def test_healthcheck(monkeypatch):
     client = TestClient(api.app)
     response = client.get("/healthcheck")
+    assert response.status_code == 200
+
+
+def test_layout_yolox_api_parsing_image_soft():
+    filename = os.path.join("sample-docs", "test-image.jpg")
+
+    client = TestClient(api.app)
+    response = client.post(
+        "/layout/yolox_tiny/image",
+        headers={"Accept": "multipart/mixed"},
+        files=[("file", (filename, open(filename, "rb"), "image/png"))],
+    )
+    doc_layout = response.json()
+    assert len(doc_layout["pages"]) == 1
+    # NOTE(benjamin) Soft version of the test, run make test-long in order to run with full model
+    assert len(doc_layout["pages"][0]["elements"]) > 0
+    assert response.status_code == 200
+
+
+def test_layout_yolox_api_parsing_pdf_soft():
+    filename = os.path.join("sample-docs", "loremipsum.pdf")
+
+    client = TestClient(api.app)
+    response = client.post(
+        "/layout/yolox_tiny/pdf",
+        files={"file": (filename, open(filename, "rb"))},
+    )
+    doc_layout = response.json()
+    assert len(doc_layout["pages"]) == 1
+    # NOTE(benjamin) Soft version of the test, run make test-long in order to run with full model
+    assert len(doc_layout["pages"][0]["elements"]) > 0
+    assert response.status_code == 200
+
+
+def test_layout_yolox_api_parsing_pdf_ocr_soft():
+    filename = os.path.join("sample-docs", "non-embedded.pdf")
+
+    client = TestClient(api.app)
+    response = client.post(
+        "/layout/yolox_tiny/pdf",
+        files={"file": (filename, open(filename, "rb"))},
+        data={"force_ocr": True},
+    )
+    doc_layout = response.json()
+    assert len(doc_layout["pages"]) == 10
+    assert len(doc_layout["pages"][0]["elements"]) > 1
     assert response.status_code == 200

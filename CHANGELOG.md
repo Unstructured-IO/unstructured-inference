@@ -1,6 +1,7 @@
-## 0.2.8-dev1
+## 0.2.8-dev2
 
 * Refactored YoloX inference code to integrate better with framework
+* Improved testing time
 
 ## 0.2.7
 
