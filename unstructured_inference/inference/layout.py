@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from multiprocessing import Pool
 import os
 import re
 import tempfile
@@ -158,20 +159,31 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         image_layout = self.model(self.image)
-        return self.elements_from_layout(image_layout, inplace)
-
-    def elements_from_layout(self, layout: Layout, inplace=True):
-        # NOTE(robinson) - This orders the page from top to bottom. We'll need more
-        # sophisticated ordering logic for more complicated layouts.
-        layout.sort(key=lambda element: element.coordinates[1], inplace=True)
-        # NOTE(alan) - If we add multiprocessing this might be a good entrypoint
-        elements = [self.element_from_block(block) for block in layout]
+        elements = self.elements_from_layout(image_layout)
         if inplace:
             self.elements = elements
             return None
         return elements
 
+    def elements_from_layout(self, layout: Layout):
+        # NOTE(robinson) - This orders the page from top to bottom. We'll need more
+        # sophisticated ordering logic for more complicated layouts.
+        layout.sort(key=lambda element: element.coordinates[1], inplace=True)
+        # NOTE(alan) - If we add multiprocessing this might be a good entrypoint
+        # Creates a Pool for concurrent processing of image elements by OCR
+        pool = Pool()
+        # elements = [self.element_from_block(block) for block in layout]
+        elements = pool.map(self.element_from_block, layout)
+        try:
+            elements = pool.map(self.element_from_block, layout)
+        finally:
+            pool.close()
+            pool.join()
+        print(type(elements))
+        return elements
+
     def element_from_block(self, block: TextBlock):
+        print(type(block))
         text = self.aggregate_by_block(block)
         element = LayoutElement(type=block.type, text=text, coordinates=block.points.tolist())
         return element
