@@ -169,17 +169,13 @@ class PageLayout:
         # NOTE(robinson) - This orders the page from top to bottom. We'll need more
         # sophisticated ordering logic for more complicated layouts.
         layout.sort(key=lambda element: element.coordinates[1], inplace=True)
-        # NOTE(alan) - If we add multiprocessing this might be a good entrypoint
-        # Creates a Pool for concurrent processing of image elements by OCR
+        # NOTE(benjamin): Creates a Pool for concurrent processing of image elements by OCR
         pool = Pool()
-        # elements = [self.element_from_block(block) for block in layout]
-        elements = pool.map(self.element_from_block, layout)
         try:
             elements = pool.map(self.element_from_block, layout)
         finally:
             pool.close()
             pool.join()
-        print(type(elements))
         return elements
 
     def element_from_block(self, block: TextBlock):
