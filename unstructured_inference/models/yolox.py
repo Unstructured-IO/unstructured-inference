@@ -51,7 +51,7 @@ class UnstructuredYoloXModel(UnstructuredModel):
         return self.image_processing(x)
 
     def initialize(self, model_path: str, label_map: dict):
-        self.model = model_path
+        self.model = onnxruntime.InferenceSession(model_path)
         self.layout_classes = label_map
 
     def image_processing(
@@ -76,8 +76,7 @@ class UnstructuredYoloXModel(UnstructuredModel):
         origin_img = np.array(image)
         img, ratio = preprocess(origin_img, input_shape)
         # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
-        model_path = self.model
-        session = onnxruntime.InferenceSession(model_path)
+        session = self.model
 
         ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
         output = session.run(None, ort_inputs)
