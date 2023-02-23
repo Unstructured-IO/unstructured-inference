@@ -1,7 +1,7 @@
 from functools import partial
 import pytest
 import tempfile
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, Mock
 
 import layoutparser as lp
 from layoutparser.elements import Layout, Rectangle, TextBlock
@@ -281,3 +281,33 @@ def test_from_file_raises_on_length_mismatch(monkeypatch):
     with pytest.raises(RuntimeError) as e:
         layout.DocumentLayout.from_file("fake_file")
     assert "poppler" in str(e).lower()
+
+
+@pytest.mark.parametrize("idx", range(2))
+def test_elements_from_layout(mock_page_layout, idx):
+    page = MockPageLayout(layout=mock_page_layout)
+    block = mock_page_layout._blocks[idx].pad(3)
+    fixed_layout = Layout(blocks=[block])
+    elements = page.elements_from_layout(fixed_layout)
+    assert elements[0].text == block.text
+
+
+@pytest.mark.parametrize(
+    "fixed_layouts, called_method, not_called_method",
+    [
+        ([MockLayout()], "elements_from_layout", "get_elements"),
+        (None, "get_elements", "elements_from_layout"),
+    ],
+)
+def test_from_file_fixed_layout(fixed_layouts, called_method, not_called_method):
+    with patch.object(layout.PageLayout, "get_elements", return_value=[]), patch.object(
+        layout.PageLayout, "elements_from_layout", return_value=[]
+    ):
+        layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf", fixed_layouts=fixed_layouts)
+        getattr(layout.PageLayout, called_method).assert_called()
+        getattr(layout.PageLayout, not_called_method).assert_not_called()
+
+
+def test_invalid_ocr_strategy_raises(mock_image):
+    with pytest.raises(ValueError):
+        layout.PageLayout(0, mock_image, MockLayout(), ocr_strategy="fake_strategy")
