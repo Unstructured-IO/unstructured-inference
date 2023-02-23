@@ -4,7 +4,7 @@ from multiprocessing import Pool
 import os
 import re
 import tempfile
-from typing import List, Dict, Optional, Tuple, Union, BinaryIO
+from typing import List, Optional, Tuple, Union, BinaryIO
 
 from layoutparser.io.pdf import load_pdf
 from layoutparser.elements.layout_elements import TextBlock
@@ -78,8 +78,8 @@ class DocumentLayout:
         cls,
         filename: str,
         model: Optional[UnstructuredModel] = None,
-        fixed_layouts: Optional[Union[List[Layout], Dict[int, Layout]]] = None,
-        ocr_strategy="auto",
+        fixed_layouts: Optional[List[Optional[Layout]]] = None,
+        ocr_strategy: str = "auto",
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         # NOTE(alan): For now the model is a Detectron2LayoutModel but in the future it should
@@ -93,23 +93,28 @@ class DocumentLayout:
                 "Some images were not loaded. Check that poppler is installed and in your $PATH."
             )
         pages: List[PageLayout] = list()
-        for i, layout in enumerate(layouts):
-            image = images[i]
+        if fixed_layouts is None:
+            fixed_layouts = [None for _ in layouts]
+        for image, layout, fixed_layout in zip(images, layouts, fixed_layouts):
             # NOTE(robinson) - In the future, maybe we detect the page number and default
             # to the index if it is not detected
-            page = PageLayout(
-                number=i, image=image, layout=layout, model=model, ocr_strategy=ocr_strategy
+            page = PageLayout.from_image(
+                image,
+                model=model,
+                layout=layout,
+                ocr_strategy=ocr_strategy,
+                fixed_layout=fixed_layout,
             )
-            if fixed_layouts is None or fixed_layouts[i] is None:
-                page.get_elements()
-            else:
-                page.elements = page.elements_from_layout(fixed_layouts[i])
             pages.append(page)
         return cls.from_pages(pages)
 
     @classmethod
     def from_image_file(
-        cls, filename: str, model: Optional[UnstructuredModel] = None, ocr_strategy="auto"
+        cls,
+        filename: str,
+        model: Optional[UnstructuredModel] = None,
+        ocr_strategy: str = "auto",
+        fixed_layout: Optional[Layout] = None,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
@@ -120,10 +125,9 @@ class DocumentLayout:
                 raise e
             else:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
-        page = PageLayout(
-            number=0, image=image, layout=None, model=model, ocr_strategy=ocr_strategy
+        page = PageLayout.from_image(
+            image, model=model, layout=None, ocr_strategy=ocr_strategy, fixed_layout=fixed_layout
         )
-        page.get_elements()
         return cls.from_pages([page])
 
 
@@ -160,26 +164,26 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         image_layout = self.model(self.image)
-        elements = self.elements_from_layout(image_layout)
+        elements = self.get_elements_from_layout(image_layout)
         if inplace:
             self.elements = elements
             return None
         return elements
 
-    def elements_from_layout(self, layout: Layout) -> List[LayoutElement]:
+    def get_elements_from_layout(self, layout: Layout) -> List[LayoutElement]:
         # NOTE(robinson) - This orders the page from top to bottom. We'll need more
         # sophisticated ordering logic for more complicated layouts.
         layout.sort(key=lambda element: element.coordinates[1], inplace=True)
         # NOTE(benjamin): Creates a Pool for concurrent processing of image elements by OCR
         pool = Pool()
         try:
-            elements = pool.map(self.element_from_block, layout)
+            elements = pool.map(self.get_element_from_block, layout)
         finally:
             pool.close()
             pool.join()
         return elements
 
-    def element_from_block(self, block: TextBlock) -> LayoutElement:
+    def get_element_from_block(self, block: TextBlock) -> LayoutElement:
         text = self.aggregate_by_block(block)
         element = LayoutElement(type=block.type, text=text, coordinates=block.points.tolist())
         return element
@@ -223,23 +227,51 @@ class PageLayout:
             self.image_array = np.array(self.image)
         return self.image_array
 
+    @classmethod
+    def from_image(
+        cls,
+        image,
+        model: Optional[UnstructuredModel] = None,
+        layout: Optional[Layout] = None,
+        ocr_strategy: str = "auto",
+        fixed_layout: Optional[Layout] = None,
+    ):
+        page = cls(number=0, image=image, layout=layout, model=model, ocr_strategy=ocr_strategy)
+        if fixed_layout is None:
+            page.get_elements()
+        else:
+            page.elements = page.get_elements_from_layout(fixed_layout)
+        return page
+
 
 def process_data_with_model(
-    data: BinaryIO, model_name: Optional[str], is_image: bool = False, ocr_strategy="auto"
+    data: BinaryIO,
+    model_name: Optional[str],
+    is_image: bool = False,
+    ocr_strategy: str = "auto",
+    fixed_layouts: Optional[List[Optional[Layout]]] = None,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
     with tempfile.NamedTemporaryFile() as tmp_file:
         tmp_file.write(data.read())
         layout = process_file_with_model(
-            tmp_file.name, model_name, is_image=is_image, ocr_strategy=ocr_strategy
+            tmp_file.name,
+            model_name,
+            is_image=is_image,
+            ocr_strategy=ocr_strategy,
+            fixed_layouts=fixed_layouts,
         )
 
     return layout
 
 
 def process_file_with_model(
-    filename: str, model_name: Optional[str], is_image: bool = False, ocr_strategy="auto"
+    filename: str,
+    model_name: Optional[str],
+    is_image: bool = False,
+    ocr_strategy: str = "auto",
+    fixed_layouts: Optional[List[Optional[Layout]]] = None,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
@@ -247,7 +279,9 @@ def process_file_with_model(
     layout = (
         DocumentLayout.from_image_file(filename, model=model, ocr_strategy=ocr_strategy)
         if is_image
-        else DocumentLayout.from_file(filename, model=model, ocr_strategy=ocr_strategy)
+        else DocumentLayout.from_file(
+            filename, model=model, ocr_strategy=ocr_strategy, fixed_layouts=fixed_layouts
+        )
     )
     return layout
 
