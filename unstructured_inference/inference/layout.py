@@ -101,7 +101,7 @@ class DocumentLayout:
                 number=i, image=image, layout=layout, model=model, ocr_strategy=ocr_strategy
             )
             if fixed_layouts is None or fixed_layouts[i] is None:
-                page.elements = page.get_elements(inplace=False)
+                page.get_elements()
             else:
                 page.elements = page.elements_from_layout(fixed_layouts[i])
             pages.append(page)

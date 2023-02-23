@@ -1,7 +1,7 @@
 from functools import partial
 import pytest
 import tempfile
-from unittest.mock import patch, mock_open, Mock
+from unittest.mock import patch, mock_open
 
 import layoutparser as lp
 from layoutparser.elements import Layout, Rectangle, TextBlock
