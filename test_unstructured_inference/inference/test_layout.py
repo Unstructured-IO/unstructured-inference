@@ -244,25 +244,29 @@ class MockLayout:
 @pytest.mark.parametrize(
     "block_text, layout_texts, expected_text",
     [
-        ("no ocr", ["pieced", "together", "group"], "pieced together group"),
-        ("no ocr", [None, None, "one"], "ocr ocr one"),
-        ("no ocr", [None, None, None], "no ocr"),
-        (None, [None, None, None], "ocr"),
+        ("no ocr", ["pieced", "together", "group"], "no ocr"),
+        (None, ["pieced", "together", "group"], "pieced together group"),
+        (None, [None, None, "one"], "ocr ocr one"),
     ],
 )
-def test_aggregate_by_block(block_text, layout_texts, mock_image, expected_text):
+def test_get_element_from_block(block_text, layout_texts, mock_image, expected_text):
     with patch("unstructured_inference.inference.layout.ocr", return_value="ocr"):
         block = TextBlock(Rectangle(0, 0, 10, 10), text=block_text)
-        if all(block_text is None for block_text in layout_texts):
-            captured_layout = None
-        else:
-            captured_layout = Layout(
-                [
-                    TextBlock(Rectangle(i + 1, i + 1, i + 2, i + 2), text=text)
-                    for i, text in enumerate(layout_texts)
-                ]
-            )
-        assert layout.aggregate_by_block(block, mock_image, captured_layout) == expected_text
+        captured_layout = Layout(
+            [
+                TextBlock(Rectangle(i + 1, i + 1, i + 2, i + 2), text=text)
+                for i, text in enumerate(layout_texts)
+            ]
+        )
+        assert (
+            layout.get_element_from_block(block, mock_image, captured_layout).text == expected_text
+        )
+
+
+def test_get_elements_from_block_raises():
+    with pytest.raises(ValueError):
+        block = TextBlock(Rectangle(0, 0, 10, 10), text=None)
+        layout.get_element_from_block(block, None, None)
 
 
 @pytest.mark.parametrize("filetype", ("png", "jpg"))
