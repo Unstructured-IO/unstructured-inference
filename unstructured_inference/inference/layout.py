@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from functools import partial
 from multiprocessing import Pool
 import os
 import re
@@ -163,8 +164,8 @@ class PageLayout:
 
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
-        image_layout = self.model(self.image)
-        elements = self.get_elements_from_layout(image_layout)
+        inferred_layout = self.model(self.image)
+        elements = self.get_elements_from_layout(inferred_layout)
         if inplace:
             self.elements = elements
             return None
@@ -177,49 +178,17 @@ class PageLayout:
         # NOTE(benjamin): Creates a Pool for concurrent processing of image elements by OCR
         pool = Pool()
         try:
-            elements = pool.map(self.get_element_from_block, layout)
+            get_element_partial = partial(
+                get_element_from_block,
+                image=self.image,
+                layout=self.layout,
+                ocr_strategy=self.ocr_strategy,
+            )
+            elements = pool.map(get_element_partial, layout)
         finally:
             pool.close()
             pool.join()
         return elements
-
-    def get_element_from_block(self, block: TextBlock) -> LayoutElement:
-        text = self.aggregate_by_block(block)
-        element = LayoutElement(type=block.type, text=text, coordinates=block.points.tolist())
-        return element
-
-    def aggregate_by_block(self, text_block: TextBlock) -> str:
-        if self.layout is None:
-            text = self.interpret_text_block(text_block)
-        else:
-            filtered_blocks = self.layout.filter_by(text_block, center=True)
-            for little_block in filtered_blocks:
-                little_block.text = self.interpret_text_block(little_block)
-            text = " ".join([x for x in filtered_blocks.get_texts() if x])
-        return text
-
-    def interpret_text_block(self, text_block: TextBlock) -> str:
-        """Interprets the text in a TextBlock."""
-        # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
-        # already OCR'd and we have to send the snippet out for OCRing.
-
-        if (self.ocr_strategy == "force") or (
-            self.ocr_strategy == "auto"
-            and ((text_block.text is None) or cid_ratio(text_block.text) > 0.5)
-        ):
-            out_text = self.ocr(text_block)
-        else:
-            out_text = "" if text_block.text is None else text_block.text
-        return out_text
-
-    def ocr(self, text_block: TextBlock) -> str:
-        """Runs a cropped text block image through and OCR agent."""
-        logger.debug("Running OCR on text block ...")
-        tesseract.load_agent()
-        image_array = self._get_image_array()
-        padded_block = text_block.pad(left=5, right=5, top=5, bottom=5)
-        cropped_image = padded_block.crop_image(image_array)
-        return tesseract.ocr_agent.detect(cropped_image)
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
@@ -301,3 +270,50 @@ def is_cid_present(text: str) -> bool:
     if len(text) < len("(cid:x)"):
         return False
     return text.find("(cid:") != -1
+
+
+def get_element_from_block(
+    block: TextBlock, image: Image.Image, layout: Optional[Layout], ocr_strategy: str = "auto"
+) -> LayoutElement:
+    text = aggregate_by_block(block, image, layout, ocr_strategy)
+    element = LayoutElement(type=block.type, text=text, coordinates=block.points.tolist())
+    return element
+
+
+def aggregate_by_block(
+    text_block: TextBlock, image: Image.Image, layout: Optional[Layout], ocr_strategy: str = "auto"
+) -> str:
+    if layout is None:
+        text = interpret_text_block(text_block, image, ocr_strategy)
+    else:
+        filtered_blocks = layout.filter_by(text_block, center=True)
+        for little_block in filtered_blocks:
+            little_block.text = interpret_text_block(little_block, image, ocr_strategy)
+        text = " ".join([x for x in filtered_blocks.get_texts() if x])
+    return text
+
+
+def interpret_text_block(
+    text_block: TextBlock, image: Image.Image, ocr_strategy: str = "auto"
+) -> str:
+    """Interprets the text in a TextBlock."""
+    # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
+    # already OCR'd and we have to send the snippet out for OCRing.
+
+    if (ocr_strategy == "force") or (
+        ocr_strategy == "auto" and ((text_block.text is None) or cid_ratio(text_block.text) > 0.5)
+    ):
+        out_text = ocr(text_block, image)
+    else:
+        out_text = "" if text_block.text is None else text_block.text
+    return out_text
+
+
+def ocr(text_block: TextBlock, image: Image.Image) -> str:
+    """Runs a cropped text block image through and OCR agent."""
+    logger.debug("Running OCR on text block ...")
+    tesseract.load_agent()
+    image_array = np.array(image)
+    padded_block = text_block.pad(left=5, right=5, top=5, bottom=5)
+    cropped_image = padded_block.crop_image(image_array)
+    return tesseract.ocr_agent.detect(cropped_image)
