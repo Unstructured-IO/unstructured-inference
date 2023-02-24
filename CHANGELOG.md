@@ -1,4 +1,4 @@
-## 0.2.8-dev2
+## 0.2.8
 
 * Refactored YoloX inference code to integrate better with framework
 * Improved testing time
