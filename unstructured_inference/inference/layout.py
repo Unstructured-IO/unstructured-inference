@@ -172,6 +172,8 @@ class PageLayout:
         return elements
 
     def get_elements_from_layout(self, layout: Layout) -> List[LayoutElement]:
+        """Uses the given Layout to separate the page text into elements, either extracting the
+        text from the discovered layout blocks or from the image using OCR."""
         # NOTE(robinson) - This orders the page from top to bottom. We'll need more
         # sophisticated ordering logic for more complicated layouts.
         layout.sort(key=lambda element: element.coordinates[1], inplace=True)
@@ -205,6 +207,7 @@ class PageLayout:
         ocr_strategy: str = "auto",
         fixed_layout: Optional[Layout] = None,
     ):
+        """Creates a PageLayout from an already-loaded PIL Image."""
         page = cls(number=0, image=image, layout=layout, model=model, ocr_strategy=ocr_strategy)
         if fixed_layout is None:
             page.get_elements()
@@ -273,30 +276,49 @@ def is_cid_present(text: str) -> bool:
 
 
 def get_element_from_block(
-    block: TextBlock, image: Image.Image, layout: Optional[Layout], ocr_strategy: str = "auto"
+    block: TextBlock,
+    image: Optional[Image.Image] = None,
+    layout: Optional[Layout] = None,
+    ocr_strategy: str = "auto",
 ) -> LayoutElement:
-    text = aggregate_by_block(block, image, layout, ocr_strategy)
+    """Creates a LayoutElement from a given layout or image by finding all the text that lies within
+    a given block."""
+    if block.text is not None:
+        # If block text is already populated, we'll assume it's correct
+        text = block.text
+    elif layout is not None:
+        text = aggregate_by_block(block, image, layout, ocr_strategy)
+    elif image is not None:
+        text = interpret_text_block(block, image, ocr_strategy)
+    else:
+        raise ValueError(
+            "Got arguments image and layout as None, at least one must be populated to use for "
+            "text extraction."
+        )
     element = LayoutElement(type=block.type, text=text, coordinates=block.points.tolist())
     return element
 
 
 def aggregate_by_block(
-    text_block: TextBlock, image: Image.Image, layout: Optional[Layout], ocr_strategy: str = "auto"
+    text_block: TextBlock,
+    image: Optional[Image.Image],
+    layout: Layout,
+    ocr_strategy: str = "auto",
 ) -> str:
-    if layout is None:
-        text = interpret_text_block(text_block, image, ocr_strategy)
-    else:
-        filtered_blocks = layout.filter_by(text_block, center=True)
-        for little_block in filtered_blocks:
-            little_block.text = interpret_text_block(little_block, image, ocr_strategy)
-        text = " ".join([x for x in filtered_blocks.get_texts() if x])
+    """Extracts the text aggregated from the elements of the given layout that lie within the given
+    block."""
+    filtered_blocks = layout.filter_by(text_block, center=True)
+    for little_block in filtered_blocks:
+        little_block.text = interpret_text_block(little_block, image, ocr_strategy)
+    text = " ".join([x for x in filtered_blocks.get_texts() if x])
     return text
 
 
 def interpret_text_block(
     text_block: TextBlock, image: Image.Image, ocr_strategy: str = "auto"
 ) -> str:
-    """Interprets the text in a TextBlock."""
+    """Interprets the text in a TextBlock using OCR or the text attribute, according to the given
+    ocr_strategy."""
     # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
     # already OCR'd and we have to send the snippet out for OCRing.
 
