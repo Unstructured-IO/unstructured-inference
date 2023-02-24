@@ -1,7 +1,7 @@
 from functools import partial
 import pytest
 import tempfile
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, Mock
 
 import layoutparser as lp
 from layoutparser.elements import Layout, Rectangle, TextBlock
@@ -51,11 +51,10 @@ def test_ocr(monkeypatch):
     monkeypatch.setattr(tesseract, "is_pytesseract_available", lambda *args: True)
 
     image = np.random.randint(12, 24, (40, 40))
-    page = layout.PageLayout(number=0, image=image, layout=Layout())
     rectangle = Rectangle(1, 2, 3, 4)
     text_block = TextBlock(rectangle, text=None)
 
-    assert page.ocr(text_block) == mock_text
+    assert layout.ocr(text_block, image=image) == mock_text
 
 
 class MockLayoutModel:
@@ -101,10 +100,11 @@ def test_get_page_elements_with_ocr(monkeypatch):
     doc_layout = Layout([text_block])
 
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
-    monkeypatch.setattr(layout.PageLayout, "ocr", lambda *args: "An Even Catchier Title")
+    monkeypatch.setattr(layout, "ocr", lambda *args: "An Even Catchier Title")
     monkeypatch.setattr(layout, "Pool", MockPool)
 
     image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
+    print(layout.ocr(text_block, image))
     page = layout.PageLayout(
         number=0, image=image, layout=doc_layout, model=MockLayoutModel(doc_layout)
     )
@@ -203,11 +203,12 @@ class MockPageLayout(layout.PageLayout):
         return text_block.ocr_text
 
 
-def test_interpret_text_block_use_ocr_when_text_symbols_cid():
-    fake_text = "(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)"
-    fake_ocr = "ocrme"
-    fake_text_block = MockTextBlock(text=fake_text, ocr_text=fake_ocr)
-    assert MockPageLayout().interpret_text_block(fake_text_block) == fake_ocr
+def test_interpret_text_block_use_ocr_when_text_symbols_cid(mock_image):
+    fake_text_block = Mock()
+    fake_text_block.text = "(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)"
+    with patch("unstructured_inference.inference.layout.ocr"):
+        layout.interpret_text_block(fake_text_block, mock_image)
+        layout.ocr.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -240,16 +241,28 @@ class MockLayout:
         return [el.text for el in self.elements]
 
 
-def test_pagelayout_without_layout():
-    mock_layout = MockLayout(
-        MockTextBlock(text=None, ocr_text="textblock1"),
-        MockTextBlock(text=None, ocr_text="textblock2"),
-    )
-
-    model = MockLayoutModel(mock_layout)
-    pl = MockPageLayout(model=model, layout=None)
-
-    assert [el.text for el in pl.get_elements(inplace=False)] == [el.ocr_text for el in model(None)]
+@pytest.mark.parametrize(
+    "block_text, layout_texts, expected_text",
+    [
+        ("no ocr", ["pieced", "together", "group"], "pieced together group"),
+        ("no ocr", [None, None, "one"], "ocr ocr one"),
+        ("no ocr", [None, None, None], "no ocr"),
+        (None, [None, None, None], "ocr"),
+    ],
+)
+def test_aggregate_by_block(block_text, layout_texts, mock_image, expected_text):
+    with patch("unstructured_inference.inference.layout.ocr", return_value="ocr"):
+        block = TextBlock(Rectangle(0, 0, 10, 10), text=block_text)
+        if all(block_text is None for block_text in layout_texts):
+            captured_layout = None
+        else:
+            captured_layout = Layout(
+                [
+                    TextBlock(Rectangle(i + 1, i + 1, i + 2, i + 2), text=text)
+                    for i, text in enumerate(layout_texts)
+                ]
+            )
+        assert layout.aggregate_by_block(block, mock_image, captured_layout) == expected_text
 
 
 @pytest.mark.parametrize("filetype", ("png", "jpg"))
