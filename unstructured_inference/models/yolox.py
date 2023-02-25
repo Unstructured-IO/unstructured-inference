@@ -2,208 +2,128 @@
 # Unstructured modified the original source code found at:
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/237e943ac64aa32eb32f875faa93ebb18512d41d/yolox/data/data_augment.py
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
-import os
-import tempfile
-from typing import Optional
-from PIL import Image
 
+from PIL import Image
 import cv2
+from huggingface_hub import hf_hub_download
+from layoutparser.elements.layout_elements import TextBlock, Rectangle
+from layoutparser.elements.layout import Layout
 import numpy as np
 import onnxruntime
-from pdf2image import convert_from_path
 
-from unstructured_inference.inference.layout import DocumentLayout, LayoutElement, PageLayout
+from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.visualize import draw_bounding_boxes
-from unstructured_inference.models.base import UnknownModelException
-import json
-from typing import Tuple, Dict
-from huggingface_hub import hf_hub_download
+from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
+
+YOLOX_LABEL_MAP = {
+    0: "Caption",
+    1: "Footnote",
+    2: "Formula",
+    3: "List-item",
+    4: "Page-footer",
+    5: "Page-header",
+    6: "Picture",
+    7: "Section-header",
+    8: "Table",
+    9: "Text",
+    10: "Title",
+}
+
+MODEL_TYPES = {
+    "yolox": LazyDict(
+        model_path=LazyEvaluateInfo(
+            hf_hub_download, "unstructuredio/yolo_x_layout", "yolox_l0.05.onnx"
+        ),
+        label_map=YOLOX_LABEL_MAP,
+    ),
+    "yolox_tiny": LazyDict(
+        model_path=LazyEvaluateInfo(
+            hf_hub_download, "unstructuredio/yolo_x_layout", "yolox_tiny.onnx"
+        ),
+        label_map=YOLOX_LABEL_MAP,
+    ),
+}
 
 
-def get_model_loading_info(model: str) -> Tuple[str, Dict[int, str]]:
-    """Gets local model binary and config locations and label map, downloading if necessary."""
-    # TODO(alan): Find the right way to map model name to retrieval. It seems off that testing
-    # needs to mock hf_hub_download.
-    # NOTE(benjamin) Repository and file to download from hugging_face
-    hf_names = {
-        "yolox": ("yolox_l0.05.onnx", "label_map.json"),
-        "yolox_tiny": ("yolox_tiny.onnx", "label_map.json"),
-    }
-    try:
-        repo_id = "unstructuredio/yolo_x_layout"
-        binary_fn, label_path = hf_names[model]
-        model_path = hf_hub_download(repo_id, binary_fn)
-        # As JSON only encode keys as strings, we need to parse strings to ints
-        label_map = json.load(
-            open(hf_hub_download(repo_id, label_path), "r"),
-            object_hook=lambda d: {int(k): v for k, v in d.items()},
-        )
-    except KeyError:
-        raise UnknownModelException(f"Unknown model type: {model}")
-    # NOTE(benjamin): Maybe could return a dictionary intead this set of variables
-    return model_path, label_map
+class UnstructuredYoloXModel(UnstructuredModel):
+    def predict(self, x: Image):
+        super().predict(x)
+        return self.image_processing(x)
 
+    def initialize(self, model_path: str, label_map: dict):
+        self.model = onnxruntime.InferenceSession(model_path)
+        self.layout_classes = label_map
 
-def yolox_local_inference(
-    filename: str,
-    type: str = "image",
-    use_ocr=False,
-    version: str = "yolox",
-    output_directory: Optional[str] = None,
-) -> DocumentLayout:
-    """This function creates a DocumentLayout from a file in local storage.
-    Parameters
-    ----------
-    type
-        Accepted "image" and "pdf" files
-    use_ocr:
-        For pdf without embedded text, this function will use OCR for
-        text extraction
-    output_directory
-        Default 'None', if specified, the output of YoloX model will be
-        drawed over page images at this folder
-    """
-    DPI = 500
-    pages_paths = []
-    detections = []
-    detectedDocument = None
+    def image_processing(
+        self,
+        image: Image = None,
+    ) -> Layout:
+        """Method runing YoloX for layout detection, returns a PageLayout
+        parameters
+        ----------
+        page
+            Path for image file with the image to process
+        origin_img
+            If specified, an Image object for process with YoloX model
+        page_number
+            Number asigned to the PageLayout returned
+        output_directory
+            Boolean indicating if result will be stored
+        """
+        # The model was trained and exported with this shape
+        # TODO (benjamin): check other shapes for inference
+        input_shape = (1024, 768)
+        origin_img = np.array(image)
+        img, ratio = preprocess(origin_img, input_shape)
+        # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
+        session = self.model
 
-    # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
-    model_path, LAYOUT_CLASSES = get_model_loading_info(version)
-    session = onnxruntime.InferenceSession(model_path)
+        ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
+        output = session.run(None, ort_inputs)
+        # TODO(benjamin): check for p6
+        predictions = demo_postprocess(output[0], input_shape, p6=False)[0]
 
-    if type == "pdf":
-        with tempfile.TemporaryDirectory() as tmp_folder:
-            pages_paths = convert_from_path(
-                filename, dpi=DPI, output_folder=tmp_folder, paths_only=True
-            )
-            for i, path in enumerate(pages_paths):
-                # Return a dict of {n-->PageLayoutDocument}
-                detections.append(
-                    image_processing(
-                        session,
-                        LAYOUT_CLASSES,
-                        path,
-                        page_number=i,
-                        output_directory=output_directory,
-                        version=version,
-                    )
-                )
-            detectedDocument = DocumentLayout(detections)
-            if use_ocr:
-                for n, page_path in enumerate(pages_paths):
-                    detectedDocument.parse_image_elements(page_path, n)
-            else:
-                # Extract embedded text from PDF
-                detectedDocument.parse_elements(filename, DPI=DPI)
-    else:
-        # Return a PageLayoutDocument
-        detections = [
-            image_processing(
-                session,
-                LAYOUT_CLASSES,
-                filename,
-                origin_img=None,
-                page_number=0,
-                output_directory=output_directory,
-                version=version,
-            )
-        ]
-        detectedDocument = DocumentLayout(detections)
-        detectedDocument.parse_image_elements(filename, 0)
+        boxes = predictions[:, :4]
+        scores = predictions[:, 4:5] * predictions[:, 5:]
 
-    return detectedDocument
+        boxes_xyxy = np.ones_like(boxes)
+        boxes_xyxy[:, 0] = boxes[:, 0] - boxes[:, 2] / 2.0
+        boxes_xyxy[:, 1] = boxes[:, 1] - boxes[:, 3] / 2.0
+        boxes_xyxy[:, 2] = boxes[:, 0] + boxes[:, 2] / 2.0
+        boxes_xyxy[:, 3] = boxes[:, 1] + boxes[:, 3] / 2.0
+        boxes_xyxy /= ratio
+        dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.45, score_thr=0.1)
 
+        blocks = []
 
-def image_processing(
-    session: onnxruntime.InferenceSession,
-    layout_classes: Dict[int, str],
-    page: str,
-    origin_img: Image = None,
-    page_number: int = 0,
-    version: str = "yolox",
-    output_directory: Optional[str] = None,
-) -> PageLayout:
-    """Method runing YoloX for layout detection, returns a PageLayout
-    parameters
-    ----------
-    page
-        Path for image file with the image to process
-    origin_img
-        If specified, an Image object for process with YoloX model
-    page_number
-        Number asigned to the PageLayout returned
-    output_directory
-        Boolean indicating if result will be stored
-    """
-    # The model was trained and exported with this shape
-    # TODO (benjamin): check other shapes for inference
-    input_shape = (1024, 768)
-    if origin_img and page:
-        raise ValueError("Just one of the arguments allowed 'page' or 'origin_img'")
-    if not origin_img:
-        origin_img = cv2.imread(page)
-    img, ratio = preprocess(origin_img, input_shape)
-    page_orig = page
-    ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
-    output = session.run(None, ort_inputs)
-    predictions = demo_postprocess(output[0], input_shape, p6=False)[
-        0
-    ]  # TODO(benjamin): check for p6
+        for det in dets:
+            # Each detection should have (x1,y1,x2,y2,probability,class) format
+            # being (x1,y1) the top left and (x2,y2) the bottom right
+            x1, y1, x2, y2, _, class_id = det.tolist()
+            detected_class = self.layout_classes[int(class_id)]
+            block = TextBlock(type=detected_class, text=None, block=Rectangle(x1, y1, x2, y2))
 
-    boxes = predictions[:, :4]
-    scores = predictions[:, 4:5] * predictions[:, 5:]
+            blocks.append(block)
 
-    boxes_xyxy = np.ones_like(boxes)
-    boxes_xyxy[:, 0] = boxes[:, 0] - boxes[:, 2] / 2.0
-    boxes_xyxy[:, 1] = boxes[:, 1] - boxes[:, 3] / 2.0
-    boxes_xyxy[:, 2] = boxes[:, 0] + boxes[:, 2] / 2.0
-    boxes_xyxy[:, 3] = boxes[:, 1] + boxes[:, 3] / 2.0
-    boxes_xyxy /= ratio
-    dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.45, score_thr=0.1)
+        blocks.sort(key=lambda element: element.coordinates[1])
 
-    # If dets is None, the page is created empty, else this object will be replaced
-    page_layout = PageLayout(number=page_number, image=None, layout=[])
+        page_layout = Layout(blocks=blocks)  # TODO(benjamin): encode image as base64?
 
-    if dets is not None:
+        return page_layout
+
+    def annotate_image(self, image_fn, dets, out_fn):
+        origin_img = np.array(Image.open(image_fn))
         final_boxes, final_scores, final_cls_inds = dets[:, :4], dets[:, 4], dets[:, 5]
+
         annotated_image = draw_bounding_boxes(
             origin_img,
             final_boxes,
             final_scores,
             final_cls_inds,
             conf=0.3,
-            class_names=layout_classes,
+            class_names=self.layout_classes,
         )
-
-        elements = []
-        # Each detection should have (x1,y1,x2,y2,probability,class) format
-        # being (x1,y1) the top left and (x2,y2) the bottom right
-
-        for det in dets:
-            detection = det.tolist()
-            detection[-1] = layout_classes[int(detection[-1])]
-            element = LayoutElement(
-                type=detection[-1],
-                coordinates=[(detection[0], detection[1]), (detection[2], detection[3])],
-                text=" ",
-            )
-
-            elements.append(element)
-
-        elements.sort(key=lambda element: element.coordinates[0][1])
-
-        page_layout = PageLayout(
-            number=page_number, image=None, layout=elements
-        )  # TODO(benjamin): encode image as base64?
-        if output_directory:
-            if not os.path.exists(output_directory):
-                os.makedirs(output_directory)
-            # the  tmp_file laks of extension
-            output_path = os.path.join(output_directory, os.path.basename(page_orig))
-            cv2.imwrite(output_path, annotated_image)
-
-    return page_layout
+        cv2.imwrite(out_fn, annotated_image)
 
 
 # Note: preprocess function was named preproc on original source
@@ -271,16 +191,13 @@ def multiclass_nms_class_agnostic(boxes, scores, nms_thr, score_thr):
     cls_scores = scores[np.arange(len(cls_inds)), cls_inds]
 
     valid_score_mask = cls_scores > score_thr
-    if valid_score_mask.sum() == 0:
-        return None
     valid_scores = cls_scores[valid_score_mask]
     valid_boxes = boxes[valid_score_mask]
     valid_cls_inds = cls_inds[valid_score_mask]
     keep = nms(valid_boxes, valid_scores, nms_thr)
-    if keep:
-        dets = np.concatenate(
-            [valid_boxes[keep], valid_scores[keep, None], valid_cls_inds[keep, None]], 1
-        )
+    dets = np.concatenate(
+        [valid_boxes[keep], valid_scores[keep, None], valid_cls_inds[keep, None]], 1
+    )
     return dets
 
 
