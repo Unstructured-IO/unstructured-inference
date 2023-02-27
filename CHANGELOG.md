@@ -1,5 +1,6 @@
-## 0.2.8-dev0
+## 0.2.8
 
+* Refactored YoloX inference code to integrate better with framework
 * Improved testing time
 
 ## 0.2.7
@@ -14,9 +15,6 @@
 ## 0.2.5
 
 * Add YoloX model for images and PDFs
-
-## 0.2.5-dev0
-
 * Add generic model interface
 
 ## 0.2.4
