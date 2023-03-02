@@ -1,3 +1,7 @@
+## 0.2.9
+
+* Removed multithreading from OCR
+
 ## 0.2.8
 
 * Refactored YoloX inference code to integrate better with framework
