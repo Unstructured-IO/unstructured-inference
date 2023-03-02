@@ -1,7 +1,5 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from functools import partial
-from multiprocessing import Pool
 import os
 import re
 import tempfile
@@ -181,7 +179,7 @@ class PageLayout:
         # NOTE(benjamin): Creates a Pool for concurrent processing of image elements by OCR
         elements = []
         for e in tqdm(layout):
-            elements.append(get_element_from_block(e,self.image,self.layout,self.ocr_strategy))
+            elements.append(get_element_from_block(e, self.image, self.layout, self.ocr_strategy))
         return elements
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
