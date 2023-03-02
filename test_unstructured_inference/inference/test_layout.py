@@ -101,7 +101,6 @@ def test_get_page_elements_with_ocr(monkeypatch):
 
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
     monkeypatch.setattr(layout, "ocr", lambda *args: "An Even Catchier Title")
-    monkeypatch.setattr(layout, "Pool", MockPool)
 
     image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
     print(layout.ocr(text_block, image))
