@@ -5,6 +5,7 @@ from multiprocessing import Pool
 import os
 import re
 import tempfile
+from tqdm import tqdm
 from typing import List, Optional, Tuple, Union, BinaryIO
 
 from layoutparser.io.pdf import load_pdf
@@ -178,18 +179,9 @@ class PageLayout:
         # sophisticated ordering logic for more complicated layouts.
         layout.sort(key=lambda element: element.coordinates[1], inplace=True)
         # NOTE(benjamin): Creates a Pool for concurrent processing of image elements by OCR
-        pool = Pool()
-        try:
-            get_element_partial = partial(
-                get_element_from_block,
-                image=self.image,
-                layout=self.layout,
-                ocr_strategy=self.ocr_strategy,
-            )
-            elements = pool.map(get_element_partial, layout)
-        finally:
-            pool.close()
-            pool.join()
+        elements = []
+        for e in tqdm(layout):
+            elements.append(get_element_from_block(e,self.image,self.layout,self.ocr_strategy))
         return elements
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
