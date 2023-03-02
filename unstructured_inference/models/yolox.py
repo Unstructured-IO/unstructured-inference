@@ -51,7 +51,7 @@ class UnstructuredYoloXModel(UnstructuredModel):
         return self.image_processing(x)
 
     def initialize(self, model_path: str, label_map: dict):
-        self.model = onnxruntime.InferenceSession(model_path)
+        self.model = onnxruntime.InferenceSession(model_path,providers=['CPUExecutionProvider'])
         self.layout_classes = label_map
 
     def image_processing(
