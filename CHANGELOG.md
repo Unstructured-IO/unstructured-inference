@@ -1,3 +1,7 @@
+## 0.2.9
+
+* Removed multithreading from OCR (DocumentLayout.get_elements_from_layout)
+
 ## 0.2.8
 
 * Refactored YoloX inference code to integrate better with framework
