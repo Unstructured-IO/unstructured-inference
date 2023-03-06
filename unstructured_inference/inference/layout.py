@@ -5,7 +5,7 @@ import re
 import tempfile
 from tqdm import tqdm
 from typing import List, Optional, Tuple, Union, BinaryIO
-
+import unicodedata
 from layoutparser.io.pdf import load_pdf
 from layoutparser.elements.layout_elements import TextBlock
 from layoutparser.elements.layout import Layout
@@ -316,6 +316,7 @@ def interpret_text_block(
         ocr_strategy == "auto" and ((text_block.text is None) or cid_ratio(text_block.text) > 0.5)
     ):
         out_text = ocr(text_block, image)
+        out_text = ''.join(c for c in out_text if unicodedata.category(c)[0] != 'C')
     else:
         out_text = "" if text_block.text is None else text_block.text
     return out_text
