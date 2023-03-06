@@ -316,7 +316,7 @@ def interpret_text_block(
         ocr_strategy == "auto" and ((text_block.text is None) or cid_ratio(text_block.text) > 0.5)
     ):
         out_text = ocr(text_block, image)
-        out_text = ''.join(c for c in out_text if unicodedata.category(c)[0] != 'C')
+        out_text = "".join(c for c in out_text if unicodedata.category(c)[0] != "C")
     else:
         out_text = "" if text_block.text is None else text_block.text
     return out_text
