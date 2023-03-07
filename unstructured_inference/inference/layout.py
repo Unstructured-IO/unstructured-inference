@@ -316,9 +316,9 @@ def interpret_text_block(
         ocr_strategy == "auto" and ((text_block.text is None) or cid_ratio(text_block.text) > 0.5)
     ):
         out_text = ocr(text_block, image)
-        out_text = "".join(c for c in out_text if unicodedata.category(c)[0] != "C")
     else:
         out_text = "" if text_block.text is None else text_block.text
+    out_text = remove_control_characters(out_text)
     return out_text
 
 
@@ -330,3 +330,9 @@ def ocr(text_block: TextBlock, image: Image.Image) -> str:
     padded_block = text_block.pad(left=5, right=5, top=5, bottom=5)
     cropped_image = padded_block.crop_image(image_array)
     return tesseract.ocr_agent.detect(cropped_image)
+
+
+def remove_control_characters(text: str) -> str:
+    """Removes control characters from text."""
+    out_text = "".join(c for c in text if unicodedata.category(c)[0] != "C")
+    return out_text
