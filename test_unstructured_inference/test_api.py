@@ -127,6 +127,7 @@ def test_layout_yolox_api_parsing_image_soft():
     assert len(doc_layout["pages"][0]["elements"]) > 0
     assert response.status_code == 200
 
+
 def test_layout_yolox_api_parsing_image_RGBA_soft():
     filename = os.path.join("sample-docs", "RGBA_image.png")
 
