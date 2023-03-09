@@ -1,3 +1,7 @@
+## 0.2.11
+
+* Fix for processing RGBA images
+
 ## 0.2.10
 
 * Removed control characters from tesseract output
