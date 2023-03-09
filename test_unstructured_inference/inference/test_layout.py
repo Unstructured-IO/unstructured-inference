@@ -327,3 +327,10 @@ def test_from_file_fixed_layout(fixed_layouts, called_method, not_called_method)
 def test_invalid_ocr_strategy_raises(mock_image):
     with pytest.raises(ValueError):
         layout.PageLayout(0, mock_image, MockLayout(), ocr_strategy="fake_strategy")
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"), [("a\ts\x0cd\nfas\fd\rf\b", "asdfasdf"), ("\"'\\", "\"'\\")]
+)
+def test_remove_control_characters(text, expected):
+    assert layout.remove_control_characters(text) == expected

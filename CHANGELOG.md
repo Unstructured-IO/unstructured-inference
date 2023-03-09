@@ -1,3 +1,7 @@
+## 0.2.10
+
+* Removed control characters from tesseract output
+
 ## 0.2.9
 
 * Removed multithreading from OCR (DocumentLayout.get_elements_from_layout)
