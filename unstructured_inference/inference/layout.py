@@ -95,15 +95,14 @@ class DocumentLayout:
                 images = []
                 for page in fitz.open(filename):
                     pixmap = page.get_pixmap()
-                    images.append(
-                        Image.open(io.BytesIO(pixmap.pil_tobytes("ppm")))
-                    )
+                    images.append(Image.open(io.BytesIO(pixmap.pil_tobytes("ppm"))))
                 if len(layouts) > len(images):
                     raise ValueError("PyMuPDF extracted less images than layouts.")
 
             except Exception as exc:
                 raise RuntimeError(
-                    "Some images were not loaded. Check that poppler is installed and in your $PATH."
+                    "Some images were not loaded. "
+                    "Check that poppler is installed and in your $PATH."
                 ) from exc
 
         pages: List[PageLayout] = list()
