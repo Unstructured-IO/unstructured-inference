@@ -16,7 +16,7 @@ done
 # Version appearing earliest in CHANGELOGFILE will be used as ground truth.
 CHANGELOGFILE="CHANGELOG.md"
 VERSIONFILE="unstructured_inference/__version__.py"
-RE_SEMVER_FULL="(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-((0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?"
+RE_SEMVER_FULL="(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?"
 # Pull out semver appearing earliest in CHANGELOGFILE.
 LAST_VERSION=$(grep -o -m 1 -E "${RE_SEMVER_FULL}" "$CHANGELOGFILE")
 

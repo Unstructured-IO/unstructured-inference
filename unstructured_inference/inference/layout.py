@@ -298,6 +298,13 @@ def aggregate_by_block(
     """Extracts the text aggregated from the elements of the given layout that lie within the given
     block."""
     filtered_blocks = layout.filter_by(text_block, center=True)
+    # NOTE(alan): For now, if none of the elements discovered by layoutparser are in the block
+    # we can try interpreting the whole block. This still doesn't handle edge cases, like when there
+    # are some text elements within the block, but there are image elements overlapping the block
+    # with text lying within the block. In this case the text in the image would likely be ignored.
+    if not filtered_blocks:
+        text = interpret_text_block(text_block, image, ocr_strategy)
+        return text
     for little_block in filtered_blocks:
         little_block.text = interpret_text_block(little_block, image, ocr_strategy)
     text = " ".join([x for x in filtered_blocks.get_texts() if x])
