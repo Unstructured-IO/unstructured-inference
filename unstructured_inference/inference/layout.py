@@ -1,11 +1,13 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import io
 import os
 import re
 import tempfile
 from tqdm import tqdm
 from typing import List, Optional, Tuple, Union, BinaryIO
 
+import fitz
 from layoutparser.io.pdf import load_pdf
 from layoutparser.elements.layout_elements import TextBlock
 from layoutparser.elements.layout import Layout
@@ -89,9 +91,21 @@ class DocumentLayout:
         logger.info(f"Reading PDF for file: {filename} ...")
         layouts, images = load_pdf(filename, load_images=True)
         if len(layouts) > len(images):
-            raise RuntimeError(
-                "Some images were not loaded. Check that poppler is installed and in your $PATH."
-            )
+            try:
+                images = []
+                for page in fitz.open(filename):
+                    pixmap = page.get_pixmap()
+                    images.append(
+                        Image.open(io.BytesIO(pixmap.pil_tobytes("ppm")))
+                    )
+                if len(layouts) > len(images):
+                    raise ValueError("PyMuPDF extracted less images than layouts.")
+
+            except Exception as exc:
+                raise RuntimeError(
+                    "Some images were not loaded. Check that poppler is installed and in your $PATH."
+                ) from exc
+
         pages: List[PageLayout] = list()
         if fixed_layouts is None:
             fixed_layouts = [None for _ in layouts]
