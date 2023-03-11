@@ -101,7 +101,7 @@ If your PDF file doesn't have text embedded you can force the use of OCR with
 the parameter force_ocr=True:
 ```
 curl -X 'POST' 'http://localhost:8000/layout/yolox/pdf' \
--F 'file=@sample-docs/loremipsum.pdf' \
+-F 'file=@sample-docs/loremipsum-flat.pdf' \
 -F force_ocr=true 
  | jq -C | less -R
 ```
