@@ -1,3 +1,19 @@
+## 0.2.12
+
+* Fix for processing RGBA images
+
+## 0.2.11
+
+* Fixed some cases where image elements were not being OCR'd
+
+## 0.2.10
+
+* Removed control characters from tesseract output
+
+## 0.2.9
+
+* Removed multithreading from OCR (DocumentLayout.get_elements_from_layout)
+
 ## 0.2.8
 
 * Refactored YoloX inference code to integrate better with framework

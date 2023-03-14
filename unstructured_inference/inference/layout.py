@@ -1,12 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from functools import partial
-from multiprocessing import Pool
 import os
 import re
 import tempfile
+from tqdm import tqdm
 from typing import List, Optional, Tuple, Union, BinaryIO
-
+import unicodedata
 from layoutparser.io.pdf import load_pdf
 from layoutparser.elements.layout_elements import TextBlock
 from layoutparser.elements.layout import Layout
@@ -120,7 +119,7 @@ class DocumentLayout:
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
         try:
-            image = Image.open(filename)
+            image = Image.open(filename).convert("RGB")
         except Exception as e:
             if os.path.isdir(filename) or os.path.isfile(filename):
                 raise e
@@ -178,18 +177,9 @@ class PageLayout:
         # sophisticated ordering logic for more complicated layouts.
         layout.sort(key=lambda element: element.coordinates[1], inplace=True)
         # NOTE(benjamin): Creates a Pool for concurrent processing of image elements by OCR
-        pool = Pool()
-        try:
-            get_element_partial = partial(
-                get_element_from_block,
-                image=self.image,
-                layout=self.layout,
-                ocr_strategy=self.ocr_strategy,
-            )
-            elements = pool.map(get_element_partial, layout)
-        finally:
-            pool.close()
-            pool.join()
+        elements = []
+        for e in tqdm(layout):
+            elements.append(get_element_from_block(e, self.image, self.layout, self.ocr_strategy))
         return elements
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
@@ -308,6 +298,13 @@ def aggregate_by_block(
     """Extracts the text aggregated from the elements of the given layout that lie within the given
     block."""
     filtered_blocks = layout.filter_by(text_block, center=True)
+    # NOTE(alan): For now, if none of the elements discovered by layoutparser are in the block
+    # we can try interpreting the whole block. This still doesn't handle edge cases, like when there
+    # are some text elements within the block, but there are image elements overlapping the block
+    # with text lying within the block. In this case the text in the image would likely be ignored.
+    if not filtered_blocks:
+        text = interpret_text_block(text_block, image, ocr_strategy)
+        return text
     for little_block in filtered_blocks:
         little_block.text = interpret_text_block(little_block, image, ocr_strategy)
     text = " ".join([x for x in filtered_blocks.get_texts() if x])
@@ -328,6 +325,7 @@ def interpret_text_block(
         out_text = ocr(text_block, image)
     else:
         out_text = "" if text_block.text is None else text_block.text
+    out_text = remove_control_characters(out_text)
     return out_text
 
 
@@ -339,3 +337,9 @@ def ocr(text_block: TextBlock, image: Image.Image) -> str:
     padded_block = text_block.pad(left=5, right=5, top=5, bottom=5)
     cropped_image = padded_block.crop_image(image_array)
     return tesseract.ocr_agent.detect(cropped_image)
+
+
+def remove_control_characters(text: str) -> str:
+    """Removes control characters from text."""
+    out_text = "".join(c for c in text if unicodedata.category(c)[0] != "C")
+    return out_text
