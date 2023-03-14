@@ -128,6 +128,22 @@ def test_layout_yolox_api_parsing_image_soft():
     assert response.status_code == 200
 
 
+def test_layout_yolox_api_parsing_image_RGBA_soft():
+    filename = os.path.join("sample-docs", "RGBA_image.png")
+
+    client = TestClient(api.app)
+    response = client.post(
+        "/layout/yolox_tiny/image",
+        headers={"Accept": "multipart/mixed"},
+        files=[("file", (filename, open(filename, "rb"), "image/png"))],
+    )
+    doc_layout = response.json()
+    assert len(doc_layout["pages"]) == 1
+    # NOTE(benjamin) Soft version of the test, run make test-long in order to run with full model
+    assert len(doc_layout["pages"][0]["elements"]) > 0
+    assert response.status_code == 200
+
+
 def test_layout_yolox_api_parsing_pdf_soft():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
 

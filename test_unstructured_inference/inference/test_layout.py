@@ -101,7 +101,6 @@ def test_get_page_elements_with_ocr(monkeypatch):
 
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
     monkeypatch.setattr(layout, "ocr", lambda *args: "An Even Catchier Title")
-    monkeypatch.setattr(layout, "Pool", MockPool)
 
     image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
     print(layout.ocr(text_block, image))
@@ -231,6 +230,9 @@ class MockLayout:
     def __init__(self, *elements):
         self.elements = elements
 
+    def __len__(self):
+        return len(self.elements)
+
     def sort(self, key, inplace):
         return self.elements
 
@@ -239,6 +241,9 @@ class MockLayout:
 
     def get_texts(self):
         return [el.text for el in self.elements]
+
+    def filter_by(self, *args, **kwargs):
+        return MockLayout()
 
 
 @pytest.mark.parametrize(
@@ -328,3 +333,16 @@ def test_from_file_fixed_layout(fixed_layouts, called_method, not_called_method)
 def test_invalid_ocr_strategy_raises(mock_image):
     with pytest.raises(ValueError):
         layout.PageLayout(0, mock_image, MockLayout(), ocr_strategy="fake_strategy")
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"), [("a\ts\x0cd\nfas\fd\rf\b", "asdfasdf"), ("\"'\\", "\"'\\")]
+)
+def test_remove_control_characters(text, expected):
+    assert layout.remove_control_characters(text) == expected
+
+
+def test_interpret_called_when_filter_empty(mock_image):
+    with patch("unstructured_inference.inference.layout.interpret_text_block"):
+        layout.aggregate_by_block(MockTextBlock(), mock_image, MockLayout())
+        layout.interpret_text_block.assert_called_once()
