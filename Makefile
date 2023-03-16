@@ -66,7 +66,7 @@ docker-build:
 
 .PHONY: docker-start-api
 docker-start-api:
-	docker run -p 8000:8000 --mount type=bind,source=$(realpath .),target=/home/notebook-user/local -t --rm --entrypoint uvicorn unstructured-inference-dev:latest ${PACKAGE_NAME}.api:app --host 0.0.0.0 --port 8000
+	docker run -p 8000:8000 --mount type=bind,source=$(realpath .),target=/home/notebook-user/local -t --rm --entrypoint uvicorn unstructured-inference-dev:latest ${PACKAGE_NAME}.api:app --log-config logger_config.yaml --host 0.0.0.0 --port 8000
 
 
 #########
@@ -76,7 +76,7 @@ docker-start-api:
 ## run-app-dev:             runs the FastAPI api with hot reloading
 .PHONY: run-app-dev
 run-app-dev:
-	PYTHONPATH=. uvicorn unstructured_inference.api:app --reload
+	PYTHONPATH=. uvicorn unstructured_inference.api:app --log-config logger_config.yaml --reload
 
 ## start-app-local:         runs FastAPI in the container with hot reloading
 .PHONY: start-app-local
