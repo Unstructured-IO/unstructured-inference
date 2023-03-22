@@ -60,6 +60,7 @@ class UnstructuredDetectronModel(UnstructuredModel):
     """Unstructured model wrapper for Detectron2LayoutModel."""
 
     def predict(self, x: Image):
+        """Makes a prediction using detectron2 model."""
         super().predict(x)
         prediction = self.model.detect(x)
         return [LayoutElement.from_lp_textblock(block) for block in prediction]

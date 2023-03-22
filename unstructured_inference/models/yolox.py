@@ -47,10 +47,12 @@ MODEL_TYPES = {
 
 class UnstructuredYoloXModel(UnstructuredModel):
     def predict(self, x: Image):
+        """Predict using YoloX model."""
         super().predict(x)
         return self.image_processing(x)
 
     def initialize(self, model_path: str, label_map: dict):
+        """Start inference session for YoloX model."""
         self.model = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
         self.layout_classes = label_map
 
@@ -112,6 +114,7 @@ class UnstructuredYoloXModel(UnstructuredModel):
         return page_layout
 
     def annotate_image(self, image_fn, dets, out_fn):
+        """Draw bounding boxes and prediction metadata."""
         origin_img = np.array(Image.open(image_fn))
         final_boxes, final_scores, final_cls_inds = dets[:, :4], dets[:, 4], dets[:, 5]
 
@@ -130,6 +133,7 @@ class UnstructuredYoloXModel(UnstructuredModel):
 
 
 def preprocess(img, input_size, swap=(2, 0, 1)):
+    """Preprocess image data before YoloX inference."""
     if len(img.shape) == 3:
         padded_img = np.ones((input_size[0], input_size[1], 3), dtype=np.uint8) * 114
     else:
@@ -149,6 +153,7 @@ def preprocess(img, input_size, swap=(2, 0, 1)):
 
 
 def demo_postprocess(outputs, img_size, p6=False):
+    """Postprocessing for YoloX model."""
     grids = []
     expanded_strides = []
 
