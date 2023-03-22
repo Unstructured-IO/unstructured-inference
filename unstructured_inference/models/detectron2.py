@@ -10,6 +10,7 @@ from PIL import Image
 from huggingface_hub import hf_hub_download
 
 from unstructured_inference.logger import logger
+from unstructured_inference.inference.elements import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 
@@ -60,7 +61,8 @@ class UnstructuredDetectronModel(UnstructuredModel):
 
     def predict(self, x: Image):
         super().predict(x)
-        return self.model.detect(x)
+        prediction = self.model.detect(x)
+        return [LayoutElement.from_lp_textblock(block) for block in prediction]
 
     def initialize(
         self,
