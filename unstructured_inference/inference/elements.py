@@ -72,8 +72,6 @@ class ImageTextRegion(TextRegion):
 
 
 @dataclass
-# NOTE(alan): I notice this has (almost?) the same structure as a layoutparser TextBlock. Maybe we
-# don't need to make our own here?
 class LayoutElement(TextRegion):
     type: Optional[str] = None
 
