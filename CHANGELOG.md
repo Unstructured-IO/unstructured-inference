@@ -1,3 +1,7 @@
+## 0.2.13-dev0
+
+* Change OCR logic to be aware of PDF image elements
+
 ## 0.2.12
 
 * Fix for processing RGBA images
