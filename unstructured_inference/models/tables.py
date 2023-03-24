@@ -21,6 +21,7 @@ from transformers import DetrImageProcessor
 from PIL import Image
 from typing import Union, Optional
 from pathlib import Path
+import platform
 
 from . import table_postprocess as postprocess
 
@@ -75,26 +76,29 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             #new_image.show()
             '''
 
-        zoom = 6
-        img = cv2.resize(
-            cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
-            None,
-            fx=zoom,
-            fy=zoom,
-            interpolation=cv2.INTER_CUBIC,
-        )
+        if platform.machine() == "x86_64":
+            pass
+        else:
+            zoom = 6
+            img = cv2.resize(
+                cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
+                None,
+                fx=zoom,
+                fy=zoom,
+                interpolation=cv2.INTER_CUBIC,
+            )
 
-        kernel = np.ones((1, 1), np.uint8)
-        img = cv2.dilate(img, kernel, iterations=1)
-        img = cv2.erode(img, kernel, iterations=1)
+            kernel = np.ones((1, 1), np.uint8)
+            img = cv2.dilate(img, kernel, iterations=1)
+            img = cv2.erode(img, kernel, iterations=1)
 
-        ocr_df = pytesseract.image_to_data(Image.fromarray(img), output_type="data.frame")
+            ocr_df = pytesseract.image_to_data(Image.fromarray(img), output_type="data.frame")
 
-        ocr_df = ocr_df.dropna()
+            ocr_df = ocr_df.dropna()
 
-        tokens = []
-        for idx in ocr_df.itertuples():
-            tokens.append({ 'bbox': [idx.left/zoom, idx.top/zoom, (idx.left+idx.width)/zoom, (idx.top+idx.height)/zoom], 'text':idx.text})
+            tokens = []
+            for idx in ocr_df.itertuples():
+                tokens.append({ 'bbox': [idx.left/zoom, idx.top/zoom, (idx.left+idx.width)/zoom, (idx.top+idx.height)/zoom], 'text':idx.text})
 
         sorted(tokens, key=lambda x:x['bbox'][1]*10000+x['bbox'][0])
 
@@ -127,7 +131,10 @@ def load_agent():
         tables_agent = UnstructuredTableTransformerModel()
         tables_agent.initialize("microsoft/table-transformer-structure-recognition")
 
-
+    if platform.machine() == "x86_64":
+        from paddleocr import PaddleOCR
+        global paddle_ocr
+        paddle_ocr = PaddleOCR(use_angle_cls=True, lang='en', mkl_dnn=True)
 
 def get_class_map(data_type):
     if data_type == 'structure':
