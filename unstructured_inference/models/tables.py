@@ -58,8 +58,8 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         self.model.to(device)
 
     def run_prediction(self, x: Image):
+        x = Image.fromarray(x)
         with torch.no_grad():
-            x = Image.fromarray(x)
             encoding = self.feature_extractor(x, return_tensors="pt").to(self.device)
             outputs_structure = self.model(**encoding)
 
@@ -77,7 +77,17 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             '''
 
         if platform.machine() == "x86_64":
-            pass
+            paddle_result = paddle_ocr.ocr(np.array(x), cls=True)
+
+            tokens = []
+            for idx in range(len(paddle_result)):
+                res = paddle_result[idx]
+                for line in res:
+                    xmin = min([i[0] for i in line[0]])
+                    ymin = min([i[1] for i in line[0]])
+                    xmax = max([i[0] for i in line[0]])
+                    ymax = max([i[1] for i in line[0]])
+                    tokens.append({ 'bbox': [xmin, ymin, xmax, ymax], 'text':line[1][0]})
         else:
             zoom = 6
             img = cv2.resize(
