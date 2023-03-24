@@ -4,6 +4,7 @@ import torch
 import logging
 
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.logger import logger
 
 from collections import defaultdict
 import xml.etree.ElementTree as ET
@@ -24,12 +25,13 @@ from pathlib import Path
 from . import table_postprocess as postprocess
 
 
+
 class UnstructuredTableTransformerModel(UnstructuredModel):
     """Unstructured model wrapper for table-transformer."""
 
     def predict(self, x: Image):
         # Predict table structure
-
+        super().predict(x)
         return self.run_prediction(x)
 
     def initialize(
@@ -55,6 +57,24 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         self.model.to(device)
 
     def run_prediction(self, x: Image):
+        with torch.no_grad():
+            x = Image.fromarray(x)
+            encoding = self.feature_extractor(x, return_tensors="pt").to(self.device)
+            outputs_structure = self.model(**encoding)
+
+            '''
+            target_sizes = [x.size[::-1]]
+            new_image = Image.new('RGB', (x.size[0], x.size[1]), color='white')
+            for box in self.feature_extractor.post_process_object_detection(outputs_structure, threshold=0.6, target_sizes=target_sizes)[0]['boxes']:
+                # paste cropped
+                box = box.detach().numpy()
+                crop_image = x.crop((box))
+                #print(box)
+                new_image.paste(crop_image, (int(box[0]), int(box[1])))
+
+            #new_image.show()
+            '''
+
         zoom = 6
         img = cv2.resize(
             cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
@@ -93,11 +113,20 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             if not 'block_num' in token:
                 token['block_num'] = 0
 
-        with torch.no_grad():
-            encoding = self.feature_extractor(x, return_tensors="pt").to(self.device)
-            outputs_structure = self.model(**encoding)
-
         return recognize(outputs_structure, x, tokens = tokens, out_html=True)['html'][0]
+
+tables_agent: UnstructuredTableTransformerModel = None
+
+
+def load_agent():
+    """Loads the Tesseract OCR agent as a global variable to ensure that we only load it once."""
+    global tables_agent
+
+    if tables_agent is None:
+        logger.info("Loading the Tesseract OCR agent ...")
+        tables_agent = UnstructuredTableTransformerModel()
+        tables_agent.initialize("microsoft/table-transformer-structure-recognition")
+
 
 
 def get_class_map(data_type):

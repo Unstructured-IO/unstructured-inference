@@ -14,6 +14,7 @@ from PIL import Image
 
 from unstructured_inference.logger import logger
 import unstructured_inference.models.tesseract as tesseract
+import unstructured_inference.models.tables as tables
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 
@@ -276,6 +277,8 @@ def get_element_from_block(
     if block.text is not None:
         # If block text is already populated, we'll assume it's correct
         text = block.text
+    elif block.type == 'Table':
+        text = interprete_table_block(block, image)
     elif layout is not None:
         text = aggregate_by_block(block, image, layout, ocr_strategy)
     elif image is not None:
@@ -310,6 +313,14 @@ def aggregate_by_block(
     text = " ".join([x for x in filtered_blocks.get_texts() if x])
     return text
 
+def interprete_table_block(
+        text_block: TextBlock, image:Image.Image
+) -> str:
+    tables.load_agent()
+    image_array = np.array(image)
+    padded_block = text_block.pad(left=5, right=5, top=5, bottom=5)
+    cropped_image = padded_block.crop_image(image_array)
+    return tables.tables_agent.predict(cropped_image)
 
 def interpret_text_block(
     text_block: TextBlock, image: Image.Image, ocr_strategy: str = "auto"
