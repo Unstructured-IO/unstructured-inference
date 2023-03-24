@@ -144,7 +144,7 @@ def load_agent():
     if platform.machine() == "x86_64":
         from paddleocr import PaddleOCR
         global paddle_ocr
-        paddle_ocr = PaddleOCR(use_angle_cls=True, lang='en', mkl_dnn=True)
+        paddle_ocr = PaddleOCR(use_angle_cls=True, lang='en', mkl_dnn=True, show_log = False)
 
 def get_class_map(data_type):
     if data_type == 'structure':
