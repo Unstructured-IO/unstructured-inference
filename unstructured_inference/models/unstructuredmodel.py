@@ -23,6 +23,7 @@ class UnstructuredModel(ABC):
         pass  # pragma: no cover
 
     def __call__(self, x: Any):
+        """Inference using function call interface."""
         return self.predict(x)
 
     @abstractmethod

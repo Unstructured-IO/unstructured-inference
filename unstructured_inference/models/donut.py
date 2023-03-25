@@ -12,6 +12,7 @@ class UnstructuredDonutModel(UnstructuredModel):
     """Unstructured model wrapper for Donut image transformer."""
 
     def predict(self, x: Image):
+        """Make prediction using donut model"""
         super().predict(x)
         return self.run_prediction(x)
 
@@ -45,6 +46,7 @@ class UnstructuredDonutModel(UnstructuredModel):
         self.model.to(device)
 
     def run_prediction(self, x: Image):
+        """Internal prediction method."""
         pixel_values = self.processor(x, return_tensors="pt").pixel_values
         decoder_input_ids = self.processor.tokenizer(
             self.task_prompt, add_special_tokens=False, return_tensors="pt"

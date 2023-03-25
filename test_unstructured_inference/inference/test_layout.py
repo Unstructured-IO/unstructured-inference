@@ -1,16 +1,14 @@
 from functools import partial
+from itertools import product
 import pytest
 import tempfile
-from unittest.mock import patch, mock_open, Mock
+from unittest.mock import patch, mock_open
 
-import layoutparser as lp
-from layoutparser.elements import Layout, Rectangle, TextBlock
 import numpy as np
 from PIL import Image
 
 import unstructured_inference.inference.layout as layout
 import unstructured_inference.models.base as models
-
 import unstructured_inference.models.detectron2 as detectron2
 import unstructured_inference.models.tesseract as tesseract
 
@@ -22,17 +20,15 @@ def mock_image():
 
 @pytest.fixture
 def mock_page_layout():
-    text_rectangle = Rectangle(2, 4, 6, 8)
-    text_block = TextBlock(text_rectangle, text="A very repetitive narrative. " * 10, type="Text")
+    text_block = layout.TextRegion(2, 4, 6, 8, text="A very repetitive narrative. " * 10)
 
-    title_rectangle = Rectangle(1, 2, 3, 4)
-    title_block = TextBlock(title_rectangle, text="A Catchy Title", type="Title")
+    title_block = layout.TextRegion(1, 2, 3, 4, text="A Catchy Title")
 
-    return Layout([text_block, title_block])
+    return [text_block, title_block]
 
 
 def test_pdf_page_converts_images_to_array(mock_image):
-    page = layout.PageLayout(number=0, image=mock_image, layout=Layout())
+    page = layout.PageLayout(number=0, image=mock_image, layout=[])
     assert page.image_array is None
 
     image_array = page._get_image_array()
@@ -50,9 +46,8 @@ def test_ocr(monkeypatch):
     monkeypatch.setattr(tesseract, "ocr_agent", MockOCRAgent)
     monkeypatch.setattr(tesseract, "is_pytesseract_available", lambda *args: True)
 
-    image = np.random.randint(12, 24, (40, 40))
-    rectangle = Rectangle(1, 2, 3, 4)
-    text_block = TextBlock(rectangle, text=None)
+    image = Image.fromarray(np.random.randint(12, 24, (40, 40)), mode="RGB")
+    text_block = layout.TextRegion(1, 2, 3, 4, text=None)
 
     assert layout.ocr(text_block, image=image) == mock_text
 
@@ -95,28 +90,27 @@ class MockPool:
 
 
 def test_get_page_elements_with_ocr(monkeypatch):
-    rectangle = Rectangle(2, 4, 6, 8)
-    text_block = TextBlock(rectangle, text=None, type="Title")
-    doc_layout = Layout([text_block])
+    text_block = layout.TextRegion(2, 4, 6, 8, text=None)
+    image_block = layout.ImageTextRegion(8, 14, 16, 18)
+    doc_layout = [text_block, image_block]
 
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
     monkeypatch.setattr(layout, "ocr", lambda *args: "An Even Catchier Title")
 
     image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
-    print(layout.ocr(text_block, image))
     page = layout.PageLayout(
         number=0, image=image, layout=doc_layout, model=MockLayoutModel(doc_layout)
     )
     page.get_elements()
 
-    assert str(page) == "An Even Catchier Title"
+    assert str(page) == "\n\nAn Even Catchier Title"
 
 
 def test_read_pdf(monkeypatch, mock_page_layout):
     image = np.random.randint(12, 24, (40, 40))
     images = [image, image]
 
-    layouts = Layout([mock_page_layout, mock_page_layout])
+    layouts = [mock_page_layout, mock_page_layout]
 
     monkeypatch.setattr(
         models, "UnstructuredDetectronModel", partial(MockLayoutModel, layout=mock_page_layout)
@@ -180,7 +174,7 @@ class MockPoints:
         return [1, 2, 3, 4]
 
 
-class MockTextBlock(lp.TextBlock):
+class MockTextRegion(layout.TextRegion):
     def __init__(self, type=None, text=None, ocr_text=None):
         self.type = type
         self.text = text
@@ -198,16 +192,8 @@ class MockPageLayout(layout.PageLayout):
         self.model = model
         self.ocr_strategy = ocr_strategy
 
-    def ocr(self, text_block: MockTextBlock):
+    def ocr(self, text_block: MockTextRegion):
         return text_block.ocr_text
-
-
-def test_interpret_text_block_use_ocr_when_text_symbols_cid(mock_image):
-    fake_text_block = Mock()
-    fake_text_block.text = "(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)"
-    with patch("unstructured_inference.inference.layout.ocr"):
-        layout.interpret_text_block(fake_text_block, mock_image)
-        layout.ocr.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -251,18 +237,15 @@ class MockLayout:
     [
         ("no ocr", ["pieced", "together", "group"], "no ocr"),
         (None, ["pieced", "together", "group"], "pieced together group"),
-        (None, [None, None, "one"], "ocr ocr one"),
     ],
 )
 def test_get_element_from_block(block_text, layout_texts, mock_image, expected_text):
     with patch("unstructured_inference.inference.layout.ocr", return_value="ocr"):
-        block = TextBlock(Rectangle(0, 0, 10, 10), text=block_text)
-        captured_layout = Layout(
-            [
-                TextBlock(Rectangle(i + 1, i + 1, i + 2, i + 2), text=text)
-                for i, text in enumerate(layout_texts)
-            ]
-        )
+        block = layout.TextRegion(0, 0, 10, 10, text=block_text)
+        captured_layout = [
+            layout.TextRegion(i + 1, i + 1, i + 2, i + 2, text=text)
+            for i, text in enumerate(layout_texts)
+        ]
         assert (
             layout.get_element_from_block(block, mock_image, captured_layout).text == expected_text
         )
@@ -270,7 +253,7 @@ def test_get_element_from_block(block_text, layout_texts, mock_image, expected_t
 
 def test_get_elements_from_block_raises():
     with pytest.raises(ValueError):
-        block = TextBlock(Rectangle(0, 0, 10, 10), text=None)
+        block = layout.TextRegion(0, 0, 10, 10, text=None)
         layout.get_element_from_block(block, None, None)
 
 
@@ -308,8 +291,8 @@ def test_from_file_raises_on_length_mismatch(monkeypatch):
 @pytest.mark.parametrize("idx", range(2))
 def test_get_elements_from_layout(mock_page_layout, idx):
     page = MockPageLayout(layout=mock_page_layout)
-    block = mock_page_layout._blocks[idx].pad(3)
-    fixed_layout = Layout(blocks=[block])
+    block = mock_page_layout[idx].pad(3)
+    fixed_layout = [block]
     elements = page.get_elements_from_layout(fixed_layout)
     assert elements[0].text == block.text
 
@@ -342,7 +325,77 @@ def test_remove_control_characters(text, expected):
     assert layout.remove_control_characters(text) == expected
 
 
-def test_interpret_called_when_filter_empty(mock_image):
-    with patch("unstructured_inference.inference.layout.interpret_text_block"):
-        layout.aggregate_by_block(MockTextBlock(), mock_image, MockLayout())
-        layout.interpret_text_block.assert_called_once()
+no_text_region = layout.TextRegion(0, 0, 100, 100)
+text_region = layout.TextRegion(0, 0, 100, 100, text="test")
+cid_text_region = layout.TextRegion(0, 0, 100, 100, text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)")
+overlapping_rect = layout.ImageTextRegion(50, 50, 150, 150)
+nonoverlapping_rect = layout.ImageTextRegion(150, 150, 200, 200)
+populated_text_region = layout.TextRegion(50, 50, 60, 60, text="test")
+unpopulated_text_region = layout.TextRegion(50, 50, 60, 60, text=None)
+
+
+@pytest.mark.parametrize(
+    ("region", "text_objects", "image_objects", "ocr_strategy", "expected"),
+    [
+        (no_text_region, [], [nonoverlapping_rect], "auto", False),
+        (no_text_region, [], [overlapping_rect], "auto", True),
+        (no_text_region, [], [], "auto", False),
+        (no_text_region, [populated_text_region], [nonoverlapping_rect], "auto", False),
+        (no_text_region, [populated_text_region], [overlapping_rect], "auto", False),
+        (no_text_region, [populated_text_region], [], "auto", False),
+        (no_text_region, [unpopulated_text_region], [nonoverlapping_rect], "auto", False),
+        (no_text_region, [unpopulated_text_region], [overlapping_rect], "auto", True),
+        (no_text_region, [unpopulated_text_region], [], "auto", False),
+        *list(
+            product(
+                [text_region],
+                [[], [populated_text_region], [unpopulated_text_region]],
+                [[], [nonoverlapping_rect], [overlapping_rect]],
+                ["auto"],
+                [False],
+            )
+        ),
+        *list(
+            product(
+                [cid_text_region],
+                [[], [populated_text_region], [unpopulated_text_region]],
+                [[overlapping_rect]],
+                ["auto"],
+                [True],
+            )
+        ),
+        *list(
+            product(
+                [no_text_region, text_region, cid_text_region],
+                [[], [populated_text_region], [unpopulated_text_region]],
+                [[], [nonoverlapping_rect], [overlapping_rect]],
+                ["force"],
+                [True],
+            )
+        ),
+        *list(
+            product(
+                [no_text_region, text_region, cid_text_region],
+                [[], [populated_text_region], [unpopulated_text_region]],
+                [[], [nonoverlapping_rect], [overlapping_rect]],
+                ["never"],
+                [False],
+            )
+        ),
+    ],
+)
+def test_ocr_image(region, text_objects, image_objects, ocr_strategy, expected):
+    assert layout.needs_ocr(region, text_objects, image_objects, ocr_strategy) is expected
+
+
+def test_load_pdf():
+    layouts, images = layout.load_pdf("sample-docs/loremipsum.pdf")
+    assert len(layouts)
+    assert len(images)
+    assert len(layouts) == len(images)
+
+
+def test_load_pdf_with_images():
+    layouts, _ = layout.load_pdf("sample-docs/loremipsum-flat.pdf")
+    first_page_layout = layouts[0]
+    assert any(isinstance(obj, layout.ImageTextRegion) for obj in first_page_layout)

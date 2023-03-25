@@ -11,11 +11,7 @@ class MockDetectron2LayoutModel:
         self.kwargs = kwargs
 
     def detect(self, x):
-        return MockLayout()
-
-
-class MockLayout:
-    pass
+        return []
 
 
 def test_load_default_model(monkeypatch):
@@ -46,4 +42,6 @@ def test_load_model(monkeypatch, config_path, model_path):
 def test_unstructured_detectron_model():
     model = detectron2.UnstructuredDetectronModel()
     model.model = MockDetectron2LayoutModel()
-    assert isinstance(model(None), MockLayout)
+    result = model(None)
+    assert isinstance(result, list)
+    assert len(result) == 0
