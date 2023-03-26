@@ -4,7 +4,69 @@ Copyright (C) 2021 Microsoft Corporation
 """
 from collections import defaultdict
 
-from fitz import Rect
+class Rect:
+    def __init__(self, bbox = None): #x_min, y_min, x_max, y_max):
+        if bbox is None:
+            self.x_min = 0
+            self.y_min = 0
+            self.x_max = 0
+            self.y_max = 0
+        else:
+            self.x_min = bbox[0]
+            self.y_min = bbox[1]
+            self.x_max = bbox[2]
+            self.y_max = bbox[3]
+    
+    def get_area(self):
+        area = (self.x_max - self.x_min) * (self.y_max - self.y_min)
+        return area if area > 0 else 0.0
+    
+    def intersect(self, other):
+        if self.get_area() == 0:
+            self.x_min = other.x_min
+            self.y_min = other.y_min
+            self.x_max = other.x_max
+            self.y_max = other.y_max
+        else: 
+            self.x_min = max(self.x_min, other.x_min)
+            self.y_min = max(self.y_min, other.y_min)
+            self.x_max = min(self.x_max, other.x_max)
+            self.y_max = min(self.y_max, other.y_max)
+
+            if self.x_min > self.x_max or self.y_min > self.y_max or self.get_area() == 0:
+                self.x_min = 0
+                self.y_min = 0
+                self.x_max = 0
+                self.y_max = 0
+        
+        return self
+    
+
+    def include_rect(self, bbox):
+        other = Rect(bbox)
+
+        if self.get_area() == 0:
+            self.x_min = other.x_min
+            self.y_min = other.y_min
+            self.x_max = other.x_max
+            self.y_max = other.y_max
+            return self
+
+        self.x_min = min(self.x_min, other.x_min)
+        self.y_min = min(self.y_min, other.y_min)
+        self.x_max = max(self.x_max, other.x_max)
+        self.y_max = max(self.y_max, other.y_max)
+
+        if self.get_area() == 0:
+            self.x_min = other.x_min
+            self.y_min = other.y_min
+            self.x_max = other.x_max
+            self.y_max = other.y_max
+
+        return self
+    
+    def get_bbox(self):
+        return [self.x_min, self.y_min, self.x_max, self.y_max]
 
 
 def apply_threshold(objects, threshold):
@@ -121,12 +183,18 @@ def objects_to_table_structures(table_object, objects_in_table, tokens_in_table,
 
     # Shrink table bbox to just the total height of the rows
     # and the total width of the columns
-    row_rect = Rect()
+    row_rect = None
     for obj in rows:
-        row_rect.include_rect(obj['bbox'])
-    column_rect = Rect() 
+        if row_rect is None: 
+            row_rect = Rect(obj['bbox'])
+        else:
+            row_rect.include_rect(obj['bbox'])
+    column_rect = None
     for obj in columns:
-        column_rect.include_rect(obj['bbox'])
+        if column_rect is None:
+            column_rect = Rect(obj['bbox'])
+        else:
+            column_rect.include_rect(obj['bbox'])
     table_object['row_column_bbox'] = [column_rect[0], row_rect[1], column_rect[2], row_rect[3]]
     table_object['bbox'] = table_object['row_column_bbox']
 
@@ -226,8 +294,9 @@ def slot_into_containers(container_objects, package_objects, overlap_threshold=0
         package_area = package_rect.get_area()        
         for container_num, container in enumerate(container_objects):
             container_rect = Rect(container['bbox'])
-            intersect_area = container_rect.intersect(package['bbox']).get_area()
+            intersect_area = container_rect.intersect(Rect(package['bbox'])).get_area()
             overlap_fraction = intersect_area / package_area
+
             match_scores.append({'container': container, 'container_num': container_num, 'score': overlap_fraction})
 
         sorted_match_scores = sort_objects_by_score(match_scores)
@@ -245,7 +314,7 @@ def slot_into_containers(container_objects, package_objects, overlap_threshold=0
                     package_assignments[package_num].append(match_score['container_num'])
                 else:
                     break
-            
+
     return container_assignments, package_assignments, best_match_scores
 
 
@@ -302,7 +371,7 @@ def overlaps(bbox1, bbox2, threshold=0.5):
     area1 = rect1.get_area()
     if area1 == 0:
         return False
-    return rect1.intersect(list(bbox2)).get_area()/area1 >= threshold
+    return rect1.intersect(Rect(list(bbox2))).get_area()/area1 >= threshold
 
 
 def extract_text_from_spans(spans, join_with_space=True, remove_integer_superscripts=True):
@@ -613,7 +682,7 @@ def align_supercells(supercells, rows, columns):
         if col_bbox_rect is None:
             continue
 
-        supercell_bbox = list(row_bbox_rect.intersect(col_bbox_rect))
+        supercell_bbox = row_bbox_rect.intersect(col_bbox_rect).get_bbox()
         supercell['bbox'] = supercell_bbox
 
         # Only a true supercell if it joins across multiple rows or columns

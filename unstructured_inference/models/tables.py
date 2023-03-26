@@ -9,12 +9,10 @@ from unstructured_inference.logger import logger
 from collections import defaultdict
 import xml.etree.ElementTree as ET
 
-
 import cv2
 import numpy as np
 
 import pytesseract
-from fitz import Rect
 
 from transformers import TableTransformerForObjectDetection
 from transformers import DetrImageProcessor
@@ -24,6 +22,7 @@ from pathlib import Path
 import platform
 
 from . import table_postprocess as postprocess
+from unstructured_inference.models.table_postprocess import Rect
 
 
 
@@ -62,19 +61,6 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         with torch.no_grad():
             encoding = self.feature_extractor(x, return_tensors="pt").to(self.device)
             outputs_structure = self.model(**encoding)
-
-            '''
-            target_sizes = [x.size[::-1]]
-            new_image = Image.new('RGB', (x.size[0], x.size[1]), color='white')
-            for box in self.feature_extractor.post_process_object_detection(outputs_structure, threshold=0.6, target_sizes=target_sizes)[0]['boxes']:
-                # paste cropped
-                box = box.detach().numpy()
-                crop_image = x.crop((box))
-                #print(box)
-                new_image.paste(crop_image, (int(box[0]), int(box[1])))
-
-            #new_image.show()
-            '''
 
         if platform.machine() == "x86_64":
             paddle_result = paddle_ocr.ocr(np.array(x), cls=True)
@@ -146,7 +132,7 @@ def load_agent():
         global paddle_ocr
         paddle_ocr = PaddleOCR(use_angle_cls=True, lang='en', mkl_dnn=True, show_log = False)
 
-def get_class_map(data_type):
+def get_class_map(data_type: str):
     if data_type == 'structure':
         class_map = {
             'table': 0,
@@ -171,7 +157,7 @@ structure_class_thresholds = {
     "no object": 10
 }
 
-def recognize(outputs, img, tokens=None, out_html=False):
+def recognize(outputs: dict, img: Image, tokens:list=None, out_html:bool=False):
     out_formats = {} 
 
     str_class_name2idx = get_class_map('structure')
@@ -183,7 +169,6 @@ def recognize(outputs, img, tokens=None, out_html=False):
 
     # Further process the detected objects so they correspond to a consistent table
     tables_structure = objects_to_structures(objects, tokens, str_class_thresholds)
-
     # Enumerate all table cells: grid cells and spanning cells
     tables_cells = [structure_to_cells(structure, tokens)[0] for structure in tables_structure]
 
@@ -227,7 +212,7 @@ def iob(bbox1, bbox2):
     """
     Compute the intersection area over box area, for bbox1.
     """
-    intersection = Rect(bbox1).intersect(bbox2)
+    intersection = Rect(bbox1).intersect(Rect(bbox2))
     
     bbox1_area = Rect(bbox1).get_area()
     if bbox1_area > 0:
@@ -280,7 +265,7 @@ def objects_to_structures(objects, tokens, class_thresholds):
         column_rect = Rect() 
         for obj in columns:
             column_rect.include_rect(obj['bbox'])
-        table['row_column_bbox'] = [column_rect[0], row_rect[1], column_rect[2], row_rect[3]]
+        table['row_column_bbox'] = [column_rect.x_min, row_rect.y_min, column_rect.x_max, row_rect.y_max]
         table['bbox'] = table['row_column_bbox']
 
         # Process the rows and columns into a complete segmented table
@@ -381,7 +366,7 @@ def align_headers(headers, rows):
             # Having more than 1 header is not supported currently.
             break
 
-    header = {'bbox': list(header_rect)}
+    header = {'bbox': header_rect.get_bbox()}
     aligned_headers.append(header)
 
     return aligned_headers
@@ -400,7 +385,6 @@ def structure_to_cells(table_structure, tokens):
     spanning_cells = table_structure['spanning cells']
     cells = []
     subcells = []
-
     # Identify complete cells and subcells
     for column_num, column in enumerate(columns):
         for row_num, row in enumerate(rows):
@@ -408,7 +392,7 @@ def structure_to_cells(table_structure, tokens):
             row_rect = Rect(list(row['bbox']))
             cell_rect = row_rect.intersect(column_rect)
             header = 'column header' in row and row['column header']
-            cell = {'bbox': list(cell_rect), 'column_nums': [column_num], 'row_nums': [row_num],
+            cell = {'bbox': cell_rect.get_bbox(), 'column_nums': [column_num], 'row_nums': [row_num],
                     'column header': header}
 
             cell['subcell'] = False
@@ -449,7 +433,7 @@ def structure_to_cells(table_structure, tokens):
                 # otherwise, this could lead to a non-rectangular header region
                 header = header and 'column header' in subcell and subcell['column header']
         if len(cell_rows) > 0 and len(cell_columns) > 0:
-            cell = {'bbox': list(cell_rect), 'column_nums': list(cell_columns), 'row_nums': list(cell_rows),
+            cell = {'bbox': cell_rect.get_bbox(), 'column_nums': list(cell_columns), 'row_nums': list(cell_rows),
                     'column header': header, 'projected row header': spanning_cell['projected row header']}
             cells.append(cell)
 
@@ -476,7 +460,7 @@ def structure_to_cells(table_structure, tokens):
         for row_num in cell['row_nums']:
             row_rect.include_rect(list(dilated_rows[row_num]['bbox']))
         cell_rect = column_rect.intersect(row_rect)
-        cell['bbox'] = list(cell_rect)
+        cell['bbox'] = cell_rect.get_bbox()
 
     span_nums_by_cell, _, _ = postprocess.slot_into_containers(cells, tokens, overlap_threshold=0.001,
                                                                unique_assignment=True, forced_assignment=False)
@@ -487,7 +471,7 @@ def structure_to_cells(table_structure, tokens):
         # but need to associate 
         cell['cell text'] = postprocess.extract_text_from_spans(cell_spans, remove_integer_superscripts=False)
         cell['spans'] = cell_spans
-        
+
     # Adjust the row, column, and cell bounding boxes to reflect the extracted text
     num_rows = len(rows)
     rows = postprocess.sort_objects_top_to_bottom(rows)
@@ -526,15 +510,21 @@ def structure_to_cells(table_structure, tokens):
         if len(max_y_values_by_row[num_rows-1]) > 0:
             column['bbox'][3] = max(max_y_values_by_row[num_rows-1])
     for cell in cells:
-        row_rect = Rect()
-        column_rect = Rect()
+        row_rect = None
+        column_rect = None
         for row_num in cell['row_nums']:
-            row_rect.include_rect(list(rows[row_num]['bbox']))
+            if row_rect is None:
+                row_rect = Rect(list(rows[row_num]['bbox']))
+            else:
+                row_rect.include_rect(list(rows[row_num]['bbox']))
         for column_num in cell['column_nums']:
-            column_rect.include_rect(list(columns[column_num]['bbox']))
+            if column_rect is None:
+                column_rect = Rect(list(columns[column_num]['bbox']))
+            else:
+                column_rect.include_rect(list(columns[column_num]['bbox']))
         cell_rect = row_rect.intersect(column_rect)
         if cell_rect.get_area() > 0:
-            cell['bbox'] = list(cell_rect)
+            cell['bbox'] = cell_rect.get_bbox()
             pass
 
     return cells, confidence_score
