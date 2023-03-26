@@ -287,11 +287,11 @@ def aggregate_by_block(
     return text
 
 
-def interprete_table_block(text_block: TextBlock, image: Image.Image) -> str:
+def interprete_table_block(text_block: TextRegion, image: Image.Image) -> str:
+    """Extract the contents of a table."""
     tables.load_agent()
-    image_array = np.array(image)
-    padded_block = text_block.pad(left=5, right=5, top=5, bottom=5)
-    cropped_image = padded_block.crop_image(image_array)
+    padded_block = text_block.pad(5)
+    cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tables.tables_agent.predict(cropped_image)
 
 
