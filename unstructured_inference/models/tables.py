@@ -25,12 +25,11 @@ from . import table_postprocess as postprocess
 from unstructured_inference.models.table_postprocess import Rect
 
 
-
 class UnstructuredTableTransformerModel(UnstructuredModel):
     """Unstructured model wrapper for table-transformer."""
 
     def predict(self, x: Image):
-        # Predict table structure
+        """Predict table structure deferring to run_prediction"""
         super().predict(x)
         return self.run_prediction(x)
 
@@ -50,14 +49,14 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
         except EnvironmentError:
             logging.critical("Failed to initialize the model.")
-            logging.critical(
-                "Ensure that the model is correct"
+            logging.critical("Ensure that the model is correct")
+            raise ImportError(
+                "Review the parameters to initialize a UnstructuredTableTransformerModel obj"
             )
-            raise ImportError("Review the parameters to initialize a UnstructuredTableTransformerModel obj")
         self.model.to(device)
 
     def run_prediction(self, x: Image):
-        x = Image.fromarray(x)
+        """Predict table structure"""
         with torch.no_grad():
             encoding = self.feature_extractor(x, return_tensors="pt").to(self.device)
             outputs_structure = self.model(**encoding)
@@ -73,7 +72,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                     ymin = min([i[1] for i in line[0]])
                     xmax = max([i[0] for i in line[0]])
                     ymax = max([i[1] for i in line[0]])
-                    tokens.append({ 'bbox': [xmin, ymin, xmax, ymax], 'text':line[1][0]})
+                    tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
         else:
             zoom = 6
             img = cv2.resize(
@@ -94,26 +93,37 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
             tokens = []
             for idx in ocr_df.itertuples():
-                tokens.append({ 'bbox': [idx.left/zoom, idx.top/zoom, (idx.left+idx.width)/zoom, (idx.top+idx.height)/zoom], 'text':idx.text})
+                tokens.append(
+                    {
+                        "bbox": [
+                            idx.left / zoom,
+                            idx.top / zoom,
+                            (idx.left + idx.width) / zoom,
+                            (idx.top + idx.height) / zoom,
+                        ],
+                        "text": idx.text,
+                    }
+                )
 
-        sorted(tokens, key=lambda x:x['bbox'][1]*10000+x['bbox'][0])
+        sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
 
         # Handle dictionary format
-        if type(tokens) is dict and 'words' in tokens:
-            tokens = tokens['words']
+        if type(tokens) is dict and "words" in tokens:
+            tokens = tokens["words"]
 
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
         # If no order is provided, use current order
         for idx, token in enumerate(tokens):
-            if not 'span_num' in token:
-                token['span_num'] = idx
-            if not 'line_num' in token:
-                token['line_num'] = 0
-            if not 'block_num' in token:
-                token['block_num'] = 0
+            if "span_num" not in token:
+                token["span_num"] = idx
+            if "line_num" not in token:
+                token["line_num"] = 0
+            if "block_num" not in token:
+                token["block_num"] = 0
 
-        return recognize(outputs_structure, x, tokens = tokens, out_html=True)['html'][0]
+        return recognize(outputs_structure, x, tokens=tokens, out_html=True)["html"][0]
+
 
 tables_agent: UnstructuredTableTransformerModel = None
 
@@ -129,23 +139,26 @@ def load_agent():
 
     if platform.machine() == "x86_64":
         from paddleocr import PaddleOCR
+
         global paddle_ocr
-        paddle_ocr = PaddleOCR(use_angle_cls=True, lang='en', mkl_dnn=True, show_log = False)
+        paddle_ocr = PaddleOCR(use_angle_cls=True, lang="en", mkl_dnn=True, show_log=False)
+
 
 def get_class_map(data_type: str):
     if data_type == 'structure':
         class_map = {
-            'table': 0,
-            'table column': 1,
-            'table row': 2,
-            'table column header': 3,
-            'table projected row header': 4,
-            'table spanning cell': 5,
-            'no object': 6
+            "table": 0,
+            "table column": 1,
+            "table row": 2,
+            "table column header": 3,
+            "table projected row header": 4,
+            "table spanning cell": 5,
+            "no object": 6,
         }
-    elif data_type == 'detection':
-        class_map = {'table': 0, 'table rotated': 1, 'no object': 2}
+    elif data_type == "detection":
+        class_map = {"table": 0, "table rotated": 1, "no object": 2}
     return class_map
+
 
 structure_class_thresholds = {
     "table": 0.5,
@@ -154,14 +167,18 @@ structure_class_thresholds = {
     "table column header": 0.5,
     "table projected row header": 0.5,
     "table spanning cell": 0.5,
-    "no object": 10
+    "no object": 10,
 }
 
 def recognize(outputs: dict, img: Image, tokens:list=None, out_html:bool=False):
     out_formats = {} 
 
-    str_class_name2idx = get_class_map('structure')
-    str_class_idx2name = {v:k for k, v in str_class_name2idx.items()}
+def recognize(outputs, img, tokens=None, out_html=False):
+    """Recognize table elements."""
+    out_formats = {}
+
+    str_class_name2idx = get_class_map("structure")
+    str_class_idx2name = {v: k for k, v in str_class_name2idx.items()}
     str_class_thresholds = structure_class_thresholds
 
     # Post-process detected objects, assign class labels
@@ -175,38 +192,50 @@ def recognize(outputs: dict, img: Image, tokens:list=None, out_html:bool=False):
     # Convert cells to HTML
     if out_html:
         tables_htmls = [cells_to_html(cells) for cells in tables_cells]
-        out_formats['html'] = tables_htmls
+        out_formats["html"] = tables_htmls
 
     return out_formats
 
+
 def outputs_to_objects(outputs, img_size, class_idx2name):
-    m = outputs['logits'].softmax(-1).max(-1)
+    """Output table element types."""
+    m = outputs["logits"].softmax(-1).max(-1)
     pred_labels = list(m.indices.detach().cpu().numpy())[0]
     pred_scores = list(m.values.detach().cpu().numpy())[0]
-    pred_bboxes = outputs['pred_boxes'].detach().cpu()[0]
+    pred_bboxes = outputs["pred_boxes"].detach().cpu()[0]
     pred_bboxes = [elem.tolist() for elem in rescale_bboxes(pred_bboxes, img_size)]
 
     objects = []
     for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes):
         class_label = class_idx2name[int(label)]
-        if not class_label == 'no object':
-            objects.append({'label': class_label, 'score': float(score),
-                            'bbox': [float(elem) for elem in bbox]})
+        if not class_label == "no object":
+            objects.append(
+                {
+                    "label": class_label,
+                    "score": float(score),
+                    "bbox": [float(elem) for elem in bbox],
+                }
+            )
 
     return objects
 
+
 # for output bounding box post-processing
 def box_cxcywh_to_xyxy(x):
+    """Convert rectangle format from center-x, center-y, width, height to
+    x-min, y-min, x-max, y-max."""
     x_c, y_c, w, h = x.unbind(-1)
     b = [(x_c - 0.5 * w), (y_c - 0.5 * h), (x_c + 0.5 * w), (y_c + 0.5 * h)]
     return torch.stack(b, dim=1)
 
 
 def rescale_bboxes(out_bbox, size):
+    """Rescale relative bounding box to box of size given by size."""
     img_w, img_h = size
     b = box_cxcywh_to_xyxy(out_bbox)
     b = b * torch.tensor([img_w, img_h, img_w, img_h], dtype=torch.float32)
     return b
+
 
 def iob(bbox1, bbox2):
     """
@@ -217,8 +246,9 @@ def iob(bbox1, bbox2):
     bbox1_area = Rect(bbox1).get_area()
     if bbox1_area > 0:
         return intersection.get_area() / bbox1_area
-    
+
     return 0
+
 
 def objects_to_structures(objects, tokens, class_thresholds):
     """
@@ -228,54 +258,58 @@ def objects_to_structures(objects, tokens, class_thresholds):
     conditions (for example: rows should all have the same width, etc.).
     """
 
-    tables = [obj for obj in objects if obj['label'] == 'table']
+    tables = [obj for obj in objects if obj["label"] == "table"]
     table_structures = []
 
     for table in tables:
-        table_objects = [obj for obj in objects if iob(obj['bbox'], table['bbox']) >= 0.5]
-        table_tokens = [token for token in tokens if iob(token['bbox'], table['bbox']) >= 0.5]
-        
+        table_objects = [obj for obj in objects if iob(obj["bbox"], table["bbox"]) >= 0.5]
+        table_tokens = [token for token in tokens if iob(token["bbox"], table["bbox"]) >= 0.5]
+
         structure = {}
 
-        columns = [obj for obj in table_objects if obj['label'] == 'table column']
-        rows = [obj for obj in table_objects if obj['label'] == 'table row']
-        column_headers = [obj for obj in table_objects if obj['label'] == 'table column header']
-        spanning_cells = [obj for obj in table_objects if obj['label'] == 'table spanning cell']
+        columns = [obj for obj in table_objects if obj["label"] == "table column"]
+        rows = [obj for obj in table_objects if obj["label"] == "table row"]
+        column_headers = [obj for obj in table_objects if obj["label"] == "table column header"]
+        spanning_cells = [obj for obj in table_objects if obj["label"] == "table spanning cell"]
         for obj in spanning_cells:
-            obj['projected row header'] = False
-        projected_row_headers = [obj for obj in table_objects if obj['label'] == 'table projected row header']
+            obj["projected row header"] = False
+        projected_row_headers = [
+            obj for obj in table_objects if obj["label"] == "table projected row header"
+        ]
         for obj in projected_row_headers:
-            obj['projected row header'] = True
+            obj["projected row header"] = True
         spanning_cells += projected_row_headers
         for obj in rows:
-            obj['column header'] = False
+            obj["column header"] = False
             for header_obj in column_headers:
-                if iob(obj['bbox'], header_obj['bbox']) >= 0.5:
-                    obj['column header'] = True
+                if iob(obj["bbox"], header_obj["bbox"]) >= 0.5:
+                    obj["column header"] = True
 
         # Refine table structures
-        rows = postprocess.refine_rows(rows, table_tokens, class_thresholds['table row'])
-        columns = postprocess.refine_columns(columns, table_tokens, class_thresholds['table column'])
+        rows = postprocess.refine_rows(rows, table_tokens, class_thresholds["table row"])
+        columns = postprocess.refine_columns(
+            columns, table_tokens, class_thresholds["table column"]
+        )
 
         # Shrink table bbox to just the total height of the rows
         # and the total width of the columns
         row_rect = Rect()
         for obj in rows:
-            row_rect.include_rect(obj['bbox'])
-        column_rect = Rect() 
+            row_rect.include_rect(obj["bbox"])
+        column_rect = Rect()
         for obj in columns:
             column_rect.include_rect(obj['bbox'])
         table['row_column_bbox'] = [column_rect.x_min, row_rect.y_min, column_rect.x_max, row_rect.y_max]
         table['bbox'] = table['row_column_bbox']
 
         # Process the rows and columns into a complete segmented table
-        columns = postprocess.align_columns(columns, table['row_column_bbox'])
-        rows = postprocess.align_rows(rows, table['row_column_bbox'])
+        columns = postprocess.align_columns(columns, table["row_column_bbox"])
+        rows = postprocess.align_rows(rows, table["row_column_bbox"])
 
-        structure['rows'] = rows
-        structure['columns'] = columns
-        structure['column headers'] = column_headers
-        structure['spanning cells'] = spanning_cells
+        structure["rows"] = rows
+        structure["columns"] = columns
+        structure["column headers"] = column_headers
+        structure["spanning cells"] = spanning_cells
 
         if len(rows) > 0 and len(columns) > 1:
             structure = refine_table_structure(structure, class_thresholds)
@@ -291,20 +325,29 @@ def refine_table_structure(table_structure, class_thresholds):
     thresholding, NMS, and alignment.
     """
     rows = table_structure["rows"]
-    columns = table_structure['columns']
+    columns = table_structure["columns"]
 
     # Process the headers
-    column_headers = table_structure['column headers']
-    column_headers = postprocess.apply_threshold(column_headers, class_thresholds["table column header"])
+    column_headers = table_structure["column headers"]
+    column_headers = postprocess.apply_threshold(
+        column_headers, class_thresholds["table column header"]
+    )
     column_headers = postprocess.nms(column_headers)
     column_headers = align_headers(column_headers, rows)
 
     # Process spanning cells
-    spanning_cells = [elem for elem in table_structure['spanning cells'] if not elem['projected row header']]
-    projected_row_headers = [elem for elem in table_structure['spanning cells'] if elem['projected row header']]
-    spanning_cells = postprocess.apply_threshold(spanning_cells, class_thresholds["table spanning cell"])
-    projected_row_headers = postprocess.apply_threshold(projected_row_headers,
-                                                        class_thresholds["table projected row header"])
+    spanning_cells = [
+        elem for elem in table_structure["spanning cells"] if not elem["projected row header"]
+    ]
+    projected_row_headers = [
+        elem for elem in table_structure["spanning cells"] if elem["projected row header"]
+    ]
+    spanning_cells = postprocess.apply_threshold(
+        spanning_cells, class_thresholds["table spanning cell"]
+    )
+    projected_row_headers = postprocess.apply_threshold(
+        projected_row_headers, class_thresholds["table projected row header"]
+    )
     spanning_cells += projected_row_headers
     # Align before NMS for spanning cells because alignment brings them into agreement
     # with rows and columns first; if spanning cells still overlap after this operation,
@@ -314,10 +357,10 @@ def refine_table_structure(table_structure, class_thresholds):
 
     postprocess.header_supercell_tree(spanning_cells)
 
-    table_structure['columns'] = columns
-    table_structure['rows'] = rows
-    table_structure['spanning cells'] = spanning_cells
-    table_structure['column headers'] = column_headers
+    table_structure["columns"] = columns
+    table_structure["rows"] = rows
+    table_structure["spanning cells"] = spanning_cells
+    table_structure["column headers"] = column_headers
 
     return table_structure
 
@@ -330,18 +373,18 @@ def align_headers(headers, rows):
     For now, we are not supporting tables with multiple headers, so we need to
     eliminate anything besides the top-most header.
     """
-    
+
     aligned_headers = []
 
     for row in rows:
-        row['column header'] = False
+        row["column header"] = False
 
     header_row_nums = []
     for header in headers:
         for row_num, row in enumerate(rows):
-            row_height = row['bbox'][3] - row['bbox'][1]
-            min_row_overlap = max(row['bbox'][1], header['bbox'][1])
-            max_row_overlap = min(row['bbox'][3], header['bbox'][3])
+            row_height = row["bbox"][3] - row["bbox"][1]
+            min_row_overlap = max(row["bbox"][1], header["bbox"][1])
+            max_row_overlap = min(row["bbox"][3], header["bbox"][3])
             overlap_height = max_row_overlap - min_row_overlap
             if overlap_height / row_height >= 0.5:
                 header_row_nums.append(row_num)
@@ -351,14 +394,14 @@ def align_headers(headers, rows):
 
     header_rect = Rect()
     if header_row_nums[0] > 0:
-        header_row_nums = list(range(header_row_nums[0]+1)) + header_row_nums
+        header_row_nums = list(range(header_row_nums[0] + 1)) + header_row_nums
 
     last_row_num = -1
     for row_num in header_row_nums:
         if row_num == last_row_num + 1:
             row = rows[row_num]
-            row['column header'] = True
-            header_rect = header_rect.include_rect(row['bbox'])
+            row["column header"] = True
+            header_rect = header_rect.include_rect(row["bbox"])
             last_row_num = row_num
         else:
             # Break as soon as a non-header row is encountered.
@@ -371,6 +414,7 @@ def align_headers(headers, rows):
 
     return aligned_headers
 
+
 def structure_to_cells(table_structure, tokens):
     """
     Assuming the row, column, spanning cell, and header bounding boxes have
@@ -380,58 +424,58 @@ def structure_to_cells(table_structure, tokens):
     Classify the cells as header/access cells or data cells
     based on if they intersect with the header bounding box.
     """
-    columns = table_structure['columns']
-    rows = table_structure['rows']
-    spanning_cells = table_structure['spanning cells']
+    columns = table_structure["columns"]
+    rows = table_structure["rows"]
+    spanning_cells = table_structure["spanning cells"]
     cells = []
     subcells = []
     # Identify complete cells and subcells
     for column_num, column in enumerate(columns):
         for row_num, row in enumerate(rows):
-            column_rect = Rect(list(column['bbox']))
-            row_rect = Rect(list(row['bbox']))
+            column_rect = Rect(list(column["bbox"]))
+            row_rect = Rect(list(row["bbox"]))
             cell_rect = row_rect.intersect(column_rect)
             header = 'column header' in row and row['column header']
             cell = {'bbox': cell_rect.get_bbox(), 'column_nums': [column_num], 'row_nums': [row_num],
                     'column header': header}
 
-            cell['subcell'] = False
+            cell["subcell"] = False
             for spanning_cell in spanning_cells:
-                spanning_cell_rect = Rect(list(spanning_cell['bbox']))
-                if (spanning_cell_rect.intersect(cell_rect).get_area()
-                        / cell_rect.get_area()) > 0.5:
-                    cell['subcell'] = True
+                spanning_cell_rect = Rect(list(spanning_cell["bbox"]))
+                if (
+                    spanning_cell_rect.intersect(cell_rect).get_area() / cell_rect.get_area()
+                ) > 0.5:
+                    cell["subcell"] = True
                     break
 
-            if cell['subcell']:
+            if cell["subcell"]:
                 subcells.append(cell)
             else:
-                #cell text = extract_text_inside_bbox(table_spans, cell['bbox'])
-                #cell['cell text'] = cell text
-                cell['projected row header'] = False
+                # cell text = extract_text_inside_bbox(table_spans, cell['bbox'])
+                # cell['cell text'] = cell text
+                cell["projected row header"] = False
                 cells.append(cell)
 
     for spanning_cell in spanning_cells:
-        spanning_cell_rect = Rect(list(spanning_cell['bbox']))
+        spanning_cell_rect = Rect(list(spanning_cell["bbox"]))
         cell_columns = set()
         cell_rows = set()
         cell_rect = None
         header = True
         for subcell in subcells:
-            subcell_rect = Rect(list(subcell['bbox']))
+            subcell_rect = Rect(list(subcell["bbox"]))
             subcell_rect_area = subcell_rect.get_area()
-            if (subcell_rect.intersect(spanning_cell_rect).get_area()
-                    / subcell_rect_area) > 0.5:
+            if (subcell_rect.intersect(spanning_cell_rect).get_area() / subcell_rect_area) > 0.5:
                 if cell_rect is None:
-                    cell_rect = Rect(list(subcell['bbox']))
+                    cell_rect = Rect(list(subcell["bbox"]))
                 else:
-                    cell_rect.include_rect(Rect(list(subcell['bbox'])))
-                cell_rows = cell_rows.union(set(subcell['row_nums']))
-                cell_columns = cell_columns.union(set(subcell['column_nums']))
+                    cell_rect.include_rect(Rect(list(subcell["bbox"])))
+                cell_rows = cell_rows.union(set(subcell["row_nums"]))
+                cell_columns = cell_columns.union(set(subcell["column_nums"]))
                 # By convention here, all subcells must be classified
                 # as header cells for a spanning cell to be classified as a header cell;
                 # otherwise, this could lead to a non-rectangular header region
-                header = header and 'column header' in subcell and subcell['column header']
+                header = header and "column header" in subcell and subcell["column header"]
         if len(cell_rows) > 0 and len(cell_columns) > 0:
             cell = {'bbox': cell_rect.get_bbox(), 'column_nums': list(cell_columns), 'row_nums': list(cell_rows),
                     'column header': header, 'projected row header': spanning_cell['projected row header']}
@@ -443,27 +487,28 @@ def structure_to_cells(table_structure, tokens):
     try:
         mean_match_score = sum(cell_match_scores) / len(cell_match_scores)
         min_match_score = min(cell_match_scores)
-        confidence_score = (mean_match_score + min_match_score)/2
-    except:
+        confidence_score = (mean_match_score + min_match_score) / 2
+    except ZeroDivisionError:
         confidence_score = 0
 
     # Dilate rows and columns before final extraction
-    #dilated_columns = fill_column_gaps(columns, table_bbox)
+    # dilated_columns = fill_column_gaps(columns, table_bbox)
     dilated_columns = columns
-    #dilated_rows = fill_row_gaps(rows, table_bbox)
+    # dilated_rows = fill_row_gaps(rows, table_bbox)
     dilated_rows = rows
     for cell in cells:
         column_rect = Rect()
-        for column_num in cell['column_nums']:
-            column_rect.include_rect(list(dilated_columns[column_num]['bbox']))
+        for column_num in cell["column_nums"]:
+            column_rect.include_rect(list(dilated_columns[column_num]["bbox"]))
         row_rect = Rect()
-        for row_num in cell['row_nums']:
-            row_rect.include_rect(list(dilated_rows[row_num]['bbox']))
+        for row_num in cell["row_nums"]:
+            row_rect.include_rect(list(dilated_rows[row_num]["bbox"]))
         cell_rect = column_rect.intersect(row_rect)
         cell['bbox'] = cell_rect.get_bbox()
 
-    span_nums_by_cell, _, _ = postprocess.slot_into_containers(cells, tokens, overlap_threshold=0.001,
-                                                               unique_assignment=True, forced_assignment=False)
+    span_nums_by_cell, _, _ = postprocess.slot_into_containers(
+        cells, tokens, overlap_threshold=0.001, unique_assignment=True, forced_assignment=False
+    )
 
     for cell, cell_span_nums in zip(cells, span_nums_by_cell):
         cell_spans = [tokens[num] for num in cell_span_nums]
@@ -486,29 +531,29 @@ def structure_to_cells(table_structure, tokens):
         max_row = max(cell["row_nums"])
         min_column = min(cell["column_nums"])
         max_column = max(cell["column_nums"])
-        for span in cell['spans']:
-            min_x_values_by_column[min_column].append(span['bbox'][0])
-            min_y_values_by_row[min_row].append(span['bbox'][1])
-            max_x_values_by_column[max_column].append(span['bbox'][2])
-            max_y_values_by_row[max_row].append(span['bbox'][3])
+        for span in cell["spans"]:
+            min_x_values_by_column[min_column].append(span["bbox"][0])
+            min_y_values_by_row[min_row].append(span["bbox"][1])
+            max_x_values_by_column[max_column].append(span["bbox"][2])
+            max_y_values_by_row[max_row].append(span["bbox"][3])
     for row_num, row in enumerate(rows):
         if len(min_x_values_by_column[0]) > 0:
-            row['bbox'][0] = min(min_x_values_by_column[0])
+            row["bbox"][0] = min(min_x_values_by_column[0])
         if len(min_y_values_by_row[row_num]) > 0:
-            row['bbox'][1] = min(min_y_values_by_row[row_num])
-        if len(max_x_values_by_column[num_columns-1]) > 0:
-            row['bbox'][2] = max(max_x_values_by_column[num_columns-1])
+            row["bbox"][1] = min(min_y_values_by_row[row_num])
+        if len(max_x_values_by_column[num_columns - 1]) > 0:
+            row["bbox"][2] = max(max_x_values_by_column[num_columns - 1])
         if len(max_y_values_by_row[row_num]) > 0:
-            row['bbox'][3] = max(max_y_values_by_row[row_num])
+            row["bbox"][3] = max(max_y_values_by_row[row_num])
     for column_num, column in enumerate(columns):
         if len(min_x_values_by_column[column_num]) > 0:
-            column['bbox'][0] = min(min_x_values_by_column[column_num])
+            column["bbox"][0] = min(min_x_values_by_column[column_num])
         if len(min_y_values_by_row[0]) > 0:
-            column['bbox'][1] = min(min_y_values_by_row[0])
+            column["bbox"][1] = min(min_y_values_by_row[0])
         if len(max_x_values_by_column[column_num]) > 0:
-            column['bbox'][2] = max(max_x_values_by_column[column_num])
-        if len(max_y_values_by_row[num_rows-1]) > 0:
-            column['bbox'][3] = max(max_y_values_by_row[num_rows-1])
+            column["bbox"][2] = max(max_x_values_by_column[column_num])
+        if len(max_y_values_by_row[num_rows - 1]) > 0:
+            column["bbox"][3] = max(max_y_values_by_row[num_rows - 1])
     for cell in cells:
         row_rect = None
         column_rect = None
@@ -529,32 +574,34 @@ def structure_to_cells(table_structure, tokens):
 
     return cells, confidence_score
 
+
 def cells_to_html(cells):
-    cells = sorted(cells, key=lambda k: min(k['column_nums']))
-    cells = sorted(cells, key=lambda k: min(k['row_nums']))
+    """Convert table structure to html format."""
+    cells = sorted(cells, key=lambda k: min(k["column_nums"]))
+    cells = sorted(cells, key=lambda k: min(k["row_nums"]))
 
     table = ET.Element("table")
     current_row = -1
 
     for cell in cells:
-        this_row = min(cell['row_nums'])
+        this_row = min(cell["row_nums"])
 
         attrib = {}
-        colspan = len(cell['column_nums'])
+        colspan = len(cell["column_nums"])
         if colspan > 1:
-            attrib['colspan'] = str(colspan)
-        rowspan = len(cell['row_nums'])
+            attrib["colspan"] = str(colspan)
+        rowspan = len(cell["row_nums"])
         if rowspan > 1:
-            attrib['rowspan'] = str(rowspan)
+            attrib["rowspan"] = str(rowspan)
         if this_row > current_row:
             current_row = this_row
-            if cell['column header']:
+            if cell["column header"]:
                 cell_tag = "th"
                 row = ET.SubElement(table, "thead")
             else:
                 cell_tag = "td"
                 row = ET.SubElement(table, "tr")
         tcell = ET.SubElement(row, cell_tag, attrib=attrib)
-        tcell.text = cell['cell text']
+        tcell.text = cell["cell text"]
 
     return str(ET.tostring(table, encoding="unicode", short_empty_elements=False))

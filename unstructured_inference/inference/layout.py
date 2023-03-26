@@ -1,17 +1,17 @@
 from __future__ import annotations
-from dataclasses import dataclass
 import os
 import re
 import tempfile
 from tqdm import tqdm
 from typing import List, Optional, Tuple, Union, BinaryIO
 import unicodedata
-from layoutparser.io.pdf import load_pdf
-from layoutparser.elements.layout_elements import TextBlock
-from layoutparser.elements.layout import Layout
+
 import numpy as np
+import pdfplumber
+import pdf2image
 from PIL import Image
 
+from unstructured_inference.inference.elements import TextRegion, ImageTextRegion, LayoutElement
 from unstructured_inference.logger import logger
 import unstructured_inference.models.tesseract as tesseract
 import unstructured_inference.models.tables as tables
@@ -23,32 +23,6 @@ VALID_OCR_STRATEGIES = (
     "force",  # Always use OCR
     "never",  # Never use OCR
 )
-
-
-@dataclass
-# NOTE(alan): I notice this has (almost?) the same structure as a layoutparser TextBlock. Maybe we
-# don't need to make our own here?
-class LayoutElement:
-    type: str
-    # NOTE(robinson) - The list contain two elements, each a tuple
-    # in format (x1,y1), the first the upper left corner and the second
-    # the right bottom corner
-    coordinates: List[Tuple[float, float]]
-    text: Optional[str] = None
-
-    def __str__(self) -> str:
-        return str(self.text)
-
-    def to_dict(self) -> dict:
-        return self.__dict__
-
-    def get_width(self) -> float:
-        # NOTE(benjamin) i.e: y2-y1
-        return self.coordinates[1][0] - self.coordinates[0][0]
-
-    def get_height(self) -> float:
-        # NOTE(benjamin) i.e: x2-x1
-        return self.coordinates[1][1] - self.coordinates[0][1]
 
 
 class DocumentLayout:
@@ -79,16 +53,12 @@ class DocumentLayout:
         cls,
         filename: str,
         model: Optional[UnstructuredModel] = None,
-        fixed_layouts: Optional[List[Optional[Layout]]] = None,
+        fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         ocr_strategy: str = "auto",
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
-        # NOTE(alan): For now the model is a Detectron2LayoutModel but in the future it should
-        # be an abstract class that supports some standard interface and can accomodate either
-        # a locally instantiated model or an API. Maybe even just a callable that accepts an
-        # image and returns a dict, or something.
         logger.info(f"Reading PDF for file: {filename} ...")
-        layouts, images = load_pdf(filename, load_images=True)
+        layouts, images = load_pdf(filename)
         if len(layouts) > len(images):
             raise RuntimeError(
                 "Some images were not loaded. Check that poppler is installed and in your $PATH."
@@ -115,7 +85,7 @@ class DocumentLayout:
         filename: str,
         model: Optional[UnstructuredModel] = None,
         ocr_strategy: str = "auto",
-        fixed_layout: Optional[Layout] = None,
+        fixed_layout: Optional[List[TextRegion]] = None,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
@@ -139,7 +109,7 @@ class PageLayout:
         self,
         number: int,
         image: Image,
-        layout: Layout,
+        layout: Optional[List[TextRegion]],
         model: Optional[UnstructuredModel] = None,
         ocr_strategy: str = "auto",
     ):
@@ -171,13 +141,12 @@ class PageLayout:
             return None
         return elements
 
-    def get_elements_from_layout(self, layout: Layout) -> List[LayoutElement]:
+    def get_elements_from_layout(self, layout: List[TextRegion]) -> List[LayoutElement]:
         """Uses the given Layout to separate the page text into elements, either extracting the
         text from the discovered layout blocks or from the image using OCR."""
         # NOTE(robinson) - This orders the page from top to bottom. We'll need more
         # sophisticated ordering logic for more complicated layouts.
-        layout.sort(key=lambda element: element.coordinates[1], inplace=True)
-        # NOTE(benjamin): Creates a Pool for concurrent processing of image elements by OCR
+        layout.sort(key=lambda element: element.y1)
         elements = []
         for e in tqdm(layout):
             elements.append(get_element_from_block(e, self.image, self.layout, self.ocr_strategy))
@@ -194,9 +163,9 @@ class PageLayout:
         cls,
         image,
         model: Optional[UnstructuredModel] = None,
-        layout: Optional[Layout] = None,
+        layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
-        fixed_layout: Optional[Layout] = None,
+        fixed_layout: Optional[List[TextRegion]] = None,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
         page = cls(number=0, image=image, layout=layout, model=model, ocr_strategy=ocr_strategy)
@@ -212,7 +181,7 @@ def process_data_with_model(
     model_name: Optional[str],
     is_image: bool = False,
     ocr_strategy: str = "auto",
-    fixed_layouts: Optional[List[Optional[Layout]]] = None,
+    fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
@@ -234,7 +203,7 @@ def process_file_with_model(
     model_name: Optional[str],
     is_image: bool = False,
     ocr_strategy: str = "auto",
-    fixed_layouts: Optional[List[Optional[Layout]]] = None,
+    fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
@@ -267,9 +236,9 @@ def is_cid_present(text: str) -> bool:
 
 
 def get_element_from_block(
-    block: TextBlock,
+    block: TextRegion,
     image: Optional[Image.Image] = None,
-    layout: Optional[Layout] = None,
+    pdf_objects: Optional[List[Union[TextRegion, ImageTextRegion]]] = None,
     ocr_strategy: str = "auto",
 ) -> LayoutElement:
     """Creates a LayoutElement from a given layout or image by finding all the text that lies within
@@ -277,76 +246,61 @@ def get_element_from_block(
     if block.text is not None:
         # If block text is already populated, we'll assume it's correct
         text = block.text
-    elif block.type == 'Table':
+    elif block.type == "Table":
         text = interprete_table_block(block, image)
-    elif layout is not None:
-        text = aggregate_by_block(block, image, layout, ocr_strategy)
+    elif pdf_objects is not None:
+        text = aggregate_by_block(block, image, pdf_objects, ocr_strategy)
     elif image is not None:
-        text = interpret_text_block(block, image, ocr_strategy)
+        # We don't have anything to go on but the image itself, so we use OCR
+        text = ocr(block, image)
     else:
         raise ValueError(
             "Got arguments image and layout as None, at least one must be populated to use for "
             "text extraction."
         )
-    element = LayoutElement(type=block.type, text=text, coordinates=block.points.tolist())
+    element = LayoutElement.from_region(block)
+    element.text = text
     return element
 
 
 def aggregate_by_block(
-    text_block: TextBlock,
+    text_region: TextRegion,
     image: Optional[Image.Image],
-    layout: Layout,
+    pdf_objects: List[Union[TextRegion, ImageTextRegion]],
     ocr_strategy: str = "auto",
 ) -> str:
     """Extracts the text aggregated from the elements of the given layout that lie within the given
     block."""
-    filtered_blocks = layout.filter_by(text_block, center=True)
-    # NOTE(alan): For now, if none of the elements discovered by layoutparser are in the block
-    # we can try interpreting the whole block. This still doesn't handle edge cases, like when there
-    # are some text elements within the block, but there are image elements overlapping the block
-    # with text lying within the block. In this case the text in the image would likely be ignored.
-    if not filtered_blocks:
-        text = interpret_text_block(text_block, image, ocr_strategy)
-        return text
-    for little_block in filtered_blocks:
-        little_block.text = interpret_text_block(little_block, image, ocr_strategy)
-    text = " ".join([x for x in filtered_blocks.get_texts() if x])
+    word_objects = [obj for obj in pdf_objects if isinstance(obj, TextRegion)]
+    image_objects = [obj for obj in pdf_objects if isinstance(obj, ImageTextRegion)]
+    if image is not None and needs_ocr(text_region, word_objects, image_objects, ocr_strategy):
+        text = ocr(text_region, image)
+    else:
+        filtered_blocks = [obj for obj in pdf_objects if obj.is_in(text_region, error_margin=5)]
+        for little_block in filtered_blocks:
+            if image is not None and needs_ocr(
+                little_block, word_objects, image_objects, ocr_strategy
+            ):
+                little_block.text = ocr(little_block, image)
+        text = " ".join([x.text for x in filtered_blocks if x.text])
+    text = remove_control_characters(text)
     return text
 
-def interprete_table_block(
-        text_block: TextBlock, image:Image.Image
-) -> str:
+
+def interprete_table_block(text_block: TextRegion, image: Image.Image) -> str:
+    """Extract the contents of a table."""
     tables.load_agent()
-    image_array = np.array(image)
-    padded_block = text_block.pad(left=5, right=5, top=5, bottom=5)
-    cropped_image = padded_block.crop_image(image_array)
+    padded_block = text_block.pad(5)
+    cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tables.tables_agent.predict(cropped_image)
 
-def interpret_text_block(
-    text_block: TextBlock, image: Image.Image, ocr_strategy: str = "auto"
-) -> str:
-    """Interprets the text in a TextBlock using OCR or the text attribute, according to the given
-    ocr_strategy."""
-    # NOTE(robinson) - If the text attribute is None, that means the PDF isn't
-    # already OCR'd and we have to send the snippet out for OCRing.
 
-    if (ocr_strategy == "force") or (
-        ocr_strategy == "auto" and ((text_block.text is None) or cid_ratio(text_block.text) > 0.5)
-    ):
-        out_text = ocr(text_block, image)
-    else:
-        out_text = "" if text_block.text is None else text_block.text
-    out_text = remove_control_characters(out_text)
-    return out_text
-
-
-def ocr(text_block: TextBlock, image: Image.Image) -> str:
+def ocr(text_block: TextRegion, image: Image.Image) -> str:
     """Runs a cropped text block image through and OCR agent."""
     logger.debug("Running OCR on text block ...")
     tesseract.load_agent()
-    image_array = np.array(image)
-    padded_block = text_block.pad(left=5, right=5, top=5, bottom=5)
-    cropped_image = padded_block.crop_image(image_array)
+    padded_block = text_block.pad(5)
+    cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tesseract.ocr_agent.detect(cropped_image)
 
 
@@ -354,3 +308,80 @@ def remove_control_characters(text: str) -> str:
     """Removes control characters from text."""
     out_text = "".join(c for c in text if unicodedata.category(c)[0] != "C")
     return out_text
+
+
+def load_pdf(
+    filename: str,
+    x_tolerance: Union[int, float] = 1.5,
+    y_tolerance: Union[int, float] = 2,
+    keep_blank_chars: bool = False,
+    use_text_flow: bool = False,
+    horizontal_ltr: bool = True,  # Should words be read left-to-right?
+    vertical_ttb: bool = True,  # Should vertical words be read top-to-bottom?
+    extra_attrs: Optional[List[str]] = None,
+    split_at_punctuation: Union[bool, str] = False,
+    dpi: int = 72,
+) -> Tuple[List[List[TextRegion]], List[Image.Image]]:
+    """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
+    pdf pages using pdf2image"""
+    pdf_object = pdfplumber.open(filename)
+    layouts = []
+    images = []
+    for page in pdf_object.pages:
+        plumber_words = page.extract_words(
+            x_tolerance=x_tolerance,
+            y_tolerance=y_tolerance,
+            keep_blank_chars=keep_blank_chars,
+            use_text_flow=use_text_flow,
+            horizontal_ltr=horizontal_ltr,
+            vertical_ttb=vertical_ttb,
+            extra_attrs=extra_attrs,
+            split_at_punctuation=split_at_punctuation,
+        )
+        word_objs = [
+            TextRegion(
+                x1=word["x0"], y1=word["top"], x2=word["x1"], y2=word["bottom"], text=word["text"]
+            )
+            for word in plumber_words
+        ]
+        image_objs = [
+            ImageTextRegion(x1=image["x0"], y1=image["y0"], x2=image["x1"], y2=image["y1"])
+            for image in page.images
+        ]
+        layout = word_objs + image_objs
+        layouts.append(layout)
+
+    images = pdf2image.convert_from_path(filename, dpi=dpi)
+    return layouts, images
+
+
+def needs_ocr(
+    region: TextRegion,
+    word_objects: List[TextRegion],
+    image_objects: List[ImageTextRegion],
+    ocr_strategy: str,
+) -> bool:
+    """Logic to determine whether ocr is needed to extract text from given region."""
+    if ocr_strategy == "force":
+        return True
+    elif ocr_strategy == "auto":
+        # If any image object overlaps with the region of interest, we have hope of getting some
+        # text from OCR. Otherwise, there's nothing there to find, no need to waste our time with
+        # OCR.
+        image_intersects = any(region.intersects(img_obj) for img_obj in image_objects)
+        if region.text is None:
+            # If the region has no text check if any images overlap with the region that might
+            # contain text.
+            if any(obj.is_in(region) and obj.text is not None for obj in word_objects):
+                # If there are word objects in the region, we defer to that rather than OCR
+                return False
+            else:
+                return image_intersects
+        elif cid_ratio(region.text) > 0.5:
+            # If the region has text, we should only have to OCR if too much of the text is
+            # uninterpretable.
+            return image_intersects
+        else:
+            return False
+    else:
+        return False
