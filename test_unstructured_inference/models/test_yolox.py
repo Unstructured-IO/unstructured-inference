@@ -57,7 +57,7 @@ def test_layout_yolox_local_parsing_pdf_soft():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
     document_layout = process_file_with_model(filename, model_name="yolox_tiny")
     content = str(document_layout)
-    assert "Lorem ipsum" in content
+    assert "libero fringilla" in content
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) Soft version of the test, run make test-long in order to run with full model
     assert len(document_layout.pages[0].elements) > 0
