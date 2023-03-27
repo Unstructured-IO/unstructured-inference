@@ -123,7 +123,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             if "block_num" not in token:
                 token["block_num"] = 0
 
-        return recognize(outputs_structure, x, tokens=tokens, out_html=True)["html"][0]
+        html = recognize(outputs_structure, x, tokens=tokens, out_html=True)["html"]
+        prediction = html[0] if html else ""
+        return prediction
 
 
 tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerModel()
@@ -168,11 +170,7 @@ structure_class_thresholds = {
 }
 
 
-# def recognize(outputs: dict, img: Image, tokens: list = None, out_html: bool = False):
-#    out_formats = {}
-
-
-def recognize(outputs, img, tokens=None, out_html=False):
+def recognize(outputs: dict, img: Image, tokens: list, out_html: bool = False):
     """Recognize table elements."""
     out_formats = {}
 
