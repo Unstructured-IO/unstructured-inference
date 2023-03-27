@@ -186,11 +186,12 @@ class MockTextRegion(layout.TextRegion):
 
 
 class MockPageLayout(layout.PageLayout):
-    def __init__(self, layout=None, model=None, ocr_strategy="auto"):
+    def __init__(self, layout=None, model=None, ocr_strategy="auto", extract_tables=False):
         self.image = None
         self.layout = layout
         self.model = model
         self.ocr_strategy = ocr_strategy
+        self.extract_tables = extract_tables
 
     def ocr(self, text_block: MockTextRegion):
         return text_block.ocr_text

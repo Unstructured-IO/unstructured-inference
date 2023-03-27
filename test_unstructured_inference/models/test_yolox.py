@@ -22,7 +22,7 @@ def test_layout_yolox_local_parsing_pdf():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
     document_layout = process_file_with_model(filename, model_name="yolox")
     content = str(document_layout)
-    assert "Lorem ipsum" in content
+    assert "libero fringilla" in content
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 5 detections
     assert len(document_layout.pages[0].elements) == 5
