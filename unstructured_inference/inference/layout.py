@@ -55,6 +55,7 @@ class DocumentLayout:
         model: Optional[UnstructuredModel] = None,
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         ocr_strategy: str = "auto",
+        extract_tables: bool = False,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         logger.info(f"Reading PDF for file: {filename} ...")
@@ -75,6 +76,7 @@ class DocumentLayout:
                 layout=layout,
                 ocr_strategy=ocr_strategy,
                 fixed_layout=fixed_layout,
+                extract_tables=extract_tables,
             )
             pages.append(page)
         return cls.from_pages(pages)
@@ -86,6 +88,7 @@ class DocumentLayout:
         model: Optional[UnstructuredModel] = None,
         ocr_strategy: str = "auto",
         fixed_layout: Optional[List[TextRegion]] = None,
+        extract_tables: bool = False,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
@@ -97,7 +100,12 @@ class DocumentLayout:
             else:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
         page = PageLayout.from_image(
-            image, model=model, layout=None, ocr_strategy=ocr_strategy, fixed_layout=fixed_layout
+            image,
+            model=model,
+            layout=None,
+            ocr_strategy=ocr_strategy,
+            fixed_layout=fixed_layout,
+            extract_tables=extract_tables,
         )
         return cls.from_pages([page])
 
@@ -112,6 +120,7 @@ class PageLayout:
         layout: Optional[List[TextRegion]],
         model: Optional[UnstructuredModel] = None,
         ocr_strategy: str = "auto",
+        extract_tables: bool = False,
     ):
         self.image = image
         self.image_array: Union[np.ndarray, None] = None
@@ -122,6 +131,7 @@ class PageLayout:
         if ocr_strategy not in VALID_OCR_STRATEGIES:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
+        self.extract_tables = extract_tables
 
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
@@ -149,7 +159,11 @@ class PageLayout:
         layout.sort(key=lambda element: element.y1)
         elements = []
         for e in tqdm(layout):
-            elements.append(get_element_from_block(e, self.image, self.layout, self.ocr_strategy))
+            elements.append(
+                get_element_from_block(
+                    e, self.image, self.layout, self.ocr_strategy, self.extract_tables
+                )
+            )
         return elements
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
@@ -240,13 +254,14 @@ def get_element_from_block(
     image: Optional[Image.Image] = None,
     pdf_objects: Optional[List[Union[TextRegion, ImageTextRegion]]] = None,
     ocr_strategy: str = "auto",
+    extract_tables: bool = False,
 ) -> LayoutElement:
     """Creates a LayoutElement from a given layout or image by finding all the text that lies within
     a given block."""
     if block.text is not None:
         # If block text is already populated, we'll assume it's correct
         text = block.text
-    elif isinstance(block, LayoutElement) and block.type == "Table":
+    elif extract_tables and isinstance(block, LayoutElement) and block.type == "Table":
         text = interprete_table_block(block, image)
     elif pdf_objects is not None:
         text = aggregate_by_block(block, image, pdf_objects, ocr_strategy)
