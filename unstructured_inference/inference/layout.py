@@ -292,7 +292,7 @@ def interprete_table_block(text_block: TextRegion, image: Image.Image) -> str:
     tables.load_agent()
     if tables.tables_agent is None:
         raise RuntimeError("Unable to load table extraction agent.")
-    padded_block = text_block.pad(5)
+    padded_block = text_block.pad(12)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tables.tables_agent.predict(cropped_image)
 
@@ -301,7 +301,7 @@ def ocr(text_block: TextRegion, image: Image.Image) -> str:
     """Runs a cropped text block image through and OCR agent."""
     logger.debug("Running OCR on text block ...")
     tesseract.load_agent()
-    padded_block = text_block.pad(5)
+    padded_block = text_block.pad(12)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tesseract.ocr_agent.detect(cropped_image)
 
