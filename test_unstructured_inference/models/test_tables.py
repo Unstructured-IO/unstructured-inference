@@ -5,6 +5,7 @@ from unittest.mock import patch
 from transformers.models.table_transformer.modeling_table_transformer import TableTransformerDecoder
 
 import unstructured_inference.models.tables as tables
+import unstructured_inference.models.table_postprocess as postprocess
 from unstructured_inference.models.table_postprocess import Rect
 
 
