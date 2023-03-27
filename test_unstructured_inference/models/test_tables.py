@@ -1,11 +1,6 @@
 import platform
 import pytest
-<<<<<<< HEAD
-import unstructured_inference.models.tables as tables
-import unstructured_inference.models.table_postprocess as postprocess
-=======
 from unittest.mock import patch
->>>>>>> 740902121ffccb4260c805cddf9fff9fd234d82e
 
 from transformers.models.table_transformer.modeling_table_transformer import TableTransformerDecoder
 
