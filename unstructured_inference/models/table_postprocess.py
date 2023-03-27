@@ -6,7 +6,7 @@ from collections import defaultdict
 
 
 class Rect:
-    def __init__(self, bbox=None):  # x_min, y_min, x_max, y_max):
+    def __init__(self, bbox=None):
         if bbox is None:
             self.x_min = 0
             self.y_min = 0
@@ -19,10 +19,12 @@ class Rect:
             self.y_max = bbox[3]
 
     def get_area(self):
+        """Calculates the area of the rectangle"""
         area = (self.x_max - self.x_min) * (self.y_max - self.y_min)
         return area if area > 0 else 0.0
 
     def intersect(self, other):
+        """Calculates the intersection with another rectangle"""
         if self.get_area() == 0:
             self.x_min = other.x_min
             self.y_min = other.y_min
@@ -43,6 +45,7 @@ class Rect:
         return self
 
     def include_rect(self, bbox):
+        """Calculates a rectangle that includes both rectangles"""
         other = Rect(bbox)
 
         if self.get_area() == 0:
@@ -66,6 +69,7 @@ class Rect:
         return self
 
     def get_bbox(self):
+        """Returns the coordinates that define the rectangle"""
         return [self.x_min, self.y_min, self.x_max, self.y_max]
 
 

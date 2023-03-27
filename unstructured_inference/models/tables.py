@@ -29,6 +29,9 @@ from unstructured_inference.models.table_postprocess import Rect
 class UnstructuredTableTransformerModel(UnstructuredModel):
     """Unstructured model wrapper for table-transformer."""
 
+    def __init__(self):
+        pass
+
     def predict(self, x: Image):
         """Predict table structure deferring to run_prediction"""
         super().predict(x)
@@ -63,7 +66,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             outputs_structure = self.model(**encoding)
 
         if platform.machine() == "x86_64":
-            paddle_result = paddle_ocr.ocr(np.array(x), cls=True)  # type: ignore
+            from unstructured_inference.models import paddle_ocr
+
+            paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
 
             tokens = []
             for idx in range(len(paddle_result)):
@@ -95,24 +100,20 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             ocr_df = ocr_df.dropna()
 
             tokens = []
-            for idx in ocr_df.itertuples():
+            for idtx in ocr_df.itertuples():
                 tokens.append(
                     {
                         "bbox": [
-                            idx.left / zoom,  # type: ignore
-                            idx.top / zoom,  # type: ignore
-                            (idx.left + idx.width) / zoom,  # type: ignore
-                            (idx.top + idx.height) / zoom,  # type: ignore
+                            idtx.left / zoom,
+                            idtx.top / zoom,
+                            (idtx.left + idtx.width) / zoom,
+                            (idtx.top + idtx.height) / zoom,
                         ],
-                        "text": idx.text,  # type: ignore
+                        "text": idtx.text,
                     }
                 )
 
         sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
-
-        # Handle dictionary format
-        if isinstance(tokens, dict) and "words" in tokens:
-            tokens = tokens["words"]
 
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
@@ -130,26 +131,22 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         return prediction
 
 
-tables_agent: Optional[UnstructuredTableTransformerModel] = None
+tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerModel()
 
 
 def load_agent():
     """Loads the Tesseract OCR agent as a global variable to ensure that we only load it once."""
     global tables_agent
 
-    if tables_agent is None:
+    if not hasattr(tables_agent, "model"):
         logger.info("Loading the Tesseract OCR agent ...")
-        tables_agent = UnstructuredTableTransformerModel()
         tables_agent.initialize("microsoft/table-transformer-structure-recognition")
 
-    if platform.machine() == "x86_64":
-        from paddleocr import PaddleOCR
-
-        global paddle_ocr
-        paddle_ocr = PaddleOCR(use_angle_cls=True, lang="en", mkl_dnn=True, show_log=False)
+    return
 
 
 def get_class_map(data_type: str):
+    """Defines class map dictionaries"""
     if data_type == "structure":
         class_map = {
             "table": 0,
@@ -176,7 +173,7 @@ structure_class_thresholds = {
 }
 
 
-def recognize(outputs: dict, img: Image, tokens: Optional[list] = None, out_html: bool = False):
+def recognize(outputs: dict, img: Image, tokens: list, out_html: bool = False):
     """Recognize table elements."""
     out_formats = {}
 
