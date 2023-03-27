@@ -521,7 +521,7 @@ def structure_to_cells(table_structure, tokens):
         cell["bbox"] = cell_rect.get_bbox()
 
     span_nums_by_cell, _, _ = postprocess.slot_into_containers(
-        cells, tokens, overlap_threshold=0.001, unique_assignment=True, forced_assignment=False
+        cells, tokens, overlap_threshold=0.001, forced_assignment=False
     )
 
     for cell, cell_span_nums in zip(cells, span_nums_by_cell):
