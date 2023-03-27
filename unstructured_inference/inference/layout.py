@@ -320,7 +320,7 @@ def load_pdf(
     vertical_ttb: bool = True,  # Should vertical words be read top-to-bottom?
     extra_attrs: Optional[List[str]] = None,
     split_at_punctuation: Union[bool, str] = False,
-    dpi: int = 72,
+    dpi: int = 200,
 ) -> Tuple[List[List[TextRegion]], List[Image.Image]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
