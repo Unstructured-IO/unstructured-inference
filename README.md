@@ -43,7 +43,7 @@ PaddleOCR should be installed using the following instructions.
 
 ```shell
 pip install paddlepaddle
-pip install 'git+https://github.com/Unstructured-IO/unstructured.PaddleOCR@feat/installation#egg=paddleocr'
+pip install 'git+https://github.com/Unstructured-IO/unstructured.PaddleOCR'
 ```
 
 ### Repository
