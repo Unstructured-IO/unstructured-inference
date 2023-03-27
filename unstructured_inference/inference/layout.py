@@ -179,10 +179,18 @@ class PageLayout:
         model: Optional[UnstructuredModel] = None,
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
+        extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
-        page = cls(number=0, image=image, layout=layout, model=model, ocr_strategy=ocr_strategy)
+        page = cls(
+            number=0,
+            image=image,
+            layout=layout,
+            model=model,
+            ocr_strategy=ocr_strategy,
+            extract_tables=extract_tables,
+        )
         if fixed_layout is None:
             page.get_elements()
         else:
