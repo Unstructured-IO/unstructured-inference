@@ -246,7 +246,7 @@ def get_element_from_block(
     if block.text is not None:
         # If block text is already populated, we'll assume it's correct
         text = block.text
-    elif block.type == "Table":
+    elif hasattr(block, "type") and block.type == "Table":
         text = interprete_table_block(block, image)
     elif pdf_objects is not None:
         text = aggregate_by_block(block, image, pdf_objects, ocr_strategy)
