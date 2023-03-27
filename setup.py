@@ -18,6 +18,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from setuptools import setup, find_packages
+from platform import machine
 
 from unstructured_inference.__version__ import __version__
 
@@ -60,5 +61,5 @@ setup(
         "onnxruntime",
         "transformers",
     ],
-    extras_require={},
+    extras_require={"paddle-ocr": "unstructured.PaddleOCR"},
 )
