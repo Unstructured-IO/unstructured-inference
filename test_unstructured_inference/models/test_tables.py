@@ -1,6 +1,7 @@
 import platform
 import pytest
 import unstructured_inference.models.tables as tables
+import unstructured_inference.models.table_postprocess as postprocess
 
 from transformers.models.table_transformer.modeling_table_transformer import TableTransformerDecoder
 
@@ -64,6 +65,17 @@ def sample_table_transcript():
         )
     return out
 
+@pytest.mark.parametrize(
+    "input_test, output_test",
+    [
+        ([{'label': 'table column header', 'score': 0.9349299073219299, 'bbox': [47.83147430419922, 116.8877944946289, 2557.79296875, 216.98883056640625]},
+     {'label': 'table column header', 'score': 0.934, 'bbox': [47.83147430419922, 116.8877944946289, 2557.79296875, 216.98883056640625]}], [{'label': 'table column header', 'score': 0.9349299073219299, 'bbox': [47.83147430419922, 116.8877944946289, 2557.79296875, 216.98883056640625]}]),
+    ],
+)
+def test_nms(input_test, output_test):
+    output = postprocess.nms(input_test)
+
+    assert output == output_test
 
 @pytest.mark.parametrize(
     "model_path",
@@ -78,6 +90,5 @@ def test_table_prediction(model_path, sample_table_transcript):
     table_model.initialize(model=model_path)
     img = Image.open("./sample-docs/example_table.jpg").convert("RGB")
     prediction = table_model.predict(img)
+
     assert prediction == sample_table_transcript
-
-
