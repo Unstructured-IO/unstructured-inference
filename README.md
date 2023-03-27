@@ -37,7 +37,7 @@ tips on installing Detectron2 on Windows.
 ### PaddleOCR
 
 [PaddleOCR](https://github.com/Unstructured-IO/unstructured.PaddleOCR) is required for table processing for `x86_64` architectures.
-It should bot be installed under MacOS with Apple Silicon cpu.
+It should not be installed under MacOS with Apple Silicon cpu.
 
 PaddleOCR should be installed using the following instructions.
 
