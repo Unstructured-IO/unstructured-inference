@@ -469,7 +469,7 @@ def structure_to_cells(table_structure, tokens):
                 if cell_rect is None:
                     cell_rect = Rect(list(subcell["bbox"]))
                 else:
-                    cell_rect.include_rect(Rect(list(subcell["bbox"])))
+                    cell_rect.include_rect(list(subcell["bbox"]))
                 cell_rows = cell_rows.union(set(subcell["row_nums"]))
                 cell_columns = cell_columns.union(set(subcell["column_nums"]))
                 # By convention here, all subcells must be classified
