@@ -146,7 +146,6 @@ def nms_by_containment(container_objects, package_objects, overlap_threshold=0.5
         container_objects,
         package_objects,
         overlap_threshold=overlap_threshold,
-        unique_assignment=True,
         forced_assignment=False,
     )
 
@@ -168,7 +167,6 @@ def slot_into_containers(
     container_objects,
     package_objects,
     overlap_threshold=0.5,
-    unique_assignment=True,
     forced_assignment=False,
 ):
     """
@@ -204,14 +202,6 @@ def slot_into_containers(
         if forced_assignment or best_match_score["score"] >= overlap_threshold:
             container_assignments[best_match_score["container_num"]].append(package_num)
             package_assignments[package_num].append(best_match_score["container_num"])
-
-        if not unique_assignment:  # slot package into all eligible slots
-            for match_score in sorted_match_scores[1:]:
-                if match_score["score"] >= overlap_threshold:
-                    container_assignments[match_score["container_num"]].append(package_num)
-                    package_assignments[package_num].append(match_score["container_num"])
-                else:
-                    break
 
     return container_assignments, package_assignments, best_match_scores
 
