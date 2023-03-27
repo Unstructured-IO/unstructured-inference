@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 
 import cv2
 import numpy as np
+import pandas as pd
 
 import pytesseract
 
@@ -62,7 +63,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             outputs_structure = self.model(**encoding)
 
         if platform.machine() == "x86_64":
-            paddle_result = paddle_ocr.ocr(np.array(x), cls=True)
+            paddle_result = paddle_ocr.ocr(np.array(x), cls=True)  # type: ignore
 
             tokens = []
             for idx in range(len(paddle_result)):
@@ -87,7 +88,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             img = cv2.dilate(img, kernel, iterations=1)
             img = cv2.erode(img, kernel, iterations=1)
 
-            ocr_df = pytesseract.image_to_data(Image.fromarray(img), output_type="data.frame")
+            ocr_df: pd.DataFrame = pytesseract.image_to_data(
+                Image.fromarray(img), output_type="data.frame"
+            )
 
             ocr_df = ocr_df.dropna()
 
@@ -96,19 +99,19 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 tokens.append(
                     {
                         "bbox": [
-                            idx.left / zoom,
-                            idx.top / zoom,
-                            (idx.left + idx.width) / zoom,
-                            (idx.top + idx.height) / zoom,
+                            idx.left / zoom,  # type: ignore
+                            idx.top / zoom,  # type: ignore
+                            (idx.left + idx.width) / zoom,  # type: ignore
+                            (idx.top + idx.height) / zoom,  # type: ignore
                         ],
-                        "text": idx.text,
+                        "text": idx.text,  # type: ignore
                     }
                 )
 
         sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
 
         # Handle dictionary format
-        if type(tokens) is dict and "words" in tokens:
+        if isinstance(tokens, dict) and "words" in tokens:
             tokens = tokens["words"]
 
         # 'tokens' is a list of tokens
@@ -127,7 +130,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         return prediction
 
 
-tables_agent: UnstructuredTableTransformerModel = None
+tables_agent: Optional[UnstructuredTableTransformerModel] = None
 
 
 def load_agent():
@@ -173,7 +176,7 @@ structure_class_thresholds = {
 }
 
 
-def recognize(outputs: dict, img: Image, tokens: list = None, out_html: bool = False):
+def recognize(outputs: dict, img: Image, tokens: Optional[list] = None, out_html: bool = False):
     """Recognize table elements."""
     out_formats = {}
 

@@ -246,7 +246,7 @@ def get_element_from_block(
     if block.text is not None:
         # If block text is already populated, we'll assume it's correct
         text = block.text
-    elif block.type == "Table":
+    elif isinstance(block, LayoutElement) and block.type == "Table":
         text = interprete_table_block(block, image)
     elif pdf_objects is not None:
         text = aggregate_by_block(block, image, pdf_objects, ocr_strategy)
@@ -290,6 +290,8 @@ def aggregate_by_block(
 def interprete_table_block(text_block: TextRegion, image: Image.Image) -> str:
     """Extract the contents of a table."""
     tables.load_agent()
+    if tables.tables_agent is None:
+        raise RuntimeError("Unable to load table extraction agent.")
     padded_block = text_block.pad(5)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tables.tables_agent.predict(cropped_image)
