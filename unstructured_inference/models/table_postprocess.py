@@ -98,138 +98,6 @@ def apply_class_thresholds(bboxes, labels, scores, class_names, class_thresholds
     return bboxes, scores, labels
 
 
-def iou(bbox1, bbox2):
-    """
-    Compute the intersection-over-union of two bounding boxes.
-    """
-    intersection = Rect(bbox1).intersect(bbox2)
-    union = Rect(bbox1).include_rect(bbox2)
-
-    union_area = union.get_area()
-    if union_area > 0:
-        return intersection.get_area() / union.get_area()
-
-    return 0
-
-
-def iob(bbox1, bbox2):
-    """
-    Compute the intersection area over box area, for bbox1.
-    """
-    intersection = Rect(bbox1).intersect(bbox2)
-
-    bbox1_area = Rect(bbox1).get_area()
-    if bbox1_area > 0:
-        return intersection.get_area() / bbox1_area
-
-    return 0
-
-
-def objects_to_cells(table, objects_in_table, tokens_in_table, class_map, class_thresholds):
-    """
-    Process the bounding boxes produced by the table structure recognition model
-    and the token/word/span bounding boxes into table cells.
-
-    Also return a confidence score based on how well the text was able to be
-    uniquely slotted into the cells detected by the table model.
-    """
-
-    table_structures = objects_to_table_structures(
-        table, objects_in_table, tokens_in_table, class_map, class_thresholds
-    )
-
-    # Check for a valid table
-    if len(table_structures["columns"]) < 1 or len(table_structures["rows"]) < 1:
-        cells = []  # None
-        confidence_score = 0
-    else:
-        cells, confidence_score = table_structure_to_cells(
-            table_structures, tokens_in_table, table["bbox"]
-        )
-
-    return table_structures, cells, confidence_score
-
-
-def objects_to_table_structures(
-    table_object, objects_in_table, tokens_in_table, class_names, class_thresholds
-):
-    """
-    Process the bounding boxes produced by the table structure recognition model into
-    a *consistent* set of table structures (rows, columns, supercells, headers).
-    This entails resolving conflicts/overlaps, and ensuring the boxes meet certain alignment
-    conditions (for example: rows should all have the same width, etc.).
-    """
-
-    page_num = table_object["page_num"]
-
-    table_structures = {}
-
-    columns = [obj for obj in objects_in_table if class_names[obj["label"]] == "table column"]
-    rows = [obj for obj in objects_in_table if class_names[obj["label"]] == "table row"]
-    headers = [
-        obj for obj in objects_in_table if class_names[obj["label"]] == "table column header"
-    ]
-    supercells = [
-        obj for obj in objects_in_table if class_names[obj["label"]] == "table spanning cell"
-    ]
-    for obj in supercells:
-        obj["subheader"] = False
-    subheaders = [
-        obj for obj in objects_in_table if class_names[obj["label"]] == "table projected row header"
-    ]
-    for obj in subheaders:
-        obj["subheader"] = True
-    supercells += subheaders
-    for obj in rows:
-        obj["header"] = False
-        for header_obj in headers:
-            if iob(obj["bbox"], header_obj["bbox"]) >= 0.5:
-                obj["header"] = True
-
-    for row in rows:
-        row["page"] = page_num
-
-    for column in columns:
-        column["page"] = page_num
-
-    # Refine table structures
-    rows = refine_rows(rows, tokens_in_table, class_thresholds["table row"])
-    columns = refine_columns(columns, tokens_in_table, class_thresholds["table column"])
-
-    # Shrink table bbox to just the total height of the rows
-    # and the total width of the columns
-    row_rect = None
-    for obj in rows:
-        if row_rect is None:
-            row_rect = Rect(obj["bbox"])
-        else:
-            row_rect.include_rect(obj["bbox"])
-    column_rect = None
-    for obj in columns:
-        if column_rect is None:
-            column_rect = Rect(obj["bbox"])
-        else:
-            column_rect.include_rect(obj["bbox"])
-    table_object["row_column_bbox"] = [column_rect[0], row_rect[1], column_rect[2], row_rect[3]]
-    table_object["bbox"] = table_object["row_column_bbox"]
-
-    # Process the rows and columns into a complete segmented table
-    columns = align_columns(columns, table_object["row_column_bbox"])
-    rows = align_rows(rows, table_object["row_column_bbox"])
-
-    table_structures["rows"] = rows
-    table_structures["columns"] = columns
-    table_structures["headers"] = headers
-    table_structures["supercells"] = supercells
-
-    if len(rows) > 0 and len(columns) > 1:
-        table_structures = refine_table_structures(
-            table_object["bbox"], table_structures, tokens_in_table, class_thresholds
-        )
-
-    return table_structures
-
-
 def refine_rows(rows, tokens, score_threshold):
     """
     Apply operations to the detected rows, such as
@@ -352,11 +220,7 @@ def sort_objects_by_score(objects, reverse=True):
     """
     Put any set of objects in order from high score to low score.
     """
-    if reverse:
-        sign = -1
-    else:
-        sign = 1
-    return sorted(objects, key=lambda k: sign * k["score"])
+    return sorted(objects, key=lambda k: k["score"], reverse=reverse)
 
 
 def remove_objects_without_content(page_spans, objects):
@@ -409,10 +273,7 @@ def extract_text_from_spans(spans, join_with_space=True, remove_integer_superscr
     Convert a collection of page tokens/words/spans into a single text string.
     """
 
-    if join_with_space:
-        join_char = " "
-    else:
-        join_char = ""
+    join_char = " " if join_with_space else ""
     spans_copy = spans[:]
 
     if remove_integer_superscripts:
@@ -506,45 +367,6 @@ def align_rows(rows, bbox):
     return rows
 
 
-def refine_table_structures(table_bbox, table_structures, page_spans, class_thresholds):
-    """
-    Apply operations to the detected table structure objects such as
-    thresholding, NMS, and alignment.
-    """
-    rows = table_structures["rows"]
-    columns = table_structures["columns"]
-
-    # columns = fill_column_gaps(columns, table_bbox)
-    # rows = fill_row_gaps(rows, table_bbox)
-
-    # Process the headers
-    headers = table_structures["headers"]
-    headers = apply_threshold(headers, class_thresholds["table column header"])
-    headers = nms(headers)
-    headers = align_headers(headers, rows)
-
-    # Process supercells
-    supercells = [elem for elem in table_structures["supercells"] if not elem["subheader"]]
-    subheaders = [elem for elem in table_structures["supercells"] if elem["subheader"]]
-    supercells = apply_threshold(supercells, class_thresholds["table spanning cell"])
-    subheaders = apply_threshold(subheaders, class_thresholds["table projected row header"])
-    supercells += subheaders
-    # Align before NMS for supercells because alignment brings them into agreement
-    # with rows and columns first; if supercells still overlap after this operation,
-    # the threshold for NMS can basically be lowered to just above 0
-    supercells = align_supercells(supercells, rows, columns)
-    supercells = nms_supercells(supercells)
-
-    header_supercell_tree(supercells)
-
-    table_structures["columns"] = columns
-    table_structures["rows"] = rows
-    table_structures["supercells"] = supercells
-    table_structures["headers"] = headers
-
-    return table_structures
-
-
 def nms(objects, match_criteria="object2_overlap", match_threshold=0.05, keep_higher=True):
     """
     A customizable version of non-maxima suppression (NMS).
@@ -583,61 +405,11 @@ def nms(objects, match_criteria="object2_overlap", match_threshold=0.05, keep_hi
                     if metric >= match_threshold:
                         suppression[object2_num] = True
                         break
-                except Exception:
+                except ZeroDivisionError:
                     # Intended to recover from divide-by-zero
                     pass
 
     return [obj for idx, obj in enumerate(objects) if not suppression[idx]]
-
-
-def align_headers(headers, rows):
-    """
-    Adjust the header boundary to be the convex hull of the rows it intersects
-    at least 50% of the height of.
-
-    For now, we are not supporting tables with multiple headers, so we need to
-    eliminate anything besides the top-most header.
-    """
-
-    aligned_headers = []
-
-    for row in rows:
-        row["header"] = False
-
-    header_row_nums = []
-    for header in headers:
-        for row_num, row in enumerate(rows):
-            row_height = row["bbox"][3] - row["bbox"][1]
-            min_row_overlap = max(row["bbox"][1], header["bbox"][1])
-            max_row_overlap = min(row["bbox"][3], header["bbox"][3])
-            overlap_height = max_row_overlap - min_row_overlap
-            if overlap_height / row_height >= 0.5:
-                header_row_nums.append(row_num)
-
-    if len(header_row_nums) == 0:
-        return aligned_headers
-
-    header_rect = Rect()
-    if header_row_nums[0] > 0:
-        header_row_nums = list(range(header_row_nums[0] + 1)) + header_row_nums
-
-    last_row_num = -1
-    for row_num in header_row_nums:
-        if row_num == last_row_num + 1:
-            row = rows[row_num]
-            row["header"] = True
-            header_rect = header_rect.include_rect(row["bbox"])
-            last_row_num = row_num
-        else:
-            # Break as soon as a non-header row is encountered.
-            # This ignores any subsequent rows in the table labeled as a header.
-            # Having more than 1 header is not supported currently.
-            break
-
-    header = {"bbox": list(header_rect)}
-    aligned_headers.append(header)
-
-    return aligned_headers
 
 
 def align_supercells(supercells, rows, columns):
@@ -807,168 +579,6 @@ def header_supercell_tree(supercells):
             if not ancestors_by_row[row] == 1:
                 supercells.remove(header_supercell)
                 break
-
-
-def table_structure_to_cells(table_structures, table_spans, table_bbox):
-    """
-    Assuming the row, column, supercell, and header bounding boxes have
-    been refined into a set of consistent table structures, process these
-    table structures into table cells. This is a universal representation
-    format for the table, which can later be exported to Pandas or CSV formats.
-    Classify the cells as header/access cells or data cells
-    based on if they intersect with the header bounding box.
-    """
-    columns = table_structures["columns"]
-    rows = table_structures["rows"]
-    supercells = table_structures["supercells"]
-    cells = []
-    subcells = []
-
-    # Identify complete cells and subcells
-    for column_num, column in enumerate(columns):
-        for row_num, row in enumerate(rows):
-            column_rect = Rect(list(column["bbox"]))
-            row_rect = Rect(list(row["bbox"]))
-            cell_rect = row_rect.intersect(column_rect)
-            header = "header" in row and row["header"]
-            cell = {
-                "bbox": list(cell_rect),
-                "column_nums": [column_num],
-                "row_nums": [row_num],
-                "header": header,
-            }
-
-            cell["subcell"] = False
-            for supercell in supercells:
-                supercell_rect = Rect(list(supercell["bbox"]))
-                if (supercell_rect.intersect(cell_rect).get_area() / cell_rect.get_area()) > 0.5:
-                    cell["subcell"] = True
-                    break
-
-            if cell["subcell"]:
-                subcells.append(cell)
-            else:
-                # cell_text = extract_text_inside_bbox(table_spans, cell['bbox'])
-                # cell['cell_text'] = cell_text
-                cell["subheader"] = False
-                cells.append(cell)
-
-    for supercell in supercells:
-        supercell_rect = Rect(list(supercell["bbox"]))
-        cell_columns = set()
-        cell_rows = set()
-        cell_rect = None
-        header = True
-        for subcell in subcells:
-            subcell_rect = Rect(list(subcell["bbox"]))
-            subcell_rect_area = subcell_rect.get_area()
-            if (subcell_rect.intersect(supercell_rect).get_area() / subcell_rect_area) > 0.5:
-                if cell_rect is None:
-                    cell_rect = Rect(list(subcell["bbox"]))
-                else:
-                    cell_rect.include_rect(Rect(list(subcell["bbox"])))
-                cell_rows = cell_rows.union(set(subcell["row_nums"]))
-                cell_columns = cell_columns.union(set(subcell["column_nums"]))
-                # By convention here, all subcells must be classified
-                # as header cells for a supercell to be classified as a header cell;
-                # otherwise, this could lead to a non-rectangular header region
-                header = header and "header" in subcell and subcell["header"]
-        if len(cell_rows) > 0 and len(cell_columns) > 0:
-            cell = {
-                "bbox": list(cell_rect),
-                "column_nums": list(cell_columns),
-                "row_nums": list(cell_rows),
-                "header": header,
-                "subheader": supercell["subheader"],
-            }
-            cells.append(cell)
-
-    # Compute a confidence score based on how well the page tokens
-    # slot into the cells reported by the model
-    _, _, cell_match_scores = slot_into_containers(cells, table_spans)
-    try:
-        mean_match_score = sum(cell_match_scores) / len(cell_match_scores)
-        min_match_score = min(cell_match_scores)
-        confidence_score = (mean_match_score + min_match_score) / 2
-    except ZeroDivisionError:
-        confidence_score = 0
-
-    # Dilate rows and columns before final extraction
-    # dilated_columns = fill_column_gaps(columns, table_bbox)
-    dilated_columns = columns
-    # dilated_rows = fill_row_gaps(rows, table_bbox)
-    dilated_rows = rows
-    for cell in cells:
-        column_rect = Rect()
-        for column_num in cell["column_nums"]:
-            column_rect.include_rect(list(dilated_columns[column_num]["bbox"]))
-        row_rect = Rect()
-        for row_num in cell["row_nums"]:
-            row_rect.include_rect(list(dilated_rows[row_num]["bbox"]))
-        cell_rect = column_rect.intersect(row_rect)
-        cell["bbox"] = list(cell_rect)
-
-    span_nums_by_cell, _, _ = slot_into_containers(
-        cells, table_spans, overlap_threshold=0.001, unique_assignment=True, forced_assignment=False
-    )
-
-    for cell, cell_span_nums in zip(cells, span_nums_by_cell):
-        cell_spans = [table_spans[num] for num in cell_span_nums]
-        # TODO: Refine how text is extracted; should be character-based, not span-based;
-        # but need to associate
-        cell["cell_text"] = extract_text_from_spans(cell_spans, remove_integer_superscripts=False)
-        cell["spans"] = cell_spans
-
-    # Adjust the row, column, and cell bounding boxes to reflect the extracted text
-    num_rows = len(rows)
-    rows = sort_objects_top_to_bottom(rows)
-    num_columns = len(columns)
-    columns = sort_objects_left_to_right(columns)
-    min_y_values_by_row = defaultdict(list)
-    max_y_values_by_row = defaultdict(list)
-    min_x_values_by_column = defaultdict(list)
-    max_x_values_by_column = defaultdict(list)
-    for cell in cells:
-        min_row = min(cell["row_nums"])
-        max_row = max(cell["row_nums"])
-        min_column = min(cell["column_nums"])
-        max_column = max(cell["column_nums"])
-        for span in cell["spans"]:
-            min_x_values_by_column[min_column].append(span["bbox"][0])
-            min_y_values_by_row[min_row].append(span["bbox"][1])
-            max_x_values_by_column[max_column].append(span["bbox"][2])
-            max_y_values_by_row[max_row].append(span["bbox"][3])
-    for row_num, row in enumerate(rows):
-        if len(min_x_values_by_column[0]) > 0:
-            row["bbox"][0] = min(min_x_values_by_column[0])
-        if len(min_y_values_by_row[row_num]) > 0:
-            row["bbox"][1] = min(min_y_values_by_row[row_num])
-        if len(max_x_values_by_column[num_columns - 1]) > 0:
-            row["bbox"][2] = max(max_x_values_by_column[num_columns - 1])
-        if len(max_y_values_by_row[row_num]) > 0:
-            row["bbox"][3] = max(max_y_values_by_row[row_num])
-    for column_num, column in enumerate(columns):
-        if len(min_x_values_by_column[column_num]) > 0:
-            column["bbox"][0] = min(min_x_values_by_column[column_num])
-        if len(min_y_values_by_row[0]) > 0:
-            column["bbox"][1] = min(min_y_values_by_row[0])
-        if len(max_x_values_by_column[column_num]) > 0:
-            column["bbox"][2] = max(max_x_values_by_column[column_num])
-        if len(max_y_values_by_row[num_rows - 1]) > 0:
-            column["bbox"][3] = max(max_y_values_by_row[num_rows - 1])
-    for cell in cells:
-        row_rect = Rect()
-        column_rect = Rect()
-        for row_num in cell["row_nums"]:
-            row_rect.include_rect(list(rows[row_num]["bbox"]))
-        for column_num in cell["column_nums"]:
-            column_rect.include_rect(list(columns[column_num]["bbox"]))
-        cell_rect = row_rect.intersect(column_rect)
-        if cell_rect.get_area() > 0:
-            cell["bbox"] = list(cell_rect)
-            pass
-
-    return cells, confidence_score
 
 
 def remove_supercell_overlap(supercell1, supercell2):
