@@ -122,7 +122,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             if "block_num" not in token:
                 token["block_num"] = 0
 
-        return recognize(outputs_structure, x, tokens=tokens, out_html=True)["html"][0]
+        html = recognize(outputs_structure, x, tokens=tokens, out_html=True)["html"]
+        prediction = html[0] if html else ""
+        return prediction
 
 
 tables_agent: UnstructuredTableTransformerModel = None
