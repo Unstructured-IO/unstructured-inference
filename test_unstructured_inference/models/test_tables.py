@@ -76,6 +76,8 @@ def test_table_prediction(model_path, sample_table_transcript):
     from PIL import Image
 
     table_model.initialize(model=model_path)
-    img = Image.open("./sample-docs/example_table.png").convert("RGB")
+    img = Image.open("./sample-docs/example_table.jpg").convert("RGB")
     prediction = table_model.predict(img)
     assert prediction == sample_table_transcript
+
+
