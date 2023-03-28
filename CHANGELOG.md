@@ -1,5 +1,6 @@
-## 0.2.13-dev0
+## 0.2.13
 
+* Add table processing
 * Change OCR logic to be aware of PDF image elements
 
 ## 0.2.12
