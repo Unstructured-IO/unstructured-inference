@@ -286,6 +286,116 @@ def test_remove_supercell_overlap(supercell1, supercell2):
     postprocess.remove_supercell_overlap(supercell1, supercell2)
 
 
+@pytest.mark.parametrize(
+    ("supercells", "rows", "columns", "output_test"),
+    [
+        (
+            [
+                {
+                    "label": "table spanning cell",
+                    "score": 0.9,
+                    "bbox": [
+                        98.92312622070312,
+                        143.11549377441406,
+                        2115.197265625,
+                        1238.27587890625,
+                    ],
+                    "projected row header": True,
+                    "header": True,
+                    "span": True,
+                },
+            ],
+            [
+                {
+                    "label": "table row",
+                    "score": 0.9299452900886536,
+                    "bbox": [0, 0, 10, 10],
+                    "column header": True,
+                    "header": True,
+                },
+                {
+                    "label": "table row",
+                    "score": 0.9299452900886536,
+                    "bbox": [
+                        98.92312622070312,
+                        143.11549377441406,
+                        2114.3525390625,
+                        193.67681884765625,
+                    ],
+                    "column header": True,
+                    "header": True,
+                },
+                {
+                    "label": "table row",
+                    "score": 0.9299452900886536,
+                    "bbox": [
+                        98.92312622070312,
+                        143.11549377441406,
+                        2114.3525390625,
+                        193.67681884765625,
+                    ],
+                    "column header": True,
+                    "header": True,
+                },
+            ],
+            [
+                {
+                    "label": "table column",
+                    "score": 0.9996132254600525,
+                    "bbox": [
+                        98.92312622070312,
+                        143.11549377441406,
+                        517.6508178710938,
+                        1616.48779296875,
+                    ],
+                },
+                {
+                    "label": "table column",
+                    "score": 0.9935646653175354,
+                    "bbox": [
+                        520.0474853515625,
+                        143.11549377441406,
+                        751.0982666015625,
+                        1616.48779296875,
+                    ],
+                },
+            ],
+            [
+                {
+                    "label": "table spanning cell",
+                    "score": 0.9,
+                    "bbox": [
+                        98.92312622070312,
+                        143.11549377441406,
+                        751.0982666015625,
+                        193.67681884765625,
+                    ],
+                    "projected row header": True,
+                    "header": True,
+                    "span": True,
+                    "row_numbers": [1, 2],
+                    "column_numbers": [0, 1],
+                },
+                {
+                    "row_numbers": [0],
+                    "column_numbers": [0, 1],
+                    "score": 0.9,
+                    "propagated": True,
+                    "bbox": [
+                        98.92312622070312,
+                        143.11549377441406,
+                        751.0982666015625,
+                        193.67681884765625,
+                    ],
+                },
+            ],
+        )
+    ],
+)
+def test_align_supercells(supercells, rows, columns, output_test):
+    assert postprocess.align_supercells(supercells, rows, columns) == output_test
+
+
 @pytest.mark.parametrize("rows, bbox, output", [([1.0], [0.0], [1.0])])
 def test_align_rows(rows, bbox, output):
     assert postprocess.align_rows(rows, bbox) == output
