@@ -423,5 +423,38 @@ def test_extract_text_from_spans(spans, join_with_space, expected):
     res = postprocess.extract_text_from_spans(
         spans, join_with_space=join_with_space, remove_integer_superscripts=True
     )
-    print(res)
     assert res == expected
+
+
+@pytest.mark.parametrize(
+    ("supercells", "expected_len"),
+    [
+        ([{"header": "hi", "row_numbers": [0, 1, 2], "score": 0.9}], 1),
+        (
+            [
+                {
+                    "header": "hi",
+                    "row_numbers": [0],
+                    "column_numbers": [1, 2, 3],
+                    "score": 0.9,
+                },
+                {"header": "hi", "row_numbers": [1], "column_numbers": [1], "score": 0.9},
+                {"header": "hi", "row_numbers": [1], "column_numbers": [2], "score": 0.9},
+                {"header": "hi", "row_numbers": [1], "column_numbers": [3], "score": 0.9},
+            ],
+            4,
+        ),
+        (
+            [
+                {"header": "hi", "row_numbers": [0], "column_numbers": [0], "score": 0.9},
+                {"header": "hi", "row_numbers": [1], "column_numbers": [0], "score": 0.9},
+                {"header": "hi", "row_numbers": [1, 2], "column_numbers": [0], "score": 0.9},
+                {"header": "hi", "row_numbers": [3], "column_numbers": [0], "score": 0.9},
+            ],
+            3,
+        ),
+    ],
+)
+def test_header_supercell_tree(supercells, expected_len):
+    postprocess.header_supercell_tree(supercells)
+    assert len(supercells) == expected_len
