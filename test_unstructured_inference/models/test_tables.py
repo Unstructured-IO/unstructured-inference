@@ -283,7 +283,7 @@ def test_nms(input_test, output_test):
     ],
 )
 def test_remove_supercell_overlap(supercell1, supercell2):
-    postprocess.remove_supercell_overlap(supercell1, supercell2)
+    assert postprocess.remove_supercell_overlap(supercell1, supercell2) == None
 
 
 @pytest.mark.parametrize(
