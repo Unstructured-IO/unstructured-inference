@@ -60,11 +60,11 @@ class Rect:
         self.x_max = max(self.x_max, other.x_max)
         self.y_max = max(self.y_max, other.y_max)
 
-        if self.get_area() == 0:
-            self.x_min = other.x_min
-            self.y_min = other.y_min
-            self.x_max = other.x_max
-            self.y_max = other.y_max
+        # if self.get_area() == 0:
+        #     self.x_min = other.x_min
+        #     self.y_min = other.y_min
+        #     self.x_max = other.x_max
+        #     self.y_max = other.y_max
 
         return self
 
@@ -80,22 +80,22 @@ def apply_threshold(objects, threshold):
     return [obj for obj in objects if obj["score"] >= threshold]
 
 
-def apply_class_thresholds(bboxes, labels, scores, class_names, class_thresholds):
-    """
-    Filter out bounding boxes whose confidence is below the confidence threshold for
-    its associated class label.
-    """
-    # Apply class-specific thresholds
-    indices_above_threshold = [
-        idx
-        for idx, (score, label) in enumerate(zip(scores, labels))
-        if score >= class_thresholds[class_names[label]]
-    ]
-    bboxes = [bboxes[idx] for idx in indices_above_threshold]
-    scores = [scores[idx] for idx in indices_above_threshold]
-    labels = [labels[idx] for idx in indices_above_threshold]
+# def apply_class_thresholds(bboxes, labels, scores, class_names, class_thresholds):
+#     """
+#     Filter out bounding boxes whose confidence is below the confidence threshold for
+#     its associated class label.
+#     """
+#     # Apply class-specific thresholds
+#     indices_above_threshold = [
+#         idx
+#         for idx, (score, label) in enumerate(zip(scores, labels))
+#         if score >= class_thresholds[class_names[label]]
+#     ]
+#     bboxes = [bboxes[idx] for idx in indices_above_threshold]
+#     scores = [scores[idx] for idx in indices_above_threshold]
+#     labels = [labels[idx] for idx in indices_above_threshold]
 
-    return bboxes, scores, labels
+#     return bboxes, scores, labels
 
 
 def refine_rows(rows, tokens, score_threshold):
