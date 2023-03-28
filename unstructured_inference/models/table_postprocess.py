@@ -272,7 +272,7 @@ def extract_text_from_spans(spans, join_with_space=True, remove_integer_superscr
                 continue
             flags = span["flags"]
             if flags & 2**0:  # superscript flag
-                if is_int(span["text"]):
+                if span["text"].strip().isdigit():
                     spans_copy.remove(span)
                 else:
                     span["superscript"] = True
@@ -589,7 +589,7 @@ def remove_supercell_overlap(supercell1, supercell2):
     common_columns = set(supercell1["column_numbers"]).intersection(
         set(supercell2["column_numbers"])
     )
-
+    print(supercell1, supercell2)
     # While the supercells have overlapping grid cells, continue shrinking the less-confident
     # supercell one row or one column at a time
     while len(common_rows) > 0 and len(common_columns) > 0:
@@ -621,16 +621,3 @@ def remove_supercell_overlap(supercell1, supercell2):
             else:
                 supercell2["row_numbers"] = []
                 common_rows = set()
-
-
-def is_int(text: str):
-    """Determines whether text is string representation of an integer."""
-    text = text.strip()
-    if not text:
-        return False
-    if len(text) == 1:
-        return 48 <= ord(text[0]) <= 57
-    else:
-        ((49 <= ord(text[0]) <= 57) or (text[0] == "-")) and all(
-            48 <= ord(chr) <= 57 for chr in text[1:]
-        )
