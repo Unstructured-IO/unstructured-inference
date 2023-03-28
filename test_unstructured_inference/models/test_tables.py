@@ -198,3 +198,115 @@ def test_intersect():
     a = postprocess.Rect()
     b = postprocess.Rect([1, 2, 3, 4])
     assert a.intersect(b).get_area() == 4.0
+
+
+def test_include_rect():
+    a = postprocess.Rect()
+    assert a.include_rect([1, 2, 3, 4]).get_area() == 4.0
+
+
+@pytest.mark.parametrize(
+    ("spans", "join_with_space", "expected"),
+    [
+        (
+            [
+                {
+                    "flags": 2**0,
+                    "text": "5",
+                    "superscript": False,
+                    "span_num": 0,
+                    "line_num": 0,
+                    "block_num": 0,
+                }
+            ],
+            True,
+            "",
+        ),
+        (
+            [
+                {
+                    "flags": 2**0,
+                    "text": "p",
+                    "superscript": False,
+                    "span_num": 0,
+                    "line_num": 0,
+                    "block_num": 0,
+                }
+            ],
+            True,
+            "p",
+        ),
+        (
+            [
+                {
+                    "flags": 2**0,
+                    "text": "p",
+                    "superscript": False,
+                    "span_num": 0,
+                    "line_num": 0,
+                    "block_num": 0,
+                },
+                {
+                    "flags": 2**0,
+                    "text": "p",
+                    "superscript": False,
+                    "span_num": 0,
+                    "line_num": 0,
+                    "block_num": 0,
+                },
+            ],
+            True,
+            "p p",
+        ),
+        (
+            [
+                {
+                    "flags": 2**0,
+                    "text": "p",
+                    "superscript": False,
+                    "span_num": 0,
+                    "line_num": 0,
+                    "block_num": 0,
+                },
+                {
+                    "flags": 2**0,
+                    "text": "p",
+                    "superscript": False,
+                    "span_num": 0,
+                    "line_num": 0,
+                    "block_num": 1,
+                },
+            ],
+            True,
+            "p p",
+        ),
+        (
+            [
+                {
+                    "flags": 2**0,
+                    "text": "p",
+                    "superscript": False,
+                    "span_num": 0,
+                    "line_num": 0,
+                    "block_num": 0,
+                },
+                {
+                    "flags": 2**0,
+                    "text": "p",
+                    "superscript": False,
+                    "span_num": 0,
+                    "line_num": 0,
+                    "block_num": 1,
+                },
+            ],
+            False,
+            "p p",
+        ),
+    ],
+)
+def test_extract_text_from_spans(spans, join_with_space, expected):
+    res = postprocess.extract_text_from_spans(
+        spans, join_with_space=join_with_space, remove_integer_superscripts=True
+    )
+    print(res)
+    assert res == expected
