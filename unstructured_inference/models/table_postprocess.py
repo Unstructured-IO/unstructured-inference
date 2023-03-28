@@ -589,7 +589,7 @@ def remove_supercell_overlap(supercell1, supercell2):
     common_columns = set(supercell1["column_numbers"]).intersection(
         set(supercell2["column_numbers"])
     )
-    print(supercell1, supercell2)
+    
     # While the supercells have overlapping grid cells, continue shrinking the less-confident
     # supercell one row or one column at a time
     while len(common_rows) > 0 and len(common_columns) > 0:

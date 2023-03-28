@@ -42,8 +42,7 @@ It should not be installed under MacOS with Apple Silicon cpu.
 PaddleOCR should be installed using the following instructions.
 
 ```shell
-pip install paddlepaddle
-pip install 'git+https://github.com/Unstructured-IO/unstructured.PaddleOCR'
+pip install "unstructured.PaddleOCR"
 ```
 
 ### Repository
