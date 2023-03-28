@@ -1,4 +1,4 @@
-from paddleocr import PaddleOCR
+from unstructured_paddleocr import PaddleOCR
 
 paddle_ocr: PaddleOCR = None
 
