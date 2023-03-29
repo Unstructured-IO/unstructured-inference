@@ -1,3 +1,7 @@
+## 0.2.15-dev0
+
+* Fix for text block detection
+
 ## 0.2.14
 
 * Suppressed processing progress bars
