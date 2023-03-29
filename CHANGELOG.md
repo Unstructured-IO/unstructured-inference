@@ -1,6 +1,7 @@
-## 0.2.15-dev0
+## 0.3.0
 
 * Fix for text block detection
+* Add paddleocr dependency to setup for x86_64 machines
 
 ## 0.2.14
 
