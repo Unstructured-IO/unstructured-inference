@@ -32,7 +32,7 @@ install-detectron2:
 	pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@78d5b4f335005091fe0364ce4775d711ec93566e"
 
 .PHONY: install-paddleocr
-install-detectron2:
+install-paddleocr:
 	pip install "unstructured.PaddleOCR"
 
 .PHONY: install-test
