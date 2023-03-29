@@ -20,7 +20,7 @@ install-base: install-base-pip-packages
 install: install-base-pip-packages install-dev install-detectron2 install-test
 
 .PHONY: install-ci
-install-ci: install-base-pip-packages install-test
+install-ci: install-base-pip-packages install-test install-paddleocr
 
 .PHONY: install-base-pip-packages
 install-base-pip-packages:
@@ -30,6 +30,10 @@ install-base-pip-packages:
 .PHONY: install-detectron2
 install-detectron2:
 	pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@78d5b4f335005091fe0364ce4775d711ec93566e"
+
+.PHONY: install-paddleocr
+install-paddleocr:
+	pip install "unstructured.PaddleOCR"
 
 .PHONY: install-test
 install-test:

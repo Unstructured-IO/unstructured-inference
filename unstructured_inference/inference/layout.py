@@ -14,6 +14,7 @@ from PIL import Image
 from unstructured_inference.inference.elements import TextRegion, ImageTextRegion, LayoutElement
 from unstructured_inference.logger import logger
 import unstructured_inference.models.tesseract as tesseract
+import unstructured_inference.models.tables as tables
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 
@@ -54,6 +55,7 @@ class DocumentLayout:
         model: Optional[UnstructuredModel] = None,
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         ocr_strategy: str = "auto",
+        extract_tables: bool = False,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         logger.info(f"Reading PDF for file: {filename} ...")
@@ -74,6 +76,7 @@ class DocumentLayout:
                 layout=layout,
                 ocr_strategy=ocr_strategy,
                 fixed_layout=fixed_layout,
+                extract_tables=extract_tables,
             )
             pages.append(page)
         return cls.from_pages(pages)
@@ -85,6 +88,7 @@ class DocumentLayout:
         model: Optional[UnstructuredModel] = None,
         ocr_strategy: str = "auto",
         fixed_layout: Optional[List[TextRegion]] = None,
+        extract_tables: bool = False,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
@@ -96,7 +100,12 @@ class DocumentLayout:
             else:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
         page = PageLayout.from_image(
-            image, model=model, layout=None, ocr_strategy=ocr_strategy, fixed_layout=fixed_layout
+            image,
+            model=model,
+            layout=None,
+            ocr_strategy=ocr_strategy,
+            fixed_layout=fixed_layout,
+            extract_tables=extract_tables,
         )
         return cls.from_pages([page])
 
@@ -111,6 +120,7 @@ class PageLayout:
         layout: Optional[List[TextRegion]],
         model: Optional[UnstructuredModel] = None,
         ocr_strategy: str = "auto",
+        extract_tables: bool = False,
     ):
         self.image = image
         self.image_array: Union[np.ndarray, None] = None
@@ -121,6 +131,7 @@ class PageLayout:
         if ocr_strategy not in VALID_OCR_STRATEGIES:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
+        self.extract_tables = extract_tables
 
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
@@ -148,7 +159,11 @@ class PageLayout:
         layout.sort(key=lambda element: element.y1)
         elements = []
         for e in tqdm(layout):
-            elements.append(get_element_from_block(e, self.image, self.layout, self.ocr_strategy))
+            elements.append(
+                get_element_from_block(
+                    e, self.image, self.layout, self.ocr_strategy, self.extract_tables
+                )
+            )
         return elements
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
@@ -164,10 +179,18 @@ class PageLayout:
         model: Optional[UnstructuredModel] = None,
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
+        extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
-        page = cls(number=0, image=image, layout=layout, model=model, ocr_strategy=ocr_strategy)
+        page = cls(
+            number=0,
+            image=image,
+            layout=layout,
+            model=model,
+            ocr_strategy=ocr_strategy,
+            extract_tables=extract_tables,
+        )
         if fixed_layout is None:
             page.get_elements()
         else:
@@ -239,12 +262,15 @@ def get_element_from_block(
     image: Optional[Image.Image] = None,
     pdf_objects: Optional[List[Union[TextRegion, ImageTextRegion]]] = None,
     ocr_strategy: str = "auto",
+    extract_tables: bool = False,
 ) -> LayoutElement:
     """Creates a LayoutElement from a given layout or image by finding all the text that lies within
     a given block."""
     if block.text is not None:
         # If block text is already populated, we'll assume it's correct
         text = block.text
+    elif extract_tables and isinstance(block, LayoutElement) and block.type == "Table":
+        text = interprete_table_block(block, image)
     elif pdf_objects is not None:
         text = aggregate_by_block(block, image, pdf_objects, ocr_strategy)
     elif image is not None:
@@ -284,11 +310,21 @@ def aggregate_by_block(
     return text
 
 
+def interprete_table_block(text_block: TextRegion, image: Image.Image) -> str:
+    """Extract the contents of a table."""
+    tables.load_agent()
+    if tables.tables_agent is None:
+        raise RuntimeError("Unable to load table extraction agent.")
+    padded_block = text_block.pad(12)
+    cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
+    return tables.tables_agent.predict(cropped_image)
+
+
 def ocr(text_block: TextRegion, image: Image.Image) -> str:
     """Runs a cropped text block image through and OCR agent."""
     logger.debug("Running OCR on text block ...")
     tesseract.load_agent()
-    padded_block = text_block.pad(5)
+    padded_block = text_block.pad(12)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tesseract.ocr_agent.detect(cropped_image)
 
@@ -309,7 +345,7 @@ def load_pdf(
     vertical_ttb: bool = True,  # Should vertical words be read top-to-bottom?
     extra_attrs: Optional[List[str]] = None,
     split_at_punctuation: Union[bool, str] = False,
-    dpi: int = 72,
+    dpi: int = 200,
 ) -> Tuple[List[List[TextRegion]], List[Image.Image]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
