@@ -58,6 +58,11 @@ class Rectangle:
             ]
         )
 
+    @property
+    def coordinates(self):
+        """Gets coordinates of the rectangle"""
+        return ((self.x1, self.y1), (self.x1, self.y2), (self.x2, self.y2), (self.x2, self.y1))
+
 
 @dataclass
 class TextRegion(Rectangle):
@@ -77,7 +82,12 @@ class LayoutElement(TextRegion):
 
     def to_dict(self) -> dict:
         """Converts the class instance to dictionary form."""
-        return self.__dict__
+        out_dict = {
+            "coordinates": self.coordinates,
+            "text": self.text,
+            "type": self.type,
+        }
+        return out_dict
 
     @classmethod
     def from_region(cls, region: Rectangle):

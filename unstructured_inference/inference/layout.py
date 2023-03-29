@@ -363,12 +363,21 @@ def load_pdf(
         )
         word_objs = [
             TextRegion(
-                x1=word["x0"], y1=word["top"], x2=word["x1"], y2=word["bottom"], text=word["text"]
+                x1=word["x0"] * dpi / 72,
+                y1=word["top"] * dpi / 72,
+                x2=word["x1"] * dpi / 72,
+                y2=word["bottom"] * dpi / 72,
+                text=word["text"],
             )
             for word in plumber_words
         ]
         image_objs = [
-            ImageTextRegion(x1=image["x0"], y1=image["y0"], x2=image["x1"], y2=image["y1"])
+            ImageTextRegion(
+                x1=image["x0"] * dpi / 72,
+                y1=image["y0"] * dpi / 72,
+                x2=image["x1"] * dpi / 72,
+                y2=image["y1"] * dpi / 72,
+            )
             for image in page.images
         ]
         layout = word_objs + image_objs
