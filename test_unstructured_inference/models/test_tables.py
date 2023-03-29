@@ -1,4 +1,3 @@
-import platform
 import pytest
 from unittest.mock import patch
 
@@ -283,7 +282,7 @@ def test_nms(input_test, output_test):
     ],
 )
 def test_remove_supercell_overlap(supercell1, supercell2):
-    assert postprocess.remove_supercell_overlap(supercell1, supercell2) == None
+    assert postprocess.remove_supercell_overlap(supercell1, supercell2) is None
 
 
 @pytest.mark.parametrize(
