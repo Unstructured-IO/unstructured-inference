@@ -1,3 +1,7 @@
+## 0.2.14-dev0
+
+* Suppressed processing progress bars
+
 ## 0.2.13
 
 * Add table processing
