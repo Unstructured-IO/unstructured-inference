@@ -2,7 +2,6 @@ from __future__ import annotations
 import os
 import re
 import tempfile
-from tqdm import tqdm
 from typing import List, Optional, Tuple, Union, BinaryIO
 import unicodedata
 
@@ -157,13 +156,12 @@ class PageLayout:
         # NOTE(robinson) - This orders the page from top to bottom. We'll need more
         # sophisticated ordering logic for more complicated layouts.
         layout.sort(key=lambda element: element.y1)
-        elements = []
-        for e in tqdm(layout):
-            elements.append(
-                get_element_from_block(
-                    e, self.image, self.layout, self.ocr_strategy, self.extract_tables
-                )
+        elements = [
+            get_element_from_block(
+                e, self.image, self.layout, self.ocr_strategy, self.extract_tables
             )
+            for e in layout
+        ]
         return elements
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
