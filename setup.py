@@ -60,5 +60,6 @@ setup(
         "onnxruntime",
         "transformers",
         'unstructured.PaddleOCR ; platform_machine=="x86_64"',
+        "protobuf==3.20.*",
     ],
 )
