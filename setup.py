@@ -60,6 +60,8 @@ setup(
         "onnxruntime",
         "transformers",
         'unstructured.PaddleOCR ; platform_machine=="x86_64"',
+        # NOTE(alan): protobuf is required by onnxruntime, and causes errors when the latest version
+        # is used in conjunction with certain other libraries (tensorboard/flow for example).
         "protobuf==3.20.*",
     ],
 )
