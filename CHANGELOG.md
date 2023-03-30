@@ -1,3 +1,7 @@
+## 0.3.1
+
+* Pin protobuf version to avoid errors
+
 ## 0.3.0
 
 * Fix for text block detection
