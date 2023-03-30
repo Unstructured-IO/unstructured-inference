@@ -115,10 +115,8 @@ pillow==9.4.0
     #   torchvision
 portalocker==2.7.0
     # via iopath
-protobuf==3.20.3
-    # via
-    #   onnxruntime
-    #   unstructured-inference (setup.py)
+protobuf==4.22.1
+    # via onnxruntime
 pycocotools==2.0.6
     # via effdet
 pycparser==2.21
