@@ -170,6 +170,15 @@ class PageLayout:
             self.image_array = np.array(self.image)
         return self.image_array
 
+    def annotate(self) -> Image.Image:
+        """Returns image annotated with bounding boxes for the elements."""
+        ann_img = self.image.copy()
+        draw_image = ImageDraw.ImageDraw(ann_img)
+        for el in self.elements:
+            box = (el.x1, el.y1, el.x2, el.y2)
+            draw_image = draw_image.rectangle(box, outline="red")
+        return ann_img
+
     @classmethod
     def from_image(
         cls,
