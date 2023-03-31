@@ -1,3 +1,7 @@
+## 0.3.2
+
+* Allow extracting tables from higher level functions
+
 ## 0.3.1
 
 * Pin protobuf version to avoid errors

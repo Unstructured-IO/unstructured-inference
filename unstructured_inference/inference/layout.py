@@ -115,7 +115,7 @@ class PageLayout:
     def __init__(
         self,
         number: int,
-        image: Image,
+        image: Image.Image,
         layout: Optional[List[TextRegion]],
         model: Optional[UnstructuredModel] = None,
         ocr_strategy: str = "auto",
@@ -202,6 +202,7 @@ def process_data_with_model(
     is_image: bool = False,
     ocr_strategy: str = "auto",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
+    extract_tables: bool = False,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
@@ -213,6 +214,7 @@ def process_data_with_model(
             is_image=is_image,
             ocr_strategy=ocr_strategy,
             fixed_layouts=fixed_layouts,
+            extract_tables=extract_tables,
         )
 
     return layout
@@ -224,15 +226,22 @@ def process_file_with_model(
     is_image: bool = False,
     ocr_strategy: str = "auto",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
+    extract_tables: bool = False,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
     model = get_model(model_name)
     layout = (
-        DocumentLayout.from_image_file(filename, model=model, ocr_strategy=ocr_strategy)
+        DocumentLayout.from_image_file(
+            filename, model=model, ocr_strategy=ocr_strategy, extract_tables=extract_tables
+        )
         if is_image
         else DocumentLayout.from_file(
-            filename, model=model, ocr_strategy=ocr_strategy, fixed_layouts=fixed_layouts
+            filename,
+            model=model,
+            ocr_strategy=ocr_strategy,
+            fixed_layouts=fixed_layouts,
+            extract_tables=extract_tables,
         )
     )
     return layout
