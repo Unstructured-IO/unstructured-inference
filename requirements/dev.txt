@@ -67,7 +67,7 @@ ipykernel==6.22.0
     #   nbclassic
     #   notebook
     #   qtconsole
-ipython==8.11.0
+ipython==8.12.0
     # via
     #   -r requirements/dev.in
     #   ipykernel
@@ -143,7 +143,7 @@ matplotlib-inline==0.1.6
     #   ipython
 mistune==2.0.5
     # via nbconvert
-nbclassic==0.5.3
+nbclassic==0.5.4
     # via notebook
 nbclient==0.7.2
     # via nbconvert
@@ -304,6 +304,8 @@ traitlets==5.9.0
     #   nbformat
     #   notebook
     #   qtconsole
+typing-extensions==4.5.0
+    # via ipython
 uri-template==1.2.0
     # via jsonschema
 wcwidth==0.2.6

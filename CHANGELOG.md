@@ -1,3 +1,8 @@
+## 0.3.1
+
+* Pin protobuf version to avoid errors
+* Make paddleocr an extra again
+
 ## 0.3.0
 
 * Fix for text block detection
