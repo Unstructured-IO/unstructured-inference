@@ -46,7 +46,7 @@ COPY unstructured_inference unstructured_inference
 RUN python3.8 -m pip install pip==${PIP_VERSION} \
   && pip3.8 install  --no-cache  -r requirements-base.txt \
   && pip3.8 install  --no-cache  -r requirements-dev.txt \
-  && pip3.8 install --no-cache "detectron2@git+https://github.com/facebookresearch/detectron2.git@v0.6#egg=detectron2" \
+  && pip3.8 install --no-cache "detectron2@git+https://github.com/facebookresearch/detectron2.git@e2ce8dc1ab097891395d324abaffe9cf298503d1#egg=detectron2" \
   && python3.8 -c "import unstructured_inference.models.detectron2 as detectron2; detectron2.load_default_model()"
 
 EXPOSE 5000
