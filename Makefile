@@ -46,7 +46,7 @@ install-dev:
 ## pip-compile:             compiles all base/dev/test requirements
 .PHONY: pip-compile
 pip-compile:
-	pip-compile --upgrade -o requirements/base.txt
+	pip-compile --upgrade requirements/base.in
 	# NOTE(robinson) - We want the dependencies for detectron2 in the requirements.txt, but not
 	# the detectron2 repo itself. If detectron2 is in the requirements.txt file, an order of
 	# operations issue related to the torch library causes the install to fail
