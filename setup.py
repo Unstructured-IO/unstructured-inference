@@ -74,9 +74,9 @@ setup(
             #  1. Downgrade the protobuf package to 3.20.x or lower.
             #  2. Set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python (but this will use pure-Python
             #     parsing and will be much slower).
-            "protobuf<3.21",
+            'protobuf<3.21 ; platform_machine=="x86_64"',
             # NOTE(alan): Pin to get around error: undefined symbol: _dl_sym, version GLIBC_PRIVATE
-            "paddlepaddle>=2.4",
+            'paddlepaddle>=2.4 ; platform_machine=="x86_64"',
         ]
     },
 )
