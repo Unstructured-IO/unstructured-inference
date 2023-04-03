@@ -20,7 +20,7 @@ install-base: install-base-pip-packages
 install: install-base-pip-packages install-dev install-detectron2 install-test
 
 .PHONY: install-ci
-install-ci: install-base-pip-packages install-test
+install-ci: install-base-pip-packages install-test install-paddleocr
 
 .PHONY: install-base-pip-packages
 install-base-pip-packages:
@@ -30,6 +30,10 @@ install-base-pip-packages:
 .PHONY: install-detectron2
 install-detectron2:
 	pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@78d5b4f335005091fe0364ce4775d711ec93566e"
+
+.PHONY: install-paddleocr
+install-paddleocr:
+	pip install "unstructured.PaddleOCR"
 
 .PHONY: install-test
 install-test:
@@ -66,7 +70,7 @@ docker-build:
 
 .PHONY: docker-start-api
 docker-start-api:
-	docker run -p 8000:8000 --mount type=bind,source=$(realpath .),target=/home/notebook-user/local -t --rm --entrypoint uvicorn unstructured-inference-dev:latest ${PACKAGE_NAME}.api:app --host 0.0.0.0 --port 8000
+	docker run -p 8000:8000 --mount type=bind,source=$(realpath .),target=/home/notebook-user/local -t --rm --entrypoint uvicorn unstructured-inference-dev:latest ${PACKAGE_NAME}.api:app --log-config logger_config.yaml --host 0.0.0.0 --port 8000
 
 
 #########
@@ -76,7 +80,7 @@ docker-start-api:
 ## run-app-dev:             runs the FastAPI api with hot reloading
 .PHONY: run-app-dev
 run-app-dev:
-	PYTHONPATH=. uvicorn unstructured_inference.api:app --reload
+	PYTHONPATH=. uvicorn unstructured_inference.api:app --log-config logger_config.yaml --reload
 
 ## start-app-local:         runs FastAPI in the container with hot reloading
 .PHONY: start-app-local

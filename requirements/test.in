@@ -8,6 +8,7 @@ click>=8.1
 # starlette even though it's required for TestClient
 httpx
 flake8
+flake8-docstrings
 mypy
 pytest-cov
 pdf2image>=1.16.2

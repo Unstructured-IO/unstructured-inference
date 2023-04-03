@@ -37,6 +37,7 @@ RUN mkdir ${HOME}/.ssh && chmod go-rwx ${HOME}/.ssh \
 ENV PYTHONPATH="${PYTHONPATH}:${HOME}"
 ENV PATH="/home/${NB_USER}/.local/bin:${PATH}"
 
+COPY logger_config.yaml logger_config.yaml
 COPY requirements/dev.txt requirements-dev.txt
 COPY requirements/base.txt requirements-base.txt
 COPY unstructured_inference unstructured_inference
@@ -51,5 +52,6 @@ RUN python3.8 -m pip install pip==${PIP_VERSION} \
 EXPOSE 5000
 
 ENTRYPOINT ["uvicorn", "unstructured_inference.api:app", \
+  "--log-config", "logger_config.yaml", \
   "--host", "0.0.0.0", \
   "--port", "5000"]

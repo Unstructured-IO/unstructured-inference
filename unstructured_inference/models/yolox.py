@@ -6,11 +6,11 @@
 from PIL import Image
 import cv2
 from huggingface_hub import hf_hub_download
-from layoutparser.elements.layout_elements import TextBlock, Rectangle
-from layoutparser.elements.layout import Layout
 import numpy as np
 import onnxruntime
+from typing import List
 
+from unstructured_inference.inference.elements import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.visualize import draw_bounding_boxes
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
@@ -47,17 +47,19 @@ MODEL_TYPES = {
 
 class UnstructuredYoloXModel(UnstructuredModel):
     def predict(self, x: Image):
+        """Predict using YoloX model."""
         super().predict(x)
         return self.image_processing(x)
 
     def initialize(self, model_path: str, label_map: dict):
+        """Start inference session for YoloX model."""
         self.model = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
         self.layout_classes = label_map
 
     def image_processing(
         self,
         image: Image = None,
-    ) -> Layout:
+    ) -> List[LayoutElement]:
         """Method runing YoloX for layout detection, returns a PageLayout
         parameters
         ----------
@@ -94,24 +96,25 @@ class UnstructuredYoloXModel(UnstructuredModel):
         boxes_xyxy /= ratio
         dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.45, score_thr=0.1)
 
-        blocks = []
+        regions = []
 
         for det in dets:
             # Each detection should have (x1,y1,x2,y2,probability,class) format
             # being (x1,y1) the top left and (x2,y2) the bottom right
             x1, y1, x2, y2, _, class_id = det.tolist()
             detected_class = self.layout_classes[int(class_id)]
-            block = TextBlock(type=detected_class, text=None, block=Rectangle(x1, y1, x2, y2))
+            region = LayoutElement(x1, y1, x2, y2, text=None, type=detected_class)
 
-            blocks.append(block)
+            regions.append(region)
 
-        blocks.sort(key=lambda element: element.coordinates[1])
+        regions.sort(key=lambda element: element.y1)
 
-        page_layout = Layout(blocks=blocks)  # TODO(benjamin): encode image as base64?
+        page_layout = regions  # TODO(benjamin): encode image as base64?
 
         return page_layout
 
     def annotate_image(self, image_fn, dets, out_fn):
+        """Draw bounding boxes and prediction metadata."""
         origin_img = np.array(Image.open(image_fn))
         final_boxes, final_scores, final_cls_inds = dets[:, :4], dets[:, 4], dets[:, 5]
 
@@ -130,6 +133,7 @@ class UnstructuredYoloXModel(UnstructuredModel):
 
 
 def preprocess(img, input_size, swap=(2, 0, 1)):
+    """Preprocess image data before YoloX inference."""
     if len(img.shape) == 3:
         padded_img = np.ones((input_size[0], input_size[1], 3), dtype=np.uint8) * 114
     else:
@@ -149,6 +153,7 @@ def preprocess(img, input_size, swap=(2, 0, 1)):
 
 
 def demo_postprocess(outputs, img_size, p6=False):
+    """Postprocessing for YoloX model."""
     grids = []
     expanded_strides = []
 

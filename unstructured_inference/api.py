@@ -18,6 +18,7 @@ async def layout_parsing(
     force_ocr=Form(default=False),
     # TODO(alan): Need a way to send model options to the model
 ):
+    """Route to proper filetype parser."""
     if filetype not in VALID_FILETYPES:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
     is_image = filetype == "image"
@@ -46,4 +47,5 @@ async def layout_parsing(
 
 @app.get("/healthcheck", status_code=status.HTTP_200_OK)
 async def healthcheck(request: Request):
+    """Return healthy status"""
     return {"healthcheck": "HEALTHCHECK STATUS: EVERYTHING OK!"}

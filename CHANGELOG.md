@@ -1,3 +1,26 @@
+## 0.3.2
+
+* Allow extracting tables from higher level functions
+
+## 0.3.1
+
+* Pin protobuf version to avoid errors
+* Make paddleocr an extra again
+
+## 0.3.0
+
+* Fix for text block detection
+* Add paddleocr dependency to setup for x86_64 machines
+
+## 0.2.14
+
+* Suppressed processing progress bars
+
+## 0.2.13
+
+* Add table processing
+* Change OCR logic to be aware of PDF image elements
+
 ## 0.2.12
 
 * Fix for processing RGBA images
