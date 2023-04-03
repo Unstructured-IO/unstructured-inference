@@ -1,0 +1,11 @@
+fastapi
+layoutparser[layoutmodels,tesseract]
+python-multipart
+uvicorn
+huggingface-hub
+# NOTE(robinson) - later versions of opencv-python cause installation issues
+# on RHEL7. We can remove this pin once the following issue from 12/2022 is resolved
+# ref: https://github.com/opencv/opencv-python/issues/772
+opencv-python==4.6.0.66
+onnxruntime
+transformers

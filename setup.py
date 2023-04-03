@@ -21,6 +21,20 @@ from setuptools import setup, find_packages
 
 from unstructured_inference.__version__ import __version__
 
+
+def load_requirements(file_list=None):
+    if file_list is None:
+        file_list = ["requirements/base.in"]
+    if isinstance(file_list, str):
+        file_list = [file_list]
+    requirements = []
+    for file in file_list:
+        if not file.startswith("#"):
+            with open(file, encoding="utf-8") as f:
+                requirements.extend(f.readlines())
+    return requirements
+
+
 setup(
     name="unstructured_inference",
     description="A library for performing inference using trained models.",
@@ -47,19 +61,7 @@ setup(
     packages=find_packages(),
     version=__version__,
     entry_points={},
-    install_requires=[
-        "fastapi",
-        "layoutparser[layoutmodels,tesseract]",
-        "python-multipart",
-        "uvicorn",
-        "huggingface-hub",
-        # NOTE(robinson) - later versions of opencv-python cause installation issues
-        # on RHEL7. We can remove this pin once the following issue from 12/2022 is resolved
-        # ref: https://github.com/opencv/opencv-python/issues/772
-        "opencv-python==4.6.0.66",
-        "onnxruntime",
-        "transformers",
-    ],
+    install_requires=load_requirements(),
     extras_require={
         "tables": [
             'unstructured.PaddleOCR ; platform_machine=="x86_64"',
