@@ -36,11 +36,11 @@ install-paddleocr:
 	pip install "unstructured.PaddleOCR"
 
 .PHONY: install-test
-install-test:
+install-test: install-base
 	pip install -r requirements/test.txt
 
 .PHONY: install-dev
-install-dev:
+install-dev: install-test
 	pip install -r requirements/dev.txt
 
 ## pip-compile:             compiles all base/dev/test requirements

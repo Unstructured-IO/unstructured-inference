@@ -1,4 +1,5 @@
--c test.txt
+-c base.txt
+-c test.txt 
 jupyter
 ipython
 pip-tools
