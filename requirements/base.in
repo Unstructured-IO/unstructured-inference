@@ -9,3 +9,4 @@ huggingface-hub
 opencv-python==4.6.0.66
 onnxruntime
 transformers
+scikit-learn
