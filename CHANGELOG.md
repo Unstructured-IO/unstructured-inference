@@ -1,3 +1,7 @@
+## 0.3.3-dev0
+
+* Update detectron2 version
+
 ## 0.3.2
 
 * Allow extracting tables from higher level functions
