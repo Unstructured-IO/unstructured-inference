@@ -14,10 +14,11 @@ help: Makefile
 ## install-base:            installs core requirements needed for text processing bricks
 .PHONY: install-base
 install-base: install-base-pip-packages
+	pip install -r requirements/base.txt
 
 ## install:                 installs all test, dev, and experimental requirements
 .PHONY: install
-install: install-base-pip-packages install-dev install-detectron2 install-test
+install: install-base-pip-packages install-dev install-detectron2
 
 .PHONY: install-ci
 install-ci: install-base-pip-packages install-test install-paddleocr
@@ -25,7 +26,6 @@ install-ci: install-base-pip-packages install-test install-paddleocr
 .PHONY: install-base-pip-packages
 install-base-pip-packages:
 	python3 -m pip install pip==${PIP_VERSION}
-	pip install -r requirements/base.txt
 
 .PHONY: install-detectron2
 install-detectron2:
