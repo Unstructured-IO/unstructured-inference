@@ -3,6 +3,6 @@ layoutparser[layoutmodels,tesseract]
 python-multipart
 uvicorn
 huggingface-hub
-opencv-python>=4.7.0.70
+opencv-python!=4.7.0.68
 onnxruntime
 transformers
