@@ -14,10 +14,11 @@ help: Makefile
 ## install-base:            installs core requirements needed for text processing bricks
 .PHONY: install-base
 install-base: install-base-pip-packages
+	pip install -r requirements/base.txt
 
 ## install:                 installs all test, dev, and experimental requirements
 .PHONY: install
-install: install-base-pip-packages install-dev install-detectron2 install-test
+install: install-base-pip-packages install-dev install-detectron2
 
 .PHONY: install-ci
 install-ci: install-base-pip-packages install-test install-paddleocr
@@ -25,7 +26,6 @@ install-ci: install-base-pip-packages install-test install-paddleocr
 .PHONY: install-base-pip-packages
 install-base-pip-packages:
 	python3 -m pip install pip==${PIP_VERSION}
-	pip install -r requirements/base.txt
 
 .PHONY: install-detectron2
 install-detectron2:
@@ -36,17 +36,17 @@ install-paddleocr:
 	pip install "unstructured.PaddleOCR"
 
 .PHONY: install-test
-install-test:
+install-test: install-base
 	pip install -r requirements/test.txt
 
 .PHONY: install-dev
-install-dev:
+install-dev: install-test
 	pip install -r requirements/dev.txt
 
 ## pip-compile:             compiles all base/dev/test requirements
 .PHONY: pip-compile
 pip-compile:
-	pip-compile --upgrade -o requirements/base.txt
+	pip-compile --upgrade requirements/base.in
 	# NOTE(robinson) - We want the dependencies for detectron2 in the requirements.txt, but not
 	# the detectron2 repo itself. If detectron2 is in the requirements.txt file, an order of
 	# operations issue related to the torch library causes the install to fail

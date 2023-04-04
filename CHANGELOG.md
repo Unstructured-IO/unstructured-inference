@@ -1,5 +1,6 @@
-## 0.3.3-dev0
+## 0.3.3-dev1
 
+* Update to how dependencies are being handled
 * Update detectron2 version
 
 ## 0.3.2
