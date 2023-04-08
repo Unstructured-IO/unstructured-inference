@@ -383,9 +383,9 @@ def load_pdf(
         image_objs = [
             ImageTextRegion(
                 x1=image["x0"] * dpi / 72,
-                y1=image["y0"] * dpi / 72,
+                y1=image["top"] * dpi / 72,
                 x2=image["x1"] * dpi / 72,
-                y2=image["y1"] * dpi / 72,
+                y2=image["bottom"] * dpi / 72,
             )
             for image in page.images
         ]
