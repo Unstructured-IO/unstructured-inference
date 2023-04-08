@@ -1,17 +1,17 @@
 from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 from layoutparser.elements.layout import TextBlock
 
 
 @dataclass
 class Rectangle:
-    x1: int
-    y1: int
-    x2: int
-    y2: int
+    x1: Union[int, float]
+    y1: Union[int, float]
+    x2: Union[int, float]
+    y2: Union[int, float]
 
     def pad(self, padding: int):
         """Increases (or decreases, if padding is negative) the size of the rectangle by extending
