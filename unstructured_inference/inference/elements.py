@@ -1,25 +1,37 @@
 from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 from layoutparser.elements.layout import TextBlock
 
 
 @dataclass
 class Rectangle:
-    x1: int
-    y1: int
-    x2: int
-    y2: int
+    x1: Union[int, float]
+    y1: Union[int, float]
+    x2: Union[int, float]
+    y2: Union[int, float]
 
-    def pad(self, padding: int):
+    def pad(self, padding: Union[int, float]):
+        """Increases (or decreases, if padding is negative) the size of the rectangle by extending
+        the boundary outward (resp. inward)."""
+        out_object = self.hpad(padding).vpad(padding)
+        return out_object
+
+    def hpad(self, padding: Union[int, float]):
         """Increases (or decreases, if padding is negative) the size of the rectangle by extending
         the boundary outward (resp. inward)."""
         out_object = deepcopy(self)
         out_object.x1 -= padding
-        out_object.y1 -= padding
         out_object.x2 += padding
+        return out_object
+
+    def vpad(self, padding: Union[int, float]):
+        """Increases (or decreases, if padding is negative) the size of the rectangle by extending
+        the boundary outward (resp. inward)."""
+        out_object = deepcopy(self)
+        out_object.y1 -= padding
         out_object.y2 += padding
         return out_object
 
@@ -35,15 +47,18 @@ class Rectangle:
 
     def is_disjoint(self, other: Rectangle):
         """Checks whether this rectangle is disjoint from another rectangle."""
-        return ((self.x2 < other.x1) or (self.x1 > other.x2)) and (
-            (self.y2 < other.y1) or (self.y1 > other.y2)
+        return (
+            (self.x2 < other.x1)
+            or (self.x1 > other.x2)
+            or (self.y2 < other.y1)
+            or (self.y1 > other.y2)
         )
 
     def intersects(self, other: Rectangle):
         """Checks whether this rectangle intersects another rectangle."""
         return not self.is_disjoint(other)
 
-    def is_in(self, other: Rectangle, error_margin: Optional[int] = None):
+    def is_in(self, other: Rectangle, error_margin: Optional[Union[int, float]] = None):
         """Checks whether this rectangle is contained within another rectangle."""
         if error_margin is not None:
             padded_other = other.pad(error_margin)
@@ -104,3 +119,21 @@ class LayoutElement(TextRegion):
         text = textblock.text
         type = textblock.type
         return cls(x1, y1, x2, y2, text, type)
+
+
+def minimal_containing_region(*regions: Rectangle) -> Rectangle:
+    """Returns the smallest rectangular region that contains all regions passed"""
+    x1 = min(region.x1 for region in regions)
+    y1 = min(region.y1 for region in regions)
+    x2 = max(region.x2 for region in regions)
+    y2 = max(region.y2 for region in regions)
+
+    # Return most specialized class of which that every region is a subclass
+    def least_common_superclass(*instances):
+        mros = (type(ins).mro() for ins in instances)
+        mro = next(mros)
+        common = set(mro).intersection(*mros)
+        return next((x for x in mro if x in common), Rectangle)
+
+    cls = least_common_superclass(*regions)
+    return cls(x1, y1, x2, y2)
