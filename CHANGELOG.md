@@ -1,5 +1,6 @@
-## 0.3.3-dev1
+## 0.3.3-dev2
 
+* Fixed embedded image coordinates being interpreted differently than embedded text coordinates
 * Update to how dependencies are being handled
 * Update detectron2 version
 

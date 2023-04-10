@@ -400,3 +400,13 @@ def test_load_pdf_with_images():
     layouts, _ = layout.load_pdf("sample-docs/loremipsum-flat.pdf")
     first_page_layout = layouts[0]
     assert any(isinstance(obj, layout.ImageTextRegion) for obj in first_page_layout)
+
+
+def test_load_pdf_image_placement():
+    layouts, images = layout.load_pdf("sample-docs/layout-parser-paper.pdf")
+    page_layout = layouts[5]
+    image_regions = [region for region in page_layout if isinstance(region, layout.ImageTextRegion)]
+    image_region = image_regions[0]
+    # Image is in top half of the page, so that should be reflected in the pixel coordinates
+    assert image_region.y1 < images[5].height / 2
+    assert image_region.y2 < images[5].height / 2
