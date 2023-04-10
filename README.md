@@ -72,14 +72,14 @@ run the API locally, use `make start-app-local`. You can stop the API with `make
 The API will run at `http:/localhost:5000`. 
 You can then `POST` a PDF file to the API endpoint to see its layout with the command:
 ```
-curl -X 'POST' 'http://localhost:5000/layout/pdf' -F 'file=@<your_pdf_file>' | jq -C . | less -R
+curl -X 'POST' 'http://localhost:5000/layout/default/pdf' -F 'file=@<your_pdf_file>' | jq -C . | less -R
 ```
 
 You can also choose the types of elements you want to return from the output of PDF parsing by 
 passing a list of types to the `include_elems` parameter. For example, if you only want to return 
 `Text` elements and `Title` elements, you can curl:
 ```
-curl -X 'POST' 'http://localhost:5000/layout/pdf' \
+curl -X 'POST' 'http://localhost:5000/layout/default/pdf' \
 -F 'file=@<your_pdf_file>' \
 -F include_elems=Text \
 -F include_elems=Title \
@@ -94,8 +94,8 @@ View the swagger documentation at `http://localhost:5000/docs`.
 
 For using the YoloX model the endpoints are: 
 ```
-http://localhost:8000/layout_v1/pdf
-http://localhost:8000/layout_v1/image
+http://localhost:8000/layout/yolox/pdf
+http://localhost:8000/layout/yolox/image
 ```
 For example:
 ```
