@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image
 
 import unstructured_inference.inference.layout as layout
+import unstructured_inference.inference.elements as elements
 import unstructured_inference.models.base as models
 import unstructured_inference.models.detectron2 as detectron2
 import unstructured_inference.models.tesseract as tesseract
@@ -20,9 +21,9 @@ def mock_image():
 
 @pytest.fixture
 def mock_page_layout():
-    text_block = layout.TextRegion(2, 4, 6, 8, text="A very repetitive narrative. " * 10)
+    text_block = layout.EmbeddedTextRegion(2, 4, 6, 8, text="A very repetitive narrative. " * 10)
 
-    title_block = layout.TextRegion(1, 2, 3, 4, text="A Catchy Title")
+    title_block = layout.EmbeddedTextRegion(1, 2, 3, 4, text="A Catchy Title")
 
     return [text_block, title_block]
 
@@ -49,7 +50,7 @@ def test_ocr(monkeypatch):
     image = Image.fromarray(np.random.randint(12, 24, (40, 40)), mode="RGB")
     text_block = layout.TextRegion(1, 2, 3, 4, text=None)
 
-    assert layout.ocr(text_block, image=image) == mock_text
+    assert elements.ocr(text_block, image=image) == mock_text
 
 
 class MockLayoutModel:
@@ -69,12 +70,12 @@ def test_get_page_elements(monkeypatch, mock_page_layout):
         number=0, image=image, layout=mock_page_layout, model=MockLayoutModel(mock_page_layout)
     )
 
-    elements = page.get_elements(inplace=False)
+    elements = page.get_elements_with_model(inplace=False)
 
     assert str(elements[0]) == "A Catchy Title"
     assert str(elements[1]).startswith("A very repetitive narrative.")
 
-    page.get_elements(inplace=True)
+    page.get_elements_with_model(inplace=True)
     assert elements == page.elements
 
 
@@ -95,13 +96,13 @@ def test_get_page_elements_with_ocr(monkeypatch):
     doc_layout = [text_block, image_block]
 
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
-    monkeypatch.setattr(layout, "ocr", lambda *args: "An Even Catchier Title")
+    monkeypatch.setattr(elements, "ocr", lambda *args: "An Even Catchier Title")
 
     image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
     page = layout.PageLayout(
         number=0, image=image, layout=doc_layout, model=MockLayoutModel(doc_layout)
     )
-    page.get_elements()
+    page.get_elements_with_model()
 
     assert str(page) == "\n\nAn Even Catchier Title"
 
@@ -174,7 +175,7 @@ class MockPoints:
         return [1, 2, 3, 4]
 
 
-class MockTextRegion(layout.TextRegion):
+class MockEmbeddedTextRegion(layout.EmbeddedTextRegion):
     def __init__(self, type=None, text=None, ocr_text=None):
         self.type = type
         self.text = text
@@ -193,7 +194,7 @@ class MockPageLayout(layout.PageLayout):
         self.ocr_strategy = ocr_strategy
         self.extract_tables = extract_tables
 
-    def ocr(self, text_block: MockTextRegion):
+    def ocr(self, text_block: MockEmbeddedTextRegion):
         return text_block.ocr_text
 
 
@@ -202,7 +203,7 @@ class MockPageLayout(layout.PageLayout):
     [("base", 0.0), ("", 0.0), ("(cid:2)", 1.0), ("(cid:1)a", 0.5), ("c(cid:1)ab", 0.25)],
 )
 def test_cid_ratio(text, expected):
-    assert layout.cid_ratio(text) == expected
+    assert elements.cid_ratio(text) == expected
 
 
 @pytest.mark.parametrize(
@@ -210,7 +211,7 @@ def test_cid_ratio(text, expected):
     [("base", False), ("(cid:2)", True), ("(cid:1234567890)", True), ("jkl;(cid:12)asdf", True)],
 )
 def test_is_cid_present(text, expected):
-    assert layout.is_cid_present(text) == expected
+    assert elements.is_cid_present(text) == expected
 
 
 class MockLayout:
@@ -241,7 +242,7 @@ class MockLayout:
     ],
 )
 def test_get_element_from_block(block_text, layout_texts, mock_image, expected_text):
-    with patch("unstructured_inference.inference.layout.ocr", return_value="ocr"):
+    with patch("unstructured_inference.inference.elements.ocr", return_value="ocr"):
         block = layout.TextRegion(0, 0, 10, 10, text=block_text)
         captured_layout = [
             layout.TextRegion(i + 1, i + 1, i + 2, i + 2, text=text)
@@ -263,7 +264,7 @@ def test_from_image_file(monkeypatch, mock_page_layout, filetype):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_page_layout]
 
-    monkeypatch.setattr(layout.PageLayout, "get_elements", mock_get_elements)
+    monkeypatch.setattr(layout.PageLayout, "get_elements_with_model", mock_get_elements)
     elements = (
         layout.DocumentLayout.from_image_file(f"sample-docs/loremipsum.{filetype}")
         .pages[0]
@@ -301,12 +302,12 @@ def test_get_elements_from_layout(mock_page_layout, idx):
 @pytest.mark.parametrize(
     "fixed_layouts, called_method, not_called_method",
     [
-        ([MockLayout()], "get_elements_from_layout", "get_elements"),
-        (None, "get_elements", "get_elements_from_layout"),
+        ([MockLayout()], "get_elements_from_layout", "get_elements_with_model"),
+        (None, "get_elements_with_model", "get_elements_from_layout"),
     ],
 )
 def test_from_file_fixed_layout(fixed_layouts, called_method, not_called_method):
-    with patch.object(layout.PageLayout, "get_elements", return_value=[]), patch.object(
+    with patch.object(layout.PageLayout, "get_elements_with_model", return_value=[]), patch.object(
         layout.PageLayout, "get_elements_from_layout", return_value=[]
     ):
         layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf", fixed_layouts=fixed_layouts)
@@ -323,35 +324,46 @@ def test_invalid_ocr_strategy_raises(mock_image):
     ("text", "expected"), [("a\ts\x0cd\nfas\fd\rf\b", "asdfasdf"), ("\"'\\", "\"'\\")]
 )
 def test_remove_control_characters(text, expected):
-    assert layout.remove_control_characters(text) == expected
+    assert elements.remove_control_characters(text) == expected
 
 
-no_text_region = layout.TextRegion(0, 0, 100, 100)
-text_region = layout.TextRegion(0, 0, 100, 100, text="test")
-cid_text_region = layout.TextRegion(0, 0, 100, 100, text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)")
+no_text_region = layout.EmbeddedTextRegion(0, 0, 100, 100)
+text_region = layout.EmbeddedTextRegion(0, 0, 100, 100, text="test")
+cid_text_region = layout.EmbeddedTextRegion(
+    0, 0, 100, 100, text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)"
+)
 overlapping_rect = layout.ImageTextRegion(50, 50, 150, 150)
 nonoverlapping_rect = layout.ImageTextRegion(150, 150, 200, 200)
-populated_text_region = layout.TextRegion(50, 50, 60, 60, text="test")
-unpopulated_text_region = layout.TextRegion(50, 50, 60, 60, text=None)
+populated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text="test")
+unpopulated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text=None)
 
 
 @pytest.mark.parametrize(
-    ("region", "text_objects", "image_objects", "ocr_strategy", "expected"),
+    ("region", "objects", "ocr_strategy", "expected"),
     [
-        (no_text_region, [], [nonoverlapping_rect], "auto", False),
-        (no_text_region, [], [overlapping_rect], "auto", True),
-        (no_text_region, [], [], "auto", False),
-        (no_text_region, [populated_text_region], [nonoverlapping_rect], "auto", False),
-        (no_text_region, [populated_text_region], [overlapping_rect], "auto", False),
-        (no_text_region, [populated_text_region], [], "auto", False),
-        (no_text_region, [unpopulated_text_region], [nonoverlapping_rect], "auto", False),
-        (no_text_region, [unpopulated_text_region], [overlapping_rect], "auto", True),
-        (no_text_region, [unpopulated_text_region], [], "auto", False),
+        (no_text_region, [nonoverlapping_rect], "auto", False),
+        (no_text_region, [overlapping_rect], "auto", True),
+        (no_text_region, [], "auto", False),
+        (no_text_region, [populated_text_region, nonoverlapping_rect], "auto", False),
+        (no_text_region, [populated_text_region, overlapping_rect], "auto", False),
+        (no_text_region, [populated_text_region], "auto", False),
+        (no_text_region, [unpopulated_text_region, nonoverlapping_rect], "auto", False),
+        (no_text_region, [unpopulated_text_region, overlapping_rect], "auto", True),
+        (no_text_region, [unpopulated_text_region], "auto", False),
         *list(
             product(
                 [text_region],
-                [[], [populated_text_region], [unpopulated_text_region]],
-                [[], [nonoverlapping_rect], [overlapping_rect]],
+                [
+                    [],
+                    [populated_text_region],
+                    [unpopulated_text_region],
+                    [nonoverlapping_rect],
+                    [overlapping_rect],
+                    [populated_text_region, nonoverlapping_rect],
+                    [populated_text_region, overlapping_rect],
+                    [unpopulated_text_region, nonoverlapping_rect],
+                    [unpopulated_text_region, overlapping_rect],
+                ],
                 ["auto"],
                 [False],
             )
@@ -359,8 +371,14 @@ unpopulated_text_region = layout.TextRegion(50, 50, 60, 60, text=None)
         *list(
             product(
                 [cid_text_region],
-                [[], [populated_text_region], [unpopulated_text_region]],
-                [[overlapping_rect]],
+                [
+                    [],
+                    [populated_text_region],
+                    [unpopulated_text_region],
+                    [overlapping_rect],
+                    [populated_text_region, overlapping_rect],
+                    [unpopulated_text_region, overlapping_rect],
+                ],
                 ["auto"],
                 [True],
             )
@@ -368,8 +386,17 @@ unpopulated_text_region = layout.TextRegion(50, 50, 60, 60, text=None)
         *list(
             product(
                 [no_text_region, text_region, cid_text_region],
-                [[], [populated_text_region], [unpopulated_text_region]],
-                [[], [nonoverlapping_rect], [overlapping_rect]],
+                [
+                    [],
+                    [populated_text_region],
+                    [unpopulated_text_region],
+                    [nonoverlapping_rect],
+                    [overlapping_rect],
+                    [populated_text_region, nonoverlapping_rect],
+                    [populated_text_region, overlapping_rect],
+                    [unpopulated_text_region, nonoverlapping_rect],
+                    [unpopulated_text_region, overlapping_rect],
+                ],
                 ["force"],
                 [True],
             )
@@ -377,16 +404,25 @@ unpopulated_text_region = layout.TextRegion(50, 50, 60, 60, text=None)
         *list(
             product(
                 [no_text_region, text_region, cid_text_region],
-                [[], [populated_text_region], [unpopulated_text_region]],
-                [[], [nonoverlapping_rect], [overlapping_rect]],
+                [
+                    [],
+                    [populated_text_region],
+                    [unpopulated_text_region],
+                    [nonoverlapping_rect],
+                    [overlapping_rect],
+                    [populated_text_region, nonoverlapping_rect],
+                    [populated_text_region, overlapping_rect],
+                    [unpopulated_text_region, nonoverlapping_rect],
+                    [unpopulated_text_region, overlapping_rect],
+                ],
                 ["never"],
                 [False],
             )
         ),
     ],
 )
-def test_ocr_image(region, text_objects, image_objects, ocr_strategy, expected):
-    assert layout.needs_ocr(region, text_objects, image_objects, ocr_strategy) is expected
+def test_ocr_image(region, objects, ocr_strategy, expected):
+    assert elements.needs_ocr(region, objects, ocr_strategy) is expected
 
 
 def test_load_pdf():
