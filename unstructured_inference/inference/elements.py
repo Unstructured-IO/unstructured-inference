@@ -12,7 +12,12 @@ from scipy.sparse.csgraph import connected_components
 from unstructured_inference.logger import logger
 from unstructured_inference.models import tesseract
 
+# When extending the boundaries of a PDF object for the purpose of determining which other elements
+# should be considered in the same text region, we use a relative distance based on some fraction of
+# the block height (typically character height). This is the fraction used for the horizontal
+# extension applied to the left and right sides.
 H_PADDING_COEF = 0.4
+# Same as above but the vertical extension.
 V_PADDING_COEF = 0.3
 
 
