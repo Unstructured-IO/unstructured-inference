@@ -10,7 +10,7 @@ from PIL import Image
 from huggingface_hub import hf_hub_download
 
 from unstructured_inference.logger import logger
-from unstructured_inference.inference.elements import LayoutElement
+from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 

@@ -10,7 +10,7 @@ import numpy as np
 import onnxruntime
 from typing import List
 
-from unstructured_inference.inference.elements import LayoutElement
+from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.visualize import draw_bounding_boxes
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
