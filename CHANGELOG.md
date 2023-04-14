@@ -1,4 +1,4 @@
-## 0.3.3-dev3
+## 0.4.0
 
 * Added logic to partition granular elements (words, characters) by proximity
 * Text extraction is now delegated to text regions rather than being handled centrally
