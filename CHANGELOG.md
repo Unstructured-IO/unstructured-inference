@@ -1,5 +1,7 @@
-## 0.3.3-dev2
+## 0.4.0
 
+* Added logic to partition granular elements (words, characters) by proximity
+* Text extraction is now delegated to text regions rather than being handled centrally
 * Fixed embedded image coordinates being interpreted differently than embedded text coordinates
 * Update to how dependencies are being handled
 * Update detectron2 version

@@ -1,19 +1,20 @@
 from __future__ import annotations
 import os
-import re
 import tempfile
 from typing import List, Optional, Tuple, Union, BinaryIO
-import unicodedata
 
 import numpy as np
 import pdfplumber
 import pdf2image
 from PIL import Image
 
-from unstructured_inference.inference.elements import TextRegion, ImageTextRegion, LayoutElement
+from unstructured_inference.inference.elements import (
+    TextRegion,
+    EmbeddedTextRegion,
+    ImageTextRegion,
+)
+from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
-import unstructured_inference.models.tesseract as tesseract
-import unstructured_inference.models.tables as tables
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 
@@ -135,7 +136,7 @@ class PageLayout:
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
 
-    def get_elements(self, inplace=True) -> Optional[List[LayoutElement]]:
+    def get_elements_with_model(self, inplace=True) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
         if self.model is None:
@@ -190,7 +191,7 @@ class PageLayout:
             extract_tables=extract_tables,
         )
         if fixed_layout is None:
-            page.get_elements()
+            page.get_elements_with_model()
         else:
             page.elements = page.get_elements_from_layout(fixed_layout)
         return page
@@ -247,99 +248,20 @@ def process_file_with_model(
     return layout
 
 
-def cid_ratio(text: str) -> float:
-    """Gets ratio of unknown 'cid' characters extracted from text to all characters."""
-    if not is_cid_present(text):
-        return 0.0
-    cid_pattern = r"\(cid\:(\d+)\)"
-    unmatched, n_cid = re.subn(cid_pattern, "", text)
-    total = n_cid + len(unmatched)
-    return n_cid / total
-
-
-def is_cid_present(text: str) -> bool:
-    """Checks if a cid code is present in a text selection."""
-    if len(text) < len("(cid:x)"):
-        return False
-    return text.find("(cid:") != -1
-
-
 def get_element_from_block(
     block: TextRegion,
     image: Optional[Image.Image] = None,
-    pdf_objects: Optional[List[Union[TextRegion, ImageTextRegion]]] = None,
+    pdf_objects: Optional[List[TextRegion]] = None,
     ocr_strategy: str = "auto",
     extract_tables: bool = False,
 ) -> LayoutElement:
     """Creates a LayoutElement from a given layout or image by finding all the text that lies within
     a given block."""
-    if block.text is not None:
-        # If block text is already populated, we'll assume it's correct
-        text = block.text
-    elif extract_tables and isinstance(block, LayoutElement) and block.type == "Table":
-        text = interprete_table_block(block, image)
-    elif pdf_objects is not None:
-        text = aggregate_by_block(block, image, pdf_objects, ocr_strategy)
-    elif image is not None:
-        # We don't have anything to go on but the image itself, so we use OCR
-        text = ocr(block, image)
-    else:
-        raise ValueError(
-            "Got arguments image and layout as None, at least one must be populated to use for "
-            "text extraction."
-        )
     element = LayoutElement.from_region(block)
-    element.text = text
+    element.text = block.extract_text(
+        objects=pdf_objects, image=image, extract_tables=extract_tables, ocr_strategy=ocr_strategy
+    )
     return element
-
-
-def aggregate_by_block(
-    text_region: TextRegion,
-    image: Optional[Image.Image],
-    pdf_objects: List[Union[TextRegion, ImageTextRegion]],
-    ocr_strategy: str = "auto",
-) -> str:
-    """Extracts the text aggregated from the elements of the given layout that lie within the given
-    block."""
-    word_objects = [obj for obj in pdf_objects if isinstance(obj, TextRegion)]
-    image_objects = [obj for obj in pdf_objects if isinstance(obj, ImageTextRegion)]
-    if image is not None and needs_ocr(text_region, word_objects, image_objects, ocr_strategy):
-        text = ocr(text_region, image)
-    else:
-        filtered_blocks = [obj for obj in pdf_objects if obj.is_in(text_region, error_margin=5)]
-        for little_block in filtered_blocks:
-            if image is not None and needs_ocr(
-                little_block, word_objects, image_objects, ocr_strategy
-            ):
-                little_block.text = ocr(little_block, image)
-        text = " ".join([x.text for x in filtered_blocks if x.text])
-    text = remove_control_characters(text)
-    return text
-
-
-def interprete_table_block(text_block: TextRegion, image: Image.Image) -> str:
-    """Extract the contents of a table."""
-    tables.load_agent()
-    if tables.tables_agent is None:
-        raise RuntimeError("Unable to load table extraction agent.")
-    padded_block = text_block.pad(12)
-    cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
-    return tables.tables_agent.predict(cropped_image)
-
-
-def ocr(text_block: TextRegion, image: Image.Image) -> str:
-    """Runs a cropped text block image through and OCR agent."""
-    logger.debug("Running OCR on text block ...")
-    tesseract.load_agent()
-    padded_block = text_block.pad(12)
-    cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
-    return tesseract.ocr_agent.detect(cropped_image)
-
-
-def remove_control_characters(text: str) -> str:
-    """Removes control characters from text."""
-    out_text = "".join(c for c in text if unicodedata.category(c)[0] != "C")
-    return out_text
 
 
 def load_pdf(
@@ -370,8 +292,8 @@ def load_pdf(
             extra_attrs=extra_attrs,
             split_at_punctuation=split_at_punctuation,
         )
-        word_objs = [
-            TextRegion(
+        word_objs: List[TextRegion] = [
+            EmbeddedTextRegion(
                 x1=word["x0"] * dpi / 72,
                 y1=word["top"] * dpi / 72,
                 x2=word["x1"] * dpi / 72,
@@ -380,7 +302,7 @@ def load_pdf(
             )
             for word in plumber_words
         ]
-        image_objs = [
+        image_objs: List[TextRegion] = [
             ImageTextRegion(
                 x1=image["x0"] * dpi / 72,
                 y1=image["top"] * dpi / 72,
@@ -394,35 +316,3 @@ def load_pdf(
 
     images = pdf2image.convert_from_path(filename, dpi=dpi)
     return layouts, images
-
-
-def needs_ocr(
-    region: TextRegion,
-    word_objects: List[TextRegion],
-    image_objects: List[ImageTextRegion],
-    ocr_strategy: str,
-) -> bool:
-    """Logic to determine whether ocr is needed to extract text from given region."""
-    if ocr_strategy == "force":
-        return True
-    elif ocr_strategy == "auto":
-        # If any image object overlaps with the region of interest, we have hope of getting some
-        # text from OCR. Otherwise, there's nothing there to find, no need to waste our time with
-        # OCR.
-        image_intersects = any(region.intersects(img_obj) for img_obj in image_objects)
-        if region.text is None:
-            # If the region has no text check if any images overlap with the region that might
-            # contain text.
-            if any(obj.is_in(region) and obj.text is not None for obj in word_objects):
-                # If there are word objects in the region, we defer to that rather than OCR
-                return False
-            else:
-                return image_intersects
-        elif cid_ratio(region.text) > 0.5:
-            # If the region has text, we should only have to OCR if too much of the text is
-            # uninterpretable.
-            return image_intersects
-        else:
-            return False
-    else:
-        return False
