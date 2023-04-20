@@ -1,3 +1,8 @@
+## 0.4.1-dev0
+
+* Added the ability to pass `ocr_languages` to the OCR agent for users who need
+  non-English language packs.
+
 ## 0.4.0
 
 * Added logic to partition granular elements (words, characters) by proximity
