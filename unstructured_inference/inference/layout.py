@@ -55,6 +55,7 @@ class DocumentLayout:
         model: Optional[UnstructuredModel] = None,
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         ocr_strategy: str = "auto",
+        ocr_languages: str = "eng",
         extract_tables: bool = False,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
@@ -75,6 +76,7 @@ class DocumentLayout:
                 model=model,
                 layout=layout,
                 ocr_strategy=ocr_strategy,
+                ocr_languages=ocr_languages,
                 fixed_layout=fixed_layout,
                 extract_tables=extract_tables,
             )
@@ -87,6 +89,7 @@ class DocumentLayout:
         filename: str,
         model: Optional[UnstructuredModel] = None,
         ocr_strategy: str = "auto",
+        ocr_languages: str = "eng",
         fixed_layout: Optional[List[TextRegion]] = None,
         extract_tables: bool = False,
     ) -> DocumentLayout:
@@ -104,6 +107,7 @@ class DocumentLayout:
             model=model,
             layout=None,
             ocr_strategy=ocr_strategy,
+            ocr_languages=ocr_languages,
             fixed_layout=fixed_layout,
             extract_tables=extract_tables,
         )
@@ -120,6 +124,7 @@ class PageLayout:
         layout: Optional[List[TextRegion]],
         model: Optional[UnstructuredModel] = None,
         ocr_strategy: str = "auto",
+        ocr_languages: str = "eng",
         extract_tables: bool = False,
     ):
         self.image = image
@@ -131,6 +136,7 @@ class PageLayout:
         if ocr_strategy not in VALID_OCR_STRATEGIES:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
+        self.ocr_languages = ocr_languages
         self.extract_tables = extract_tables
 
     def __str__(self) -> str:
@@ -159,7 +165,12 @@ class PageLayout:
         layout.sort(key=lambda element: element.y1)
         elements = [
             get_element_from_block(
-                e, self.image, self.layout, self.ocr_strategy, self.extract_tables
+                block=e,
+                image=self.image,
+                pdf_objects=self.layout,
+                ocr_strategy=self.ocr_strategy,
+                ocr_languages=self.ocr_languages,
+                extract_tables=self.extract_tables,
             )
             for e in layout
         ]
@@ -178,6 +189,7 @@ class PageLayout:
         model: Optional[UnstructuredModel] = None,
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
+        ocr_languages: str = "eng",
         extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
     ):
@@ -188,6 +200,7 @@ class PageLayout:
             layout=layout,
             model=model,
             ocr_strategy=ocr_strategy,
+            ocr_languages=ocr_languages,
             extract_tables=extract_tables,
         )
         if fixed_layout is None:
@@ -202,6 +215,7 @@ def process_data_with_model(
     model_name: Optional[str],
     is_image: bool = False,
     ocr_strategy: str = "auto",
+    ocr_languages: str = "eng",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
 ) -> DocumentLayout:
@@ -214,6 +228,7 @@ def process_data_with_model(
             model_name,
             is_image=is_image,
             ocr_strategy=ocr_strategy,
+            ocr_languages=ocr_languages,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
         )
@@ -226,6 +241,7 @@ def process_file_with_model(
     model_name: Optional[str],
     is_image: bool = False,
     ocr_strategy: str = "auto",
+    ocr_languages: str = "eng",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
 ) -> DocumentLayout:
@@ -234,13 +250,18 @@ def process_file_with_model(
     model = get_model(model_name)
     layout = (
         DocumentLayout.from_image_file(
-            filename, model=model, ocr_strategy=ocr_strategy, extract_tables=extract_tables
+            filename,
+            model=model,
+            ocr_strategy=ocr_strategy,
+            ocr_languages=ocr_languages,
+            extract_tables=extract_tables,
         )
         if is_image
         else DocumentLayout.from_file(
             filename,
             model=model,
             ocr_strategy=ocr_strategy,
+            ocr_languages=ocr_languages,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
         )
@@ -253,13 +274,18 @@ def get_element_from_block(
     image: Optional[Image.Image] = None,
     pdf_objects: Optional[List[TextRegion]] = None,
     ocr_strategy: str = "auto",
+    ocr_languages: str = "eng",
     extract_tables: bool = False,
 ) -> LayoutElement:
     """Creates a LayoutElement from a given layout or image by finding all the text that lies within
     a given block."""
     element = LayoutElement.from_region(block)
     element.text = block.extract_text(
-        objects=pdf_objects, image=image, extract_tables=extract_tables, ocr_strategy=ocr_strategy
+        objects=pdf_objects,
+        image=image,
+        extract_tables=extract_tables,
+        ocr_strategy=ocr_strategy,
+        ocr_languages=ocr_languages,
     )
     return element
 
