@@ -1,3 +1,7 @@
+## 0.4.2-dev0
+
+* Output of table extraction is now stored in `text_as_html` property rather than `text` property
+
 ## 0.4.1
 
 * Added the ability to pass `ocr_languages` to the OCR agent for users who need
