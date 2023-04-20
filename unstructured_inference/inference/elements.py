@@ -162,6 +162,7 @@ class TextRegion(Rectangle):
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
+        ocr_languages: str = "eng",
     ) -> str:
         """Extracts text contained in region."""
         if self.text is not None:
@@ -172,7 +173,7 @@ class TextRegion(Rectangle):
         elif image is not None:
             if ocr_strategy != "never":
                 # We don't have anything to go on but the image itself, so we use OCR
-                text = ocr(self, image)
+                text = ocr(self, image, languages=ocr_languages)
             else:
                 text = ""
         else:
@@ -190,6 +191,7 @@ class EmbeddedTextRegion(TextRegion):
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
+        ocr_languages: str = "eng",
     ) -> str:
         """Extracts text contained in region."""
         if self.text is None:
@@ -205,24 +207,28 @@ class ImageTextRegion(TextRegion):
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
+        ocr_languages: str = "eng",
     ) -> str:
         """Extracts text contained in region."""
         if self.text is None:
             if ocr_strategy == "never" or image is None:
                 return ""
             else:
-                return ocr(self, image)
+                return ocr(self, image, languages=ocr_languages)
         else:
             return super().extract_text(objects, image, extract_tables, ocr_strategy)
 
 
-def ocr(text_block: TextRegion, image: Image.Image) -> str:
+def ocr(text_block: TextRegion, image: Image.Image, languages: str = "eng") -> str:
     """Runs a cropped text block image through and OCR agent."""
     logger.debug("Running OCR on text block ...")
-    tesseract.load_agent()
+    tesseract.load_agent(languages=languages)
     padded_block = text_block.pad(12)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
-    return tesseract.ocr_agent.detect(cropped_image)
+    agent = tesseract.ocr_agents.get(languages)
+    if agent is None:
+        raise RuntimeError("OCR agent is not loaded for {languages}.")
+    return agent.detect(cropped_image)
 
 
 def needs_ocr(
@@ -263,16 +269,17 @@ def aggregate_by_block(
     image: Optional[Image.Image],
     pdf_objects: List[TextRegion],
     ocr_strategy: str = "auto",
+    ocr_languages: str = "eng",
 ) -> str:
     """Extracts the text aggregated from the elements of the given layout that lie within the given
     block."""
     if image is not None and needs_ocr(text_region, pdf_objects, ocr_strategy):
-        text = ocr(text_region, image)
+        text = ocr(text_region, image, languages=ocr_languages)
     else:
         filtered_blocks = [obj for obj in pdf_objects if obj.is_in(text_region, error_margin=5)]
         for little_block in filtered_blocks:
             if image is not None and needs_ocr(little_block, pdf_objects, ocr_strategy):
-                little_block.text = ocr(little_block, image)
+                little_block.text = ocr(little_block, image, languages=ocr_languages)
         text = " ".join([x.text for x in filtered_blocks if x.text])
     text = remove_control_characters(text)
     return text

@@ -19,6 +19,7 @@ class LayoutElement(TextRegion):
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
+        ocr_languages: str = "eng",
     ):
         """Extracts text contained in region"""
         if self.text is not None:
@@ -32,6 +33,7 @@ class LayoutElement(TextRegion):
                 image=image,
                 extract_tables=extract_tables,
                 ocr_strategy=ocr_strategy,
+                ocr_languages=ocr_languages,
             )
         return text
 
