@@ -1,4 +1,4 @@
-## 0.4.1-dev0
+## 0.4.1
 
 * Added the ability to pass `ocr_languages` to the OCR agent for users who need
   non-English language packs.
