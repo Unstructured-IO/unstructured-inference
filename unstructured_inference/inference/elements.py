@@ -279,7 +279,7 @@ def aggregate_by_block(
         filtered_blocks = [obj for obj in pdf_objects if obj.is_in(text_region, error_margin=5)]
         for little_block in filtered_blocks:
             if image is not None and needs_ocr(little_block, pdf_objects, ocr_strategy):
-                little_block.text = ocr(little_block, image)
+                little_block.text = ocr(little_block, image, languages=ocr_languages)
         text = " ".join([x.text for x in filtered_blocks if x.text])
     text = remove_control_characters(text)
     return text

@@ -11,12 +11,12 @@ class MockTesseractAgent:
 
 def test_load_agent(monkeypatch):
     monkeypatch.setattr(tesseract, "TesseractAgent", MockTesseractAgent)
-    monkeypatch.setattr(tesseract, "ocr_agent", None)
+    monkeypatch.setattr(tesseract, "ocr_agents", {})
 
     with patch.object(tesseract, "is_pytesseract_available", return_value=True):
-        tesseract.load_agent()
+        tesseract.load_agent(languages="eng+swe")
 
-    assert isinstance(tesseract.ocr_agent, MockTesseractAgent)
+    assert isinstance(tesseract.ocr_agents["eng+swe"], MockTesseractAgent)
 
 
 def test_load_agent_raises_when_not_available():
