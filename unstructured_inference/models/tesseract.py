@@ -1,8 +1,10 @@
+from typing import Dict
+
 from layoutparser.ocr.tesseract_agent import is_pytesseract_available, TesseractAgent
 
 from unstructured_inference.logger import logger
 
-ocr_agent: TesseractAgent = None
+ocr_agents: Dict[str, TesseractAgent] = {}
 
 
 def load_agent(languages: str = "eng"):
@@ -14,7 +16,7 @@ def load_agent(languages: str = "eng"):
         The languages to use for the Tesseract agent. To use a langauge, you'll first need
         to isntall the appropriate Tesseract language pack.
     """
-    global ocr_agent
+    global ocr_agents
 
     if not is_pytesseract_available():
         raise ImportError(
@@ -22,6 +24,6 @@ def load_agent(languages: str = "eng"):
             "    >>> sudo apt install -y tesseract-ocr"
         )
 
-    if ocr_agent is None:
-        logger.info("Loading the Tesseract OCR agent ...")
-        ocr_agent = TesseractAgent(languages=languages)
+    if languages not in ocr_agents:
+        logger.info(f"Loading the Tesseract OCR agent for {languages} ...")
+        ocr_agents[languages] = TesseractAgent(languages=languages)

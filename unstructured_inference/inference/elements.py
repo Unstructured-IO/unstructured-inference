@@ -225,7 +225,10 @@ def ocr(text_block: TextRegion, image: Image.Image, languages: str = "eng") -> s
     tesseract.load_agent(languages=languages)
     padded_block = text_block.pad(12)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
-    return tesseract.ocr_agent.detect(cropped_image)
+    agent = tesseract.ocr_agents.get(languages)
+    if agent is None:
+        raise RuntimeError("OCR agent is not loaded for {languages}.")
+    return agent.detect(cropped_image)
 
 
 def needs_ocr(
