@@ -131,7 +131,9 @@ check-scripts:
 .PHONY: check-version
 check-version:
     # Fail if syncing version would produce changes
-	scripts/version-sync.sh -c
+	scripts/version-sync.sh -c \
+		-s CHANGELOG.md \
+		-f unstructured_inference/__version__.py semver
 
 ## tidy:                    run black
 .PHONY: tidy
@@ -142,7 +144,9 @@ tidy:
 ## version-sync:            update __version__.py with most recent version from CHANGELOG.md
 .PHONY: version-sync
 version-sync:
-	scripts/version-sync.sh
+	scripts/version-sync.sh \
+		-s CHANGELOG.md \
+		-f unstructured_inference/__version__.py semver
 
 .PHONY: check-coverage
 check-coverage:
