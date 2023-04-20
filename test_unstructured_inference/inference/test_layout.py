@@ -44,7 +44,7 @@ def test_ocr(monkeypatch):
         def detect(self, *args):
             return mock_text
 
-    monkeypatch.setattr(tesseract, "ocr_agent", MockOCRAgent)
+    monkeypatch.setattr(tesseract, "ocr_agents", {"eng": MockOCRAgent})
     monkeypatch.setattr(tesseract, "is_pytesseract_available", lambda *args: True)
 
     image = Image.fromarray(np.random.randint(12, 24, (40, 40)), mode="RGB")
@@ -96,7 +96,7 @@ def test_get_page_elements_with_ocr(monkeypatch):
     doc_layout = [text_block, image_block]
 
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
-    monkeypatch.setattr(elements, "ocr", lambda *args: "An Even Catchier Title")
+    monkeypatch.setattr(elements, "ocr", lambda *args, **kwargs: "An Even Catchier Title")
 
     image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
     page = layout.PageLayout(
@@ -187,11 +187,19 @@ class MockEmbeddedTextRegion(layout.EmbeddedTextRegion):
 
 
 class MockPageLayout(layout.PageLayout):
-    def __init__(self, layout=None, model=None, ocr_strategy="auto", extract_tables=False):
+    def __init__(
+        self,
+        layout=None,
+        model=None,
+        ocr_strategy="auto",
+        ocr_languages="eng",
+        extract_tables=False,
+    ):
         self.image = None
         self.layout = layout
         self.model = model
         self.ocr_strategy = ocr_strategy
+        self.ocr_languages = ocr_languages
         self.extract_tables = extract_tables
 
     def ocr(self, text_block: MockEmbeddedTextRegion):
