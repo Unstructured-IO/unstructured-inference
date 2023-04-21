@@ -22,19 +22,15 @@ class LayoutElement(TextRegion):
         ocr_languages: str = "eng",
     ):
         """Extracts text contained in region"""
-        if self.text is not None:
-            # If block text is already populated, we'll assume it's correct
-            text = self.text
-        elif extract_tables and isinstance(self, LayoutElement) and self.type == "Table":
-            text = interprete_table_block(self, image)
-        else:
-            text = super().extract_text(
-                objects=objects,
-                image=image,
-                extract_tables=extract_tables,
-                ocr_strategy=ocr_strategy,
-                ocr_languages=ocr_languages,
-            )
+        text = super().extract_text(
+            objects=objects,
+            image=image,
+            extract_tables=extract_tables,
+            ocr_strategy=ocr_strategy,
+            ocr_languages=ocr_languages,
+        )
+        if extract_tables and self.type == "Table":
+            self.text_as_html = interpret_table_block(self, image)
         return text
 
     def to_dict(self) -> dict:
@@ -63,7 +59,7 @@ class LayoutElement(TextRegion):
         return cls(x1, y1, x2, y2, text, type)
 
 
-def interprete_table_block(text_block: TextRegion, image: Image.Image) -> str:
+def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
     """Extract the contents of a table."""
     tables.load_agent()
     if tables.tables_agent is None:

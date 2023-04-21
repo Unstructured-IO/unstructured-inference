@@ -279,8 +279,11 @@ def get_element_from_block(
 ) -> LayoutElement:
     """Creates a LayoutElement from a given layout or image by finding all the text that lies within
     a given block."""
-    element = LayoutElement.from_region(block)
-    element.text = block.extract_text(
+    if isinstance(block, LayoutElement):
+        element = block
+    else:
+        element = LayoutElement.from_region(block)
+    element.text = element.extract_text(
         objects=pdf_objects,
         image=image,
         extract_tables=extract_tables,
