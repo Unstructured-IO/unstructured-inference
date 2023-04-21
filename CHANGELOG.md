@@ -1,4 +1,4 @@
-## 0.4.2-dev0
+## 0.4.2
 
 * Output of table extraction is now stored in `text_as_html` property rather than `text` property
 
