@@ -6,13 +6,9 @@
 #
 anyio==3.6.2
     # via
-    #   -c requirements/base.txt
-    #   -c requirements/test.txt
+    #   -c base.txt
+    #   -c test.txt
     #   jupyter-server
-appnope==0.1.3
-    # via
-    #   ipykernel
-    #   ipython
 argon2-cffi==21.3.0
     # via
     #   jupyter-server
@@ -26,7 +22,7 @@ asttokens==2.2.1
     # via stack-data
 attrs==22.2.0
     # via
-    #   -c requirements/test.txt
+    #   -c test.txt
     #   jsonschema
 backcall==0.2.0
     # via ipython
@@ -38,12 +34,12 @@ build==0.10.0
     # via pip-tools
 cffi==1.15.1
     # via
-    #   -c requirements/base.txt
+    #   -c base.txt
     #   argon2-cffi-bindings
 click==8.1.3
     # via
-    #   -c requirements/base.txt
-    #   -c requirements/test.txt
+    #   -c base.txt
+    #   -c test.txt
     #   pip-tools
 comm==0.1.3
     # via ipykernel
@@ -61,17 +57,9 @@ fqdn==1.5.1
     # via jsonschema
 idna==3.4
     # via
-    #   -c requirements/base.txt
-    #   -c requirements/test.txt
+    #   -c base.txt
+    #   -c test.txt
     #   anyio
-    #   jsonschema
-importlib-metadata==6.1.0
-    # via
-    #   jupyter-client
-    #   nbconvert
-importlib-resources==5.12.0
-    # via
-    #   -c requirements/base.txt
     #   jsonschema
 ipykernel==6.22.0
     # via
@@ -81,9 +69,9 @@ ipykernel==6.22.0
     #   nbclassic
     #   notebook
     #   qtconsole
-ipython==8.12.0
+ipython==8.13.1
     # via
-    #   -r requirements/dev.in
+    #   -r dev.in
     #   ipykernel
     #   ipywidgets
     #   jupyter-console
@@ -100,7 +88,7 @@ jedi==0.18.2
     # via ipython
 jinja2==3.1.2
     # via
-    #   -c requirements/base.txt
+    #   -c base.txt
     #   jupyter-server
     #   nbclassic
     #   nbconvert
@@ -112,7 +100,7 @@ jsonschema[format-nongpl]==4.17.3
     #   jupyter-events
     #   nbformat
 jupyter==1.0.0
-    # via -r requirements/dev.in
+    # via -r dev.in
 jupyter-client==8.1.0
     # via
     #   ipykernel
@@ -150,7 +138,7 @@ jupyterlab-widgets==3.0.7
     # via ipywidgets
 markupsafe==2.1.2
     # via
-    #   -c requirements/base.txt
+    #   -c base.txt
     #   jinja2
     #   nbconvert
 matplotlib-inline==0.1.6
@@ -187,8 +175,8 @@ notebook-shim==0.2.2
     # via nbclassic
 packaging==23.0
     # via
-    #   -c requirements/base.txt
-    #   -c requirements/test.txt
+    #   -c base.txt
+    #   -c test.txt
     #   build
     #   ipykernel
     #   jupyter-server
@@ -204,12 +192,10 @@ pexpect==4.8.0
 pickleshare==0.7.5
     # via ipython
 pip-tools==6.12.3
-    # via -r requirements/dev.in
-pkgutil-resolve-name==1.3.10
-    # via jsonschema
+    # via -r dev.in
 platformdirs==3.2.0
     # via
-    #   -c requirements/test.txt
+    #   -c test.txt
     #   jupyter-core
 prometheus-client==0.16.0
     # via
@@ -230,7 +216,7 @@ pure-eval==0.2.2
     # via stack-data
 pycparser==2.21
     # via
-    #   -c requirements/base.txt
+    #   -c base.txt
     #   cffi
 pygments==2.14.0
     # via
@@ -244,15 +230,15 @@ pyrsistent==0.19.3
     # via jsonschema
 python-dateutil==2.8.2
     # via
-    #   -c requirements/base.txt
+    #   -c base.txt
     #   arrow
     #   jupyter-client
 python-json-logger==2.0.7
     # via jupyter-events
 pyyaml==6.0
     # via
-    #   -c requirements/base.txt
-    #   -c requirements/test.txt
+    #   -c base.txt
+    #   -c test.txt
     #   jupyter-events
 pyzmq==25.0.2
     # via
@@ -282,15 +268,15 @@ send2trash==1.8.0
     #   notebook
 six==1.16.0
     # via
-    #   -c requirements/base.txt
+    #   -c base.txt
     #   asttokens
     #   bleach
     #   python-dateutil
     #   rfc3339-validator
 sniffio==1.3.0
     # via
-    #   -c requirements/base.txt
-    #   -c requirements/test.txt
+    #   -c base.txt
+    #   -c test.txt
     #   anyio
 soupsieve==2.4
     # via beautifulsoup4
@@ -304,11 +290,6 @@ terminado==0.17.1
     #   notebook
 tinycss2==1.2.1
     # via nbconvert
-tomli==2.0.1
-    # via
-    #   -c requirements/test.txt
-    #   build
-    #   pyproject-hooks
 tornado==6.2
     # via
     #   ipykernel
@@ -335,11 +316,6 @@ traitlets==5.9.0
     #   nbformat
     #   notebook
     #   qtconsole
-typing-extensions==4.5.0
-    # via
-    #   -c requirements/base.txt
-    #   -c requirements/test.txt
-    #   ipython
 uri-template==1.2.0
     # via jsonschema
 wcwidth==0.2.6
@@ -356,11 +332,6 @@ wheel==0.40.0
     # via pip-tools
 widgetsnbextension==4.0.7
     # via ipywidgets
-zipp==3.15.0
-    # via
-    #   -c requirements/base.txt
-    #   importlib-metadata
-    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
