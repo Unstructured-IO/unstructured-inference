@@ -21,7 +21,7 @@ from unstructured_inference.patches.pdfminer import parse_keyword
 
 # NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
 # the bug: https://github.com/pdfminer/pdfminer.six/pull/885
-psparser.PSBaseParser._parse_keyword = parse_keyword
+psparser.PSBaseParser._parse_keyword = parse_keyword  # type: ignore
 
 import pdfplumber  # noqa
 
