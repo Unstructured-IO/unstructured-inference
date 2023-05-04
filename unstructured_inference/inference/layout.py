@@ -17,6 +17,7 @@ from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.patches.pdfminer import parse_keyword
 
 VALID_OCR_STRATEGIES = (
     "auto",  # Use OCR when it looks like other methods have failed
@@ -307,6 +308,7 @@ def load_pdf(
 ) -> Tuple[List[List[TextRegion]], List[Image.Image]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
+    pdfplumber.pdf.PDFParser._parse_keyword = parse_keyword
     pdf_object = pdfplumber.open(filename)
     layouts = []
     images = []
