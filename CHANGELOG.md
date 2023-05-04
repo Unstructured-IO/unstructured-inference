@@ -1,4 +1,4 @@
-## 0.4.3-dev0
+## 0.4.3
 
 * Patch pdfminer.six to fix parsing bug
 
