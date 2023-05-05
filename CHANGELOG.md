@@ -1,3 +1,7 @@
+## 0.4.4
+
+* Fixed patches not being a package.
+
 ## 0.4.3
 
 * Patch pdfminer.six to fix parsing bug
