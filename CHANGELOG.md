@@ -1,3 +1,7 @@
+## 0.4.5
+
+* Detectron2 dependency deleted
+
 ## 0.4.4
 
 * Fixed patches not being a package.

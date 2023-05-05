@@ -1,10 +1,7 @@
 from typing import Final, Optional, Union, List, Dict, Any
 from pathlib import Path
 
-from layoutparser.models.detectron2.layoutmodel import (
-    is_detectron2_available,
-    Detectron2LayoutModel,
-)
+from layoutparser.models.detectron2.layoutmodel import is_detectron2_available
 from layoutparser.models.model_config import LayoutModelConfig
 from PIL import Image
 from huggingface_hub import hf_hub_download
@@ -46,7 +43,7 @@ MODEL_TYPES = {
         label_map=DEFAULT_LABEL_MAP,
         extra_config=DEFAULT_EXTRA_CONFIG,
     ),
-    "onnx":LazyDict(
+    "onnx": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download,
             "unstructuredio/detectron2_faster_rcnn_R_50_FPN_3x",
@@ -74,7 +71,9 @@ class UnstructuredDetectronModel(UnstructuredModel):
     def predict(self, x: Image):
         """Makes a prediction using detectron2 model."""
         super().predict(x)
-        prediction= self.image_processing(x)#[LayoutElement.from_lp_textblock(block) for block in prediction]
+        prediction = self.image_processing(
+            x
+        )  # [LayoutElement.from_lp_textblock(block) for block in prediction]
         return [LayoutElement.from_lp_textblock(block) for block in prediction]
 
     def initialize(
@@ -93,8 +92,6 @@ class UnstructuredDetectronModel(UnstructuredModel):
                 "module is correctly installed."
             )
 
-        config_path_str = str(config_path)
-        model_path_str: Optional[str] = None if model_path is None else str(model_path)
         logger.info("Loading the Detectron2 layout model ...")
         self.model = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
 
@@ -116,22 +113,23 @@ class UnstructuredDetectronModel(UnstructuredModel):
         """
         # The model was trained and exported with this shape
         # TODO (benjamin): check other shapes for inference
-        input_shape = (1035, 800) # detectron2 specific
+        # input_shape = (1035, 800)  # detectron2 specific
         img = np.array(image)
-        #img, ratio = preprocess(origin_img, input_shape)
+        # img, ratio = preprocess(origin_img, input_shape)
         # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
         session = self.model
-        #onnx input expected
+        # onnx input expected
         # [3,1035,800]
         img = cv2.resize(
-                        img,
-                        (800, 1035),
-                        interpolation=cv2.INTER_LINEAR,
-                        ).astype(np.float32)
-        img=img.transpose(2,0,1)
+            img,
+            (800, 1035),
+            interpolation=cv2.INTER_LINEAR,
+        ).astype(np.float32)
+        img = img.transpose(2, 0, 1)
         ort_inputs = {session.get_inputs()[0].name: img}
         output = session.run(None, ort_inputs)
-        # output[0] seems like bounding boxes (in pixels, not sure if original size or in (1035,800))
+        # output[0] seems like bounding boxes (in pixels, not sure if original size
+        # or in (1035,800))
         # output boxes seems like xywh due similar 3rd entry in all elements (same width)
         # output[1] seems like labels for bboxes
         # output[2] seems like confidence score for each label
@@ -139,17 +137,23 @@ class UnstructuredDetectronModel(UnstructuredModel):
         bboxes = output[0]
         labels = output[1]
         confidence = output[2]
-        
+
         regions = []
-        for bbox,label,conf in zip(bboxes,labels,confidence):
+        for bbox, label, conf in zip(bboxes, labels, confidence):
             # Each detection should have (x1,y1,x2,y2,probability,class) format
             # being (x1,y1) the top left and (x2,y2) the bottom right
             detected_class = DEFAULT_LABEL_MAP[int(label)]
-            region = LayoutElement(bbox[0], bbox[1], bbox[0]+bbox[2], bbox[1]+bbox[3], text=None, type=detected_class)
+            region = LayoutElement(
+                bbox[0],
+                bbox[1],
+                bbox[0] + bbox[2],
+                bbox[1] + bbox[3],
+                text=None,
+                type=detected_class,
+            )
 
             regions.append(region)
 
         regions.sort(key=lambda element: element.y1)
 
         return regions
-        
