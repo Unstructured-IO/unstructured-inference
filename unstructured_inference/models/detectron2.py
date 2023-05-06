@@ -49,6 +49,11 @@ MODEL_TYPES = {
             "unstructuredio/detectron2_faster_rcnn_R_50_FPN_3x",
             "model.onnx",
         ),
+        config_path=LazyEvaluateInfo(
+            hf_hub_download,
+            "layoutparser/detectron2",
+            "PubLayNet/faster_rcnn_R_50_FPN_3x/config.yml",
+        ),
         label_map=DEFAULT_LABEL_MAP,
         extra_config=DEFAULT_EXTRA_CONFIG,
     ),
@@ -74,7 +79,7 @@ class UnstructuredDetectronModel(UnstructuredModel):
         prediction = self.image_processing(
             x
         )  # [LayoutElement.from_lp_textblock(block) for block in prediction]
-        return [LayoutElement.from_lp_textblock(block) for block in prediction]
+        return prediction  # [LayoutElement.from_lp_textblock(block) for block in prediction]
 
     def initialize(
         self,
@@ -134,9 +139,9 @@ class UnstructuredDetectronModel(UnstructuredModel):
         # output[1] seems like labels for bboxes
         # output[2] seems like confidence score for each label
         # output[3] seems like image size (it's fixed to (1035,800) so this info is useless now)
-        bboxes = output[0]
-        labels = output[1]
-        confidence = output[2]
+        bboxes = output[0].tolist()
+        labels = output[1].tolist()
+        confidence = output[2].tolist()
 
         regions = []
         for bbox, label, conf in zip(bboxes, labels, confidence):
