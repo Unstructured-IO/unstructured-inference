@@ -4,8 +4,8 @@ import tempfile
 from typing import List, Optional, Tuple, Union, BinaryIO
 
 import numpy as np
-import pdfplumber
 import pdf2image
+from pdfminer import psparser
 from PIL import Image
 
 from unstructured_inference.inference.elements import (
@@ -17,6 +17,13 @@ from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.patches.pdfminer import parse_keyword
+
+# NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
+# the bug: https://github.com/pdfminer/pdfminer.six/pull/885
+psparser.PSBaseParser._parse_keyword = parse_keyword  # type: ignore
+
+import pdfplumber  # noqa
 
 VALID_OCR_STRATEGIES = (
     "auto",  # Use OCR when it looks like other methods have failed
