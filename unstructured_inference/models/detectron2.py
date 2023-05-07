@@ -1,4 +1,4 @@
-from typing import Final, Optional, Union, List, Dict
+from typing import Final, Optional, Union, Dict
 from pathlib import Path
 
 from PIL import Image
@@ -40,11 +40,20 @@ MODEL_TYPES: Dict[Optional[str], LazyDict] = {
 class UnstructuredDetectronModel(UnstructuredModel):
     """Unstructured model wrapper for Detectron2LayoutModel."""
 
-    def predict(self, x: Image.Image):
+    # The model was trained and exported with this shape
+    required_w = 800
+    required_h = 1035
+
+    def predict(self, image: Image.Image):
         """Makes a prediction using detectron2 model."""
-        super().predict(x)
-        prediction = self.image_processing(x)
-        return prediction
+        super().predict(image)
+
+        prepared_input = self.preprocess(image)
+        bboxes, labels, confidence_scores, _ = self.model.run(None, prepared_input)
+        input_w, input_h = image.size
+        regions = self.postprocess(bboxes, labels, confidence_scores, input_w, input_h)
+
+        return regions
 
     def initialize(
         self,
@@ -60,26 +69,10 @@ class UnstructuredDetectronModel(UnstructuredModel):
             confidence_threshold = 0.5
         self.confidence_threshold = confidence_threshold
 
-    def image_processing(
-        self,
-        image: Image.Image,
-    ) -> List[LayoutElement]:
-        """Method runing YoloX for layout detection, returns a PageLayout
-        parameters
-        ----------
-        page
-            Path for image file with the image to process
-        origin_img
-            If specified, an Image object for process with YoloX model
-        page_number
-            Number asigned to the PageLayout returned
-        output_directory
-            Boolean indicating if result will be stored
-        """
-        # The model was trained and exported with this shape
+    def preprocess(self, image: Image.Image):
+        """Process input image into required format for ingestion into the Detectron2 ONNX binary.
+        This involves resizing to a fixed shape and converting to a specific numpy format."""
         # TODO (benjamin): check other shapes for inference
-        input_w, input_h = image.size  # detectron2 specific
-        required_w, required_h = (800, 1035)  # detectron2 specific
         img = np.array(image)
         # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
         session = self.model
@@ -87,23 +80,26 @@ class UnstructuredDetectronModel(UnstructuredModel):
         # [3,1035,800]
         img = cv2.resize(
             img,
-            (required_w, required_h),
+            (self.required_w, self.required_h),
             interpolation=cv2.INTER_LINEAR,
         ).astype(np.float32)
         img = img.transpose(2, 0, 1)
         ort_inputs = {session.get_inputs()[0].name: img}
-        output = session.run(None, ort_inputs)
-        # output[0] seems like bounding boxes (in pixels, not sure if original size
-        # or in (1035,800))
-        # output boxes seems like xywh due similar 3rd entry in all elements (same width)
-        # output[1] seems like labels for bboxes
-        # output[2] seems like confidence score for each label
-        # output[3] seems like image size (it's fixed to (1035,800) so this info is useless now)
-        bboxes, labels, confidence_scores, _ = output
+        return ort_inputs
 
+    def postprocess(
+        self,
+        bboxes: np.ndarray,
+        labels: np.ndarray,
+        confidence_scores: np.ndarray,
+        input_w: float,
+        input_h: float,
+    ):
+        """Process output into Unstructured class. Bounding box coordinates are converted to
+        original image resolution."""
         regions = []
-        width_conversion = input_w / required_w
-        height_conversion = input_h / required_h
+        width_conversion = input_w / self.required_w
+        height_conversion = input_h / self.required_h
         for (x1, y1, x2, y2), label, conf in zip(bboxes, labels, confidence_scores):
             detected_class = self.label_map[int(label)]
             if conf >= self.confidence_threshold:
@@ -119,5 +115,4 @@ class UnstructuredDetectronModel(UnstructuredModel):
                 regions.append(region)
 
         regions.sort(key=lambda element: element.y1)
-
         return regions
