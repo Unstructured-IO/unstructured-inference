@@ -1,4 +1,4 @@
-from typing import Final, Optional, Union, Dict
+from typing import Final, Optional, Union, Dict, List
 from pathlib import Path
 
 from PIL import Image
@@ -44,7 +44,7 @@ class UnstructuredDetectronModel(UnstructuredModel):
     required_w = 800
     required_h = 1035
 
-    def predict(self, image: Image.Image):
+    def predict(self, image: Image.Image) -> List[LayoutElement]:
         """Makes a prediction using detectron2 model."""
         super().predict(image)
 
@@ -69,7 +69,7 @@ class UnstructuredDetectronModel(UnstructuredModel):
             confidence_threshold = 0.5
         self.confidence_threshold = confidence_threshold
 
-    def preprocess(self, image: Image.Image):
+    def preprocess(self, image: Image.Image) -> Dict[str, np.ndarray]:
         """Process input image into required format for ingestion into the Detectron2 ONNX binary.
         This involves resizing to a fixed shape and converting to a specific numpy format."""
         # TODO (benjamin): check other shapes for inference
@@ -94,7 +94,7 @@ class UnstructuredDetectronModel(UnstructuredModel):
         confidence_scores: np.ndarray,
         input_w: float,
         input_h: float,
-    ):
+    ) -> List[LayoutElement]:
         """Process output into Unstructured class. Bounding box coordinates are converted to
         original image resolution."""
         regions = []
