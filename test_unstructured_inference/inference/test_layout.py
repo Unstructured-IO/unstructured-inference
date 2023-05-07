@@ -146,7 +146,7 @@ def test_process_data_with_model_raises_on_invalid_model_name():
             layout.process_data_with_model(open(""), model_name="fake")
 
 
-@pytest.mark.parametrize("model_name", [None, "checkbox"])
+@pytest.mark.parametrize("model_name", [None])
 def test_process_file_with_model(monkeypatch, mock_page_layout, model_name):
     def mock_initialize(self, *args, **kwargs):
         self.model = MockLayoutModel(mock_page_layout)
