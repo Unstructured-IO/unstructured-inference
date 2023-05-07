@@ -78,7 +78,8 @@ class UnstructuredDetectronModel(UnstructuredModel):
         """
         # The model was trained and exported with this shape
         # TODO (benjamin): check other shapes for inference
-        input_shape = (800, 1035)  # detectron2 specific
+        input_w, input_h = image.size  # detectron2 specific
+        required_w, required_h = (800, 1035)  # detectron2 specific
         img = np.array(image)
         # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
         session = self.model
@@ -86,7 +87,7 @@ class UnstructuredDetectronModel(UnstructuredModel):
         # [3,1035,800]
         img = cv2.resize(
             img,
-            input_shape,
+            (required_w, required_h),
             interpolation=cv2.INTER_LINEAR,
         ).astype(np.float32)
         img = img.transpose(2, 0, 1)
@@ -101,10 +102,19 @@ class UnstructuredDetectronModel(UnstructuredModel):
         bboxes, labels, confidence_scores, _ = output
 
         regions = []
+        width_conversion = input_w / required_w
+        height_conversion = input_h / required_h
         for (x1, y1, x2, y2), label, conf in zip(bboxes, labels, confidence_scores):
             detected_class = self.label_map[int(label)]
             if conf >= self.confidence_threshold:
-                region = LayoutElement(x1, y1, x2, y2, text=None, type=detected_class)
+                region = LayoutElement(
+                    x1 * width_conversion,
+                    y1 * height_conversion,
+                    x2 * width_conversion,
+                    y2 * height_conversion,
+                    text=None,
+                    type=detected_class,
+                )
 
                 regions.append(region)
 
