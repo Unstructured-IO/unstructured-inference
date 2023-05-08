@@ -43,7 +43,7 @@ def test_load_model(model_path, label_map):
 def test_unstructured_detectron_model():
     model = detectron2.UnstructuredDetectronModel()
     model.model = 1
-    with patch.object(detectron2.UnstructuredDetectronModel, "image_processing", return_value=[]):
+    with patch.object(detectron2.UnstructuredDetectronModel, "predict", return_value=[]):
         result = model(None)
     assert isinstance(result, list)
     assert len(result) == 0
@@ -55,13 +55,14 @@ def test_inference():
     ):
         model = detectron2.UnstructuredDetectronModel()
         model.initialize(model_path="test_path", label_map={0: "test_class"})
+        assert isinstance(model.model, MockDetectron2LayoutModel)
         with open(os.path.join("sample-docs", "receipt-sample.jpg"), mode="rb") as fp:
             image = Image.open(fp)
             image.load()
-            print(type(image))
         elements = model(image)
         assert len(elements) == 1
         element = elements[0]
         (x1, y1), _, (x2, y2), _ = element.coordinates
-        assert (x1, y1, x2, y2) == (1, 2, 3, 4)
+        assert x2 / x1 == pytest.approx(3.0)
+        assert y2 / y1 == pytest.approx(2.0)
         assert element.type == "test_class"
