@@ -2,7 +2,7 @@ import pytest
 
 import numpy as np
 
-from unstructured_inference.visualize import draw_bounding_boxes
+from unstructured_inference.visualize import draw_yolox_bounding_boxes
 
 
 @pytest.mark.parametrize(
@@ -20,7 +20,7 @@ from unstructured_inference.visualize import draw_bounding_boxes
 def test_visualize(y_coords, x_coords):
     test_image = np.ones((100, 100, 3))
     boxes = [[1, 10, 50, 40]]
-    annotated_img = draw_bounding_boxes(
+    annotated_img = draw_yolox_bounding_boxes(
         test_image, boxes, scores=[0.8], cls_ids=[0], class_names=["thing"]
     )
     assert annotated_img[y_coords, x_coords, 0].sum() == 0.0
