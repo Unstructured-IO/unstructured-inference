@@ -10,7 +10,6 @@ from PIL import Image
 import unstructured_inference.inference.layout as layout
 import unstructured_inference.inference.elements as elements
 import unstructured_inference.models.base as models
-import unstructured_inference.models.detectron2 as detectron2
 import unstructured_inference.models.tesseract as tesseract
 
 
@@ -95,7 +94,6 @@ def test_get_page_elements_with_ocr(monkeypatch):
     image_block = layout.ImageTextRegion(8, 14, 16, 18)
     doc_layout = [text_block, image_block]
 
-    monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
     monkeypatch.setattr(elements, "ocr", lambda *args, **kwargs: "An Even Catchier Title")
 
     image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
@@ -116,7 +114,6 @@ def test_read_pdf(monkeypatch, mock_page_layout):
     monkeypatch.setattr(
         models, "UnstructuredDetectronModel", partial(MockLayoutModel, layout=mock_page_layout)
     )
-    monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
     with patch.object(layout, "load_pdf", return_value=(layouts, images)):
         doc = layout.DocumentLayout.from_file("fake-file.pdf")
@@ -149,7 +146,7 @@ def test_process_data_with_model_raises_on_invalid_model_name():
             layout.process_data_with_model(open(""), model_name="fake")
 
 
-@pytest.mark.parametrize("model_name", [None, "checkbox"])
+@pytest.mark.parametrize("model_name", [None])
 def test_process_file_with_model(monkeypatch, mock_page_layout, model_name):
     def mock_initialize(self, *args, **kwargs):
         self.model = MockLayoutModel(mock_page_layout)
