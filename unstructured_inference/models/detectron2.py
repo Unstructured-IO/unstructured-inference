@@ -11,7 +11,7 @@ from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 import onnxruntime
 import numpy as np
 import cv2
-
+from openvino.runtime import Core
 
 DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
     0: "Text",
@@ -49,7 +49,8 @@ class UnstructuredDetectronModel(UnstructuredModel):
         super().predict(image)
 
         prepared_input = self.preprocess(image)
-        bboxes, labels, confidence_scores, _ = self.model.run(None, prepared_input)
+        predictions = self.model(prepared_input)
+        bboxes, labels, confidence_scores = predictions[self.model.output(0)],predictions[self.model.output(1)],predictions[self.model.output(2)]
         input_w, input_h = image.size
         regions = self.postprocess(bboxes, labels, confidence_scores, input_w, input_h)
 
@@ -63,7 +64,11 @@ class UnstructuredDetectronModel(UnstructuredModel):
     ):
         """Loads the detectron2 model using the specified parameters"""
         logger.info("Loading the Detectron2 layout model ...")
-        self.model = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+        #self.model = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+        ie = Core()
+        model = ie.read_model("/home/ubuntu/detectron2_openvino/model.xml")
+        compiled_model = ie.compile_model(model,device_name='CPU')
+        self. model = compiled_model
         self.label_map = label_map
         if confidence_threshold is None:
             confidence_threshold = 0.5
@@ -84,8 +89,8 @@ class UnstructuredDetectronModel(UnstructuredModel):
             interpolation=cv2.INTER_LINEAR,
         ).astype(np.float32)
         img = img.transpose(2, 0, 1)
-        ort_inputs = {session.get_inputs()[0].name: img}
-        return ort_inputs
+        #ort_inputs = {session.get_inputs()[0].name: img}
+        return img
 
     def postprocess(
         self,
