@@ -4,5 +4,6 @@ python-multipart
 uvicorn
 huggingface-hub
 opencv-python!=4.7.0.68
+openvino
 onnxruntime
 transformers

@@ -8,11 +8,9 @@ anyio==3.6.2
     # via
     #   -c requirements/base.txt
     #   httpcore
-attrs==22.2.0
-    # via pytest
 black==23.3.0
     # via -r requirements/test.in
-certifi==2022.12.7
+certifi==2023.5.7
     # via
     #   -c requirements/base.txt
     #   httpcore
@@ -27,13 +25,13 @@ click==8.1.3
     #   -c requirements/base.txt
     #   -r requirements/test.in
     #   black
-coverage[toml]==7.2.2
+coverage[toml]==7.2.5
     # via
     #   -r requirements/test.in
     #   pytest-cov
 exceptiongroup==1.1.1
     # via pytest
-filelock==3.10.7
+filelock==3.12.0
     # via
     #   -c requirements/base.txt
     #   huggingface-hub
@@ -43,15 +41,19 @@ flake8==6.0.0
     #   flake8-docstrings
 flake8-docstrings==1.7.0
     # via -r requirements/test.in
+fsspec==2023.5.0
+    # via
+    #   -c requirements/base.txt
+    #   huggingface-hub
 h11==0.14.0
     # via
     #   -c requirements/base.txt
     #   httpcore
-httpcore==0.16.3
+httpcore==0.17.0
     # via httpx
-httpx==0.23.3
+httpx==0.24.0
     # via -r requirements/test.in
-huggingface-hub==0.13.3
+huggingface-hub==0.14.1
     # via
     #   -c requirements/base.txt
     #   -r requirements/test.in
@@ -59,19 +61,19 @@ idna==3.4
     # via
     #   -c requirements/base.txt
     #   anyio
+    #   httpx
     #   requests
-    #   rfc3986
 iniconfig==2.0.0
     # via pytest
 mccabe==0.7.0
     # via flake8
-mypy==1.1.1
+mypy==1.2.0
     # via -r requirements/test.in
 mypy-extensions==1.0.0
     # via
     #   black
     #   mypy
-packaging==23.0
+packaging==23.1
     # via
     #   -c requirements/base.txt
     #   black
@@ -87,7 +89,7 @@ pillow==9.5.0
     # via
     #   -c requirements/base.txt
     #   pdf2image
-platformdirs==3.2.0
+platformdirs==3.5.0
     # via black
 pluggy==1.0.0
     # via pytest
@@ -97,7 +99,7 @@ pydocstyle==6.3.0
     # via flake8-docstrings
 pyflakes==3.0.1
     # via flake8
-pytest==7.2.2
+pytest==7.3.1
     # via pytest-cov
 pytest-cov==4.0.0
     # via -r requirements/test.in
@@ -105,12 +107,10 @@ pyyaml==6.0
     # via
     #   -c requirements/base.txt
     #   huggingface-hub
-requests==2.28.2
+requests==2.30.0
     # via
     #   -c requirements/base.txt
     #   huggingface-hub
-rfc3986[idna2008]==1.5.0
-    # via httpx
 sniffio==1.3.0
     # via
     #   -c requirements/base.txt
@@ -135,7 +135,7 @@ typing-extensions==4.5.0
     #   black
     #   huggingface-hub
     #   mypy
-urllib3==1.26.15
+urllib3==2.0.2
     # via
     #   -c requirements/base.txt
     #   requests
