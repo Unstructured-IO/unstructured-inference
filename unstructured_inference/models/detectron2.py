@@ -8,7 +8,6 @@ from unstructured_inference.logger import logger
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
-import onnxruntime
 import numpy as np
 import cv2
 from openvino.runtime import Core
@@ -26,10 +25,15 @@ DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
 # needed.
 MODEL_TYPES: Dict[Optional[str], LazyDict] = {
     None: LazyDict(
+        model_xml=LazyEvaluateInfo(
+            hf_hub_download,
+            "unstructuredio/detectron2_faster_rcnn_R_50_FPN_3x",
+            "model.bin",
+        ),
         model_path=LazyEvaluateInfo(
             hf_hub_download,
             "unstructuredio/detectron2_faster_rcnn_R_50_FPN_3x",
-            "model.onnx",
+            "model.xml",
         ),
         label_map=DEFAULT_LABEL_MAP,
         confidence_threshold=0.8,
@@ -50,7 +54,11 @@ class UnstructuredDetectronModel(UnstructuredModel):
 
         prepared_input = self.preprocess(image)
         predictions = self.model(prepared_input)
-        bboxes, labels, confidence_scores = predictions[self.model.output(0)],predictions[self.model.output(1)],predictions[self.model.output(2)]
+        bboxes, labels, confidence_scores = (
+            predictions[self.model.output(0)],
+            predictions[self.model.output(1)],
+            predictions[self.model.output(2)],
+        )
         input_w, input_h = image.size
         regions = self.postprocess(bboxes, labels, confidence_scores, input_w, input_h)
 
@@ -59,28 +67,27 @@ class UnstructuredDetectronModel(UnstructuredModel):
     def initialize(
         self,
         model_path: Union[str, Path],
+        model_xml: Optional[Path],
         label_map: Dict[int, str],
         confidence_threshold: Optional[float] = None,
     ):
         """Loads the detectron2 model using the specified parameters"""
         logger.info("Loading the Detectron2 layout model ...")
-        #self.model = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
         ie = Core()
-        model = ie.read_model("/home/ubuntu/detectron2_openvino/model.xml")
-        compiled_model = ie.compile_model(model,device_name='CPU')
-        self. model = compiled_model
+        model = ie.read_model(model_path)
+        compiled_model = ie.compile_model(model, device_name="CPU")
+        self.model = compiled_model
         self.label_map = label_map
         if confidence_threshold is None:
             confidence_threshold = 0.5
         self.confidence_threshold = confidence_threshold
 
-    def preprocess(self, image: Image.Image) -> Dict[str, np.ndarray]:
+    def preprocess(self, image: Image.Image) -> np.ndarray:
         """Process input image into required format for ingestion into the Detectron2 ONNX binary.
         This involves resizing to a fixed shape and converting to a specific numpy format."""
         # TODO (benjamin): check other shapes for inference
         img = np.array(image)
         # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
-        session = self.model
         # onnx input expected
         # [3,1035,800]
         img = cv2.resize(
@@ -89,7 +96,6 @@ class UnstructuredDetectronModel(UnstructuredModel):
             interpolation=cv2.INTER_LINEAR,
         ).astype(np.float32)
         img = img.transpose(2, 0, 1)
-        #ort_inputs = {session.get_inputs()[0].name: img}
         return img
 
     def postprocess(
