@@ -11,6 +11,7 @@ from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 import numpy as np
 import cv2
 from openvino.runtime import Core
+import os
 
 DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
     0: "Text",
@@ -75,8 +76,12 @@ class UnstructuredDetectronModel(UnstructuredModel):
         logger.info("Loading the Detectron2 layout model ...")
         ie = Core()
         model = ie.read_model(model_path)
-        compiled_model = ie.compile_model(model, device_name="CPU")
-        self.model = compiled_model
+        compiled_path = "detectron2-compiled.ir"
+        if os.path.exists(compiled_path):
+            self.model = ie.read_model(compiled_path)
+        else:
+            compiled_model = ie.compile_model(model, device_name="CPU")
+            self.model = compiled_model
         self.label_map = label_map
         if confidence_threshold is None:
             confidence_threshold = 0.5
