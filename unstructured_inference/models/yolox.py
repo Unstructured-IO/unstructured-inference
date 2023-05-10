@@ -14,7 +14,7 @@ from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.visualize import draw_bounding_boxes
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
-
+from openvino.runtime import Core
 YOLOX_LABEL_MAP = {
     0: "Caption",
     1: "Footnote",
@@ -53,7 +53,9 @@ class UnstructuredYoloXModel(UnstructuredModel):
 
     def initialize(self, model_path: str, label_map: dict):
         """Start inference session for YoloX model."""
-        self.model = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+        ie = Core()
+        model = ie.read_model("/home/ubuntu/yoloxl_openvino/yolox_l0.05.xml")
+        self.model = ie.compile_model(model=model,device_name='CPU')
         self.layout_classes = label_map
 
     def image_processing(
@@ -78,12 +80,12 @@ class UnstructuredYoloXModel(UnstructuredModel):
         origin_img = np.array(image)
         img, ratio = preprocess(origin_img, input_shape)
         # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
-        session = self.model
+        #session = self.model
 
-        ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
-        output = session.run(None, ort_inputs)
+        #ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
+        output = self.model(img[None,:,:,:])#(ort_inputs)
         # TODO(benjamin): check for p6
-        predictions = demo_postprocess(output[0], input_shape, p6=False)[0]
+        predictions = demo_postprocess(output[self.model.output(0)], input_shape, p6=False)[0]
 
         boxes = predictions[:, :4]
         scores = predictions[:, 4:5] * predictions[:, 5:]
