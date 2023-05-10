@@ -18,7 +18,7 @@ install-base: install-base-pip-packages
 
 ## install:                 installs all test, dev, and experimental requirements
 .PHONY: install
-install: install-base-pip-packages install-dev install-detectron2
+install: install-base-pip-packages install-dev
 
 .PHONY: install-ci
 install-ci: install-base-pip-packages install-test install-paddleocr
