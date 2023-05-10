@@ -1,5 +1,5 @@
 PACKAGE_NAME := unstructured_inference
-PIP_VERSION := 23.1
+PIP_VERSION := 23.1.2
 
 
 .PHONY: help
