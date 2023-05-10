@@ -1,5 +1,5 @@
 PACKAGE_NAME := unstructured_inference
-PIP_VERSION := 23.1
+PIP_VERSION := 23.1.2
 
 
 .PHONY: help
@@ -51,8 +51,8 @@ pip-compile:
 	# the detectron2 repo itself. If detectron2 is in the requirements.txt file, an order of
 	# operations issue related to the torch library causes the install to fail
 	sed 's/^detectron2 @/# detectron2 @/g' requirements/base.txt
-	pip-compile --upgrade requirements/dev.in
 	pip-compile --upgrade requirements/test.in
+	pip-compile --upgrade requirements/dev.in
 
 ##########
 # Docker #
