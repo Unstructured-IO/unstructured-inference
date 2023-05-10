@@ -15,6 +15,8 @@ from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 from unstructured_inference.visualize import draw_yolox_bounding_boxes
+from onnxruntime.quantization import quantize_dynamic, QuantType
+import os
 
 YOLOX_LABEL_MAP = {
     0: "Caption",
@@ -58,14 +60,13 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
     def initialize(self, model_path: str, label_map: dict):
         """Start inference session for YoloX model."""
-        self.model = onnxruntime.InferenceSession(
-            model_path,
-            providers=[
-                "TensorrtExecutionProvider",
-                "CUDAExecutionProvider",
-                "CPUExecutionProvider",
-            ],
-        )
+
+        quantized_path = "yolox_quantized.onnx"
+        if not os.path.exists(quantized_path):
+            quantize_dynamic(model_path, quantized_path,weight_type=QuantType.QUInt8)
+
+        self.model = onnxruntime.InferenceSession(quantized_path, providers=["TensorrtExecutionProvider","CUDAExecutionProvider","CPUExecutionProvider"])
+        
         self.layout_classes = label_map
 
     def image_processing(

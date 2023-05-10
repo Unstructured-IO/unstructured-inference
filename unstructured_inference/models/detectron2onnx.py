@@ -13,6 +13,11 @@ from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
+import onnxruntime
+import numpy as np
+import cv2
+from onnxruntime.quantization import quantize_dynamic, QuantType
+import os
 
 onnxruntime.set_default_logger_severity(logger_onnx.getEffectiveLevel())
 
@@ -86,15 +91,10 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
     ):
         """Loads the detectron2 model using the specified parameters"""
         logger.info("Loading the Detectron2 layout model ...")
-        self.model_path = str(model_path)
-        self.model = onnxruntime.InferenceSession(
-            model_path,
-            providers=[
-                "TensorrtExecutionProvider",
-                "CUDAExecutionProvider",
-                "CPUExecutionProvider",
-            ],
-        )
+        quantized_path = "detectron2_quantized.onnx"
+        if not os.path.exists(quantized_path):
+            quantize_dynamic(model_path, quantized_path,weight_type=QuantType.QUInt8)
+        self.model = onnxruntime.InferenceSession(quantized_path, providers=["TensorrtExecutionProvider","CUDAExecutionProvider","CPUExecutionProvider"])
         self.label_map = label_map
         if confidence_threshold is None:
             confidence_threshold = 0.5
