@@ -1,6 +1,6 @@
-## 0.4.5
+## 0.4.5-dev0
 
-* Detectron2 dependency deleted
+* Added ONNX version of Detectron2
 
 ## 0.4.4
 

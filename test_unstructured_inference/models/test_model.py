@@ -15,7 +15,7 @@ def test_get_model(monkeypatch):
         "UnstructuredDetectronModel",
         MockModel,
     )
-    assert isinstance(models.get_model(), MockModel)
+    assert isinstance(models.get_model("checkbox"), MockModel)
 
 
 def test_raises_invalid_model():
