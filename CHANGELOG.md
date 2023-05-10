@@ -1,3 +1,7 @@
+## 0.4.5-dev0
+
+* Added ONNX version of Detectron2
+
 ## 0.4.4
 
 * Fixed patches not being a package.
