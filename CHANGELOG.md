@@ -1,5 +1,6 @@
-## 0.4.5-dev0
+## 0.4.5-dev1
 
+* Preserve image format in PIL.Image.Image when loading
 * Added ONNX version of Detectron2
 
 ## 0.4.4
