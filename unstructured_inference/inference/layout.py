@@ -103,7 +103,10 @@ class DocumentLayout:
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
         try:
-            image = Image.open(filename).convert("RGB")
+            image = Image.open(filename)
+            format = image.format
+            image = image.convert("RGB")
+            image.format = format
         except Exception as e:
             if os.path.isdir(filename) or os.path.isfile(filename):
                 raise e
