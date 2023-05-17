@@ -65,6 +65,7 @@ print(layout.pages[0].elements)
 Once the model has detected the layout and OCR'd the document, the text extracted from the first 
 page of the sample document will be displayed.
 You can convert a given element to a `dict` by running the `.to_dict()` method.
+
 ## Models
 
 The inference pipeline operates by finding text elements in a document page using a detection model, then extracting the contents of the elements using direct extraction (if available), OCR, and optionally table inference models.
