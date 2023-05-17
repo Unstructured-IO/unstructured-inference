@@ -21,7 +21,7 @@ Run `pip install unstructured-inference`.
 
 ### Detectron2
 
-[Detectron2](https://github.com/facebookresearch/detectron2) is required for most inference tasks 
+[Detectron2](https://github.com/facebookresearch/detectron2) is required for using models from the [layoutparser model zoo](#using-models-from-the-layoutparser-model-zoo) 
 but is not automatically installed with this package. 
 For MacOS and Linux, build from source with:
 ```shell
@@ -65,6 +65,32 @@ print(layout.pages[0].elements)
 Once the model has detected the layout and OCR'd the document, the text extracted from the first 
 page of the sample document will be displayed.
 You can convert a given element to a `dict` by running the `.to_dict()` method.
+## Models
+
+The inference pipeline operates by finding text elements in a document page using a detection model, then extracting the contents of the elements using direct extraction (if available), OCR, and optionally table inference models.
+
+We offer several detection models including [Detectron2](https://github.com/facebookresearch/detectron2), [YOLOX](https://github.com/Megvii-BaseDetection/YOLOX), and [Donut](https://github.com/clovaai/donut).
+
+### Using a non-default model
+
+When doing inference, an alternate model can be used by passing the model object to the ingestion method via the `model` parameter. The `get_model` function can be used to construct one of our out of the box models from a keyword, e.g.:
+```
+from unstructured_inference.models.base import get_model
+from unstructured_inference.inference.layout import DocumentLayout
+
+model = get_model("yolox")
+doc = DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf", model=model)
+```
+
+### Using models from the layoutparser model zoo
+
+The `UnstructuredDetectronModel` class in `unstructured_inference.modelts.detectron2` uses the `faster_rcnn_R_50_FPN_3x` model pretrained on DocLayNet, but by using different construction parameters, any model in the `layoutparser` [model zoo](https://layout-parser.readthedocs.io/en/latest/notes/modelzoo.html) can be used. `UnstructuredDetectronModel` is a light wrapper around the `layoutparser` `Detectron2LayoutModel` object, and accepts the same arguments. See [layoutparser documentation](https://layout-parser.readthedocs.io/en/latest/api_doc/models.html#layoutparser.models.Detectron2LayoutModel) for details.
+
+### Using your own model
+
+Any detection model can be used for in the `unstructured_inference` pipeline by wrapping the model in the `UnstructuredModel` class. To integrate with the `DocumentLayout` class, a subclass of `UnstructuredModel` must have a `predict` method that accepts a `PIL.Image.Image` and returns a list of `LayoutElement`s, and an `initialize` method, which loads the model and prepares it for inference.
+
+## API
 
 To build the Docker container, run `make docker-build`. Note that Apple hardware with an M1 chip 
 has trouble building `Detectron2` on Docker and for best results you should build it on Linux. To 
@@ -90,7 +116,7 @@ start the API with hot reloading. The API will run at `http:/localhost:8000`.
 
 View the swagger documentation at `http://localhost:5000/docs`.
 
-## YoloX model
+### YoloX model
 
 For using the YoloX model the endpoints are: 
 ```
