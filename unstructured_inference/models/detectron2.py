@@ -29,7 +29,7 @@ DEFAULT_EXTRA_CONFIG: Final[List[Any]] = ["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0
 # NOTE(alan): Entries are implemented as LazyDicts so that models aren't downloaded until they are
 # needed.
 MODEL_TYPES = {
-    None: LazyDict(
+    "detectron2_lp": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download,
             "layoutparser/detectron2",
