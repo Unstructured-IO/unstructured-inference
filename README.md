@@ -69,7 +69,7 @@ You can convert a given element to a `dict` by running the `.to_dict()` method.
 
 The inference pipeline operates by finding text elements in a document page using a detection model, then extracting the contents of the elements using direct extraction (if available), OCR, and optionally table inference models.
 
-We offer several detection models including [Detectron2](https://github.com/facebookresearch/detectron2), [YOLOX](https://github.com/Megvii-BaseDetection/YOLOX), and [Donut](https://github.com/clovaai/donut).
+We offer several detection models including [Detectron2](https://github.com/facebookresearch/detectron2) and [YOLOX](https://github.com/Megvii-BaseDetection/YOLOX).
 
 ### Using a non-default model
 
