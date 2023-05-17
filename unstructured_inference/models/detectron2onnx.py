@@ -6,7 +6,7 @@ from huggingface_hub import hf_hub_download
 
 from unstructured_inference.logger import logger
 from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 import onnxruntime
 import numpy as np
@@ -37,7 +37,7 @@ MODEL_TYPES: Dict[Optional[str], LazyDict] = {
 }
 
 
-class UnstructuredDetectronONNXModel(UnstructuredModel):
+class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
     """Unstructured model wrapper for detectron2 ONNX model."""
 
     # The model was trained and exported with this shape

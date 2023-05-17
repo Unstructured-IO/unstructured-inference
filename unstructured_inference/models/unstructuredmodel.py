@@ -1,5 +1,11 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any, List
+
+from PIL.Image import Image
+
+if TYPE_CHECKING:
+    from unstructured_inference.inference.layoutelement import LayoutElement
 
 
 class UnstructuredModel(ABC):
@@ -22,7 +28,7 @@ class UnstructuredModel(ABC):
             )
         pass  # pragma: no cover
 
-    def __call__(self, x: Any):
+    def __call__(self, x: Any) -> Any:
         """Inference using function call interface."""
         return self.predict(x)
 
@@ -30,6 +36,20 @@ class UnstructuredModel(ABC):
     def initialize(self, *args, **kwargs):
         """Load the model for inference."""
         pass  # pragma: no cover
+
+
+class UnstructuredObjectDetectionModel(UnstructuredModel):
+    """Wrapper class for object detection models used by unstructured."""
+
+    @abstractmethod
+    def predict(self, x: Image) -> List[LayoutElement]:
+        """Do inference using the wrapped model."""
+        super().predict(x)
+        return []  # pragma: no cover
+
+    def __call__(self, x: Image) -> List[LayoutElement]:
+        """Inference using function call interface."""
+        return super().__call__(x)
 
 
 class ModelNotInitializedError(Exception):
