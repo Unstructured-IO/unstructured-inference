@@ -89,7 +89,7 @@ The `UnstructuredDetectronModel` class in `unstructured_inference.modelts.detect
 
 ### Using your own model
 
-Any detection model can be used for in the `unstructured_inference` pipeline by wrapping the model in the `UnstructuredModel` class. To integrate with the `DocumentLayout` class, a subclass of `UnstructuredModel` must have a `predict` method that accepts a `PIL.Image.Image` and returns a list of `LayoutElement`s, and an `initialize` method, which loads the model and prepares it for inference.
+Any detection model can be used for in the `unstructured_inference` pipeline by wrapping the model in the `UnstructuredObjectDetectionModel` class. To integrate with the `DocumentLayout` class, a subclass of `UnstructuredObjectDetectionModel` must have a `predict` method that accepts a `PIL.Image.Image` and returns a list of `LayoutElement`s, and an `initialize` method, which loads the model and prepares it for inference.
 
 ## API
 
