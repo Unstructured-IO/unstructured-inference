@@ -64,5 +64,9 @@ class UnstructuredDonutModel(UnstructuredModel):
             return_dict_in_generate=True,
         )
         prediction = self.processor.batch_decode(outputs.sequences)[0]
+        # NOTE(alan): As of right now I think this would not work if passed in as the model to
+        # DocumentLayout.from_file and similar functions that take a model object as input. This
+        # produces image-to-text inferences rather than image-to-bboxes, so we actually need to
+        # hook it up in a different way.
         prediction = self.processor.token2json(prediction)
         return prediction
