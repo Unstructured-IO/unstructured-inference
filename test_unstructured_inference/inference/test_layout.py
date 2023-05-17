@@ -119,7 +119,8 @@ def test_read_pdf(monkeypatch, mock_page_layout):
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
     with patch.object(layout, "load_pdf", return_value=(layouts, images)):
-        doc = layout.DocumentLayout.from_file("fake-file.pdf")
+        model = layout.get_model("detectron2_lp")
+        doc = layout.DocumentLayout.from_file("fake-file.pdf", model=model)
 
         assert str(doc).startswith("A Catchy Title")
         assert str(doc).count("A Catchy Title") == 2  # Once for each page
