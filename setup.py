@@ -18,6 +18,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from setuptools import setup, find_packages
+from typing import List
 
 from unstructured_inference.__version__ import __version__
 
@@ -27,11 +28,11 @@ def load_requirements(file_list=None):
         file_list = ["requirements/base.in"]
     if isinstance(file_list, str):
         file_list = [file_list]
-    requirements = []
+    requirements: List[str] = []
     for file in file_list:
-        if not file.startswith("#"):
-            with open(file, encoding="utf-8") as f:
-                requirements.extend(f.readlines())
+        with open(file, encoding="utf-8") as f:
+            requirements.extend(f.readlines())
+    requirements = [req for req in requirements if not req.startswith("#")]
     return requirements
 
 

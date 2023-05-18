@@ -11,7 +11,7 @@ from huggingface_hub import hf_hub_download
 
 from unstructured_inference.logger import logger
 from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 
 
@@ -29,7 +29,7 @@ DEFAULT_EXTRA_CONFIG: Final[List[Any]] = ["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0
 # NOTE(alan): Entries are implemented as LazyDicts so that models aren't downloaded until they are
 # needed.
 MODEL_TYPES = {
-    None: LazyDict(
+    "detectron2_lp": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download,
             "layoutparser/detectron2",
@@ -56,7 +56,7 @@ MODEL_TYPES = {
 }
 
 
-class UnstructuredDetectronModel(UnstructuredModel):
+class UnstructuredDetectronModel(UnstructuredObjectDetectionModel):
     """Unstructured model wrapper for Detectron2LayoutModel."""
 
     def predict(self, x: Image):

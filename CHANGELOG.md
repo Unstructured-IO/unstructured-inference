@@ -1,7 +1,7 @@
-## 0.4.5-dev1
+## 0.4.5
 
 * Preserve image format in PIL.Image.Image when loading
-* Added ONNX version of Detectron2
+* Added ONNX version of Detectron2 and make default model
 
 ## 0.4.4
 
