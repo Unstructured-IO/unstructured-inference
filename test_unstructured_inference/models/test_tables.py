@@ -415,7 +415,7 @@ def test_table_prediction(model_path, sample_table_transcript, platform_type):
         table_model.initialize(model=model_path)
         img = Image.open("./sample-docs/example_table.jpg").convert("RGB")
         prediction = table_model.predict(img)
-        assert prediction == sample_table_transcript
+        assert prediction.strip() == sample_table_transcript.strip()
 
 
 def test_intersect():
