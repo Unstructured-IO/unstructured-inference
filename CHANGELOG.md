@@ -1,7 +1,8 @@
-## 0.4.5
+## 0.5.0
 
 * Preserve image format in PIL.Image.Image when loading
 * Added ONNX version of Detectron2 and make default model
+* Remove API code, we don't serve this as a standalone API any more
 
 ## 0.4.4
 
