@@ -75,12 +75,12 @@ We offer several detection models including [Detectron2](https://github.com/face
 ### Using a non-default model
 
 When doing inference, an alternate model can be used by passing the model object to the ingestion method via the `model` parameter. The `get_model` function can be used to construct one of our out-of-the-box models from a keyword, e.g.:
-```
+```python
 from unstructured_inference.models.base import get_model
 from unstructured_inference.inference.layout import DocumentLayout
 
 model = get_model("yolox")
-doc = DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf", model=model)
+layout = DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf", model=model)
 ```
 
 ### Using models from the layoutparser model zoo
