@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from unstructured_inference.inference.elements import TextRegion
 
@@ -27,7 +27,7 @@ def order_layout(
     layout: List[TextRegion],
     column_tol_factor: float = 0.2,
     full_page_threshold_factor: float = 0.9,
-):
+) -> List[TextRegion]:
     """Orders the layout elements detected on a page. For groups of elements that are not
     the width of the page, the algorithm attempts to group elements into column based on
     the coordinates of the bounding box. Columns are ordered left to right, and elements
@@ -44,6 +44,9 @@ def order_layout(
         multiplied by the page width to find the minimum width an elements need to be
         for it to be considered a full page width element.
     """
+    if len(layout) == 0:
+        return []
+
     width = calculate_width(layout)
     column_tolerance = column_tol_factor * width
     full_page_min_width = full_page_threshold_factor * width
@@ -74,7 +77,7 @@ def order_layout(
     return sorted_layout
 
 
-def sorted_layout_from_columns(columns: List[Column]):
+def sorted_layout_from_columns(columns: List[Column]) -> List[TextRegion]:
     """Creates a sorted list of elements from a list of columns. Columns will be sorted
     left to right and elements within columns are sorted top to bottom."""
     sorted_layout = []
@@ -87,7 +90,7 @@ def sorted_layout_from_columns(columns: List[Column]):
     return sorted_layout
 
 
-def calculate_width(layout):
+def calculate_width(layout) -> Union[float, int]:
     """Calculates total width of the elements in the layout. Used for computing the full
     page threshold and column tolerance."""
     min_x1 = min([element.x1 for element in layout])
