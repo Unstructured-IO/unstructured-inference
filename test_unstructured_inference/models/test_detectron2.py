@@ -18,7 +18,7 @@ def test_load_default_model(monkeypatch):
     monkeypatch.setattr(detectron2, "Detectron2LayoutModel", MockDetectron2LayoutModel)
 
     with patch.object(detectron2, "is_detectron2_available", return_value=True):
-        model = models.get_model()
+        model = models.get_model("detectron2_lp")
 
     assert isinstance(model.model, MockDetectron2LayoutModel)
 
@@ -26,7 +26,7 @@ def test_load_default_model(monkeypatch):
 def test_load_default_model_raises_when_not_available():
     with patch.object(detectron2, "is_detectron2_available", return_value=False):
         with pytest.raises(ImportError):
-            models.get_model()
+            models.get_model("detectron2_lp")
 
 
 @pytest.mark.parametrize("config_path, model_path", [("asdf", "diufs"), ("dfaw", "hfhfhfh")])

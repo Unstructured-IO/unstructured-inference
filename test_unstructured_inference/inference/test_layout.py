@@ -119,7 +119,8 @@ def test_read_pdf(monkeypatch, mock_page_layout):
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
     with patch.object(layout, "load_pdf", return_value=(layouts, images)):
-        doc = layout.DocumentLayout.from_file("fake-file.pdf")
+        model = layout.get_model("detectron2_lp")
+        doc = layout.DocumentLayout.from_file("fake-file.pdf", model=model)
 
         assert str(doc).startswith("A Catchy Title")
         assert str(doc).count("A Catchy Title") == 2  # Once for each page
@@ -457,3 +458,18 @@ def test_load_pdf_image_placement():
     # Image is in top half of the page, so that should be reflected in the pixel coordinates
     assert image_region.y1 < images[5].height / 2
     assert image_region.y2 < images[5].height / 2
+
+
+def test_load_pdf_with_multicolumn_layout_and_ocr(filename="sample-docs/design-thinking.pdf"):
+    layouts, images = layout.load_pdf(filename)
+    doc = layout.process_file_with_model(filename=filename, model_name=None)
+    test_snippets = ["Key to design thinking", "Design thinking also", "But in recent years"]
+
+    test_elements = []
+    for element in doc.pages[0].elements:
+        for snippet in test_snippets:
+            if element.text.startswith(snippet):
+                test_elements.append(element)
+
+    for i, element in enumerate(test_elements):
+        assert element.text.startswith(test_snippets[i])

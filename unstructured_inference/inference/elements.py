@@ -60,6 +60,16 @@ class Rectangle:
         """Height of rectangle"""
         return self.y2 - self.y1
 
+    @property
+    def x_midpoint(self) -> Union[int, float]:
+        """Finds the horizontal midpoint of the object."""
+        return (self.x2 + self.x1) / 2
+
+    @property
+    def y_midpoint(self) -> Union[int, float]:
+        """Finds the vertical midpoint of the object."""
+        return (self.y2 + self.y1) / 2
+
     def is_disjoint(self, other: Rectangle) -> bool:
         """Checks whether this rectangle is disjoint from another rectangle."""
         return not self.intersects(other)
