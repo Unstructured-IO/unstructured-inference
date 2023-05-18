@@ -91,65 +91,6 @@ The `UnstructuredDetectronModel` class in `unstructured_inference.modelts.detect
 
 Any detection model can be used for in the `unstructured_inference` pipeline by wrapping the model in the `UnstructuredObjectDetectionModel` class. To integrate with the `DocumentLayout` class, a subclass of `UnstructuredObjectDetectionModel` must have a `predict` method that accepts a `PIL.Image.Image` and returns a list of `LayoutElement`s, and an `initialize` method, which loads the model and prepares it for inference.
 
-## API
-
-To build the Docker container, run `make docker-build`. Note that Apple hardware with an M1 chip 
-has trouble building `Detectron2` on Docker and for best results you should build it on Linux. To 
-run the API locally, use `make start-app-local`. You can stop the API with `make stop-app-local`. 
-The API will run at `http:/localhost:5000`. 
-You can then `POST` a PDF file to the API endpoint to see its layout with the command:
-```
-curl -X 'POST' 'http://localhost:5000/layout/default/pdf' -F 'file=@<your_pdf_file>' | jq -C . | less -R
-```
-
-You can also choose the types of elements you want to return from the output of PDF parsing by 
-passing a list of types to the `include_elems` parameter. For example, if you only want to return 
-`Text` elements and `Title` elements, you can curl:
-```
-curl -X 'POST' 'http://localhost:5000/layout/default/pdf' \
--F 'file=@<your_pdf_file>' \
--F include_elems=Text \
--F include_elems=Title \
- | jq -C | less -R
-```
-If you are using an Apple M1 chip, use `make run-app-dev` instead of `make start-app-local` to 
-start the API with hot reloading. The API will run at `http:/localhost:8000`.
-
-View the swagger documentation at `http://localhost:5000/docs`.
-
-### YoloX model
-
-For using the YoloX model the endpoints are: 
-```
-http://localhost:8000/layout/yolox/pdf
-http://localhost:8000/layout/yolox/image
-```
-For example:
-```
-curl -X 'POST' 'http://localhost:8000/layout/yolox/image' \
--F 'file=@sample-docs/test-image.jpg' \
- | jq -C | less -R
-
-curl -X 'POST' 'http://localhost:8000/layout/yolox/pdf' \
--F 'file=@sample-docs/loremipsum.pdf' \
- | jq -C | less -R
-```
-
-If your PDF file doesn't have text embedded you can force the use of OCR with
-the parameter force_ocr=True:
-```
-curl -X 'POST' 'http://localhost:8000/layout/yolox/pdf' \
--F 'file=@sample-docs/loremipsum-flat.pdf' \
--F force_ocr=true 
- | jq -C | less -R
-```
-
-or in local:
-
-```
-layout = yolox_local_inference(filename, type="pdf")
-```
-
 ## Security Policy
 
 See our [security policy](https://github.com/Unstructured-IO/unstructured-inference/security/policy) for
