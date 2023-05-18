@@ -14,6 +14,7 @@ from unstructured_inference.inference.elements import (
     ImageTextRegion,
 )
 from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
@@ -170,9 +171,7 @@ class PageLayout:
     def get_elements_from_layout(self, layout: List[TextRegion]) -> List[LayoutElement]:
         """Uses the given Layout to separate the page text into elements, either extracting the
         text from the discovered layout blocks or from the image using OCR."""
-        # NOTE(robinson) - This orders the page from top to bottom. We'll need more
-        # sophisticated ordering logic for more complicated layouts.
-        layout.sort(key=lambda element: element.y1)
+        layout = order_layout(layout)
         elements = [
             get_element_from_block(
                 block=e,
