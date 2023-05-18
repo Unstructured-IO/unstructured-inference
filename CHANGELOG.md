@@ -1,3 +1,7 @@
+## 0.5.1-dev0
+
+* Update ordering logic to account for multicolumn documents.
+
 ## 0.4.5
 
 * Preserve image format in PIL.Image.Image when loading
