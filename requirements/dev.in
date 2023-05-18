@@ -7,4 +7,4 @@ pip-tools
 # https://discourse.jupyter.org/t/jupyter-notebook-zmq-message-arrived-on-closed-channel-error/17869
 jupyter_client==7.3.4
 jupyter_server==1.23.6
-tornado==6.1
+tornado==6.3.2
