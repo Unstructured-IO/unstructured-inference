@@ -1,3 +1,7 @@
+## 0.5.1-dev0
+
+* Store page numbers when processing PDFs
+
 ## 0.5.0
 
 * Preserve image format in PIL.Image.Image when loading
