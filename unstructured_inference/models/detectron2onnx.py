@@ -49,7 +49,11 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         super().predict(image)
 
         prepared_input = self.preprocess(image)
-        bboxes, labels, confidence_scores, _ = self.model.run(None, prepared_input)
+        try:
+            bboxes, labels, confidence_scores, _ = self.model.run(None, prepared_input)
+        except onnxruntime.capi.onnxruntime_pybind11_state.RuntimeException:
+            logger.error("Something happened while inferencing page")
+            return []
         input_w, input_h = image.size
         regions = self.postprocess(bboxes, labels, confidence_scores, input_w, input_h)
 
