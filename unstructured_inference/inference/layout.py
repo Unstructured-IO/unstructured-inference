@@ -192,10 +192,12 @@ class PageLayout:
             self.image_array = np.array(self.image)
         return self.image_array
 
-    def annotate(self, colors: Optional[List[str]] = None) -> Image.Image:
+    def annotate(self, colors: Optional[Union[List[str], str]] = None) -> Image.Image:
         """Annotates the elements on the page image."""
         if colors is None:
             colors = ["red" for _ in self.elements]
+        if isinstance(colors, str):
+            colors = [colors]
         # If there aren't enough colors, just cycle through the colors a few times
         if len(colors) < len(self.elements):
             n_copies = (len(self.elements) // len(colors)) + 1
