@@ -4,7 +4,6 @@ from PIL import Image
 import numpy as np
 
 from unstructured_inference.inference.elements import Rectangle
-from unstructured_inference.inference.layout import PageLayout
 from unstructured_inference.visualize import draw_bbox, draw_yolox_bounding_boxes
 
 
@@ -32,9 +31,7 @@ def test_visualize(y_coords, x_coords):
 def test_draw_bbox():
     test_image_arr = np.ones((100, 100, 3), dtype="uint8")
     image = Image.fromarray(test_image_arr)
-    page = PageLayout(number=1, image=image, layout=None)
     x1, y1, x2, y2 = (1, 10, 7, 11)
-    page.elements = [Rectangle(x1, y1, x2, y2)]
     rect = Rectangle(x1, y1, x2, y2)
     annotated_image = draw_bbox(image=image, rect=rect)
     annotated_array = np.array(annotated_image)
