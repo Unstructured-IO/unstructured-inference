@@ -1,3 +1,7 @@
+## 0.5.1-dev0
+
+* Add annotation for pages
+
 ## 0.5.0
 
 * Preserve image format in PIL.Image.Image when loading
