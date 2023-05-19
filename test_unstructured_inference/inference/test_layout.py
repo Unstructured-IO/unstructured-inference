@@ -473,3 +473,15 @@ def test_load_pdf_with_multicolumn_layout_and_ocr(filename="sample-docs/design-t
 
     for i, element in enumerate(test_elements):
         assert element.text.startswith(test_snippets[i])
+
+
+def test_annotate():
+    test_image_arr = np.ones((100, 100, 3), dtype="uint8")
+    image = Image.fromarray(test_image_arr)
+    page = layout.PageLayout(number=1, image=image, layout=None)
+    x1, y1, x2, y2 = (1, 10, 7, 11)
+    rect = elements.Rectangle(x1, y1, x2, y2)
+    page.elements = [rect]
+    with patch.object(layout, "draw_bbox") as mock_draw_bbox:
+        page.annotate(colors="red")
+        mock_draw_bbox.assert_called_with(image, rect, color="red")
