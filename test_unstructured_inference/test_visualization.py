@@ -37,7 +37,6 @@ def test_draw_bbox():
     page.elements = [Rectangle(x1, y1, x2, y2)]
     rect = Rectangle(x1, y1, x2, y2)
     annotated_image = draw_bbox(image=image, rect=rect)
-    # annotated_image = page.annotate(colors=["red"])
     annotated_array = np.array(annotated_image)
     # Make sure the pixels on the edge of the box are red
     for i, expected in zip(range(3), [255, 0, 0]):
