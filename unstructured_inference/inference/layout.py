@@ -204,7 +204,7 @@ class PageLayout:
             colors = colors * n_copies
         img = self.image.copy()
         for el, color in zip(self.elements, colors):
-            img = draw_bbox(self.image, el, color=color)
+            img = draw_bbox(img, el, color=color)
         return img
 
     @classmethod
