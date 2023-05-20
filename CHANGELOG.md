@@ -1,6 +1,8 @@
-## 0.5.1-dev0
+## 0.5.1-dev2
 
 * Add annotation for pages
+* Store page numbers when processing PDFs
+* Hotfix to handle inference of blank pages using ONNX detectron2
 
 ## 0.5.0
 

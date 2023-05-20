@@ -77,11 +77,12 @@ class DocumentLayout:
         pages: List[PageLayout] = list()
         if fixed_layouts is None:
             fixed_layouts = [None for _ in layouts]
-        for image, layout, fixed_layout in zip(images, layouts, fixed_layouts):
+        for i, (image, layout, fixed_layout) in enumerate(zip(images, layouts, fixed_layouts)):
             # NOTE(robinson) - In the future, maybe we detect the page number and default
             # to the index if it is not detected
             page = PageLayout.from_image(
                 image,
+                number=i + 1,
                 model=model,
                 layout=layout,
                 ocr_strategy=ocr_strategy,
@@ -211,6 +212,7 @@ class PageLayout:
     def from_image(
         cls,
         image,
+        number=1,
         model: Optional[UnstructuredModel] = None,
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
@@ -220,7 +222,7 @@ class PageLayout:
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
         page = cls(
-            number=0,
+            number=number,
             image=image,
             layout=layout,
             model=model,
