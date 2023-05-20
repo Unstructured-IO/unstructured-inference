@@ -308,6 +308,15 @@ def test_get_elements_from_layout(mock_page_layout, idx):
     assert elements[0].text == block.text
 
 
+def test_page_numbers_in_page_objects():
+    with patch(
+        "unstructured_inference.inference.layout.PageLayout.get_elements_with_model"
+    ) as mock_get_elements:
+        doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
+        mock_get_elements.assert_called()
+        assert [page.number for page in doc.pages] == list(range(1, len(doc.pages) + 1))
+
+
 @pytest.mark.parametrize(
     "fixed_layouts, called_method, not_called_method",
     [
