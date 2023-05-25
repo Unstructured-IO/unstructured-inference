@@ -482,3 +482,27 @@ def test_load_pdf_with_multicolumn_layout_and_ocr(filename="sample-docs/design-t
 
     for i, element in enumerate(test_elements):
         assert element.text.startswith(test_snippets[i])
+
+
+def test_annotate():
+    test_image_arr = np.ones((100, 100, 3), dtype="uint8")
+    image = Image.fromarray(test_image_arr)
+    page = layout.PageLayout(number=1, image=image, layout=None)
+    coords1 = (21, 30, 37, 41)
+    rect1 = elements.Rectangle(*coords1)
+    coords2 = (1, 10, 7, 11)
+    rect2 = elements.Rectangle(*coords2)
+    page.elements = [rect1, rect2]
+    annotated_image = page.annotate(colors="red")
+    annotated_array = np.array(annotated_image)
+    for x1, y1, x2, y2 in [coords1, coords2]:
+        # Make sure the pixels on the edge of the box are red
+        for i, expected in zip(range(3), [255, 0, 0]):
+            assert all(annotated_array[y1, x1:x2, i] == expected)
+            assert all(annotated_array[y2, x1:x2, i] == expected)
+            assert all(annotated_array[y1:y2, x1, i] == expected)
+            assert all(annotated_array[y1:y2, x2, i] == expected)
+        # Make sure almost all the pixels are not changed
+        assert ((annotated_array[:, :, 0] == 1).mean()) > 0.992
+        assert ((annotated_array[:, :, 1] == 1).mean()) > 0.992
+        assert ((annotated_array[:, :, 2] == 1).mean()) > 0.992

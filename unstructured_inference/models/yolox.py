@@ -12,7 +12,7 @@ from typing import List
 
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
-from unstructured_inference.visualize import draw_bounding_boxes
+from unstructured_inference.visualize import draw_yolox_bounding_boxes
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 
 YOLOX_LABEL_MAP = {
@@ -118,7 +118,7 @@ class UnstructuredYoloXModel(UnstructuredModel):
         origin_img = np.array(Image.open(image_fn))
         final_boxes, final_scores, final_cls_inds = dets[:, :4], dets[:, 4], dets[:, 5]
 
-        annotated_image = draw_bounding_boxes(
+        annotated_image = draw_yolox_bounding_boxes(
             origin_img,
             final_boxes,
             final_scores,

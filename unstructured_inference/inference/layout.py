@@ -19,6 +19,7 @@ from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.patches.pdfminer import parse_keyword
+from unstructured_inference.visualize import draw_bbox
 
 # NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
 # the bug: https://github.com/pdfminer/pdfminer.six/pull/885
@@ -191,6 +192,21 @@ class PageLayout:
         if self.image_array is None:
             self.image_array = np.array(self.image)
         return self.image_array
+
+    def annotate(self, colors: Optional[Union[List[str], str]] = None) -> Image.Image:
+        """Annotates the elements on the page image."""
+        if colors is None:
+            colors = ["red" for _ in self.elements]
+        if isinstance(colors, str):
+            colors = [colors]
+        # If there aren't enough colors, just cycle through the colors a few times
+        if len(colors) < len(self.elements):
+            n_copies = (len(self.elements) // len(colors)) + 1
+            colors = colors * n_copies
+        img = self.image.copy()
+        for el, color in zip(self.elements, colors):
+            img = draw_bbox(img, el, color=color)
+        return img
 
     @classmethod
     def from_image(
