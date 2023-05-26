@@ -105,8 +105,7 @@ class DocumentLayout:
 
         # If not using a worker pool, just call the functions in sequence
         if not worker_pool:
-            for task in layout_tasks:
-                pages = [task() for task in layout_tasks]
+            pages = [task() for task in layout_tasks]
 
         # Otherwise, use apply_async and fetch the results in order
         else:
