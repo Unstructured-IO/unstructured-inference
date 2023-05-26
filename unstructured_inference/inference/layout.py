@@ -1,5 +1,5 @@
 from __future__ import annotations
-from multiprocessing import Pool
+import multiprocessing as mp
 import os
 import tempfile
 from functools import partial
@@ -71,7 +71,7 @@ class DocumentLayout:
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
         extract_tables: bool = False,
-        num_processes: int = 4,
+        worker_pool: mp.Pool = None,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         logger.info(f"Reading PDF for file: {filename} ...")
@@ -84,9 +84,9 @@ class DocumentLayout:
         if fixed_layouts is None:
             fixed_layouts = [None for _ in layouts]
 
-        # Save the function per page so we can fan out to multiprocessing.Pool
+        # Build a list of partial functions for each page in the document
+        # If a multiprocessing pool was passed in, we'll use that to fan out the work
         layout_tasks = []
-
         for i, (image, layout, fixed_layout) in enumerate(zip(images, layouts, fixed_layouts)):
             # NOTE(robinson) - In the future, maybe we detect the page number and default
             # to the index if it is not detected
@@ -103,15 +103,18 @@ class DocumentLayout:
             )
             layout_tasks.append(task)
 
-        # Send to the pool and fetch the results in order
-        results = []
-        pages = []
-        with Pool(processes=num_processes) as pool:
+        # If not using a worker pool, just call the functions in sequence
+        if not worker_pool:
             for task in layout_tasks:
-                results.append(pool.apply_async(task, ()))
+                pages = [task() for task in layout_tasks]
 
-            for res in results:
-                pages.append(res.get())
+        # Otherwise, use apply_async and fetch the results in order
+        else:
+            results = []
+            for task in layout_tasks:
+                results.append(worker_pool.apply_async(task, ()))
+
+            pages = [res.get() for res in results]
 
         return cls.from_pages(pages)
 
@@ -253,7 +256,7 @@ def process_data_with_model(
     ocr_languages: str = "eng",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
-    num_processes: int = 4,
+    worker_pool: mp.Pool = None,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
@@ -267,7 +270,7 @@ def process_data_with_model(
             ocr_languages=ocr_languages,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
-            num_processes=num_processes,
+            worker_pool=worker_pool,
         )
 
     return layout
@@ -281,7 +284,7 @@ def process_file_with_model(
     ocr_languages: str = "eng",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
-    num_processes: int = 4,
+    worker_pool: mp.Pool = None,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
@@ -302,7 +305,7 @@ def process_file_with_model(
             ocr_languages=ocr_languages,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
-            num_processes=num_processes,
+            worker_pool=worker_pool,
         )
     )
     return layout
