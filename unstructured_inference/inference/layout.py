@@ -4,6 +4,7 @@ import os
 import tempfile
 from functools import partial
 from typing import List, Optional, Tuple, Union, BinaryIO
+from contextlib import suppress
 
 import numpy as np
 import pdf2image
@@ -21,6 +22,9 @@ from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.patches.pdfminer import parse_keyword
+
+with suppress(RuntimeError):
+    mp.set_start_method("spawn")
 
 # NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
 # the bug: https://github.com/pdfminer/pdfminer.six/pull/885
