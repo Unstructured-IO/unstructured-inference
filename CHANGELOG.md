@@ -1,8 +1,9 @@
-## 0.5.1-dev2
+## 0.5.1
 
 * Add annotation for pages
 * Store page numbers when processing PDFs
 * Hotfix to handle inference of blank pages using ONNX detectron2
+* Revert ordering change to investigate examples of misordering
 
 ## 0.5.0
 
