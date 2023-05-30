@@ -52,6 +52,8 @@ def order_layout(
     full_page_min_width = full_page_threshold_factor * width
 
     layout.sort(key=lambda element: element.y1)
+    # NOTE(alan): Temporarily revert to orginal logic pending fixing the new logic
+    return layout
 
     sorted_layout = []
     columns: List[Column] = []
