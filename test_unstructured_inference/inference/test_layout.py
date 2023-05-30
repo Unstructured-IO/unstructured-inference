@@ -506,3 +506,31 @@ def test_annotate():
         assert ((annotated_array[:, :, 0] == 1).mean()) > 0.992
         assert ((annotated_array[:, :, 1] == 1).mean()) > 0.992
         assert ((annotated_array[:, :, 2] == 1).mean()) > 0.992
+
+
+def test_textregion_returns_empty_ocr_never(mock_image):
+    tr = elements.TextRegion(0, 0, 24, 24)
+    assert tr.extract_text(objects=None, image=mock_image, ocr_strategy="never") == ""
+
+
+@pytest.mark.parametrize(("text", "expected"), [("asdf", "asdf"), (None, "")])
+def test_embedded_text_region(text, expected):
+    etr = elements.EmbeddedTextRegion(0, 0, 24, 24, text=text)
+    assert etr.extract_text(objects=None) == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "ocr_strategy", "expected"),
+    [
+        (None, "never", ""),
+        (None, "always", "asdf"),
+        ("i have text", "never", "i have text"),
+        ("i have text", "always", "i have text"),
+    ],
+)
+def test_image_text_region(text, ocr_strategy, expected, mock_image):
+    itr = elements.ImageTextRegion(0, 0, 24, 24, text=text)
+    with patch.object(elements, "ocr", return_value="asdf"):
+        assert (
+            itr.extract_text(objects=None, image=mock_image, ocr_strategy=ocr_strategy) == expected
+        )
