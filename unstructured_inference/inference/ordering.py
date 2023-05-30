@@ -47,36 +47,10 @@ def order_layout(
     if len(layout) == 0:
         return []
 
-    width = calculate_width(layout)
-    column_tolerance = column_tol_factor * width
-    full_page_min_width = full_page_threshold_factor * width
-
     layout.sort(key=lambda element: element.y1)
     # NOTE(alan): Temporarily revert to orginal logic pending fixing the new logic
+    # See code prior to this commit for new logic.
     return layout
-
-    sorted_layout = []
-    columns: List[Column] = []
-    for layout_element in layout:
-        if layout_element.width > full_page_min_width:
-            sorted_layout.extend(sorted_layout_from_columns(columns))
-            columns = []
-            sorted_layout.append(layout_element)
-
-        else:
-            added_to_column = False
-            for column in columns:
-                difference = abs(layout_element.x_midpoint - column.x_midpoint)
-                if difference < column_tolerance:
-                    column.add_element(layout_element)
-                    added_to_column = True
-                    break
-
-            if not added_to_column:
-                columns.append(Column(layout_elements=[layout_element]))
-
-    sorted_layout.extend(sorted_layout_from_columns(columns))
-    return sorted_layout
 
 
 def sorted_layout_from_columns(columns: List[Column]) -> List[TextRegion]:
