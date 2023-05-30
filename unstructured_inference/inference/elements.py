@@ -2,7 +2,7 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass
 import re
-from typing import Optional, Union, Sequence, List
+from typing import Optional, Union, List, Collection
 import unicodedata
 
 import numpy as np
@@ -98,6 +98,39 @@ class Rectangle:
         """Gets coordinates of the rectangle"""
         return ((self.x1, self.y1), (self.x1, self.y2), (self.x2, self.y2), (self.x2, self.y1))
 
+    def intersection(self, other: Rectangle) -> Optional[Rectangle]:
+        """Gives the rectangle that is the intersection of two rectangles, or None if the
+        rectangles are disjoint."""
+        x1 = max(self.x1, other.x1)
+        x2 = min(self.x2, other.x2)
+        y1 = max(self.y1, other.y1)
+        y2 = min(self.y2, other.y2)
+        if x1 > x2 or y1 > y2:
+            return None
+        return Rectangle(x1, y1, x2, y2)
+
+    def area(self) -> float:
+        """Gives the area of the rectangle."""
+        return self.width * self.height
+
+    def intersection_over_union(self, other: Rectangle) -> float:
+        """Gives the intersection-over-union of two rectangles. This tends to be a good metric of
+        how similar the regions are. Returns 0 for disjoint rectangles, 1 for two identical
+        rectangles -- area of intersection / area of union."""
+        intersection = self.intersection(other)
+        intersection_area = 0.0 if intersection is None else intersection.area()
+        union_area = self.area() + other.area() - intersection_area
+        return intersection_area / union_area
+
+    def intersection_over_minimum(self, other: Rectangle) -> float:
+        """Gives the area-of-intersection over the minimum of the areas of the rectangles. Useful
+        for identifying when one rectangle is almost-a-subset of the other. Returns 0 for disjoint
+        rectangles, 1 when either is a subset of the other."""
+        intersection = self.intersection(other)
+        intersection_area = 0.0 if intersection is None else intersection.area()
+        min_area = min(self.area(), other.area())
+        return intersection_area / min_area
+
 
 def minimal_containing_region(*regions: Rectangle) -> Rectangle:
     """Returns the smallest rectangular region that contains all regions passed"""
@@ -117,7 +150,7 @@ def minimal_containing_region(*regions: Rectangle) -> Rectangle:
     return cls(x1, y1, x2, y2)
 
 
-def partition_groups_from_regions(regions: Sequence[Rectangle]) -> List[List[Rectangle]]:
+def partition_groups_from_regions(regions: Collection[Rectangle]) -> List[List[Rectangle]]:
     """Partitions regions into groups of regions based on proximity. Returns list of lists of
     regions, each list corresponding with a group"""
     padded_regions = [
@@ -138,6 +171,7 @@ def intersections(*rects: Rectangle):
     """Returns a square boolean matrix of intersections of an arbitrary number of rectangles, i.e.
     the ijth entry of the matrix is True if and only if the ith Rectangle and jth Rectangle
     intersect."""
+    # NOTE(alan): Rewrite using line scan
     coords = np.stack([[[r.x1, r.y1], [r.x2, r.y2]] for r in rects], axis=-1)
 
     (x1s, y1s), (x2s, y2s) = coords
@@ -168,7 +202,7 @@ class TextRegion(Rectangle):
 
     def extract_text(
         self,
-        objects: Optional[List[TextRegion]],
+        objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
@@ -197,7 +231,7 @@ class TextRegion(Rectangle):
 class EmbeddedTextRegion(TextRegion):
     def extract_text(
         self,
-        objects: Optional[List[TextRegion]],
+        objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
@@ -213,7 +247,7 @@ class EmbeddedTextRegion(TextRegion):
 class ImageTextRegion(TextRegion):
     def extract_text(
         self,
-        objects: Optional[List[TextRegion]],
+        objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
@@ -243,7 +277,7 @@ def ocr(text_block: TextRegion, image: Image.Image, languages: str = "eng") -> s
 
 def needs_ocr(
     region: TextRegion,
-    pdf_objects: List[TextRegion],
+    pdf_objects: Collection[TextRegion],
     ocr_strategy: str,
 ) -> bool:
     """Logic to determine whether ocr is needed to extract text from given region."""
@@ -277,7 +311,7 @@ def needs_ocr(
 def aggregate_by_block(
     text_region: TextRegion,
     image: Optional[Image.Image],
-    pdf_objects: List[TextRegion],
+    pdf_objects: Collection[TextRegion],
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
 ) -> str:
@@ -316,3 +350,41 @@ def remove_control_characters(text: str) -> str:
     """Removes control characters from text."""
     out_text = "".join(c for c in text if unicodedata.category(c)[0] != "C")
     return out_text
+
+
+def merge_layouts(
+    main_layout: Collection[TextRegion],
+    supplemental_layout: Collection[TextRegion],
+    same_region_threshold: float = 0.75,
+    subregion_threshold: float = 0.9,
+) -> List[TextRegion]:
+    """Merge two layouts to produce a single layout."""
+    out_layout: List[TextRegion] = main_layout.copy()
+    for region2 in supplemental_layout:
+        region_matched = False
+        for region1 in main_layout:
+            if region1.intersects(region2):
+                if region1.intersection_over_union(region2) > same_region_threshold:
+                    # Looks like these represent the same region
+                    grow_region_to_match_region(region1, region2)
+                    region1.text = region2.text
+                    region_matched = True
+                elif region2.intersection_over_minimum(region1) > subregion_threshold:
+                    region_matched = True
+                    if region2.area() < region1.area():
+                        grow_region_to_match_region(region1, region2)
+        if not region_matched:
+            out_layout.append(region2)
+    return out_layout
+
+
+def grow_region_to_match_region(region_to_grow, region_to_match):
+    (new_x1, new_y1), _, (new_x2, new_y2), _ = minimal_containing_region(
+        region_to_grow, region_to_match
+    ).coordinates
+    region_to_grow.x1, region_to_grow.y1, region_to_grow.x2, region_to_grow.y2 = (
+        new_x1,
+        new_y1,
+        new_x2,
+        new_y2,
+    )

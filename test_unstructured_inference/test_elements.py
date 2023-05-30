@@ -1,4 +1,6 @@
 from random import randint
+from unittest.mock import PropertyMock, patch
+import pytest
 from unstructured_inference.inference import elements
 from unstructured_inference.inference.layout import load_pdf
 
@@ -17,18 +19,27 @@ def rand_rect(size=10):
     return elements.Rectangle(x1, y1, x1 + size, y1 + size)
 
 
-def test_intersects_overlap():
+@pytest.mark.parametrize("second_size", (10, 20))
+def test_intersects(second_size):
     for _ in range(1000):
         rect1 = rand_rect()
-        rect2 = rand_rect()
+        rect2 = rand_rect(second_size)
         assert intersect_brute(rect1, rect2) == rect1.intersects(rect2) == rect2.intersects(rect1)
-
-
-def test_intersects_subset():
-    for _ in range(1000):
-        rect1 = rand_rect()
-        rect2 = rand_rect(20)
-        assert intersect_brute(rect1, rect2) == rect1.intersects(rect2) == rect2.intersects(rect1)
+        if rect1.intersects(rect2):
+            if rect1.is_in(rect2):
+                assert rect1.intersection(rect2) == rect1 == rect2.intersection(rect1)
+            elif rect2.is_in(rect1):
+                assert rect2.intersection(rect1) == rect2
+            else:
+                x1 = max(rect1.x1, rect2.x1)
+                x2 = min(rect1.x2, rect2.x2)
+                y1 = max(rect1.y1, rect2.y1)
+                y2 = min(rect1.y2, rect2.y2)
+                intersection = elements.Rectangle(x1, y1, x2, y2)
+                assert rect1.intersection(rect2) == intersection == rect2.intersection(rect1)
+        else:
+            assert rect1.intersection(rect2) is None
+            assert rect2.intersection(rect1) is None
 
 
 def test_intersection_of_lots_of_rects():
@@ -82,3 +93,89 @@ def test_partition_groups_from_regions():
     sorted_groups = sorted(groups, key=lambda group: group[0].y1)
     text = "".join([el.text for el in sorted_groups[-1]])
     assert text.startswith("Deep")
+
+
+def test_rectangle_area(monkeypatch):
+    for _ in range(1000):
+        width = randint(0, 20)
+        height = randint(0, 20)
+        with patch(
+            "unstructured_inference.inference.elements.Rectangle.height", new_callable=PropertyMock
+        ) as mockheight, patch(
+            "unstructured_inference.inference.elements.Rectangle.width", new_callable=PropertyMock
+        ) as mockwidth:
+            rect = elements.Rectangle(0, 0, 0, 0)
+            mockheight.return_value = height
+            mockwidth.return_value = width
+            assert rect.area() == width * height
+
+
+def test_rectangle_iou():
+    for _ in range(1000):
+        rect1 = rand_rect()
+        assert rect1.intersection_over_union(rect1) == 1.0
+        rect2 = rand_rect(20)
+        assert rect1.intersection_over_union(rect2) == rect2.intersection_over_union(rect1)
+        if rect1.is_in(rect2):
+            assert rect1.intersection_over_union(rect2) == rect1.area() / rect2.area()
+        elif rect2.is_in(rect1):
+            assert rect1.intersection_over_union(rect2) == rect2.area() / rect1.area()
+        else:
+            if rect1.intersection(rect2) is None:
+                assert rect1.intersection_over_union(rect2) == 0.0
+            else:
+                intersection = rect1.intersection(rect2).area()
+                assert rect1.intersection_over_union(rect2) == intersection / (
+                    rect1.area() + rect2.area() - intersection
+                )
+
+
+def test_midpoints():
+    for _ in range(1000):
+        x2 = randint(0, 100)
+        y2 = randint(0, 100)
+        rect1 = elements.Rectangle(0, 0, x2, y2)
+        assert rect1.x_midpoint == x2 / 2.0
+        assert rect1.y_midpoint == y2 / 2.0
+        x_offset = randint(0, 50)
+        y_offset = randint(0, 50)
+        rect2 = elements.Rectangle(x_offset, y_offset, x2 + x_offset, y2 + y_offset)
+        assert rect2.x_midpoint == (x2 / 2.0) + x_offset
+        assert rect2.y_midpoint == (y2 / 2.0) + y_offset
+
+
+def test_is_disjoint():
+    for _ in range(1000):
+        a = randint(0, 100)
+        b = randint(a + 1, 200)
+        c = randint(b + 1, 300)
+        d = randint(c + 1, 400)
+        e = randint(0, 100)
+        f = randint(e, 200)
+        g = randint(0, 100)
+        h = randint(g, 200)
+        rect1 = elements.Rectangle(a, e, b, f)
+        rect2 = elements.Rectangle(c, g, d, h)
+        assert rect1.is_disjoint(rect2)
+        assert rect2.is_disjoint(rect1)
+        rect3 = elements.Rectangle(e, a, f, b)
+        rect4 = elements.Rectangle(g, c, h, d)
+        assert rect3.is_disjoint(rect4)
+        assert rect4.is_disjoint(rect3)
+
+
+@pytest.mark.parametrize(
+    ("rect1", "rect2", "expected"),
+    [
+        (elements.Rectangle(0, 0, 100, 200), elements.Rectangle(0, 0, 60, 150), 1.0),
+        (elements.Rectangle(0, 0, 100, 100), elements.Rectangle(150, 150, 200, 200), 0.0),
+        (elements.Rectangle(0, 0, 100, 100), elements.Rectangle(50, 50, 150, 150), 0.25),
+        (elements.Rectangle(0, 0, 100, 100), elements.Rectangle(20, 20, 120, 40), 0.8),
+    ],
+)
+def test_intersection_over_min(
+    rect1: elements.Rectangle, rect2: elements.Rectangle, expected: float
+):
+    assert (
+        rect1.intersection_over_minimum(rect2) == rect2.intersection_over_minimum(rect1) == expected
+    )
