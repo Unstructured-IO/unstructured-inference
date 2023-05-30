@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional, Collection
 
 from layoutparser.elements.layout import TextBlock
 from PIL import Image
@@ -15,7 +15,7 @@ class LayoutElement(TextRegion):
 
     def extract_text(
         self,
-        objects: Optional[List[TextRegion]],
+        objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
