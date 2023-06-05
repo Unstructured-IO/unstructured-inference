@@ -1,7 +1,6 @@
-import pytest
-
-from PIL import Image
 import numpy as np
+import pytest
+from PIL import Image
 
 from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.visualize import draw_bbox, draw_yolox_bounding_boxes
@@ -23,7 +22,11 @@ def test_visualize(y_coords, x_coords):
     test_image = np.ones((100, 100, 3))
     boxes = [[1, 10, 50, 40]]
     annotated_img = draw_yolox_bounding_boxes(
-        test_image, boxes, scores=[0.8], cls_ids=[0], class_names=["thing"]
+        test_image,
+        boxes,
+        scores=[0.8],
+        cls_ids=[0],
+        class_names=["thing"],
     )
     assert annotated_img[y_coords, x_coords, 0].sum() == 0.0
 

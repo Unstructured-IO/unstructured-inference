@@ -1,6 +1,6 @@
 from typing import Union
 
-from pdfminer.psparser import END_KEYWORD, PSKeyword, KWD, PSBaseParser
+from pdfminer.psparser import END_KEYWORD, KWD, PSBaseParser, PSKeyword
 
 
 def parse_keyword(self: PSBaseParser, s: bytes, i: int) -> int:

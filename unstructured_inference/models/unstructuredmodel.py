@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, List
 
@@ -24,7 +25,7 @@ class UnstructuredModel(ABC):
         if self.model is None:
             raise ModelNotInitializedError(
                 "Model has not been initialized. Please call the initialize method with the "
-                "appropriate arguments for loading the model."
+                "appropriate arguments for loading the model.",
             )
         pass  # pragma: no cover
 

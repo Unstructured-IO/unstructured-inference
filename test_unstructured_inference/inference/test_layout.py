@@ -1,25 +1,23 @@
+import tempfile
 from functools import partial
 from itertools import product
-import pytest
-import tempfile
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
 
 import numpy as np
+import pytest
 from PIL import Image
 
-import unstructured_inference.inference.layout as layout
-import unstructured_inference.inference.elements as elements
 import unstructured_inference.models.base as models
-import unstructured_inference.models.detectron2 as detectron2
-import unstructured_inference.models.tesseract as tesseract
+from unstructured_inference.inference import elements, layout
+from unstructured_inference.models import detectron2, tesseract
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_image():
     return Image.new("1", (1, 1))
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_page_layout():
     text_block = layout.EmbeddedTextRegion(2, 4, 6, 8, text="A very repetitive narrative. " * 10)
 
@@ -67,7 +65,10 @@ class MockLayoutModel:
 def test_get_page_elements(monkeypatch, mock_page_layout):
     image = np.random.randint(12, 24, (40, 40))
     page = layout.PageLayout(
-        number=0, image=image, layout=mock_page_layout, model=MockLayoutModel(mock_page_layout)
+        number=0,
+        image=image,
+        layout=mock_page_layout,
+        model=MockLayoutModel(mock_page_layout),
     )
 
     elements = page.get_elements_with_model(inplace=False)
@@ -100,7 +101,10 @@ def test_get_page_elements_with_ocr(monkeypatch):
 
     image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
     page = layout.PageLayout(
-        number=0, image=image, layout=doc_layout, model=MockLayoutModel(doc_layout)
+        number=0,
+        image=image,
+        layout=doc_layout,
+        model=MockLayoutModel(doc_layout),
     )
     page.get_elements_with_model()
 
@@ -114,7 +118,9 @@ def test_read_pdf(monkeypatch, mock_page_layout):
     layouts = [mock_page_layout, mock_page_layout]
 
     monkeypatch.setattr(
-        models, "UnstructuredDetectronModel", partial(MockLayoutModel, layout=mock_page_layout)
+        models,
+        "UnstructuredDetectronModel",
+        partial(MockLayoutModel, layout=mock_page_layout),
     )
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
@@ -140,14 +146,15 @@ def test_process_data_with_model(monkeypatch, mock_page_layout, model_name):
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
-    with patch("builtins.open", mock_open(read_data=b"000000")):
-        assert layout.process_data_with_model(open(""), model_name=model_name)
+    with patch("builtins.open", mock_open(read_data=b"000000")), open("") as fp:
+        assert layout.process_data_with_model(fp, model_name=model_name)
 
 
 def test_process_data_with_model_raises_on_invalid_model_name():
-    with patch("builtins.open", mock_open(read_data=b"000000")):
-        with pytest.raises(models.UnknownModelException):
-            layout.process_data_with_model(open(""), model_name="fake")
+    with patch("builtins.open", mock_open(read_data=b"000000")), pytest.raises(
+        models.UnknownModelException,
+    ), open("") as fp:
+        layout.process_data_with_model(fp, model_name="fake")
 
 
 @pytest.mark.parametrize("model_name", [None, "checkbox"])
@@ -208,7 +215,7 @@ class MockPageLayout(layout.PageLayout):
 
 
 @pytest.mark.parametrize(
-    "text, expected",
+    ("text", "expected"),
     [("base", 0.0), ("", 0.0), ("(cid:2)", 1.0), ("(cid:1)a", 0.5), ("c(cid:1)ab", 0.25)],
 )
 def test_cid_ratio(text, expected):
@@ -216,7 +223,7 @@ def test_cid_ratio(text, expected):
 
 
 @pytest.mark.parametrize(
-    "text, expected",
+    ("text", "expected"),
     [("base", False), ("(cid:2)", True), ("(cid:1234567890)", True), ("jkl;(cid:12)asdf", True)],
 )
 def test_is_cid_present(text, expected):
@@ -244,7 +251,7 @@ class MockLayout:
 
 
 @pytest.mark.parametrize(
-    "block_text, layout_texts, expected_text",
+    ("block_text", "layout_texts", "expected_text"),
     [
         ("no ocr", ["pieced", "together", "group"], "no ocr"),
         (None, ["pieced", "together", "group"], "pieced together group"),
@@ -268,7 +275,7 @@ def test_get_elements_from_block_raises():
         layout.get_element_from_block(block, None, None)
 
 
-@pytest.mark.parametrize("filetype", ("png", "jpg"))
+@pytest.mark.parametrize("filetype", ["png", "jpg"])
 def test_from_image_file(monkeypatch, mock_page_layout, filetype):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_page_layout]
@@ -310,7 +317,7 @@ def test_get_elements_from_layout(mock_page_layout, idx):
 
 def test_page_numbers_in_page_objects():
     with patch(
-        "unstructured_inference.inference.layout.PageLayout.get_elements_with_model"
+        "unstructured_inference.inference.layout.PageLayout.get_elements_with_model",
     ) as mock_get_elements:
         doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
         mock_get_elements.assert_called()
@@ -318,7 +325,7 @@ def test_page_numbers_in_page_objects():
 
 
 @pytest.mark.parametrize(
-    "fixed_layouts, called_method, not_called_method",
+    ("fixed_layouts", "called_method", "not_called_method"),
     [
         ([MockLayout()], "get_elements_from_layout", "get_elements_with_model"),
         (None, "get_elements_with_model", "get_elements_from_layout"),
@@ -326,7 +333,9 @@ def test_page_numbers_in_page_objects():
 )
 def test_from_file_fixed_layout(fixed_layouts, called_method, not_called_method):
     with patch.object(layout.PageLayout, "get_elements_with_model", return_value=[]), patch.object(
-        layout.PageLayout, "get_elements_from_layout", return_value=[]
+        layout.PageLayout,
+        "get_elements_from_layout",
+        return_value=[],
     ):
         layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf", fixed_layouts=fixed_layouts)
         getattr(layout.PageLayout, called_method).assert_called()
@@ -339,7 +348,8 @@ def test_invalid_ocr_strategy_raises(mock_image):
 
 
 @pytest.mark.parametrize(
-    ("text", "expected"), [("a\ts\x0cd\nfas\fd\rf\b", "asdfasdf"), ("\"'\\", "\"'\\")]
+    ("text", "expected"),
+    [("a\ts\x0cd\nfas\fd\rf\b", "asdfasdf"), ("\"'\\", "\"'\\")],
 )
 def test_remove_control_characters(text, expected):
     assert elements.remove_control_characters(text) == expected
@@ -348,7 +358,11 @@ def test_remove_control_characters(text, expected):
 no_text_region = layout.EmbeddedTextRegion(0, 0, 100, 100)
 text_region = layout.EmbeddedTextRegion(0, 0, 100, 100, text="test")
 cid_text_region = layout.EmbeddedTextRegion(
-    0, 0, 100, 100, text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)"
+    0,
+    0,
+    100,
+    100,
+    text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)",
 )
 overlapping_rect = layout.ImageTextRegion(50, 50, 150, 150)
 nonoverlapping_rect = layout.ImageTextRegion(150, 150, 200, 200)
@@ -384,7 +398,7 @@ unpopulated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text=None)
                 ],
                 ["auto"],
                 [False],
-            )
+            ),
         ),
         *list(
             product(
@@ -399,7 +413,7 @@ unpopulated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text=None)
                 ],
                 ["auto"],
                 [True],
-            )
+            ),
         ),
         *list(
             product(
@@ -417,7 +431,7 @@ unpopulated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text=None)
                 ],
                 ["force"],
                 [True],
-            )
+            ),
         ),
         *list(
             product(
@@ -435,7 +449,7 @@ unpopulated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text=None)
                 ],
                 ["never"],
                 [False],
-            )
+            ),
         ),
     ],
 )
@@ -508,7 +522,7 @@ def test_annotate():
         assert ((annotated_array[:, :, 2] == 1).mean()) > 0.992
 
 
-@pytest.fixture
+@pytest.fixture()
 def ordering_layout():
     elements = [
         layout.LayoutElement(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),

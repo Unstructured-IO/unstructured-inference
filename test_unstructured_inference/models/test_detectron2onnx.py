@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 from PIL import Image
 
-import unstructured_inference.models.detectron2onnx as detectron2
 import unstructured_inference.models.base as models
+import unstructured_inference.models.detectron2onnx as detectron2
 
 
 class MockDetectron2ONNXLayoutModel:
@@ -25,7 +25,9 @@ class MockDetectron2ONNXLayoutModel:
 
 def test_load_default_model():
     with patch.object(
-        detectron2.onnxruntime, "InferenceSession", new=MockDetectron2ONNXLayoutModel
+        detectron2.onnxruntime,
+        "InferenceSession",
+        new=MockDetectron2ONNXLayoutModel,
     ):
         model = models.get_model("detectron2_onnx")
 
@@ -53,7 +55,9 @@ def test_unstructured_detectron_model():
 
 def test_inference():
     with patch.object(
-        detectron2.onnxruntime, "InferenceSession", return_value=MockDetectron2ONNXLayoutModel()
+        detectron2.onnxruntime,
+        "InferenceSession",
+        return_value=MockDetectron2ONNXLayoutModel(),
     ):
         model = detectron2.UnstructuredDetectronONNXModel()
         model.initialize(model_path="test_path", label_map={0: "test_class"})

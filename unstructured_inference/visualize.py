@@ -53,7 +53,11 @@ def draw_yolox_bounding_boxes(img, boxes, scores, cls_ids, conf=0.5, class_names
 
         txt_bk_color = (_COLORS[cls_id] * 255 * 0.7).astype(np.uint8).tolist()
         cv2.rectangle(
-            img, (x0, y0 + 1), (x0 + txt_size[0] + 1, y0 + int(1.5 * txt_size[1])), txt_bk_color, -1
+            img,
+            (x0, y0 + 1),
+            (x0 + txt_size[0] + 1, y0 + int(1.5 * txt_size[1])),
+            txt_bk_color,
+            -1,
         )
         cv2.putText(img, text, (x0, y0 + txt_size[1]), font, 0.4, txt_color, thickness=1)
 
@@ -142,5 +146,5 @@ _COLORS = np.array(
         [0.000, 0.447, 0.741],
         [0.314, 0.717, 0.741],
         [0.50, 0.5, 0],
-    ]
+    ],
 ).astype(np.float32)
