@@ -1,9 +1,10 @@
 from __future__ import annotations
+
+import re
+import unicodedata
 from copy import deepcopy
 from dataclasses import dataclass
-import re
-from typing import Optional, Union, List, Collection
-import unicodedata
+from typing import Collection, List, Optional, Union
 
 import numpy as np
 from PIL import Image
@@ -80,17 +81,14 @@ class Rectangle:
 
     def is_in(self, other: Rectangle, error_margin: Optional[Union[int, float]] = None) -> bool:
         """Checks whether this rectangle is contained within another rectangle."""
-        if error_margin is not None:
-            padded_other = other.pad(error_margin)
-        else:
-            padded_other = other
+        padded_other = other.pad(error_margin) if error_margin is not None else other
         return all(
             [
                 (self.x1 >= padded_other.x1),
                 (self.x2 <= padded_other.x2),
                 (self.y1 >= padded_other.y1),
                 (self.y2 <= padded_other.y2),
-            ]
+            ],
         )
 
     @property
@@ -131,6 +129,16 @@ class Rectangle:
         min_area = min(self.area(), other.area())
         return intersection_area / min_area
 
+    def is_almost_subregion_of(self, other: Rectangle, subregion_threshold: float = 0.75) -> bool:
+        """Returns whether this region is almost a subregion of other. This is determined by
+        comparing the intersection area over self area to some threshold, and checking whether self
+        is the smaller rectangle."""
+        intersection = self.intersection(other)
+        intersection_area = 0.0 if intersection is None else intersection.area()
+        return (subregion_threshold < intersection_area / self.area()) and (
+            self.area() <= other.area()
+        )
+
 
 def minimal_containing_region(*regions: Rectangle) -> Rectangle:
     """Returns the smallest rectangular region that contains all regions passed"""
@@ -139,15 +147,7 @@ def minimal_containing_region(*regions: Rectangle) -> Rectangle:
     x2 = max(region.x2 for region in regions)
     y2 = max(region.y2 for region in regions)
 
-    # Return most specialized class of which that every region is a subclass
-    def least_common_superclass(*instances):
-        mros = (type(ins).mro() for ins in instances)
-        mro = next(mros)
-        common = set(mro).intersection(*mros)
-        return next((x for x in mro if x in common), Rectangle)
-
-    cls = least_common_superclass(*regions)
-    return cls(x1, y1, x2, y2)
+    return Rectangle(x1, y1, x2, y2)
 
 
 def partition_groups_from_regions(regions: Collection[Rectangle]) -> List[List[Rectangle]]:
@@ -223,7 +223,7 @@ class TextRegion(Rectangle):
         else:
             raise ValueError(
                 "Got arguments image and layout as None, at least one must be populated to use for "
-                "text extraction."
+                "text extraction.",
             )
         return text
 
@@ -352,35 +352,18 @@ def remove_control_characters(text: str) -> str:
     return out_text
 
 
-def merge_layouts(
-    main_layout: Collection[TextRegion],
-    supplemental_layout: Collection[TextRegion],
-    same_region_threshold: float = 0.75,
-    subregion_threshold: float = 0.9,
-) -> List[TextRegion]:
-    """Merge two layouts to produce a single layout."""
-    out_layout: List[TextRegion] = main_layout.copy()
-    for region2 in supplemental_layout:
-        region_matched = False
-        for region1 in main_layout:
-            if region1.intersects(region2):
-                if region1.intersection_over_union(region2) > same_region_threshold:
-                    # Looks like these represent the same region
-                    grow_region_to_match_region(region1, region2)
-                    region1.text = region2.text
-                    region_matched = True
-                elif region2.intersection_over_minimum(region1) > subregion_threshold:
-                    region_matched = True
-                    if region2.area() < region1.area():
-                        grow_region_to_match_region(region1, region2)
-        if not region_matched:
-            out_layout.append(region2)
-    return out_layout
+def region_bounding_boxes_are_almost_the_same(
+    region1: Rectangle, region2: Rectangle, same_region_threshold: float = 0.75,
+) -> bool:
+    """Returns whether bounding boxes are almost the same. This is determined by checking if the
+    intersection over union is above some threshold."""
+    return region1.intersection_over_union(region2) > same_region_threshold
 
 
-def grow_region_to_match_region(region_to_grow, region_to_match):
+def grow_region_to_match_region(region_to_grow: Rectangle, region_to_match: Rectangle):
+    """Grows a region to the minimum size necessary to contain both regions."""
     (new_x1, new_y1), _, (new_x2, new_y2), _ = minimal_containing_region(
-        region_to_grow, region_to_match
+        region_to_grow, region_to_match,
     ).coordinates
     region_to_grow.x1, region_to_grow.y1, region_to_grow.x2, region_to_grow.y2 = (
         new_x1,

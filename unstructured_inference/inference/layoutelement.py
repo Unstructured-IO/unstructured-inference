@@ -1,11 +1,17 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Optional, Collection
+from typing import Collection, List, Optional
 
 from layoutparser.elements.layout import TextBlock
 from PIL import Image
 
-from unstructured_inference.inference.elements import Rectangle, TextRegion
+from unstructured_inference.inference.elements import (
+    Rectangle,
+    TextRegion,
+    grow_region_to_match_region,
+    region_bounding_boxes_are_almost_the_same,
+)
 from unstructured_inference.models import tables
 
 
@@ -67,3 +73,42 @@ def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
     padded_block = text_block.pad(12)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tables.tables_agent.predict(cropped_image)
+
+
+def merge_inferred_layout_with_extracted_layout(
+    inferred_layout: Collection[LayoutElement],
+    extracted_layout: Collection[TextRegion],
+    same_region_threshold: float = 0.75,
+    subregion_threshold: float = 0.75,
+) -> List[LayoutElement]:
+    """Merge two layouts to produce a single layout."""
+    extracted_elements_to_add: List[TextRegion] = []
+    inferred_regions_to_remove = []
+    for extracted_region in extracted_layout:
+        region_matched = False
+        for inferred_region in inferred_layout:
+            if inferred_region.intersects(extracted_region):
+                if region_bounding_boxes_are_almost_the_same(
+                    inferred_region, extracted_region, same_region_threshold,
+                ):
+                    # Looks like these represent the same region
+                    grow_region_to_match_region(inferred_region, extracted_region)
+                    inferred_region.text = extracted_region.text
+                    region_matched = True
+                elif (inferred_region.is_almost_subregion_of(
+                    extracted_region, subregion_threshold=subregion_threshold,
+                ) or extracted_region.is_almost_subregion_of(
+                    inferred_region, subregion_threshold=subregion_threshold,
+                )) and inferred_region.type != "Table":
+                    inferred_regions_to_remove.append(inferred_region)
+        if not region_matched:
+            extracted_elements_to_add.append(extracted_region)
+    # Need to classify the extracted layout elements we're keeping.
+    categorized_extracted_elements_to_add = [
+        LayoutElement(el.x1, el.y1, el.x2, el.y2, text=el.text, type="UncategorizedText")
+        for el in extracted_elements_to_add
+    ]
+    out_layout = categorized_extracted_elements_to_add + [
+        region for region in inferred_layout if region not in inferred_regions_to_remove
+    ]
+    return out_layout

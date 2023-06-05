@@ -1,19 +1,24 @@
 from __future__ import annotations
+
 import os
 import tempfile
-from typing import List, Optional, Tuple, Union, BinaryIO
+from typing import BinaryIO, List, Optional, Tuple, Union
 
 import numpy as np
 import pdf2image
 from pdfminer import psparser
+from pdfminer.high_level import extract_pages
 from PIL import Image
 
 from unstructured_inference.inference.elements import (
-    TextRegion,
     EmbeddedTextRegion,
     ImageTextRegion,
+    TextRegion,
 )
-from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.inference.layoutelement import (
+    LayoutElement,
+    merge_inferred_layout_with_extracted_layout,
+)
 from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
@@ -72,9 +77,9 @@ class DocumentLayout:
         layouts, images = load_pdf(filename)
         if len(layouts) > len(images):
             raise RuntimeError(
-                "Some images were not loaded. Check that poppler is installed and in your $PATH."
+                "Some images were not loaded. Check that poppler is installed and in your $PATH.",
             )
-        pages: List[PageLayout] = list()
+        pages: List[PageLayout] = []
         if fixed_layouts is None:
             fixed_layouts = [None for _ in layouts]
         for i, (image, layout, fixed_layout) in enumerate(zip(images, layouts, fixed_layouts)):
@@ -145,7 +150,7 @@ class PageLayout:
         self.layout = layout
         self.number = number
         self.model = model
-        self.elements: List[LayoutElement] = list()
+        self.elements: List[LayoutElement] = []
         if ocr_strategy not in VALID_OCR_STRATEGIES:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
@@ -234,6 +239,8 @@ class PageLayout:
             page.get_elements_with_model()
         else:
             page.elements = page.get_elements_from_layout(fixed_layout)
+        if layout is not None:
+            page.elements = merge_inferred_layout_with_extracted_layout(page.elements, layout)
         return page
 
 
@@ -322,52 +329,29 @@ def get_element_from_block(
 
 def load_pdf(
     filename: str,
-    x_tolerance: Union[int, float] = 1.5,
-    y_tolerance: Union[int, float] = 2,
-    keep_blank_chars: bool = False,
-    use_text_flow: bool = False,
-    horizontal_ltr: bool = True,  # Should words be read left-to-right?
-    vertical_ttb: bool = True,  # Should vertical words be read top-to-bottom?
-    extra_attrs: Optional[List[str]] = None,
-    split_at_punctuation: Union[bool, str] = False,
     dpi: int = 200,
 ) -> Tuple[List[List[TextRegion]], List[Image.Image]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
-    pdf_object = pdfplumber.open(filename)
     layouts = []
-    images = []
-    for page in pdf_object.pages:
-        plumber_words = page.extract_words(
-            x_tolerance=x_tolerance,
-            y_tolerance=y_tolerance,
-            keep_blank_chars=keep_blank_chars,
-            use_text_flow=use_text_flow,
-            horizontal_ltr=horizontal_ltr,
-            vertical_ttb=vertical_ttb,
-            extra_attrs=extra_attrs,
-            split_at_punctuation=split_at_punctuation,
-        )
-        word_objs: List[TextRegion] = [
-            EmbeddedTextRegion(
-                x1=word["x0"] * dpi / 72,
-                y1=word["top"] * dpi / 72,
-                x2=word["x1"] * dpi / 72,
-                y2=word["bottom"] * dpi / 72,
-                text=word["text"],
+    for page in extract_pages(filename):
+        layout = []
+        height = page.height
+        for element in page:
+            x1, y2, x2, y1 = element.bbox
+            y1 = height - y1
+            y2 = height - y2
+            # Coefficient to rescale bounding box to be compatible with images
+            coef = dpi / 72
+            _text, element_class = (
+                (element.get_text(), EmbeddedTextRegion)
+                if hasattr(element, "get_text")
+                else (None, ImageTextRegion)
             )
-            for word in plumber_words
-        ]
-        image_objs: List[TextRegion] = [
-            ImageTextRegion(
-                x1=image["x0"] * dpi / 72,
-                y1=image["top"] * dpi / 72,
-                x2=image["x1"] * dpi / 72,
-                y2=image["bottom"] * dpi / 72,
-            )
-            for image in page.images
-        ]
-        layout = word_objs + image_objs
+            text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
+
+            if text_region.area() > 0:
+                layout.append(text_region)
         layouts.append(layout)
 
     images = pdf2image.convert_from_path(filename, dpi=dpi)
