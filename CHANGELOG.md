@@ -1,3 +1,7 @@
+## 0.5.2-dev0
+
+* Combine inferred elements with extracted elements
+
 ## 0.5.1
 
 * Add annotation for pages
