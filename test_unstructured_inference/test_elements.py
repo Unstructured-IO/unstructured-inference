@@ -1,6 +1,8 @@
 from random import randint
 from unittest.mock import PropertyMock, patch
+
 import pytest
+
 from unstructured_inference.inference import elements
 from unstructured_inference.inference.layout import load_pdf
 
@@ -100,9 +102,11 @@ def test_rectangle_area(monkeypatch):
         width = randint(0, 20)
         height = randint(0, 20)
         with patch(
-            "unstructured_inference.inference.elements.Rectangle.height", new_callable=PropertyMock
+            "unstructured_inference.inference.elements.Rectangle.height",
+            new_callable=PropertyMock,
         ) as mockheight, patch(
-            "unstructured_inference.inference.elements.Rectangle.width", new_callable=PropertyMock
+            "unstructured_inference.inference.elements.Rectangle.width",
+            new_callable=PropertyMock,
         ) as mockwidth:
             rect = elements.Rectangle(0, 0, 0, 0)
             mockheight.return_value = height
