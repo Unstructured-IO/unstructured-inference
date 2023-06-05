@@ -9,6 +9,7 @@ from PIL import Image
 from unstructured_inference.inference.elements import (
     Rectangle,
     TextRegion,
+    ImageTextRegion,
     grow_region_to_match_region,
     region_bounding_boxes_are_almost_the_same,
 )
@@ -89,23 +90,37 @@ def merge_inferred_layout_with_extracted_layout(
         for inferred_region in inferred_layout:
             if inferred_region.intersects(extracted_region):
                 if region_bounding_boxes_are_almost_the_same(
-                    inferred_region, extracted_region, same_region_threshold,
+                    inferred_region,
+                    extracted_region,
+                    same_region_threshold,
                 ):
                     # Looks like these represent the same region
                     grow_region_to_match_region(inferred_region, extracted_region)
                     inferred_region.text = extracted_region.text
                     region_matched = True
-                elif (inferred_region.is_almost_subregion_of(
-                    extracted_region, subregion_threshold=subregion_threshold,
-                ) or extracted_region.is_almost_subregion_of(
-                    inferred_region, subregion_threshold=subregion_threshold,
-                )) and inferred_region.type != "Table":
+                elif (
+                    inferred_region.is_almost_subregion_of(
+                        extracted_region,
+                        subregion_threshold=subregion_threshold,
+                    )
+                    or extracted_region.is_almost_subregion_of(
+                        inferred_region,
+                        subregion_threshold=subregion_threshold,
+                    )
+                ) and inferred_region.type != "Table":
                     inferred_regions_to_remove.append(inferred_region)
         if not region_matched:
             extracted_elements_to_add.append(extracted_region)
     # Need to classify the extracted layout elements we're keeping.
     categorized_extracted_elements_to_add = [
-        LayoutElement(el.x1, el.y1, el.x2, el.y2, text=el.text, type="UncategorizedText")
+        LayoutElement(
+            el.x1,
+            el.y1,
+            el.x2,
+            el.y2,
+            text=el.text,
+            type="Image" if isinstance(el, ImageTextRegion) else "UncategorizedText",
+        )
         for el in extracted_elements_to_add
     ]
     out_layout = categorized_extracted_elements_to_add + [
