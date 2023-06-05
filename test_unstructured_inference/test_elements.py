@@ -4,7 +4,6 @@ from unittest.mock import PropertyMock, patch
 import pytest
 
 from unstructured_inference.inference import elements
-from unstructured_inference.inference.layout import load_pdf
 
 
 def intersect_brute(rect1, rect2):
@@ -19,6 +18,83 @@ def rand_rect(size=10):
     x1 = randint(0, 30 - size)
     y1 = randint(0, 30 - size)
     return elements.Rectangle(x1, y1, x1 + size, y1 + size)
+
+
+# TODO(alan): Make a better test layout
+@pytest.fixture
+def sample_layout():
+    return [
+        elements.EmbeddedTextRegion(
+            x1=453.00277777777774,
+            y1=317.319341111111,
+            x2=711.5338541666665,
+            y2=358.28571222222206,
+            text="LayoutParser:",
+        ),
+        elements.EmbeddedTextRegion(
+            x1=726.4778125,
+            y1=317.319341111111,
+            x2=760.3308594444444,
+            y2=357.1698966666667,
+            text="A",
+        ),
+        elements.EmbeddedTextRegion(
+            x1=775.2748177777777,
+            y1=317.319341111111,
+            x2=917.3579885555555,
+            y2=357.1698966666667,
+            text="Unified",
+        ),
+        elements.EmbeddedTextRegion(
+            x1=932.3019468888888,
+            y1=317.319341111111,
+            x2=1071.8426522222221,
+            y2=357.1698966666667,
+            text="Toolkit",
+        ),
+        elements.EmbeddedTextRegion(
+            x1=1086.7866105555556,
+            y1=317.319341111111,
+            x2=1141.2105142777777,
+            y2=357.1698966666667,
+            text="for",
+        ),
+        elements.EmbeddedTextRegion(
+            x1=1156.154472611111,
+            y1=317.319341111111,
+            x2=1256.334784222222,
+            y2=357.1698966666667,
+            text="Deep",
+        ),
+        elements.EmbeddedTextRegion(
+            x1=437.83888888888885,
+            y1=367.13322999999986,
+            x2=610.0171992222222,
+            y2=406.9837855555556,
+            text="Learning",
+        ),
+        elements.EmbeddedTextRegion(
+            x1=624.9611575555555,
+            y1=367.13322999999986,
+            x2=741.6754646666665,
+            y2=406.9837855555556,
+            text="Based",
+        ),
+        elements.EmbeddedTextRegion(
+            x1=756.619423,
+            y1=367.13322999999986,
+            x2=958.3867708333332,
+            y2=406.9837855555556,
+            text="Document",
+        ),
+        elements.EmbeddedTextRegion(
+            x1=973.3307291666665,
+            y1=367.13322999999986,
+            x2=1092.0535042777776,
+            y2=406.9837855555556,
+            text="Image",
+        ),
+    ]
 
 
 @pytest.mark.parametrize("second_size", (10, 20))
@@ -88,13 +164,13 @@ def test_minimal_containing_rect():
         assert rect2.is_in(big_rect)
 
 
-def test_partition_groups_from_regions():
-    words, _ = load_pdf("sample-docs/layout-parser-paper.pdf")
-    groups = elements.partition_groups_from_regions(words[0])
-    assert len(groups) == 9
+def test_partition_groups_from_regions(sample_layout):
+    words = sample_layout
+    groups = elements.partition_groups_from_regions(words)
+    assert len(groups) == 1
     sorted_groups = sorted(groups, key=lambda group: group[0].y1)
     text = "".join([el.text for el in sorted_groups[-1]])
-    assert text.startswith("Deep")
+    assert text.startswith("Layout")
 
 
 def test_rectangle_area(monkeypatch):
