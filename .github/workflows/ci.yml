@@ -94,6 +94,49 @@ jobs:
         make test
         make check-coverage
 
+  test_ingest:
+    strategy:
+      # matrix:
+        # python-version: ["3.8","3.9","3.10"]
+    runs-on: ubuntu-latest
+    env:
+      NLTK_DATA: ${{ github.workspace }}/nltk_data
+    # needs: [setup, lint]
+    steps:
+    - name: Checkout unstructured repo for integration testing
+      uses: actions/checkout@v3
+      with:
+        repository: 'Unstructured-IO/unstructured'
+    - name: Checkout this repo
+      uses: actions/checkout@v3
+      with:
+        path: inference
+    - name: Test
+      env:
+        GH_READ_ONLY_ACCESS_TOKEN: ${{ secrets.GH_READ_ONLY_ACCESS_TOKEN }}
+        SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+        DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+      run: |
+        python${{ env.PYTHON_VERSION }} -m venv .venv
+        source .venv/bin/activate
+        [ ! -d "$NLTK_DATA" ] && mkdir "$NLTK_DATA"
+        make install-ci
+        pip install -e inference/
+        echo $(pip list | grep inference)
+        sudo apt-get update
+        sudo apt-get install -y libmagic-dev poppler-utils libreoffice pandoc
+        sudo add-apt-repository -y ppa:alex-p/tesseract-ocr5
+        sudo apt-get install -y tesseract-ocr
+        tesseract --version
+        make install-ingest-s3
+        make install-ingest-azure
+        make install-ingest-discord
+        make install-ingest-github
+        make install-ingest-gitlab
+        make install-ingest-slack
+        make install-ingest-wikipedia
+        ./test_unstructured_ingest/test-ingest.sh
+
   changelog:
     runs-on: ubuntu-latest
     steps:
