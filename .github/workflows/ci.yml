@@ -95,13 +95,13 @@ jobs:
         make check-coverage
 
   test_ingest:
-    # strategy:
-      # matrix:
-        # python-version: ["3.8","3.9","3.10"]
+    strategy:
+      matrix:
+        python-version: ["3.8","3.9","3.10"]
     runs-on: ubuntu-latest
     env:
       NLTK_DATA: ${{ github.workspace }}/nltk_data
-    # needs: [setup, lint]
+    needs: lint
     steps:
     - name: Checkout unstructured repo for integration testing
       uses: actions/checkout@v3
@@ -111,17 +111,17 @@ jobs:
       uses: actions/checkout@v3
       with:
         path: inference
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        python-version: ${{ matrix.python-version }}
     - name: Test
       env:
         GH_READ_ONLY_ACCESS_TOKEN: ${{ secrets.GH_READ_ONLY_ACCESS_TOKEN }}
         SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
         DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
       run: |
-        python${{ env.PYTHON_VERSION }} -m venv .venv
+        python${{ matrix.python-version }} -m venv .venv
         source .venv/bin/activate
         [ ! -d "$NLTK_DATA" ] && mkdir "$NLTK_DATA"
         make install-ci
