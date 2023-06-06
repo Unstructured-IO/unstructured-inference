@@ -140,6 +140,7 @@ jobs:
         make install-ingest-slack
         make install-ingest-wikipedia
         ./test_unstructured_ingest/test-ingest.sh
+        echo $(pip list | grep inference)
 
   changelog:
     runs-on: ubuntu-latest

@@ -91,6 +91,7 @@ class DocumentLayout:
                 extract_tables=extract_tables,
             )
             pages.append(page)
+            print("YOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYOYO")
         return cls.from_pages(pages)
 
     @classmethod
