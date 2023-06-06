@@ -95,7 +95,7 @@ jobs:
         make check-coverage
 
   test_ingest:
-    strategy:
+    # strategy:
       # matrix:
         # python-version: ["3.8","3.9","3.10"]
     runs-on: ubuntu-latest
