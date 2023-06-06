@@ -1,17 +1,18 @@
-from typing import Final, Optional, Union, Dict, List
 from pathlib import Path
+from typing import Dict, Final, List, Optional, Union
 
-from PIL import Image
-from huggingface_hub import hf_hub_download
-
-from unstructured_inference.logger import logger
-from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
-from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
-import onnxruntime
-import numpy as np
 import cv2
+import numpy as np
+import onnxruntime
+from huggingface_hub import hf_hub_download
+from PIL import Image
 
+from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.logger import logger
+from unstructured_inference.models.unstructuredmodel import (
+    UnstructuredObjectDetectionModel,
+)
+from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 
 DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
     0: "Text",

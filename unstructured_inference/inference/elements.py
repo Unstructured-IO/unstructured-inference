@@ -1,9 +1,10 @@
 from __future__ import annotations
+
+import re
+import unicodedata
 from copy import deepcopy
 from dataclasses import dataclass
-import re
-from typing import Optional, Union, Sequence, List
-import unicodedata
+from typing import List, Optional, Sequence, Union
 
 import numpy as np
 from PIL import Image
@@ -80,17 +81,14 @@ class Rectangle:
 
     def is_in(self, other: Rectangle, error_margin: Optional[Union[int, float]] = None) -> bool:
         """Checks whether this rectangle is contained within another rectangle."""
-        if error_margin is not None:
-            padded_other = other.pad(error_margin)
-        else:
-            padded_other = other
+        padded_other = other.pad(error_margin) if error_margin is not None else other
         return all(
             [
                 (self.x1 >= padded_other.x1),
                 (self.x2 <= padded_other.x2),
                 (self.y1 >= padded_other.y1),
                 (self.y2 <= padded_other.y2),
-            ]
+            ],
         )
 
     @property
@@ -181,15 +179,12 @@ class TextRegion(Rectangle):
         elif objects is not None:
             text = aggregate_by_block(self, image, objects, ocr_strategy)
         elif image is not None:
-            if ocr_strategy != "never":
-                # We don't have anything to go on but the image itself, so we use OCR
-                text = ocr(self, image, languages=ocr_languages)
-            else:
-                text = ""
+            # We don't have anything to go on but the image itself, so we use OCR
+            text = ocr(self, image, languages=ocr_languages) if ocr_strategy != "never" else ""
         else:
             raise ValueError(
                 "Got arguments image and layout as None, at least one must be populated to use for "
-                "text extraction."
+                "text extraction.",
             )
         return text
 
@@ -264,12 +259,10 @@ def needs_ocr(
                 return False
             else:
                 return image_intersects
-        elif cid_ratio(region.text) > 0.5:
+        else:
             # If the region has text, we should only have to OCR if too much of the text is
             # uninterpretable.
-            return True
-        else:
-            return False
+            return cid_ratio(region.text) > 0.5
     else:
         return False
 

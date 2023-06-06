@@ -1,4 +1,5 @@
 import pytest
+
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 
 
@@ -26,7 +27,7 @@ def test_lazy_evaluate():
     assert called == 1
 
 
-@pytest.mark.parametrize("cache, expected", [(True, 1), (False, 2)])
+@pytest.mark.parametrize(("cache", "expected"), [(True, 1), (False, 2)])
 def test_caches(cache, expected):
     called = 0
 

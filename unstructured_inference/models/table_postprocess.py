@@ -126,7 +126,10 @@ def refine_columns(columns, tokens, score_threshold):
         remove_objects_without_content(tokens, columns)
     else:
         columns = nms(
-            columns, match_criteria="object2_overlap", match_threshold=0.25, keep_higher=True
+            columns,
+            match_criteria="object2_overlap",
+            match_threshold=0.25,
+            keep_higher=True,
         )
     if len(columns) > 1:
         columns = sort_objects_left_to_right(columns)
@@ -192,7 +195,7 @@ def slot_into_containers(
             overlap_fraction = intersect_area / package_area
 
             match_scores.append(
-                {"container": container, "container_num": container_num, "score": overlap_fraction}
+                {"container": container, "container_num": container_num, "score": overlap_fraction},
             )
 
         sorted_match_scores = sort_objects_by_score(match_scores)
@@ -289,18 +292,15 @@ def extract_text_from_spans(spans, join_with_space=True, remove_integer_superscr
     line_texts = []
     line_span_texts = [spans_copy[0]["text"]]
     for span1, span2 in zip(spans_copy[:-1], spans_copy[1:]):
-        if (
-            not span1["block_num"] == span2["block_num"]
-            or not span1["line_num"] == span2["line_num"]
-        ):
+        if span1["block_num"] != span2["block_num"] or span1["line_num"] != span2["line_num"]:
             line_text = join_char.join(line_span_texts).strip()
             if (
                 len(line_text) > 0
-                and not line_text[-1] == " "
-                and not (len(line_text) > 1 and line_text[-1] == "-" and not line_text[-2] == " ")
+                and line_text[-1] != " "
+                and not (len(line_text) > 1 and line_text[-1] == "-" and line_text[-2] != " ")
+                and not join_with_space
             ):
-                if not join_with_space:
-                    line_text += " "
+                line_text += " "
             line_texts.append(line_text)
             line_span_texts = [span2["text"]]
         else:
@@ -335,7 +335,7 @@ def align_columns(columns, bbox):
             column["bbox"][1] = bbox[1]
             column["bbox"][3] = bbox[3]
     except Exception as err:
-        print("Could not align columns: {}".format(err))
+        print(f"Could not align columns: {err}")
         pass
 
     return columns
@@ -351,7 +351,7 @@ def align_rows(rows, bbox):
             row["bbox"][0] = bbox[0]
             row["bbox"][2] = bbox[2]
     except Exception as err:
-        print("Could not align rows: {}".format(err))
+        print(f"Could not align rows: {err}")
         pass
 
     return rows
@@ -424,7 +424,8 @@ def align_supercells(supercells, rows, columns):
             overlap_height = max_row_overlap - min_row_overlap
             if "span" in supercell:
                 overlap_fraction = max(
-                    overlap_height / row_height, overlap_height / supercell_height
+                    overlap_height / row_height,
+                    overlap_height / supercell_height,
                 )
             else:
                 overlap_fraction = overlap_height / row_height
@@ -559,14 +560,13 @@ def header_supercell_tree(supercells):
         min_row = min(header_supercell["row_numbers"])
         for header_supercell2 in header_supercells:
             max_row2 = max(header_supercell2["row_numbers"])
-            if max_row2 < min_row:
-                if set(header_supercell["column_numbers"]).issubset(
-                    set(header_supercell2["column_numbers"])
-                ):
-                    for row2 in header_supercell2["row_numbers"]:
-                        ancestors_by_row[row2] += 1
+            if max_row2 < min_row and set(header_supercell["column_numbers"]).issubset(
+                set(header_supercell2["column_numbers"]),
+            ):
+                for row2 in header_supercell2["row_numbers"]:
+                    ancestors_by_row[row2] += 1
         for row in range(0, min_row):
-            if not ancestors_by_row[row] == 1:
+            if ancestors_by_row[row] != 1:
                 supercells.remove(header_supercell)
                 break
 
@@ -587,7 +587,7 @@ def remove_supercell_overlap(supercell1, supercell2):
     """
     common_rows = set(supercell1["row_numbers"]).intersection(set(supercell2["row_numbers"]))
     common_columns = set(supercell1["column_numbers"]).intersection(
-        set(supercell2["column_numbers"])
+        set(supercell2["column_numbers"]),
     )
 
     # While the supercells have overlapping grid cells, continue shrinking the less-confident

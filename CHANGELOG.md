@@ -1,3 +1,7 @@
+## 0.5.2-dev0
+
+* Add ruff to keep code consistent with unstructured
+
 ## 0.5.1
 
 * Add annotation for pages
