@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-from typing import BinaryIO, List, Optional, Tuple, Union
+from typing import BinaryIO, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pdf2image
@@ -240,9 +240,13 @@ class PageLayout:
         else:
             page.elements = page.get_elements_from_layout(fixed_layout)
         if layout is not None:
-            page.elements = order_layout(
-                merge_inferred_layout_with_extracted_layout(page.elements, layout)
+            elements = order_layout(
+                cast(
+                    List[TextRegion],
+                    merge_inferred_layout_with_extracted_layout(page.elements, layout),
+                )
             )
+            page.elements = cast(List[LayoutElement], elements)
         return page
 
 
