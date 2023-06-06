@@ -1,4 +1,4 @@
-## 0.5.1-test
+## 0.5.1
 
 * Add annotation for pages
 * Store page numbers when processing PDFs

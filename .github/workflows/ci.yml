@@ -126,7 +126,6 @@ jobs:
         [ ! -d "$NLTK_DATA" ] && mkdir "$NLTK_DATA"
         make install-ci
         pip install -e inference/
-        echo $(pip list | grep inference)
         sudo apt-get update
         sudo apt-get install -y libmagic-dev poppler-utils libreoffice pandoc
         sudo add-apt-repository -y ppa:alex-p/tesseract-ocr5
@@ -140,7 +139,6 @@ jobs:
         make install-ingest-slack
         make install-ingest-wikipedia
         ./test_unstructured_ingest/test-ingest.sh
-        echo $(pip list | grep inference)
 
   changelog:
     runs-on: ubuntu-latest
