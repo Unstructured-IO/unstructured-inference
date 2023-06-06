@@ -1,4 +1,5 @@
 from random import randint
+
 from unstructured_inference.inference import elements
 from unstructured_inference.inference.layout import load_pdf
 

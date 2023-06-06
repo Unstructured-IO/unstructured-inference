@@ -1,11 +1,16 @@
-import torch
 import logging
+from pathlib import Path
+from typing import Optional, Union
+
+import torch
+from PIL import Image
+from transformers import (
+    DonutProcessor,
+    VisionEncoderDecoderConfig,
+    VisionEncoderDecoderModel,
+)
 
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
-from transformers import DonutProcessor, VisionEncoderDecoderModel, VisionEncoderDecoderConfig
-from PIL import Image
-from typing import Union, Optional
-from pathlib import Path
 
 
 class UnstructuredDonutModel(UnstructuredModel):
@@ -40,7 +45,7 @@ class UnstructuredDonutModel(UnstructuredModel):
         except EnvironmentError:
             logging.critical("Failed to initialize the model.")
             logging.critical(
-                "Ensure that the Donut parameters config, model and processor are correct"
+                "Ensure that the Donut parameters config, model and processor are correct",
             )
             raise ImportError("Review the parameters to initialize a UnstructuredDonutModel obj")
         self.model.to(device)
@@ -49,7 +54,9 @@ class UnstructuredDonutModel(UnstructuredModel):
         """Internal prediction method."""
         pixel_values = self.processor(x, return_tensors="pt").pixel_values
         decoder_input_ids = self.processor.tokenizer(
-            self.task_prompt, add_special_tokens=False, return_tensors="pt"
+            self.task_prompt,
+            add_special_tokens=False,
+            return_tensors="pt",
         ).input_ids
         outputs = self.model.generate(
             pixel_values.to(self.device),

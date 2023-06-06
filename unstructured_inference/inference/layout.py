@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 import os
 import tempfile
-from typing import List, Optional, Tuple, Union, BinaryIO
+from typing import BinaryIO, List, Optional, Tuple, Union
 
 import numpy as np
 import pdf2image
@@ -9,9 +10,9 @@ from pdfminer import psparser
 from PIL import Image
 
 from unstructured_inference.inference.elements import (
-    TextRegion,
     EmbeddedTextRegion,
     ImageTextRegion,
+    TextRegion,
 )
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.inference.ordering import order_layout
@@ -72,9 +73,9 @@ class DocumentLayout:
         layouts, images = load_pdf(filename)
         if len(layouts) > len(images):
             raise RuntimeError(
-                "Some images were not loaded. Check that poppler is installed and in your $PATH."
+                "Some images were not loaded. Check that poppler is installed and in your $PATH.",
             )
-        pages: List[PageLayout] = list()
+        pages: List[PageLayout] = []
         if fixed_layouts is None:
             fixed_layouts = [None for _ in layouts]
         for i, (image, layout, fixed_layout) in enumerate(zip(images, layouts, fixed_layouts)):
@@ -145,7 +146,7 @@ class PageLayout:
         self.layout = layout
         self.number = number
         self.model = model
-        self.elements: List[LayoutElement] = list()
+        self.elements: List[LayoutElement] = []
         if ocr_strategy not in VALID_OCR_STRATEGIES:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
@@ -306,10 +307,7 @@ def get_element_from_block(
 ) -> LayoutElement:
     """Creates a LayoutElement from a given layout or image by finding all the text that lies within
     a given block."""
-    if isinstance(block, LayoutElement):
-        element = block
-    else:
-        element = LayoutElement.from_region(block)
+    element = block if isinstance(block, LayoutElement) else LayoutElement.from_region(block)
     element.text = element.extract_text(
         objects=pdf_objects,
         image=image,
