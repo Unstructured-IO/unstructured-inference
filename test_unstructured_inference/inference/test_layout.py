@@ -146,14 +146,15 @@ def test_process_data_with_model(monkeypatch, mock_page_layout, model_name):
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
-    with patch("builtins.open", mock_open(read_data=b"000000")):
-        assert layout.process_data_with_model(open(""), model_name=model_name)
+    with patch("builtins.open", mock_open(read_data=b"000000")), open("") as fp:
+        assert layout.process_data_with_model(fp, model_name=model_name)
 
 
 def test_process_data_with_model_raises_on_invalid_model_name():
-    with patch("builtins.open", mock_open(read_data=b"000000")):
-        with pytest.raises(models.UnknownModelException):
-            layout.process_data_with_model(open(""), model_name="fake")
+    with patch("builtins.open", mock_open(read_data=b"000000")), pytest.raises(
+        models.UnknownModelException,
+    ), open("") as fp:
+        layout.process_data_with_model(fp, model_name="fake")
 
 
 @pytest.mark.parametrize("model_name", [None, "checkbox"])
@@ -274,7 +275,7 @@ def test_get_elements_from_block_raises():
         layout.get_element_from_block(block, None, None)
 
 
-@pytest.mark.parametrize("filetype", ("png", "jpg"))
+@pytest.mark.parametrize("filetype", ["png", "jpg"])
 def test_from_image_file(monkeypatch, mock_page_layout, filetype):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_page_layout]
@@ -550,7 +551,7 @@ def test_image_text_region(text, ocr_strategy, expected, mock_image):
         )
 
 
-@pytest.fixture
+@pytest.fixture()
 def ordering_layout():
     elements = [
         layout.LayoutElement(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
@@ -566,7 +567,9 @@ def ordering_layout():
 
 def test_layout_order(ordering_layout):
     with patch.object(layout, "get_model", lambda: lambda x: ordering_layout), patch.object(
-        layout, "load_pdf", lambda *args, **kwargs: ([[]], [mock_image])
+        layout,
+        "load_pdf",
+        lambda *args, **kwargs: ([[]], [mock_image]),
     ):
         doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
         page = doc.pages[0]

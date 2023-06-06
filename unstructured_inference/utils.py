@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Any, Hashable, Union, Iterator, Callable
+from typing import Any, Callable, Hashable, Iterator, Union
 
 
 class LazyEvaluateInfo:

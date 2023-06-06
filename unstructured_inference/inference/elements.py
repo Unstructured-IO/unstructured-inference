@@ -215,11 +215,8 @@ class TextRegion(Rectangle):
         elif objects is not None:
             text = aggregate_by_block(self, image, objects, ocr_strategy)
         elif image is not None:
-            if ocr_strategy != "never":
-                # We don't have anything to go on but the image itself, so we use OCR
-                text = ocr(self, image, languages=ocr_languages)
-            else:
-                text = ""
+            # We don't have anything to go on but the image itself, so we use OCR
+            text = ocr(self, image, languages=ocr_languages) if ocr_strategy != "never" else ""
         else:
             raise ValueError(
                 "Got arguments image and layout as None, at least one must be populated to use for "
@@ -298,12 +295,10 @@ def needs_ocr(
                 return False
             else:
                 return image_intersects
-        elif cid_ratio(region.text) > 0.5:
+        else:
             # If the region has text, we should only have to OCR if too much of the text is
             # uninterpretable.
-            return True
-        else:
-            return False
+            return cid_ratio(region.text) > 0.5
     else:
         return False
 

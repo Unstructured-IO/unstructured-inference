@@ -7,9 +7,9 @@ from layoutparser.elements.layout import TextBlock
 from PIL import Image
 
 from unstructured_inference.inference.elements import (
+    ImageTextRegion,
     Rectangle,
     TextRegion,
-    ImageTextRegion,
     grow_region_to_match_region,
     region_bounding_boxes_are_almost_the_same,
 )

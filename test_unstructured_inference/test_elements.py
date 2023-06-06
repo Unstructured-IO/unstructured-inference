@@ -21,7 +21,7 @@ def rand_rect(size=10):
 
 
 # TODO(alan): Make a better test layout
-@pytest.fixture
+@pytest.fixture()
 def sample_layout():
     return [
         elements.EmbeddedTextRegion(
@@ -97,7 +97,7 @@ def sample_layout():
     ]
 
 
-@pytest.mark.parametrize("second_size", (10, 20))
+@pytest.mark.parametrize("second_size", [10, 20])
 def test_intersects(second_size):
     for _ in range(1000):
         rect1 = rand_rect()
@@ -254,7 +254,9 @@ def test_is_disjoint():
     ],
 )
 def test_intersection_over_min(
-    rect1: elements.Rectangle, rect2: elements.Rectangle, expected: float
+    rect1: elements.Rectangle,
+    rect2: elements.Rectangle,
+    expected: float,
 ):
     assert (
         rect1.intersection_over_minimum(rect2) == rect2.intersection_over_minimum(rect1) == expected

@@ -244,7 +244,7 @@ class PageLayout:
                 cast(
                     List[TextRegion],
                     merge_inferred_layout_with_extracted_layout(page.elements, layout),
-                )
+                ),
             )
             page.elements = cast(List[LayoutElement], elements)
         return page
@@ -319,10 +319,7 @@ def get_element_from_block(
 ) -> LayoutElement:
     """Creates a LayoutElement from a given layout or image by finding all the text that lies within
     a given block."""
-    if isinstance(block, LayoutElement):
-        element = block
-    else:
-        element = LayoutElement.from_region(block)
+    element = block if isinstance(block, LayoutElement) else LayoutElement.from_region(block)
     element.text = element.extract_text(
         objects=pdf_objects,
         image=image,
