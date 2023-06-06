@@ -353,7 +353,9 @@ def remove_control_characters(text: str) -> str:
 
 
 def region_bounding_boxes_are_almost_the_same(
-    region1: Rectangle, region2: Rectangle, same_region_threshold: float = 0.75,
+    region1: Rectangle,
+    region2: Rectangle,
+    same_region_threshold: float = 0.75,
 ) -> bool:
     """Returns whether bounding boxes are almost the same. This is determined by checking if the
     intersection over union is above some threshold."""
@@ -363,7 +365,8 @@ def region_bounding_boxes_are_almost_the_same(
 def grow_region_to_match_region(region_to_grow: Rectangle, region_to_match: Rectangle):
     """Grows a region to the minimum size necessary to contain both regions."""
     (new_x1, new_y1), _, (new_x2, new_y2), _ = minimal_containing_region(
-        region_to_grow, region_to_match,
+        region_to_grow,
+        region_to_match,
     ).coordinates
     region_to_grow.x1, region_to_grow.y1, region_to_grow.x2, region_to_grow.y2 = (
         new_x1,
