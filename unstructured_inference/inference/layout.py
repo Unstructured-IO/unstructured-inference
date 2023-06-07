@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-from typing import BinaryIO, List, Optional, Tuple, Union, cast
+from typing import BinaryIO, List, Optional, Tuple, Union
 
 import numpy as np
 import pdf2image
@@ -169,6 +169,11 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         inferred_layout = self.model(self.image)
+        if self.layout is not None:
+            inferred_layout = merge_inferred_layout_with_extracted_layout(
+                inferred_layout=inferred_layout,
+                extracted_layout=self.layout,
+            )
         elements = self.get_elements_from_layout(inferred_layout)
         if inplace:
             self.elements = elements
@@ -239,14 +244,6 @@ class PageLayout:
             page.get_elements_with_model()
         else:
             page.elements = page.get_elements_from_layout(fixed_layout)
-        if layout is not None:
-            elements = order_layout(
-                cast(
-                    List[TextRegion],
-                    merge_inferred_layout_with_extracted_layout(page.elements, layout),
-                ),
-            )
-            page.elements = cast(List[LayoutElement], elements)
         return page
 
 
