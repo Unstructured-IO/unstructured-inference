@@ -89,25 +89,24 @@ def merge_inferred_layout_with_extracted_layout(
         region_matched = False
         for inferred_region in inferred_layout:
             if inferred_region.intersects(extracted_region):
-                if region_bounding_boxes_are_almost_the_same(
+                same_bbox = region_bounding_boxes_are_almost_the_same(
                     inferred_region,
                     extracted_region,
                     same_region_threshold,
-                ):
+                )
+                either_region_is_subregion_of_other = inferred_region.is_almost_subregion_of(
+                    extracted_region,
+                    subregion_threshold=subregion_threshold,
+                ) or extracted_region.is_almost_subregion_of(
+                    inferred_region,
+                    subregion_threshold=subregion_threshold,
+                )
+                if same_bbox:
                     # Looks like these represent the same region
                     grow_region_to_match_region(inferred_region, extracted_region)
                     inferred_region.text = extracted_region.text
                     region_matched = True
-                elif (
-                    inferred_region.is_almost_subregion_of(
-                        extracted_region,
-                        subregion_threshold=subregion_threshold,
-                    )
-                    or extracted_region.is_almost_subregion_of(
-                        inferred_region,
-                        subregion_threshold=subregion_threshold,
-                    )
-                ) and inferred_region.type != "Table":
+                elif either_region_is_subregion_of_other and inferred_region.type != "Table":
                     inferred_regions_to_remove.append(inferred_region)
         if not region_matched:
             extracted_elements_to_add.append(extracted_region)
