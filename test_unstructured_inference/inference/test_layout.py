@@ -29,7 +29,12 @@ def mock_initial_layout():
 @pytest.fixture()
 def mock_final_layout():
     text_block = layoutelement.LayoutElement(
-        2, 4, 6, 8, text="A very repetitive narrative. " * 10, type="NarrativeText"
+        2,
+        4,
+        6,
+        8,
+        text="A very repetitive narrative. " * 10,
+        type="NarrativeText",
     )
 
     title_block = layoutelement.LayoutElement(1, 2, 3, 4, text="A Catchy Title", type="Title")
@@ -107,7 +112,12 @@ def test_get_page_elements_with_ocr(monkeypatch):
     image_block = layout.ImageTextRegion(8, 14, 16, 18)
     doc_initial_layout = [text_block, image_block]
     text_layoutelement = layoutelement.LayoutElement(
-        2, 4, 6, 8, text=None, type="UncategorizedText"
+        2,
+        4,
+        6,
+        8,
+        text=None,
+        type="UncategorizedText",
     )
     image_layoutelement = layoutelement.LayoutElement(8, 14, 16, 18, text=None, type="Image")
     doc_final_layout = [text_layoutelement, image_layoutelement]
