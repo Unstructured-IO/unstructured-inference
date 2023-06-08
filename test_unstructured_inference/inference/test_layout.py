@@ -8,7 +8,7 @@ import pytest
 from PIL import Image
 
 import unstructured_inference.models.base as models
-from unstructured_inference.inference import elements, layout
+from unstructured_inference.inference import elements, layout, layoutelement
 from unstructured_inference.models import detectron2, tesseract
 
 
@@ -18,10 +18,21 @@ def mock_image():
 
 
 @pytest.fixture()
-def mock_page_layout():
+def mock_initial_layout():
     text_block = layout.EmbeddedTextRegion(2, 4, 6, 8, text="A very repetitive narrative. " * 10)
 
     title_block = layout.EmbeddedTextRegion(1, 2, 3, 4, text="A Catchy Title")
+
+    return [text_block, title_block]
+
+
+@pytest.fixture()
+def mock_final_layout():
+    text_block = layoutelement.LayoutElement(
+        2, 4, 6, 8, text="A very repetitive narrative. " * 10, type="NarrativeText"
+    )
+
+    title_block = layoutelement.LayoutElement(1, 2, 3, 4, text="A Catchy Title", type="Title")
 
     return [text_block, title_block]
 
@@ -62,13 +73,13 @@ class MockLayoutModel:
         pass
 
 
-def test_get_page_elements(monkeypatch, mock_page_layout):
+def test_get_page_elements(monkeypatch, mock_final_layout):
     image = np.random.randint(12, 24, (40, 40))
     page = layout.PageLayout(
         number=0,
         image=image,
-        layout=mock_page_layout,
-        model=MockLayoutModel(mock_page_layout),
+        layout=mock_final_layout,
+        model=MockLayoutModel(mock_final_layout),
     )
 
     elements = page.get_elements_with_model(inplace=False)
@@ -94,7 +105,12 @@ class MockPool:
 def test_get_page_elements_with_ocr(monkeypatch):
     text_block = layout.TextRegion(2, 4, 6, 8, text=None)
     image_block = layout.ImageTextRegion(8, 14, 16, 18)
-    doc_layout = [text_block, image_block]
+    doc_initial_layout = [text_block, image_block]
+    text_layoutelement = layoutelement.LayoutElement(
+        2, 4, 6, 8, text=None, type="UncategorizedText"
+    )
+    image_layoutelement = layoutelement.LayoutElement(8, 14, 16, 18, text=None, type="Image")
+    doc_final_layout = [text_layoutelement, image_layoutelement]
 
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
     monkeypatch.setattr(elements, "ocr", lambda *args, **kwargs: "An Even Catchier Title")
@@ -103,24 +119,24 @@ def test_get_page_elements_with_ocr(monkeypatch):
     page = layout.PageLayout(
         number=0,
         image=image,
-        layout=doc_layout,
-        model=MockLayoutModel(doc_layout),
+        layout=doc_initial_layout,
+        model=MockLayoutModel(doc_final_layout),
     )
     page.get_elements_with_model()
 
     assert str(page) == "\n\nAn Even Catchier Title"
 
 
-def test_read_pdf(monkeypatch, mock_page_layout):
+def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout):
     image = np.random.randint(12, 24, (40, 40))
     images = [image, image]
 
-    layouts = [mock_page_layout, mock_page_layout]
+    layouts = [mock_initial_layout, mock_initial_layout]
 
     monkeypatch.setattr(
         models,
         "UnstructuredDetectronModel",
-        partial(MockLayoutModel, layout=mock_page_layout),
+        partial(MockLayoutModel, layout=mock_final_layout),
     )
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
@@ -139,8 +155,8 @@ def test_read_pdf(monkeypatch, mock_page_layout):
 
 
 @pytest.mark.parametrize("model_name", [None, "checkbox", "fake"])
-def test_process_data_with_model(monkeypatch, mock_page_layout, model_name):
-    monkeypatch.setattr(layout, "get_model", lambda x: MockLayoutModel(mock_page_layout))
+def test_process_data_with_model(monkeypatch, mock_final_layout, model_name):
+    monkeypatch.setattr(layout, "get_model", lambda x: MockLayoutModel(mock_final_layout))
     monkeypatch.setattr(
         layout.DocumentLayout,
         "from_file",
@@ -158,11 +174,10 @@ def test_process_data_with_model_raises_on_invalid_model_name():
 
 
 @pytest.mark.parametrize("model_name", [None, "checkbox"])
-def test_process_file_with_model(monkeypatch, mock_page_layout, model_name):
+def test_process_file_with_model(monkeypatch, mock_final_layout, model_name):
     def mock_initialize(self, *args, **kwargs):
-        self.model = MockLayoutModel(mock_page_layout)
+        self.model = MockLayoutModel(mock_final_layout)
 
-    monkeypatch.setattr(models, "get_model", lambda x: MockLayoutModel(mock_page_layout))
     monkeypatch.setattr(
         layout.DocumentLayout,
         "from_file",
@@ -276,9 +291,9 @@ def test_get_elements_from_block_raises():
 
 
 @pytest.mark.parametrize("filetype", ["png", "jpg"])
-def test_from_image_file(monkeypatch, mock_page_layout, filetype):
+def test_from_image_file(monkeypatch, mock_final_layout, filetype):
     def mock_get_elements(self, *args, **kwargs):
-        self.elements = [mock_page_layout]
+        self.elements = [mock_final_layout]
 
     monkeypatch.setattr(layout.PageLayout, "get_elements_with_model", mock_get_elements)
     elements = (
@@ -286,7 +301,7 @@ def test_from_image_file(monkeypatch, mock_page_layout, filetype):
         .pages[0]
         .elements
     )
-    assert elements[0] == mock_page_layout
+    assert elements[0] == mock_final_layout
 
 
 def test_from_image_file_raises_with_empty_fn():
@@ -307,9 +322,9 @@ def test_from_file_raises_on_length_mismatch(monkeypatch):
 
 
 @pytest.mark.parametrize("idx", range(2))
-def test_get_elements_from_layout(mock_page_layout, idx):
-    page = MockPageLayout(layout=mock_page_layout)
-    block = mock_page_layout[idx].pad(3)
+def test_get_elements_from_layout(mock_initial_layout, idx):
+    page = MockPageLayout(layout=mock_initial_layout)
+    block = mock_initial_layout[idx].pad(3)
     fixed_layout = [block]
     elements = page.get_elements_from_layout(fixed_layout)
     assert elements[0].text == block.text
