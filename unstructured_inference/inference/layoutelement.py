@@ -94,17 +94,31 @@ def merge_inferred_layout_with_extracted_layout(
                     extracted_region,
                     same_region_threshold,
                 )
-                either_region_is_subregion_of_other = inferred_region.is_almost_subregion_of(
+                inferred_is_subregion_of_extracted = inferred_region.is_almost_subregion_of(
                     extracted_region,
                     subregion_threshold=subregion_threshold,
-                ) or extracted_region.is_almost_subregion_of(
+                )
+                extracted_is_image = isinstance(extracted_region, ImageTextRegion)
+                inferred_is_text = inferred_region.type not in (
+                    "Figure",
+                    "Image",
+                    "PageBreak",
+                    "Table",
+                )
+                extracted_is_subregion_of_inferred = extracted_region.is_almost_subregion_of(
                     inferred_region,
                     subregion_threshold=subregion_threshold,
+                )
+                either_region_is_subregion_of_other = (
+                    inferred_is_subregion_of_extracted or extracted_is_subregion_of_inferred
                 )
                 if same_bbox:
                     # Looks like these represent the same region
                     grow_region_to_match_region(inferred_region, extracted_region)
                     inferred_region.text = extracted_region.text
+                    region_matched = True
+                elif extracted_is_subregion_of_inferred and inferred_is_text and extracted_is_image:
+                    grow_region_to_match_region(inferred_region, extracted_region)
                     region_matched = True
                 elif either_region_is_subregion_of_other and inferred_region.type != "Table":
                     inferred_regions_to_remove.append(inferred_region)
