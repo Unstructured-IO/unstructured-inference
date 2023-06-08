@@ -221,8 +221,8 @@ class PageLayout:
     @classmethod
     def from_image(
         cls,
-        image,
-        number=1,
+        image: Image.Image,
+        number: int = 1,
         model: Optional[UnstructuredModel] = None,
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
