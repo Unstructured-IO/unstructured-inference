@@ -68,4 +68,5 @@ def test_layout_yolox_local_parsing_empty_pdf_soft():
     document_layout = process_file_with_model(filename, model_name="yolox_tiny")
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 0 detections
-    assert len(document_layout.pages[0].elements) == 0
+    text_elements_page_1 = [el for el in document_layout.pages[0].elements if el.type != "Image"]
+    assert len(text_elements_page_1) == 0

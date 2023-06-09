@@ -17,14 +17,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from typing import List
+from typing import List, Optional, Union
 
 from setuptools import find_packages, setup
 
 from unstructured_inference.__version__ import __version__
 
 
-def load_requirements(file_list=None):
+def load_requirements(file_list: Optional[Union[str, List[str]]] = None):
+    """Loads the requirements from a .in file or list of .in files."""
     if file_list is None:
         file_list = ["requirements/base.in"]
     if isinstance(file_list, str):
@@ -33,7 +34,9 @@ def load_requirements(file_list=None):
     for file in file_list:
         with open(file, encoding="utf-8") as f:
             requirements.extend(f.readlines())
-    requirements = [req for req in requirements if not req.startswith("#")]
+    requirements = [
+        req for req in requirements if not req.startswith("#") and not req.startswith("-")
+    ]
     return requirements
 
 
