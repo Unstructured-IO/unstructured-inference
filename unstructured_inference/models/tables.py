@@ -55,60 +55,70 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             )
         self.model.to(device)
 
+    def get_tokens(self, x: Image):
+        if platform.machine() == "x86_64":
+            try:
+                from unstructured_inference.models import paddle_ocr
+
+                paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
+
+                tokens = []
+                for idx in range(len(paddle_result)):
+                    res = paddle_result[idx]
+                    for line in res:
+                        xmin = min([i[0] for i in line[0]])
+                        ymin = min([i[1] for i in line[0]])
+                        xmax = max([i[0] for i in line[0]])
+                        ymax = max([i[1] for i in line[0]])
+                        tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
+                return tokens
+            except ModuleNotFoundError:
+                logging.warning(
+                    "No module named 'unstructured_paddleocr', falling back to pytesseract"
+                )
+                pass
+        zoom = 6
+        img = cv2.resize(
+            cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
+            None,
+            fx=zoom,
+            fy=zoom,
+            interpolation=cv2.INTER_CUBIC,
+        )
+
+        kernel = np.ones((1, 1), np.uint8)
+        img = cv2.dilate(img, kernel, iterations=1)
+        img = cv2.erode(img, kernel, iterations=1)
+
+        ocr_df: pd.DataFrame = pytesseract.image_to_data(
+            Image.fromarray(img),
+            output_type="data.frame",
+        )
+
+        ocr_df = ocr_df.dropna()
+
+        tokens = []
+        for idtx in ocr_df.itertuples():
+            tokens.append(
+                {
+                    "bbox": [
+                        idtx.left / zoom,
+                        idtx.top / zoom,
+                        (idtx.left + idtx.width) / zoom,
+                        (idtx.top + idtx.height) / zoom,
+                    ],
+                    "text": idtx.text,
+                },
+            )
+        return tokens
+
     def run_prediction(self, x: Image):
         """Predict table structure"""
         with torch.no_grad():
             encoding = self.feature_extractor(x, return_tensors="pt").to(self.device)
             outputs_structure = self.model(**encoding)
 
-        if platform.machine() == "x86_64":
-            from unstructured_inference.models import paddle_ocr
-
-            paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
-
-            tokens = []
-            for idx in range(len(paddle_result)):
-                res = paddle_result[idx]
-                for line in res:
-                    xmin = min([i[0] for i in line[0]])
-                    ymin = min([i[1] for i in line[0]])
-                    xmax = max([i[0] for i in line[0]])
-                    ymax = max([i[1] for i in line[0]])
-                    tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
-        else:
-            zoom = 6
-            img = cv2.resize(
-                cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
-                None,
-                fx=zoom,
-                fy=zoom,
-                interpolation=cv2.INTER_CUBIC,
-            )
-
-            kernel = np.ones((1, 1), np.uint8)
-            img = cv2.dilate(img, kernel, iterations=1)
-            img = cv2.erode(img, kernel, iterations=1)
-
-            ocr_df: pd.DataFrame = pytesseract.image_to_data(
-                Image.fromarray(img),
-                output_type="data.frame",
-            )
-
-            ocr_df = ocr_df.dropna()
-
-            tokens = []
-            for idtx in ocr_df.itertuples():
-                tokens.append(
-                    {
-                        "bbox": [
-                            idtx.left / zoom,
-                            idtx.top / zoom,
-                            (idtx.left + idtx.width) / zoom,
-                            (idtx.top + idtx.height) / zoom,
-                        ],
-                        "text": idtx.text,
-                    },
-                )
+        tokens = self.get_tokens(x=x)
 
         sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
 
