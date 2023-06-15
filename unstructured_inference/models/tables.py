@@ -56,6 +56,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         self.model.to(device)
 
     def get_tokens(self, x: Image):
+        """Get OCR tokens from either paddleocr or tesseract"""
         if platform.machine() == "x86_64":
             try:
                 from unstructured_inference.models import paddle_ocr
@@ -74,7 +75,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 return tokens
             except ModuleNotFoundError:
                 logging.warning(
-                    "No module named 'unstructured_paddleocr', falling back to pytesseract"
+                    "No module named 'unstructured_paddleocr', falling back to tesseract",
                 )
                 pass
         zoom = 6
