@@ -1,11 +1,8 @@
-## 0.5.2-dev2
-
-* Configure fallback for OCR token if paddleocr doesn't work to use tesseract
-
 ## 0.5.2-dev1
 
 * Combine inferred elements with extracted elements
 * Add ruff to keep code consistent with unstructured
+* Configure fallback for OCR token if paddleocr doesn't work to use tesseract
 
 ## 0.5.1
 
