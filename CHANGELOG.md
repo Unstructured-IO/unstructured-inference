@@ -1,4 +1,4 @@
-## 0.5.3
+## 0.5.2-dev2
 
 * Configure fallback for OCR token if paddleocr doesn't work to use tesseract
 
