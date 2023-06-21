@@ -1,4 +1,4 @@
-## 0.5.2-dev1
+## 0.5.2
 
 * Combine inferred elements with extracted elements
 * Add ruff to keep code consistent with unstructured
