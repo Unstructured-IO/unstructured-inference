@@ -2,6 +2,7 @@
 
 * Combine inferred elements with extracted elements
 * Add ruff to keep code consistent with unstructured
+* Configure fallback for OCR token if paddleocr doesn't work to use tesseract
 
 ## 0.5.1
 
