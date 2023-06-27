@@ -47,11 +47,10 @@ LABEL_MAP = [
     "Form",
 ]
 
-SPECIAL_TAGS = (
-    [f"<s_{label_type}>" for label_type in LABEL_MAP]
-    + [f"</s_{label_type}>" for label_type in LABEL_MAP]
-    + ["<sep/>"]
-)
+# NOTE(alan): Order matters with these
+SPECIAL_TAGS = ["<sep/>"] + [
+    f"<{open_or_close}s_{label_type}>" for label_type in LABEL_MAP for open_or_close in ("", "/")
+]
 
 
 class UnstructuredLargeModel(UnstructuredElementExtractionModel):
