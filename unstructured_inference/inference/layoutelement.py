@@ -140,3 +140,20 @@ def merge_inferred_layout_with_extracted_layout(
         region for region in inferred_layout if region not in inferred_regions_to_remove
     ]
     return out_layout
+
+
+# NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
+# Region types to not subclass Rectangle, and instead have an optional bbox property that is a
+# Rectangle. I or someone else will have to get to that later.
+@dataclass
+class LocationlessLayoutElement:
+    text: Optional[str]
+    type: Optional[str]
+
+    def to_dict(self) -> dict:
+        """Converts the class instance to dictionary form."""
+        out_dict = {
+            "text": self.text,
+            "type": self.type,
+        }
+        return out_dict
