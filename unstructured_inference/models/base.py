@@ -12,6 +12,8 @@ from unstructured_inference.models.detectron2onnx import (
 from unstructured_inference.models.detectron2onnx import (
     UnstructuredDetectronONNXModel,
 )
+from unstructured_inference.models.largemodel import MODEL_TYPES as LARGE_MODEL_TYPES
+from unstructured_inference.models.largemodel import UnstructuredLargeModel
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.models.yolox import (
     MODEL_TYPES as YOLOX_MODEL_TYPES,
@@ -19,8 +21,6 @@ from unstructured_inference.models.yolox import (
 from unstructured_inference.models.yolox import (
     UnstructuredYoloXModel,
 )
-from unstructured_inference.models.largemodel import MODEL_TYPES as LARGE_MODEL_TYPES
-from unstructured_inference.models.largemodel import UnstructuredLargeModel
 
 DEFAULT_MODEL = "detectron2_onnx"
 

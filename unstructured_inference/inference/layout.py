@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-from typing import BinaryIO, List, Optional, Tuple, Union
+from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pdf2image
@@ -24,8 +24,8 @@ from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import (
-    UnstructuredObjectDetectionModel,
     UnstructuredElementExtractionModel,
+    UnstructuredObjectDetectionModel,
 )
 from unstructured_inference.patches.pdfminer import parse_keyword
 from unstructured_inference.visualize import draw_bbox
@@ -162,7 +162,7 @@ class PageLayout:
         self.number = number
         self.detection_model = detection_model
         self.element_extraction_model = element_extraction_model
-        self.elements: List[LayoutElement] = []
+        self.elements: Collection[Union[LayoutElement, LocationlessLayoutElement]] = []
         if ocr_strategy not in VALID_OCR_STRATEGIES:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
@@ -173,9 +173,12 @@ class PageLayout:
         return "\n\n".join([str(element) for element in self.elements])
 
     def get_elements_using_image_extraction(
-        self, inplace=True
+        self,
+        inplace=True,
     ) -> Optional[List[LocationlessLayoutElement]]:
         """Uses end-to-end text element extraction model to extract the elements on the page."""
+        if self.element_extraction_model is None:
+            raise
         elements = self.element_extraction_model(self.image)
         if inplace:
             self.elements = elements
@@ -186,15 +189,22 @@ class PageLayout:
         """Uses specified model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
         if self.detection_model is None:
-            self.detection_model = get_model()
+            model = get_model()
+            if isinstance(model, UnstructuredObjectDetectionModel):
+                self.detection_model = model
+            else:
+                raise NotImplementedError("Default model should be a detection model")
 
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
-        inferred_layout = self.detection_model(self.image)
+        inferred_layout: List[TextRegion] = cast(List[TextRegion], self.detection_model(self.image))
         if self.layout is not None:
-            inferred_layout = merge_inferred_layout_with_extracted_layout(
-                inferred_layout=inferred_layout,
-                extracted_layout=self.layout,
+            inferred_layout = cast(
+                List[TextRegion],
+                merge_inferred_layout_with_extracted_layout(
+                    inferred_layout=cast(Collection[LayoutElement], inferred_layout),
+                    extracted_layout=self.layout,
+                ),
             )
         elements = self.get_elements_from_layout(inferred_layout)
 
@@ -238,7 +248,8 @@ class PageLayout:
             colors = colors * n_copies
         img = self.image.copy()
         for el, color in zip(self.elements, colors):
-            img = draw_bbox(img, el, color=color)
+            if isinstance(el, LayoutElement):
+                img = draw_bbox(img, el, color=color)
         return img
 
     @classmethod

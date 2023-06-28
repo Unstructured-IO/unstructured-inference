@@ -1,14 +1,16 @@
 import os
 from typing import Optional
+
 import numpy as np
-from PIL.Image import Image
 import torch
+from PIL.Image import Image
 from transformers import (
     AutoTokenizer,
-    DonutProcessor,
     DonutImageProcessor,
+    DonutProcessor,
     VisionEncoderDecoderModel,
 )
+
 from unstructured_inference.inference.layoutelement import LocationlessLayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredElementExtractionModel
 
@@ -16,7 +18,7 @@ MODEL_TYPES = {
     "large_model": {
         "tokenizer_name": "xlm-roberta-large",
         "pre_trained_model_name": "unstructuredio/ved-fine-tuning",
-    }
+    },
 }
 
 LABEL_MAP = [
@@ -63,11 +65,13 @@ class UnstructuredLargeModel(UnstructuredElementExtractionModel):
         pre_trained_model_name: str,
         auth_token: Optional[str] = os.environ.get("UNSTRUCTURED_HF_TOKEN"),
     ):
+        """Load the model for inference."""
         self.tokenizer: AutoTokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
 
         self.processor: DonutProcessor = DonutProcessor(
             image_processor=DonutImageProcessor(
-                do_resize=True, size=(self.required_w, self.required_h)
+                do_resize=True,
+                size=(self.required_w, self.required_h),
             ),
             tokenizer=self.tokenizer,
         )
@@ -75,15 +79,19 @@ class UnstructuredLargeModel(UnstructuredElementExtractionModel):
         self.tokenizer.add_tokens(new_tokens=SPECIAL_TAGS, special_tokens=True)
 
         self.model = VisionEncoderDecoderModel.from_pretrained(
-            pre_trained_model_name, ignore_mismatched_sizes=True, use_auth_token=auth_token
+            pre_trained_model_name,
+            ignore_mismatched_sizes=True,
+            use_auth_token=auth_token,
         )
 
     def predict(self, image):
+        """Do inference using the wrapped model."""
         tokens = self.predict_tokens(image)
         elements = self.postprocess(tokens)
         return elements
 
     def predict_tokens(self, image: Image):
+        """Predict tokens from image."""
         annotation = self.model.generate(
             self.processor(
                 np.array(
@@ -117,12 +125,13 @@ class UnstructuredLargeModel(UnstructuredElementExtractionModel):
         self,
         output_ids,
     ):
+        """Process tokens into layout elements."""
         elements = []
 
         # Get special tokens
         tokens_stop = [self.tokenizer.eos_token_id, self.tokenizer.pad_token_id]
         tokens_split = self.tokenizer.additional_special_tokens_ids + list(
-            self.tokenizer.get_added_vocab().values()
+            self.tokenizer.get_added_vocab().values(),
         )
 
         start = end = -1
