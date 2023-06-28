@@ -179,7 +179,9 @@ class PageLayout:
     ) -> Optional[List[LocationlessLayoutElement]]:
         """Uses end-to-end text element extraction model to extract the elements on the page."""
         if self.element_extraction_model is None:
-            raise
+            raise ValueError(
+                "Cannot get elements using image extraction, no image extraction model defined",
+            )
         elements = self.element_extraction_model(self.image)
         if inplace:
             self.elements = elements
