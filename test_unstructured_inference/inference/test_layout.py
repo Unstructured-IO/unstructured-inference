@@ -10,6 +10,10 @@ from PIL import Image
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
 from unstructured_inference.models import detectron2, tesseract
+from unstructured_inference.models.unstructuredmodel import (
+    UnstructuredElementExtractionModel,
+    UnstructuredObjectDetectionModel,
+)
 
 
 @pytest.fixture()
@@ -538,7 +542,8 @@ def test_load_pdf_with_multicolumn_layout_and_ocr(filename="sample-docs/design-t
         assert element.text.startswith(test_snippets[i])
 
 
-def test_annotate():
+@pytest.mark.parametrize("colors", ["red", None])
+def test_annotate(colors):
     test_image_arr = np.ones((100, 100, 3), dtype="uint8")
     image = Image.fromarray(test_image_arr)
     page = layout.PageLayout(number=1, image=image, layout=None)
@@ -547,7 +552,7 @@ def test_annotate():
     coords2 = (1, 10, 7, 11)
     rect2 = elements.Rectangle(*coords2)
     page.elements = [rect1, rect2]
-    annotated_image = page.annotate(colors="red")
+    annotated_image = page.annotate(colors=colors)
     annotated_array = np.array(annotated_image)
     for x1, y1, x2, y2 in [coords1, coords2]:
         # Make sure the pixels on the edge of the box are red
@@ -618,3 +623,120 @@ def test_layout_order(ordering_layout):
         page = doc.pages[0]
     for n, element in enumerate(page.elements):
         assert element.text == str(n)
+
+
+def test_page_layout_raises_when_multiple_models_passed(mock_image, mock_initial_layout):
+    with pytest.raises(ValueError):
+        layout.PageLayout(
+            0,
+            mock_image,
+            mock_initial_layout,
+            detection_model="something",
+            element_extraction_model="something else",
+        )
+
+
+class MockElementExtractionModel:
+    def __call__(self, x):
+        return [1, 2, 3]
+
+
+@pytest.mark.parametrize(("inplace", "expected"), [(True, None), (False, [1, 2, 3])])
+def test_get_elements_using_image_extraction(mock_image, inplace, expected):
+    page = layout.PageLayout(
+        1,
+        mock_image,
+        None,
+        element_extraction_model=MockElementExtractionModel(),
+    )
+    assert page.get_elements_using_image_extraction(inplace=inplace) == expected
+
+
+def test_get_elements_using_image_extraction_raises_with_no_extraction_model(mock_image):
+    page = layout.PageLayout(1, mock_image, None, element_extraction_model=None)
+    with pytest.raises(ValueError):
+        page.get_elements_using_image_extraction()
+
+
+def test_get_elements_with_detection_model_raises_with_wrong_default_model(monkeypatch):
+    monkeypatch.setattr(layout, "get_model", lambda *x: MockLayoutModel(mock_final_layout))
+    page = layout.PageLayout(1, mock_image, None)
+    with pytest.raises(NotImplementedError):
+        page.get_elements_with_detection_model()
+
+
+@pytest.mark.parametrize(
+    (
+        "detection_model",
+        "element_extraction_model",
+        "detection_model_called",
+        "element_extraction_model_called",
+    ),
+    [(None, "asdf", False, True), ("asdf", None, True, False)],
+)
+def test_from_image(
+    mock_image,
+    detection_model,
+    element_extraction_model,
+    detection_model_called,
+    element_extraction_model_called,
+):
+    with patch.object(
+        layout.PageLayout,
+        "get_elements_using_image_extraction",
+    ) as mock_image_extraction, patch.object(
+        layout.PageLayout,
+        "get_elements_with_detection_model",
+    ) as mock_detection:
+        layout.PageLayout.from_image(
+            mock_image,
+            detection_model=detection_model,
+            element_extraction_model=element_extraction_model,
+        )
+        assert mock_image_extraction.called == element_extraction_model_called
+        assert mock_detection.called == detection_model_called
+
+
+class MockUnstructuredElementExtractionModel(UnstructuredElementExtractionModel):
+    def initialize(self, *args, **kwargs):
+        return super().initialize(*args, **kwargs)
+
+    def predict(self, x: Image):
+        return super().predict(x)
+
+
+class MockUnstructuredDetectionModel(UnstructuredObjectDetectionModel):
+    def initialize(self, *args, **kwargs):
+        return super().initialize(*args, **kwargs)
+
+    def predict(self, x: Image):
+        return super().predict(x)
+
+
+@pytest.mark.parametrize(
+    ("model_type", "is_detection_model"),
+    [
+        (MockUnstructuredElementExtractionModel, False),
+        (MockUnstructuredDetectionModel, True),
+    ],
+)
+def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_model):
+    model = model_type()
+    monkeypatch.setattr(layout, "get_model", lambda *x: model)
+    with patch.object(layout.DocumentLayout, "from_file") as mock_from_file:
+        layout.process_file_with_model("asdf", model_name="fake", is_image=False)
+        if is_detection_model:
+            detection_model = model
+            element_extraction_model = None
+        else:
+            detection_model = None
+            element_extraction_model = model
+        mock_from_file.assert_called_once_with(
+            "asdf",
+            detection_model=detection_model,
+            element_extraction_model=element_extraction_model,
+            ocr_strategy="auto",
+            ocr_languages="eng",
+            fixed_layouts=None,
+            extract_tables=False,
+        )
