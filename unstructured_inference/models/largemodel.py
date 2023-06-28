@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import List, Optional
 
 import numpy as np
 import torch
@@ -84,13 +84,13 @@ class UnstructuredLargeModel(UnstructuredElementExtractionModel):
             use_auth_token=auth_token,
         )
 
-    def predict(self, image):
+    def predict(self, image) -> List[LocationlessLayoutElement]:
         """Do inference using the wrapped model."""
         tokens = self.predict_tokens(image)
         elements = self.postprocess(tokens)
         return elements
 
-    def predict_tokens(self, image: Image):
+    def predict_tokens(self, image: Image) -> List[int]:
         """Predict tokens from image."""
         annotation = self.model.generate(
             self.processor(
@@ -124,7 +124,7 @@ class UnstructuredLargeModel(UnstructuredElementExtractionModel):
     def postprocess(
         self,
         output_ids,
-    ):
+    ) -> List[LocationlessLayoutElement]:
         """Process tokens into layout elements."""
         elements = []
 
@@ -159,7 +159,7 @@ class UnstructuredLargeModel(UnstructuredElementExtractionModel):
 
                 end = i
 
-        # If exited before bos is achieved
+        # If exited before eos is achieved
         if start != -1 and start < end:
             slicing_end = end + 1
             string = self.tokenizer.decode(output_ids[start:slicing_end])
