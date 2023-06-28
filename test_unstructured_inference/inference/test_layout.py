@@ -84,15 +84,15 @@ def test_get_page_elements(monkeypatch, mock_final_layout):
         number=0,
         image=image,
         layout=mock_final_layout,
-        model=MockLayoutModel(mock_final_layout),
+        detection_model=MockLayoutModel(mock_final_layout),
     )
 
-    elements = page.get_elements_with_model(inplace=False)
+    elements = page.get_elements_with_detection_model(inplace=False)
 
     assert str(elements[0]) == "A Catchy Title"
     assert str(elements[1]).startswith("A very repetitive narrative.")
 
-    page.get_elements_with_model(inplace=True)
+    page.get_elements_with_detection_model(inplace=True)
     assert elements == page.elements
 
 
@@ -130,9 +130,9 @@ def test_get_page_elements_with_ocr(monkeypatch):
         number=0,
         image=image,
         layout=doc_initial_layout,
-        model=MockLayoutModel(doc_final_layout),
+        detection_model=MockLayoutModel(doc_final_layout),
     )
-    page.get_elements_with_model()
+    page.get_elements_with_detection_model()
 
     assert str(page) == "\n\nAn Even Catchier Title"
 
@@ -152,7 +152,7 @@ def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout):
 
     with patch.object(layout, "load_pdf", return_value=(layouts, images)):
         model = layout.get_model("detectron2_lp")
-        doc = layout.DocumentLayout.from_file("fake-file.pdf", model=model)
+        doc = layout.DocumentLayout.from_file("fake-file.pdf", detection_model=model)
 
         assert str(doc).startswith("A Catchy Title")
         assert str(doc).count("A Catchy Title") == 2  # Once for each page
@@ -172,7 +172,17 @@ def test_process_data_with_model(monkeypatch, mock_final_layout, model_name):
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
-    with patch("builtins.open", mock_open(read_data=b"000000")), open("") as fp:
+
+    def new_isinstance(obj, cls):
+        if type(obj) == MockLayoutModel:
+            return True
+        else:
+            return isinstance(obj, cls)
+
+    with patch("builtins.open", mock_open(read_data=b"000000")), patch(
+        "unstructured_inference.inference.layout.UnstructuredObjectDetectionModel",
+        MockLayoutModel,
+    ), open("") as fp:
         assert layout.process_data_with_model(fp, model_name=model_name)
 
 
@@ -305,7 +315,7 @@ def test_from_image_file(monkeypatch, mock_final_layout, filetype):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_final_layout]
 
-    monkeypatch.setattr(layout.PageLayout, "get_elements_with_model", mock_get_elements)
+    monkeypatch.setattr(layout.PageLayout, "get_elements_with_detection_model", mock_get_elements)
     elements = (
         layout.DocumentLayout.from_image_file(f"sample-docs/loremipsum.{filetype}")
         .pages[0]
@@ -342,7 +352,7 @@ def test_get_elements_from_layout(mock_initial_layout, idx):
 
 def test_page_numbers_in_page_objects():
     with patch(
-        "unstructured_inference.inference.layout.PageLayout.get_elements_with_model",
+        "unstructured_inference.inference.layout.PageLayout.get_elements_with_detection_model",
     ) as mock_get_elements:
         doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
         mock_get_elements.assert_called()
@@ -352,12 +362,16 @@ def test_page_numbers_in_page_objects():
 @pytest.mark.parametrize(
     ("fixed_layouts", "called_method", "not_called_method"),
     [
-        ([MockLayout()], "get_elements_from_layout", "get_elements_with_model"),
-        (None, "get_elements_with_model", "get_elements_from_layout"),
+        ([MockLayout()], "get_elements_from_layout", "get_elements_with_detection_model"),
+        (None, "get_elements_with_detection_model", "get_elements_from_layout"),
     ],
 )
 def test_from_file_fixed_layout(fixed_layouts, called_method, not_called_method):
-    with patch.object(layout.PageLayout, "get_elements_with_model", return_value=[]), patch.object(
+    with patch.object(
+        layout.PageLayout,
+        "get_elements_with_detection_model",
+        return_value=[],
+    ), patch.object(
         layout.PageLayout,
         "get_elements_from_layout",
         return_value=[],
@@ -595,6 +609,10 @@ def test_layout_order(ordering_layout):
         layout,
         "load_pdf",
         lambda *args, **kwargs: ([[]], [mock_image]),
+    ), patch.object(
+        layout,
+        "UnstructuredObjectDetectionModel",
+        object,
     ):
         doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
         page = doc.pages[0]
