@@ -1,3 +1,7 @@
+## 0.5.2-dev0
+
+* Refactor for large model
+
 ## 0.5.2
 
 * Combine inferred elements with extracted elements
