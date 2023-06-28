@@ -13,6 +13,7 @@ from PIL import Image
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
+    Rectangle,
     TextRegion,
 )
 from unstructured_inference.inference.layoutelement import (
@@ -248,7 +249,7 @@ class PageLayout:
             colors = colors * n_copies
         img = self.image.copy()
         for el, color in zip(self.elements, colors):
-            if isinstance(el, LayoutElement):
+            if isinstance(el, Rectangle):
                 img = draw_bbox(img, el, color=color)
         return img
 
