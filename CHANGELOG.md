@@ -1,3 +1,7 @@
+## 0.5.4-dev0
+
+* Add functionality to convert a PDF in small chunks of pages at a time in `load_pdf`
+
 ## 0.5.3
 
 * Refactor for large model
