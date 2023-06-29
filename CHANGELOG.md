@@ -2,6 +2,10 @@
 
 * Warning for onnx version of detectron2 for empty pages suppresed.
 
+## 0.5.4
+
+* Tweak to element ordering to make it more deterministic
+
 ## 0.5.3
 
 * Refactor for large model
