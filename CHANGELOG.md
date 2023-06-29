@@ -1,3 +1,7 @@
+## 0.5.4
+
+* Tweak to element ordering to make it more deterministic
+
 ## 0.5.3
 
 * Refactor for large model
