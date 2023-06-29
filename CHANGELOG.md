@@ -1,3 +1,7 @@
+## 0.5.3-dev
+
+* Warning for onnx version of detectron2 for empty pages suppresed.
+
 ## 0.5.2
 
 * Combine inferred elements with extracted elements
