@@ -1,6 +1,10 @@
-## 0.5.3-dev
+## 0.5.4-dev
 
 * Warning for onnx version of detectron2 for empty pages suppresed.
+
+## 0.5.3
+
+* Refactor for large model
 
 ## 0.5.2
 

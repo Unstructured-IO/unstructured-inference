@@ -6,7 +6,10 @@ from typing import TYPE_CHECKING, Any, List
 from PIL.Image import Image
 
 if TYPE_CHECKING:
-    from unstructured_inference.inference.layoutelement import LayoutElement
+    from unstructured_inference.inference.layoutelement import (
+        LayoutElement,
+        LocationlessLayoutElement,
+    )
 
 
 class UnstructuredModel(ABC):
@@ -49,6 +52,20 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         return []  # pragma: no cover
 
     def __call__(self, x: Image) -> List[LayoutElement]:
+        """Inference using function call interface."""
+        return super().__call__(x)
+
+
+class UnstructuredElementExtractionModel(UnstructuredModel):
+    """Wrapper class for object extraction models used by unstructured."""
+
+    @abstractmethod
+    def predict(self, x: Image) -> List[LocationlessLayoutElement]:
+        """Do inference using the wrapped model."""
+        super().predict(x)
+        return []  # pragma: no cover
+
+    def __call__(self, x: Image) -> List[LocationlessLayoutElement]:
         """Inference using function call interface."""
         return super().__call__(x)
 

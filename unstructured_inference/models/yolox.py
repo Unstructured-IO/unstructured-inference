@@ -12,7 +12,7 @@ from huggingface_hub import hf_hub_download
 from PIL import Image
 
 from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 from unstructured_inference.visualize import draw_yolox_bounding_boxes
 
@@ -50,7 +50,7 @@ MODEL_TYPES = {
 }
 
 
-class UnstructuredYoloXModel(UnstructuredModel):
+class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
     def predict(self, x: Image):
         """Predict using YoloX model."""
         super().predict(x)
