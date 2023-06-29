@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-from typing import BinaryIO, List, Optional, Tuple, Union
+from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pdf2image
@@ -13,16 +13,21 @@ from PIL import Image
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
+    Rectangle,
     TextRegion,
 )
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
+    LocationlessLayoutElement,
     merge_inferred_layout_with_extracted_layout,
 )
 from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
-from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.models.unstructuredmodel import (
+    UnstructuredElementExtractionModel,
+    UnstructuredObjectDetectionModel,
+)
 from unstructured_inference.patches.pdfminer import parse_keyword
 from unstructured_inference.visualize import draw_bbox
 
@@ -66,7 +71,8 @@ class DocumentLayout:
     def from_file(
         cls,
         filename: str,
-        model: Optional[UnstructuredModel] = None,
+        detection_model: Optional[UnstructuredObjectDetectionModel] = None,
+        element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
@@ -88,7 +94,8 @@ class DocumentLayout:
             page = PageLayout.from_image(
                 image,
                 number=i + 1,
-                model=model,
+                detection_model=detection_model,
+                element_extraction_model=element_extraction_model,
                 layout=layout,
                 ocr_strategy=ocr_strategy,
                 ocr_languages=ocr_languages,
@@ -102,7 +109,8 @@ class DocumentLayout:
     def from_image_file(
         cls,
         filename: str,
-        model: Optional[UnstructuredModel] = None,
+        detection_model: Optional[UnstructuredObjectDetectionModel] = None,
+        element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
         fixed_layout: Optional[List[TextRegion]] = None,
@@ -122,7 +130,8 @@ class DocumentLayout:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
         page = PageLayout.from_image(
             image,
-            model=model,
+            detection_model=detection_model,
+            element_extraction_model=element_extraction_model,
             layout=None,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
@@ -140,17 +149,21 @@ class PageLayout:
         number: int,
         image: Image.Image,
         layout: Optional[List[TextRegion]],
-        model: Optional[UnstructuredModel] = None,
+        detection_model: Optional[UnstructuredObjectDetectionModel] = None,
+        element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
         extract_tables: bool = False,
     ):
+        if detection_model is not None and element_extraction_model is not None:
+            raise ValueError("Only one of detection_model and extraction_model should be passed.")
         self.image = image
         self.image_array: Union[np.ndarray, None] = None
         self.layout = layout
         self.number = number
-        self.model = model
-        self.elements: List[LayoutElement] = []
+        self.detection_model = detection_model
+        self.element_extraction_model = element_extraction_model
+        self.elements: Collection[Union[LayoutElement, LocationlessLayoutElement]] = []
         if ocr_strategy not in VALID_OCR_STRATEGIES:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
@@ -160,21 +173,44 @@ class PageLayout:
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
 
-    def get_elements_with_model(self, inplace=True) -> Optional[List[LayoutElement]]:
+    def get_elements_using_image_extraction(
+        self,
+        inplace=True,
+    ) -> Optional[List[LocationlessLayoutElement]]:
+        """Uses end-to-end text element extraction model to extract the elements on the page."""
+        if self.element_extraction_model is None:
+            raise ValueError(
+                "Cannot get elements using image extraction, no image extraction model defined",
+            )
+        elements = self.element_extraction_model(self.image)
+        if inplace:
+            self.elements = elements
+            return None
+        return elements
+
+    def get_elements_with_detection_model(self, inplace=True) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
-        if self.model is None:
-            self.model = get_model()
+        if self.detection_model is None:
+            model = get_model()
+            if isinstance(model, UnstructuredObjectDetectionModel):
+                self.detection_model = model
+            else:
+                raise NotImplementedError("Default model should be a detection model")
 
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
-        inferred_layout = self.model(self.image)
+        inferred_layout: List[TextRegion] = cast(List[TextRegion], self.detection_model(self.image))
         if self.layout is not None:
-            inferred_layout = merge_inferred_layout_with_extracted_layout(
-                inferred_layout=inferred_layout,
-                extracted_layout=self.layout,
+            inferred_layout = cast(
+                List[TextRegion],
+                merge_inferred_layout_with_extracted_layout(
+                    inferred_layout=cast(Collection[LayoutElement], inferred_layout),
+                    extracted_layout=self.layout,
+                ),
             )
         elements = self.get_elements_from_layout(inferred_layout)
+
         if inplace:
             self.elements = elements
             return None
@@ -215,7 +251,8 @@ class PageLayout:
             colors = colors * n_copies
         img = self.image.copy()
         for el, color in zip(self.elements, colors):
-            img = draw_bbox(img, el, color=color)
+            if isinstance(el, Rectangle):
+                img = draw_bbox(img, el, color=color)
         return img
 
     @classmethod
@@ -223,7 +260,8 @@ class PageLayout:
         cls,
         image: Image.Image,
         number: int = 1,
-        model: Optional[UnstructuredModel] = None,
+        detection_model: Optional[UnstructuredObjectDetectionModel] = None,
+        element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
@@ -235,13 +273,17 @@ class PageLayout:
             number=number,
             image=image,
             layout=layout,
-            model=model,
+            detection_model=detection_model,
+            element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
             extract_tables=extract_tables,
         )
+        if page.element_extraction_model is not None:
+            page.get_elements_using_image_extraction()
+            return page
         if fixed_layout is None:
-            page.get_elements_with_model()
+            page.get_elements_with_detection_model()
         else:
             page.elements = page.get_elements_from_layout(fixed_layout)
         return page
@@ -285,10 +327,19 @@ def process_file_with_model(
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
     model = get_model(model_name)
+    if isinstance(model, UnstructuredObjectDetectionModel):
+        detection_model = model
+        element_extraction_model = None
+    elif isinstance(model, UnstructuredElementExtractionModel):
+        detection_model = None
+        element_extraction_model = model
+    else:
+        raise ValueError(f"Unsupported model type: {type(model)}")
     layout = (
         DocumentLayout.from_image_file(
             filename,
-            model=model,
+            detection_model=detection_model,
+            element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
             extract_tables=extract_tables,
@@ -296,7 +347,8 @@ def process_file_with_model(
         if is_image
         else DocumentLayout.from_file(
             filename,
-            model=model,
+            detection_model=detection_model,
+            element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
             fixed_layouts=fixed_layouts,
