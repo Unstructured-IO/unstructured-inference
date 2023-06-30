@@ -55,7 +55,9 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         try:
             bboxes, labels, confidence_scores, _ = self.model.run(None, prepared_input)
         except onnxruntime.capi.onnxruntime_pybind11_state.RuntimeException:
-            logger_onnx.error("Something happened while inferencing page")
+            logger_onnx.debug(
+                "Ignoring runtime error from onnx (likely due to encountering blank page)."
+            )
             return []
         input_w, input_h = image.size
         regions = self.postprocess(bboxes, labels, confidence_scores, input_w, input_h)
