@@ -1,7 +1,8 @@
-import pytest
-from unstructured_inference import logger
-
 import logging
+
+import pytest
+
+from unstructured_inference import logger
 
 
 @pytest.mark.parametrize("level", range(50))

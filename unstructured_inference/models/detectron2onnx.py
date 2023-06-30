@@ -56,7 +56,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
             bboxes, labels, confidence_scores, _ = self.model.run(None, prepared_input)
         except onnxruntime.capi.onnxruntime_pybind11_state.RuntimeException:
             logger_onnx.debug(
-                "Ignoring runtime error from onnx (likely due to encountering blank page)."
+                "Ignoring runtime error from onnx (likely due to encountering blank page).",
             )
             return []
         input_w, input_h = image.size
