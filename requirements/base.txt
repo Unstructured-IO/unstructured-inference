@@ -77,11 +77,36 @@ numpy==1.24.3
     #   scipy
     #   torchvision
     #   transformers
+nvidia-cublas-cu11==11.10.3.66
+    # via
+    #   nvidia-cudnn-cu11
+    #   nvidia-cusolver-cu11
+    #   torch
+nvidia-cuda-cupti-cu11==11.7.101
+    # via torch
+nvidia-cuda-nvrtc-cu11==11.7.99
+    # via torch
+nvidia-cuda-runtime-cu11==11.7.99
+    # via torch
+nvidia-cudnn-cu11==8.5.0.96
+    # via torch
+nvidia-cufft-cu11==10.9.0.58
+    # via torch
+nvidia-curand-cu11==10.2.10.91
+    # via torch
+nvidia-cusolver-cu11==11.4.0.1
+    # via torch
+nvidia-cusparse-cu11==11.7.4.91
+    # via torch
+nvidia-nccl-cu11==2.14.3
+    # via torch
+nvidia-nvtx-cu11==11.7.91
+    # via torch
 omegaconf==2.3.0
     # via effdet
 onnxruntime==1.15.1
     # via -r base.in
-opencv-python==4.7.0.72
+opencv-python==4.8.0.74
     # via
     #   -r base.in
     #   layoutparser
