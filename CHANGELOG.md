@@ -1,3 +1,7 @@
+## 0.5.5-dev
+
+* Added CUDA and TensorRT execution providers for yolox and detectron2onnx model. 
+
 ## 0.5.4-dev
 
 * Warning for onnx version of detectron2 for empty pages suppresed.
