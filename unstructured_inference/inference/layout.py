@@ -1,22 +1,41 @@
 from __future__ import annotations
+
 import os
 import tempfile
-from typing import List, Optional, Tuple, Union, BinaryIO
+from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
 import numpy as np
-import pdfplumber
 import pdf2image
+from pdfminer import psparser
+from pdfminer.high_level import extract_pages
 from PIL import Image
 
 from unstructured_inference.inference.elements import (
-    TextRegion,
     EmbeddedTextRegion,
     ImageTextRegion,
+    Rectangle,
+    TextRegion,
 )
-from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.inference.layoutelement import (
+    LayoutElement,
+    LocationlessLayoutElement,
+    merge_inferred_layout_with_extracted_layout,
+)
+from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
-from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.models.unstructuredmodel import (
+    UnstructuredElementExtractionModel,
+    UnstructuredObjectDetectionModel,
+)
+from unstructured_inference.patches.pdfminer import parse_keyword
+from unstructured_inference.visualize import draw_bbox
+
+# NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
+# the bug: https://github.com/pdfminer/pdfminer.six/pull/885
+psparser.PSBaseParser._parse_keyword = parse_keyword  # type: ignore
+
+import pdfplumber  # noqa
 
 VALID_OCR_STRATEGIES = (
     "auto",  # Use OCR when it looks like other methods have failed
@@ -52,7 +71,8 @@ class DocumentLayout:
     def from_file(
         cls,
         filename: str,
-        model: Optional[UnstructuredModel] = None,
+        detection_model: Optional[UnstructuredObjectDetectionModel] = None,
+        element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
@@ -63,17 +83,19 @@ class DocumentLayout:
         layouts, images = load_pdf(filename)
         if len(layouts) > len(images):
             raise RuntimeError(
-                "Some images were not loaded. Check that poppler is installed and in your $PATH."
+                "Some images were not loaded. Check that poppler is installed and in your $PATH.",
             )
-        pages: List[PageLayout] = list()
+        pages: List[PageLayout] = []
         if fixed_layouts is None:
             fixed_layouts = [None for _ in layouts]
-        for image, layout, fixed_layout in zip(images, layouts, fixed_layouts):
+        for i, (image, layout, fixed_layout) in enumerate(zip(images, layouts, fixed_layouts)):
             # NOTE(robinson) - In the future, maybe we detect the page number and default
             # to the index if it is not detected
             page = PageLayout.from_image(
                 image,
-                model=model,
+                number=i + 1,
+                detection_model=detection_model,
+                element_extraction_model=element_extraction_model,
                 layout=layout,
                 ocr_strategy=ocr_strategy,
                 ocr_languages=ocr_languages,
@@ -87,7 +109,8 @@ class DocumentLayout:
     def from_image_file(
         cls,
         filename: str,
-        model: Optional[UnstructuredModel] = None,
+        detection_model: Optional[UnstructuredObjectDetectionModel] = None,
+        element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
         fixed_layout: Optional[List[TextRegion]] = None,
@@ -96,7 +119,10 @@ class DocumentLayout:
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
         try:
-            image = Image.open(filename).convert("RGB")
+            image = Image.open(filename)
+            format = image.format
+            image = image.convert("RGB")
+            image.format = format
         except Exception as e:
             if os.path.isdir(filename) or os.path.isfile(filename):
                 raise e
@@ -104,7 +130,8 @@ class DocumentLayout:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
         page = PageLayout.from_image(
             image,
-            model=model,
+            detection_model=detection_model,
+            element_extraction_model=element_extraction_model,
             layout=None,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
@@ -122,17 +149,21 @@ class PageLayout:
         number: int,
         image: Image.Image,
         layout: Optional[List[TextRegion]],
-        model: Optional[UnstructuredModel] = None,
+        detection_model: Optional[UnstructuredObjectDetectionModel] = None,
+        element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
         extract_tables: bool = False,
     ):
+        if detection_model is not None and element_extraction_model is not None:
+            raise ValueError("Only one of detection_model and extraction_model should be passed.")
         self.image = image
         self.image_array: Union[np.ndarray, None] = None
         self.layout = layout
         self.number = number
-        self.model = model
-        self.elements: List[LayoutElement] = list()
+        self.detection_model = detection_model
+        self.element_extraction_model = element_extraction_model
+        self.elements: Collection[Union[LayoutElement, LocationlessLayoutElement]] = []
         if ocr_strategy not in VALID_OCR_STRATEGIES:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
@@ -142,16 +173,44 @@ class PageLayout:
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
 
-    def get_elements_with_model(self, inplace=True) -> Optional[List[LayoutElement]]:
+    def get_elements_using_image_extraction(
+        self,
+        inplace=True,
+    ) -> Optional[List[LocationlessLayoutElement]]:
+        """Uses end-to-end text element extraction model to extract the elements on the page."""
+        if self.element_extraction_model is None:
+            raise ValueError(
+                "Cannot get elements using image extraction, no image extraction model defined",
+            )
+        elements = self.element_extraction_model(self.image)
+        if inplace:
+            self.elements = elements
+            return None
+        return elements
+
+    def get_elements_with_detection_model(self, inplace=True) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
-        if self.model is None:
-            self.model = get_model()
+        if self.detection_model is None:
+            model = get_model()
+            if isinstance(model, UnstructuredObjectDetectionModel):
+                self.detection_model = model
+            else:
+                raise NotImplementedError("Default model should be a detection model")
 
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
-        inferred_layout = self.model(self.image)
+        inferred_layout: List[TextRegion] = cast(List[TextRegion], self.detection_model(self.image))
+        if self.layout is not None:
+            inferred_layout = cast(
+                List[TextRegion],
+                merge_inferred_layout_with_extracted_layout(
+                    inferred_layout=cast(Collection[LayoutElement], inferred_layout),
+                    extracted_layout=self.layout,
+                ),
+            )
         elements = self.get_elements_from_layout(inferred_layout)
+
         if inplace:
             self.elements = elements
             return None
@@ -160,9 +219,7 @@ class PageLayout:
     def get_elements_from_layout(self, layout: List[TextRegion]) -> List[LayoutElement]:
         """Uses the given Layout to separate the page text into elements, either extracting the
         text from the discovered layout blocks or from the image using OCR."""
-        # NOTE(robinson) - This orders the page from top to bottom. We'll need more
-        # sophisticated ordering logic for more complicated layouts.
-        layout.sort(key=lambda element: element.y1)
+        layout = order_layout(layout)
         elements = [
             get_element_from_block(
                 block=e,
@@ -182,11 +239,29 @@ class PageLayout:
             self.image_array = np.array(self.image)
         return self.image_array
 
+    def annotate(self, colors: Optional[Union[List[str], str]] = None) -> Image.Image:
+        """Annotates the elements on the page image."""
+        if colors is None:
+            colors = ["red" for _ in self.elements]
+        if isinstance(colors, str):
+            colors = [colors]
+        # If there aren't enough colors, just cycle through the colors a few times
+        if len(colors) < len(self.elements):
+            n_copies = (len(self.elements) // len(colors)) + 1
+            colors = colors * n_copies
+        img = self.image.copy()
+        for el, color in zip(self.elements, colors):
+            if isinstance(el, Rectangle):
+                img = draw_bbox(img, el, color=color)
+        return img
+
     @classmethod
     def from_image(
         cls,
-        image,
-        model: Optional[UnstructuredModel] = None,
+        image: Image.Image,
+        number: int = 1,
+        detection_model: Optional[UnstructuredObjectDetectionModel] = None,
+        element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
@@ -195,16 +270,20 @@ class PageLayout:
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
         page = cls(
-            number=0,
+            number=number,
             image=image,
             layout=layout,
-            model=model,
+            detection_model=detection_model,
+            element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
             extract_tables=extract_tables,
         )
+        if page.element_extraction_model is not None:
+            page.get_elements_using_image_extraction()
+            return page
         if fixed_layout is None:
-            page.get_elements_with_model()
+            page.get_elements_with_detection_model()
         else:
             page.elements = page.get_elements_from_layout(fixed_layout)
         return page
@@ -248,10 +327,19 @@ def process_file_with_model(
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
     model = get_model(model_name)
+    if isinstance(model, UnstructuredObjectDetectionModel):
+        detection_model = model
+        element_extraction_model = None
+    elif isinstance(model, UnstructuredElementExtractionModel):
+        detection_model = None
+        element_extraction_model = model
+    else:
+        raise ValueError(f"Unsupported model type: {type(model)}")
     layout = (
         DocumentLayout.from_image_file(
             filename,
-            model=model,
+            detection_model=detection_model,
+            element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
             extract_tables=extract_tables,
@@ -259,7 +347,8 @@ def process_file_with_model(
         if is_image
         else DocumentLayout.from_file(
             filename,
-            model=model,
+            detection_model=detection_model,
+            element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
             fixed_layouts=fixed_layouts,
@@ -279,10 +368,7 @@ def get_element_from_block(
 ) -> LayoutElement:
     """Creates a LayoutElement from a given layout or image by finding all the text that lies within
     a given block."""
-    if isinstance(block, LayoutElement):
-        element = block
-    else:
-        element = LayoutElement.from_region(block)
+    element = block if isinstance(block, LayoutElement) else LayoutElement.from_region(block)
     element.text = element.extract_text(
         objects=pdf_objects,
         image=image,
@@ -295,52 +381,29 @@ def get_element_from_block(
 
 def load_pdf(
     filename: str,
-    x_tolerance: Union[int, float] = 1.5,
-    y_tolerance: Union[int, float] = 2,
-    keep_blank_chars: bool = False,
-    use_text_flow: bool = False,
-    horizontal_ltr: bool = True,  # Should words be read left-to-right?
-    vertical_ttb: bool = True,  # Should vertical words be read top-to-bottom?
-    extra_attrs: Optional[List[str]] = None,
-    split_at_punctuation: Union[bool, str] = False,
     dpi: int = 200,
 ) -> Tuple[List[List[TextRegion]], List[Image.Image]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
-    pdf_object = pdfplumber.open(filename)
     layouts = []
-    images = []
-    for page in pdf_object.pages:
-        plumber_words = page.extract_words(
-            x_tolerance=x_tolerance,
-            y_tolerance=y_tolerance,
-            keep_blank_chars=keep_blank_chars,
-            use_text_flow=use_text_flow,
-            horizontal_ltr=horizontal_ltr,
-            vertical_ttb=vertical_ttb,
-            extra_attrs=extra_attrs,
-            split_at_punctuation=split_at_punctuation,
-        )
-        word_objs: List[TextRegion] = [
-            EmbeddedTextRegion(
-                x1=word["x0"] * dpi / 72,
-                y1=word["top"] * dpi / 72,
-                x2=word["x1"] * dpi / 72,
-                y2=word["bottom"] * dpi / 72,
-                text=word["text"],
+    for page in extract_pages(filename):
+        layout = []
+        height = page.height
+        for element in page:
+            x1, y2, x2, y1 = element.bbox
+            y1 = height - y1
+            y2 = height - y2
+            # Coefficient to rescale bounding box to be compatible with images
+            coef = dpi / 72
+            _text, element_class = (
+                (element.get_text(), EmbeddedTextRegion)
+                if hasattr(element, "get_text")
+                else (None, ImageTextRegion)
             )
-            for word in plumber_words
-        ]
-        image_objs: List[TextRegion] = [
-            ImageTextRegion(
-                x1=image["x0"] * dpi / 72,
-                y1=image["top"] * dpi / 72,
-                x2=image["x1"] * dpi / 72,
-                y2=image["bottom"] * dpi / 72,
-            )
-            for image in page.images
-        ]
-        layout = word_objs + image_objs
+            text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
+
+            if text_region.area() > 0:
+                layout.append(text_region)
         layouts.append(layout)
 
     images = pdf2image.convert_from_path(filename, dpi=dpi)

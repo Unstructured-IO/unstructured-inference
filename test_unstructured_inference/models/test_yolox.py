@@ -5,7 +5,7 @@ import pytest
 from unstructured_inference.inference.layout import process_file_with_model
 
 
-@pytest.mark.slow
+@pytest.mark.slow()
 def test_layout_yolox_local_parsing_image():
     filename = os.path.join("sample-docs", "test-image.jpg")
     # NOTE(benjamin) keep_output = True create a file for each image in
@@ -17,7 +17,7 @@ def test_layout_yolox_local_parsing_image():
     assert len(document_layout.pages[0].elements) == 13
 
 
-@pytest.mark.slow
+@pytest.mark.slow()
 def test_layout_yolox_local_parsing_pdf():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
     document_layout = process_file_with_model(filename, model_name="yolox")
@@ -28,7 +28,7 @@ def test_layout_yolox_local_parsing_pdf():
     assert len(document_layout.pages[0].elements) == 5
 
 
-@pytest.mark.slow
+@pytest.mark.slow()
 def test_layout_yolox_local_parsing_empty_pdf():
     filename = os.path.join("sample-docs", "empty-document.pdf")
     document_layout = process_file_with_model(filename, model_name="yolox")
@@ -68,4 +68,5 @@ def test_layout_yolox_local_parsing_empty_pdf_soft():
     document_layout = process_file_with_model(filename, model_name="yolox_tiny")
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 0 detections
-    assert len(document_layout.pages[0].elements) == 0
+    text_elements_page_1 = [el for el in document_layout.pages[0].elements if el.type != "Image"]
+    assert len(text_elements_page_1) == 0

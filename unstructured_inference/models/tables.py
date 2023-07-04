@@ -1,29 +1,25 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
-import torch
 import logging
-
-from unstructured_inference.models.unstructuredmodel import UnstructuredModel
-from unstructured_inference.logger import logger
-
-from collections import defaultdict
+import platform
 import xml.etree.ElementTree as ET
+from collections import defaultdict
+from pathlib import Path
+from typing import Optional, Union
 
 import cv2
 import numpy as np
 import pandas as pd
-
 import pytesseract
-
-from transformers import TableTransformerForObjectDetection
-from transformers import DetrImageProcessor
+import torch
 from PIL import Image
-from typing import Union, Optional
-from pathlib import Path
-import platform
+from transformers import DetrImageProcessor, TableTransformerForObjectDetection
+
+from unstructured_inference.logger import logger
+from unstructured_inference.models.table_postprocess import Rect
+from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 
 from . import table_postprocess as postprocess
-from unstructured_inference.models.table_postprocess import Rect
 
 
 class UnstructuredTableTransformerModel(UnstructuredModel):
@@ -55,9 +51,67 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             logging.critical("Failed to initialize the model.")
             logging.critical("Ensure that the model is correct")
             raise ImportError(
-                "Review the parameters to initialize a UnstructuredTableTransformerModel obj"
+                "Review the parameters to initialize a UnstructuredTableTransformerModel obj",
             )
         self.model.to(device)
+
+    def get_tokens(self, x: Image):
+        """Get OCR tokens from either paddleocr or tesseract"""
+        if platform.machine() == "x86_64":
+            try:
+                from unstructured_inference.models import paddle_ocr
+
+                paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
+
+                tokens = []
+                for idx in range(len(paddle_result)):
+                    res = paddle_result[idx]
+                    for line in res:
+                        xmin = min([i[0] for i in line[0]])
+                        ymin = min([i[1] for i in line[0]])
+                        xmax = max([i[0] for i in line[0]])
+                        ymax = max([i[1] for i in line[0]])
+                        tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
+                return tokens
+            except ModuleNotFoundError:
+                logging.warning(
+                    "No module named 'unstructured_paddleocr', falling back to tesseract",
+                )
+                pass
+        zoom = 6
+        img = cv2.resize(
+            cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
+            None,
+            fx=zoom,
+            fy=zoom,
+            interpolation=cv2.INTER_CUBIC,
+        )
+
+        kernel = np.ones((1, 1), np.uint8)
+        img = cv2.dilate(img, kernel, iterations=1)
+        img = cv2.erode(img, kernel, iterations=1)
+
+        ocr_df: pd.DataFrame = pytesseract.image_to_data(
+            Image.fromarray(img),
+            output_type="data.frame",
+        )
+
+        ocr_df = ocr_df.dropna()
+
+        tokens = []
+        for idtx in ocr_df.itertuples():
+            tokens.append(
+                {
+                    "bbox": [
+                        idtx.left / zoom,
+                        idtx.top / zoom,
+                        (idtx.left + idtx.width) / zoom,
+                        (idtx.top + idtx.height) / zoom,
+                    ],
+                    "text": idtx.text,
+                },
+            )
+        return tokens
 
     def run_prediction(self, x: Image):
         """Predict table structure"""
@@ -65,53 +119,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             encoding = self.feature_extractor(x, return_tensors="pt").to(self.device)
             outputs_structure = self.model(**encoding)
 
-        if platform.machine() == "x86_64":
-            from unstructured_inference.models import paddle_ocr
-
-            paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
-
-            tokens = []
-            for idx in range(len(paddle_result)):
-                res = paddle_result[idx]
-                for line in res:
-                    xmin = min([i[0] for i in line[0]])
-                    ymin = min([i[1] for i in line[0]])
-                    xmax = max([i[0] for i in line[0]])
-                    ymax = max([i[1] for i in line[0]])
-                    tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
-        else:
-            zoom = 6
-            img = cv2.resize(
-                cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
-                None,
-                fx=zoom,
-                fy=zoom,
-                interpolation=cv2.INTER_CUBIC,
-            )
-
-            kernel = np.ones((1, 1), np.uint8)
-            img = cv2.dilate(img, kernel, iterations=1)
-            img = cv2.erode(img, kernel, iterations=1)
-
-            ocr_df: pd.DataFrame = pytesseract.image_to_data(
-                Image.fromarray(img), output_type="data.frame"
-            )
-
-            ocr_df = ocr_df.dropna()
-
-            tokens = []
-            for idtx in ocr_df.itertuples():
-                tokens.append(
-                    {
-                        "bbox": [
-                            idtx.left / zoom,
-                            idtx.top / zoom,
-                            (idtx.left + idtx.width) / zoom,
-                            (idtx.top + idtx.height) / zoom,
-                        ],
-                        "text": idtx.text,
-                    }
-                )
+        tokens = self.get_tokens(x=x)
 
         sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
 
@@ -208,13 +216,13 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
     objects = []
     for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes):
         class_label = class_idx2name[int(label)]
-        if not class_label == "no object":
+        if class_label != "no object":
             objects.append(
                 {
                     "label": class_label,
                     "score": float(score),
                     "bbox": [float(elem) for elem in bbox],
-                }
+                },
             )
 
     return objects
@@ -288,7 +296,9 @@ def objects_to_structures(objects, tokens, class_thresholds):
         # Refine table structures
         rows = postprocess.refine_rows(rows, table_tokens, class_thresholds["table row"])
         columns = postprocess.refine_columns(
-            columns, table_tokens, class_thresholds["table column"]
+            columns,
+            table_tokens,
+            class_thresholds["table column"],
         )
 
         # Shrink table bbox to just the total height of the rows
@@ -335,7 +345,8 @@ def refine_table_structure(table_structure, class_thresholds):
     # Process the headers
     column_headers = table_structure["column headers"]
     column_headers = postprocess.apply_threshold(
-        column_headers, class_thresholds["table column header"]
+        column_headers,
+        class_thresholds["table column header"],
     )
     column_headers = postprocess.nms(column_headers)
     column_headers = align_headers(column_headers, rows)
@@ -348,10 +359,12 @@ def refine_table_structure(table_structure, class_thresholds):
         elem for elem in table_structure["spanning cells"] if elem["projected row header"]
     ]
     spanning_cells = postprocess.apply_threshold(
-        spanning_cells, class_thresholds["table spanning cell"]
+        spanning_cells,
+        class_thresholds["table spanning cell"],
     )
     projected_row_headers = postprocess.apply_threshold(
-        projected_row_headers, class_thresholds["table projected row header"]
+        projected_row_headers,
+        class_thresholds["table projected row header"],
     )
     spanning_cells += projected_row_headers
     # Align before NMS for spanning cells because alignment brings them into agreement
@@ -521,7 +534,10 @@ def structure_to_cells(table_structure, tokens):
         cell["bbox"] = cell_rect.get_bbox()
 
     span_nums_by_cell, _, _ = postprocess.slot_into_containers(
-        cells, tokens, overlap_threshold=0.001, forced_assignment=False
+        cells,
+        tokens,
+        overlap_threshold=0.001,
+        forced_assignment=False,
     )
 
     for cell, cell_span_nums in zip(cells, span_nums_by_cell):
@@ -529,7 +545,8 @@ def structure_to_cells(table_structure, tokens):
         # TODO: Refine how text is extracted; should be character-based, not span-based;
         # but need to associate
         cell["cell text"] = postprocess.extract_text_from_spans(
-            cell_spans, remove_integer_superscripts=False
+            cell_spans,
+            remove_integer_superscripts=False,
         )
         cell["spans"] = cell_spans
 

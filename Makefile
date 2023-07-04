@@ -1,5 +1,5 @@
 PACKAGE_NAME := unstructured_inference
-PIP_VERSION := 23.1
+PIP_VERSION := 23.1.2
 
 
 .PHONY: help
@@ -51,46 +51,9 @@ pip-compile:
 	# the detectron2 repo itself. If detectron2 is in the requirements.txt file, an order of
 	# operations issue related to the torch library causes the install to fail
 	sed 's/^detectron2 @/# detectron2 @/g' requirements/base.txt
-	pip-compile --upgrade requirements/dev.in
 	pip-compile --upgrade requirements/test.in
+	pip-compile --upgrade requirements/dev.in
 
-##########
-# Docker #
-##########
-
-# Docker targets are provided for convenience only and are not required in a standard development environment
-
-# Note that the current working directory is mounted under
-# /home/notebook-user/local/ when the image is started with
-# docker-start-api
-
-.PHONY: docker-build
-docker-build:
-	PIP_VERSION=${PIP_VERSION} ./scripts/docker-build.sh
-
-.PHONY: docker-start-api
-docker-start-api:
-	docker run -p 8000:8000 --mount type=bind,source=$(realpath .),target=/home/notebook-user/local -t --rm --entrypoint uvicorn unstructured-inference-dev:latest ${PACKAGE_NAME}.api:app --log-config logger_config.yaml --host 0.0.0.0 --port 8000
-
-
-#########
-# Local #
-########
-
-## run-app-dev:             runs the FastAPI api with hot reloading
-.PHONY: run-app-dev
-run-app-dev:
-	PYTHONPATH=. uvicorn unstructured_inference.api:app --log-config logger_config.yaml --reload
-
-## start-app-local:         runs FastAPI in the container with hot reloading
-.PHONY: start-app-local
-start-app-local:
-	docker run --name=ml-inference-container -p 127.0.0.1:5000:5000 ml-inference-dev
-
-## stop-app-local:          stops the container
-.PHONY: stop-app-local
-stop-app-local:
-	docker stop ml-inference-container | xargs docker rm
 
 #################
 # Test and Lint #
@@ -112,6 +75,7 @@ check: check-src check-tests check-version
 ## check-src:               runs linters (source only, no tests)
 .PHONY: check-src
 check-src:
+	ruff . --line-length 100 --select I,UP015,UP032,UP034,UP018,COM,C4,PT,SIM,PLR0402 --ignore PT011,PT012,SIM117
 	black --line-length 100 ${PACKAGE_NAME} --check
 	flake8 ${PACKAGE_NAME}
 	mypy ${PACKAGE_NAME} --ignore-missing-imports
@@ -138,6 +102,7 @@ check-version:
 ## tidy:                    run black
 .PHONY: tidy
 tidy:
+	ruff . --fix --line-length 100 --select I,UP015,UP032,UP034,UP018,COM,C4,PT,SIM,PLR0402 --ignore PT011,PT012,SIM117
 	black --line-length 100 ${PACKAGE_NAME}
 	black --line-length 100 test_${PACKAGE_NAME}
 

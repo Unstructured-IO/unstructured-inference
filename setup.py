@@ -17,28 +17,40 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from setuptools import setup, find_packages
+from typing import List, Optional, Union
+
+from setuptools import find_packages, setup
 
 from unstructured_inference.__version__ import __version__
 
 
-def load_requirements(file_list=None):
+def load_requirements(file_list: Optional[Union[str, List[str]]] = None):
+    """Loads the requirements from a .in file or list of .in files."""
     if file_list is None:
         file_list = ["requirements/base.in"]
     if isinstance(file_list, str):
         file_list = [file_list]
-    requirements = []
+    requirements: List[str] = []
     for file in file_list:
-        if not file.startswith("#"):
-            with open(file, encoding="utf-8") as f:
-                requirements.extend(f.readlines())
+        with open(file, encoding="utf-8") as f:
+            requirements.extend(f.readlines())
+    requirements = [
+        req for req in requirements if not req.startswith("#") and not req.startswith("-")
+    ]
     return requirements
+
+
+def load_text_from_file(filename: str):
+    """Retrieves text from a file."""
+    with open(filename, encoding="utf-8") as fp:
+        description = fp.read()
+    return description
 
 
 setup(
     name="unstructured_inference",
     description="A library for performing inference using trained models.",
-    long_description=open("README.md", "r", encoding="utf-8").read(),
+    long_description=load_text_from_file("README.md"),
     long_description_content_type="text/markdown",
     keywords="NLP PDF HTML CV XML parsing preprocessing",
     url="https://github.com/Unstructured-IO/unstructured-inference",
@@ -77,6 +89,6 @@ setup(
             'protobuf<3.21 ; platform_machine=="x86_64"',
             # NOTE(alan): Pin to get around error: undefined symbol: _dl_sym, version GLIBC_PRIVATE
             'paddlepaddle>=2.4 ; platform_machine=="x86_64"',
-        ]
+        ],
     },
 )

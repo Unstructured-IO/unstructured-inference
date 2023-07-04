@@ -1,3 +1,43 @@
+## 0.5.4-dev
+
+* Warning for onnx version of detectron2 for empty pages suppresed.
+
+## 0.5.4
+
+* Tweak to element ordering to make it more deterministic
+
+## 0.5.3
+
+* Refactor for large model
+
+## 0.5.2
+
+* Combine inferred elements with extracted elements
+* Add ruff to keep code consistent with unstructured
+* Configure fallback for OCR token if paddleocr doesn't work to use tesseract
+
+## 0.5.1
+
+* Add annotation for pages
+* Store page numbers when processing PDFs
+* Hotfix to handle inference of blank pages using ONNX detectron2
+* Revert ordering change to investigate examples of misordering
+
+## 0.5.0
+
+* Preserve image format in PIL.Image.Image when loading
+* Added ONNX version of Detectron2 and make default model
+* Remove API code, we don't serve this as a standalone API any more
+* Update ordering logic to account for multicolumn documents.
+
+## 0.4.4
+
+* Fixed patches not being a package.
+
+## 0.4.3
+
+* Patch pdfminer.six to fix parsing bug
+
 ## 0.4.2
 
 * Output of table extraction is now stored in `text_as_html` property rather than `text` property

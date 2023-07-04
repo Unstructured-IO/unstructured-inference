@@ -6,9 +6,7 @@
 #
 antlr4-python3-runtime==4.9.3
     # via omegaconf
-anyio==3.6.2
-    # via starlette
-certifi==2022.12.7
+certifi==2023.5.7
     # via requests
 cffi==1.15.1
     # via cryptography
@@ -16,44 +14,39 @@ charset-normalizer==3.1.0
     # via
     #   pdfminer-six
     #   requests
-click==8.1.3
-    # via uvicorn
+cmake==3.26.4
+    # via triton
 coloredlogs==15.0.1
     # via onnxruntime
 contourpy==1.0.7
     # via matplotlib
-cryptography==40.0.1
+cryptography==41.0.1
     # via pdfminer-six
 cycler==0.11.0
     # via matplotlib
-effdet==0.3.0
+effdet==0.4.1
     # via layoutparser
-fastapi==0.95.0
-    # via -r requirements/base.in
-filelock==3.10.7
+filelock==3.12.0
     # via
     #   huggingface-hub
     #   torch
     #   transformers
-flatbuffers==23.3.3
+    #   triton
+flatbuffers==23.5.26
     # via onnxruntime
-fonttools==4.39.3
+fonttools==4.39.4
     # via matplotlib
-h11==0.14.0
-    # via uvicorn
-huggingface-hub==0.13.3
+fsspec==2023.5.0
+    # via huggingface-hub
+huggingface-hub==0.15.1
     # via
-    #   -r requirements/base.in
+    #   -r base.in
     #   timm
     #   transformers
 humanfriendly==10.0
     # via coloredlogs
 idna==3.4
-    # via
-    #   anyio
-    #   requests
-importlib-resources==5.12.0
-    # via matplotlib
+    # via requests
 iopath==0.1.10
     # via layoutparser
 jinja2==3.1.2
@@ -61,8 +54,10 @@ jinja2==3.1.2
 kiwisolver==1.4.4
     # via matplotlib
 layoutparser[layoutmodels,tesseract]==0.3.4
-    # via -r requirements/base.in
-markupsafe==2.1.2
+    # via -r base.in
+lit==16.0.6
+    # via triton
+markupsafe==2.1.3
     # via jinja2
 matplotlib==3.7.1
     # via pycocotools
@@ -70,7 +65,7 @@ mpmath==1.3.0
     # via sympy
 networkx==3.1
     # via torch
-numpy==1.24.2
+numpy==1.24.3
     # via
     #   contourpy
     #   layoutparser
@@ -84,26 +79,26 @@ numpy==1.24.2
     #   transformers
 omegaconf==2.3.0
     # via effdet
-onnxruntime==1.14.1
-    # via -r requirements/base.in
+onnxruntime==1.15.1
+    # via -r base.in
 opencv-python==4.7.0.72
     # via
-    #   -r requirements/base.in
+    #   -r base.in
     #   layoutparser
-packaging==23.0
+packaging==23.1
     # via
     #   huggingface-hub
     #   matplotlib
     #   onnxruntime
     #   pytesseract
     #   transformers
-pandas==2.0.0
+pandas==2.0.2
     # via layoutparser
 pdf2image==1.16.3
     # via layoutparser
 pdfminer-six==20221105
     # via pdfplumber
-pdfplumber==0.8.0
+pdfplumber==0.9.0
     # via layoutparser
 pillow==9.5.0
     # via
@@ -115,14 +110,12 @@ pillow==9.5.0
     #   torchvision
 portalocker==2.7.0
     # via iopath
-protobuf==4.22.1
+protobuf==4.23.2
     # via onnxruntime
 pycocotools==2.0.6
     # via effdet
 pycparser==2.21
     # via cffi
-pydantic==1.10.7
-    # via fastapi
 pyparsing==3.0.9
     # via matplotlib
 pytesseract==0.3.10
@@ -132,7 +125,7 @@ python-dateutil==2.8.2
     #   matplotlib
     #   pandas
 python-multipart==0.0.6
-    # via -r requirements/base.in
+    # via -r base.in
 pytz==2023.3
     # via pandas
 pyyaml==6.0
@@ -142,36 +135,35 @@ pyyaml==6.0
     #   omegaconf
     #   timm
     #   transformers
-regex==2023.3.23
+regex==2023.6.3
     # via transformers
-requests==2.28.2
+requests==2.31.0
     # via
     #   huggingface-hub
     #   torchvision
     #   transformers
+safetensors==0.3.1
+    # via timm
 scipy==1.10.1
     # via layoutparser
 six==1.16.0
     # via python-dateutil
-sniffio==1.3.0
-    # via anyio
-starlette==0.26.1
-    # via fastapi
-sympy==1.11.1
+sympy==1.12
     # via
     #   onnxruntime
     #   torch
-timm==0.6.13
+timm==0.9.2
     # via effdet
-tokenizers==0.13.2
+tokenizers==0.13.3
     # via transformers
-torch==2.0.0
+torch==2.0.1
     # via
     #   effdet
     #   layoutparser
     #   timm
     #   torchvision
-torchvision==0.15.1
+    #   triton
+torchvision==0.15.2
     # via
     #   effdet
     #   layoutparser
@@ -181,22 +173,26 @@ tqdm==4.65.0
     #   huggingface-hub
     #   iopath
     #   transformers
-transformers==4.27.4
-    # via -r requirements/base.in
-typing-extensions==4.5.0
+transformers==4.29.2
+    # via -r base.in
+triton==2.0.0
+    # via torch
+typing-extensions==4.6.3
     # via
     #   huggingface-hub
     #   iopath
-    #   pydantic
-    #   starlette
     #   torch
 tzdata==2023.3
     # via pandas
-urllib3==1.26.15
+urllib3==2.0.2
     # via requests
-uvicorn==0.21.1
-    # via -r requirements/base.in
 wand==0.6.11
     # via pdfplumber
-zipp==3.15.0
-    # via importlib-resources
+wheel==0.40.0
+    # via
+    #   nvidia-cublas-cu11
+    #   nvidia-cuda-cupti-cu11
+    #   nvidia-cuda-runtime-cu11
+    #   nvidia-curand-cu11
+    #   nvidia-cusparse-cu11
+    #   nvidia-nvtx-cu11

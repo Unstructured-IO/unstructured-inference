@@ -1,9 +1,10 @@
 from __future__ import annotations
+
+import re
+import unicodedata
 from copy import deepcopy
 from dataclasses import dataclass
-import re
-from typing import Optional, Union, Sequence, List
-import unicodedata
+from typing import Collection, List, Optional, Union
 
 import numpy as np
 from PIL import Image
@@ -60,6 +61,16 @@ class Rectangle:
         """Height of rectangle"""
         return self.y2 - self.y1
 
+    @property
+    def x_midpoint(self) -> Union[int, float]:
+        """Finds the horizontal midpoint of the object."""
+        return (self.x2 + self.x1) / 2
+
+    @property
+    def y_midpoint(self) -> Union[int, float]:
+        """Finds the vertical midpoint of the object."""
+        return (self.y2 + self.y1) / 2
+
     def is_disjoint(self, other: Rectangle) -> bool:
         """Checks whether this rectangle is disjoint from another rectangle."""
         return not self.intersects(other)
@@ -70,23 +81,63 @@ class Rectangle:
 
     def is_in(self, other: Rectangle, error_margin: Optional[Union[int, float]] = None) -> bool:
         """Checks whether this rectangle is contained within another rectangle."""
-        if error_margin is not None:
-            padded_other = other.pad(error_margin)
-        else:
-            padded_other = other
+        padded_other = other.pad(error_margin) if error_margin is not None else other
         return all(
             [
                 (self.x1 >= padded_other.x1),
                 (self.x2 <= padded_other.x2),
                 (self.y1 >= padded_other.y1),
                 (self.y2 <= padded_other.y2),
-            ]
+            ],
         )
 
     @property
     def coordinates(self):
         """Gets coordinates of the rectangle"""
         return ((self.x1, self.y1), (self.x1, self.y2), (self.x2, self.y2), (self.x2, self.y1))
+
+    def intersection(self, other: Rectangle) -> Optional[Rectangle]:
+        """Gives the rectangle that is the intersection of two rectangles, or None if the
+        rectangles are disjoint."""
+        x1 = max(self.x1, other.x1)
+        x2 = min(self.x2, other.x2)
+        y1 = max(self.y1, other.y1)
+        y2 = min(self.y2, other.y2)
+        if x1 > x2 or y1 > y2:
+            return None
+        return Rectangle(x1, y1, x2, y2)
+
+    def area(self) -> float:
+        """Gives the area of the rectangle."""
+        return self.width * self.height
+
+    def intersection_over_union(self, other: Rectangle) -> float:
+        """Gives the intersection-over-union of two rectangles. This tends to be a good metric of
+        how similar the regions are. Returns 0 for disjoint rectangles, 1 for two identical
+        rectangles -- area of intersection / area of union."""
+        intersection = self.intersection(other)
+        intersection_area = 0.0 if intersection is None else intersection.area()
+        union_area = self.area() + other.area() - intersection_area
+        return intersection_area / union_area
+
+    def intersection_over_minimum(self, other: Rectangle) -> float:
+        """Gives the area-of-intersection over the minimum of the areas of the rectangles. Useful
+        for identifying when one rectangle is almost-a-subset of the other. Returns 0 for disjoint
+        rectangles, 1 when either is a subset of the other."""
+        intersection = self.intersection(other)
+        intersection_area = 0.0 if intersection is None else intersection.area()
+        min_area = min(self.area(), other.area())
+        return intersection_area / min_area
+
+    def is_almost_subregion_of(self, other: Rectangle, subregion_threshold: float = 0.75) -> bool:
+        """Returns whether this region is almost a subregion of other. This is determined by
+        comparing the intersection area over self area to some threshold, and checking whether self
+        is the smaller rectangle."""
+        intersection = self.intersection(other)
+        intersection_area = 0.0 if intersection is None else intersection.area()
+        return (subregion_threshold < intersection_area / self.area()) and (
+            self.area() <= other.area()
+        )
 
 
 def minimal_containing_region(*regions: Rectangle) -> Rectangle:
@@ -96,18 +147,10 @@ def minimal_containing_region(*regions: Rectangle) -> Rectangle:
     x2 = max(region.x2 for region in regions)
     y2 = max(region.y2 for region in regions)
 
-    # Return most specialized class of which that every region is a subclass
-    def least_common_superclass(*instances):
-        mros = (type(ins).mro() for ins in instances)
-        mro = next(mros)
-        common = set(mro).intersection(*mros)
-        return next((x for x in mro if x in common), Rectangle)
-
-    cls = least_common_superclass(*regions)
-    return cls(x1, y1, x2, y2)
+    return Rectangle(x1, y1, x2, y2)
 
 
-def partition_groups_from_regions(regions: Sequence[Rectangle]) -> List[List[Rectangle]]:
+def partition_groups_from_regions(regions: Collection[Rectangle]) -> List[List[Rectangle]]:
     """Partitions regions into groups of regions based on proximity. Returns list of lists of
     regions, each list corresponding with a group"""
     padded_regions = [
@@ -128,6 +171,7 @@ def intersections(*rects: Rectangle):
     """Returns a square boolean matrix of intersections of an arbitrary number of rectangles, i.e.
     the ijth entry of the matrix is True if and only if the ith Rectangle and jth Rectangle
     intersect."""
+    # NOTE(alan): Rewrite using line scan
     coords = np.stack([[[r.x1, r.y1], [r.x2, r.y2]] for r in rects], axis=-1)
 
     (x1s, y1s), (x2s, y2s) = coords
@@ -158,7 +202,7 @@ class TextRegion(Rectangle):
 
     def extract_text(
         self,
-        objects: Optional[List[TextRegion]],
+        objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
@@ -171,15 +215,12 @@ class TextRegion(Rectangle):
         elif objects is not None:
             text = aggregate_by_block(self, image, objects, ocr_strategy)
         elif image is not None:
-            if ocr_strategy != "never":
-                # We don't have anything to go on but the image itself, so we use OCR
-                text = ocr(self, image, languages=ocr_languages)
-            else:
-                text = ""
+            # We don't have anything to go on but the image itself, so we use OCR
+            text = ocr(self, image, languages=ocr_languages) if ocr_strategy != "never" else ""
         else:
             raise ValueError(
                 "Got arguments image and layout as None, at least one must be populated to use for "
-                "text extraction."
+                "text extraction.",
             )
         return text
 
@@ -187,7 +228,7 @@ class TextRegion(Rectangle):
 class EmbeddedTextRegion(TextRegion):
     def extract_text(
         self,
-        objects: Optional[List[TextRegion]],
+        objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
@@ -203,7 +244,7 @@ class EmbeddedTextRegion(TextRegion):
 class ImageTextRegion(TextRegion):
     def extract_text(
         self,
-        objects: Optional[List[TextRegion]],
+        objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
         ocr_strategy: str = "auto",
@@ -233,7 +274,7 @@ def ocr(text_block: TextRegion, image: Image.Image, languages: str = "eng") -> s
 
 def needs_ocr(
     region: TextRegion,
-    pdf_objects: List[TextRegion],
+    pdf_objects: Collection[TextRegion],
     ocr_strategy: str,
 ) -> bool:
     """Logic to determine whether ocr is needed to extract text from given region."""
@@ -254,12 +295,10 @@ def needs_ocr(
                 return False
             else:
                 return image_intersects
-        elif cid_ratio(region.text) > 0.5:
+        else:
             # If the region has text, we should only have to OCR if too much of the text is
             # uninterpretable.
-            return True
-        else:
-            return False
+            return cid_ratio(region.text) > 0.5
     else:
         return False
 
@@ -267,7 +306,7 @@ def needs_ocr(
 def aggregate_by_block(
     text_region: TextRegion,
     image: Optional[Image.Image],
-    pdf_objects: List[TextRegion],
+    pdf_objects: Collection[TextRegion],
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
 ) -> str:
@@ -306,3 +345,27 @@ def remove_control_characters(text: str) -> str:
     """Removes control characters from text."""
     out_text = "".join(c for c in text if unicodedata.category(c)[0] != "C")
     return out_text
+
+
+def region_bounding_boxes_are_almost_the_same(
+    region1: Rectangle,
+    region2: Rectangle,
+    same_region_threshold: float = 0.75,
+) -> bool:
+    """Returns whether bounding boxes are almost the same. This is determined by checking if the
+    intersection over union is above some threshold."""
+    return region1.intersection_over_union(region2) > same_region_threshold
+
+
+def grow_region_to_match_region(region_to_grow: Rectangle, region_to_match: Rectangle):
+    """Grows a region to the minimum size necessary to contain both regions."""
+    (new_x1, new_y1), _, (new_x2, new_y2), _ = minimal_containing_region(
+        region_to_grow,
+        region_to_match,
+    ).coordinates
+    region_to_grow.x1, region_to_grow.y1, region_to_grow.x2, region_to_grow.y2 = (
+        new_x1,
+        new_y1,
+        new_x2,
+        new_y2,
+    )

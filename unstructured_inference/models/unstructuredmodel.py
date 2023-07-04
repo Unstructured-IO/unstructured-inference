@@ -1,5 +1,15 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any, List
+
+from PIL.Image import Image
+
+if TYPE_CHECKING:
+    from unstructured_inference.inference.layoutelement import (
+        LayoutElement,
+        LocationlessLayoutElement,
+    )
 
 
 class UnstructuredModel(ABC):
@@ -18,11 +28,11 @@ class UnstructuredModel(ABC):
         if self.model is None:
             raise ModelNotInitializedError(
                 "Model has not been initialized. Please call the initialize method with the "
-                "appropriate arguments for loading the model."
+                "appropriate arguments for loading the model.",
             )
         pass  # pragma: no cover
 
-    def __call__(self, x: Any):
+    def __call__(self, x: Any) -> Any:
         """Inference using function call interface."""
         return self.predict(x)
 
@@ -30,6 +40,34 @@ class UnstructuredModel(ABC):
     def initialize(self, *args, **kwargs):
         """Load the model for inference."""
         pass  # pragma: no cover
+
+
+class UnstructuredObjectDetectionModel(UnstructuredModel):
+    """Wrapper class for object detection models used by unstructured."""
+
+    @abstractmethod
+    def predict(self, x: Image) -> List[LayoutElement]:
+        """Do inference using the wrapped model."""
+        super().predict(x)
+        return []  # pragma: no cover
+
+    def __call__(self, x: Image) -> List[LayoutElement]:
+        """Inference using function call interface."""
+        return super().__call__(x)
+
+
+class UnstructuredElementExtractionModel(UnstructuredModel):
+    """Wrapper class for object extraction models used by unstructured."""
+
+    @abstractmethod
+    def predict(self, x: Image) -> List[LocationlessLayoutElement]:
+        """Do inference using the wrapped model."""
+        super().predict(x)
+        return []  # pragma: no cover
+
+    def __call__(self, x: Image) -> List[LocationlessLayoutElement]:
+        """Inference using function call interface."""
+        return super().__call__(x)
 
 
 class ModelNotInitializedError(Exception):

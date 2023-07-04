@@ -1,11 +1,16 @@
-import torch
 import logging
+from pathlib import Path
+from typing import Optional, Union
+
+import torch
+from PIL import Image
+from transformers import (
+    DonutProcessor,
+    VisionEncoderDecoderConfig,
+    VisionEncoderDecoderModel,
+)
 
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
-from transformers import DonutProcessor, VisionEncoderDecoderModel, VisionEncoderDecoderConfig
-from PIL import Image
-from typing import Union, Optional
-from pathlib import Path
 
 
 class UnstructuredDonutModel(UnstructuredModel):
@@ -40,7 +45,7 @@ class UnstructuredDonutModel(UnstructuredModel):
         except EnvironmentError:
             logging.critical("Failed to initialize the model.")
             logging.critical(
-                "Ensure that the Donut parameters config, model and processor are correct"
+                "Ensure that the Donut parameters config, model and processor are correct",
             )
             raise ImportError("Review the parameters to initialize a UnstructuredDonutModel obj")
         self.model.to(device)
@@ -49,7 +54,9 @@ class UnstructuredDonutModel(UnstructuredModel):
         """Internal prediction method."""
         pixel_values = self.processor(x, return_tensors="pt").pixel_values
         decoder_input_ids = self.processor.tokenizer(
-            self.task_prompt, add_special_tokens=False, return_tensors="pt"
+            self.task_prompt,
+            add_special_tokens=False,
+            return_tensors="pt",
         ).input_ids
         outputs = self.model.generate(
             pixel_values.to(self.device),
@@ -64,5 +71,9 @@ class UnstructuredDonutModel(UnstructuredModel):
             return_dict_in_generate=True,
         )
         prediction = self.processor.batch_decode(outputs.sequences)[0]
+        # NOTE(alan): As of right now I think this would not work if passed in as the model to
+        # DocumentLayout.from_file and similar functions that take a model object as input. This
+        # produces image-to-text inferences rather than image-to-bboxes, so we actually need to
+        # hook it up in a different way.
         prediction = self.processor.token2json(prediction)
         return prediction

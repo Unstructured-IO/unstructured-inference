@@ -1,8 +1,7 @@
-fastapi
 layoutparser[layoutmodels,tesseract]
 python-multipart
-uvicorn
 huggingface-hub
 opencv-python!=4.7.0.68
 onnxruntime
-transformers
+# NOTE(alan): Pinned because this is when the most recent module we import appeared
+transformers>=4.25.1

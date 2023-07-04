@@ -1,10 +1,12 @@
-import pytest
 from unittest.mock import patch
 
-from transformers.models.table_transformer.modeling_table_transformer import TableTransformerDecoder
+import pytest
+from transformers.models.table_transformer.modeling_table_transformer import (
+    TableTransformerDecoder,
+)
 
-import unstructured_inference.models.tables as tables
 import unstructured_inference.models.table_postprocess as postprocess
+from unstructured_inference.models import tables
 
 
 @pytest.mark.parametrize(
@@ -32,7 +34,7 @@ def test_load_donut_model(model_path):
     assert type(table_model.model.model.decoder) == TableTransformerDecoder
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_table_transcript(platform_type):
     if platform_type == "x86_64":
         out = (
@@ -129,7 +131,7 @@ def sample_table_transcript(platform_type):
 
 
 @pytest.mark.parametrize(
-    "input_test, output_test",
+    ("input_test", "output_test"),
     [
         (
             [
@@ -164,7 +166,7 @@ def sample_table_transcript(platform_type):
                         2557.79296875,
                         216.98883056640625,
                     ],
-                }
+                },
             ],
         ),
         ([], []),
@@ -177,7 +179,7 @@ def test_nms(input_test, output_test):
 
 
 @pytest.mark.parametrize(
-    "supercell1, supercell2",
+    ("supercell1", "supercell2"),
     [
         (
             {
@@ -388,14 +390,14 @@ def test_remove_supercell_overlap(supercell1, supercell2):
                     ],
                 },
             ],
-        )
+        ),
     ],
 )
 def test_align_supercells(supercells, rows, columns, output_test):
     assert postprocess.align_supercells(supercells, rows, columns) == output_test
 
 
-@pytest.mark.parametrize("rows, bbox, output", [([1.0], [0.0], [1.0])])
+@pytest.mark.parametrize(("rows", "bbox", "output"), [([1.0], [0.0], [1.0])])
 def test_align_rows(rows, bbox, output):
     assert postprocess.align_rows(rows, bbox) == output
 
@@ -415,7 +417,7 @@ def test_table_prediction(model_path, sample_table_transcript, platform_type):
         table_model.initialize(model=model_path)
         img = Image.open("./sample-docs/example_table.jpg").convert("RGB")
         prediction = table_model.predict(img)
-        assert prediction == sample_table_transcript
+        assert prediction.strip() == sample_table_transcript.strip()
 
 
 def test_intersect():
@@ -441,7 +443,7 @@ def test_include_rect():
                     "span_num": 0,
                     "line_num": 0,
                     "block_num": 0,
-                }
+                },
             ],
             True,
             "",
@@ -455,7 +457,7 @@ def test_include_rect():
                     "span_num": 0,
                     "line_num": 0,
                     "block_num": 0,
-                }
+                },
             ],
             True,
             "p",
@@ -530,7 +532,9 @@ def test_include_rect():
 )
 def test_extract_text_from_spans(spans, join_with_space, expected):
     res = postprocess.extract_text_from_spans(
-        spans, join_with_space=join_with_space, remove_integer_superscripts=True
+        spans,
+        join_with_space=join_with_space,
+        remove_integer_superscripts=True,
     )
     assert res == expected
 

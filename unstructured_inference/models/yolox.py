@@ -3,17 +3,18 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/237e943ac64aa32eb32f875faa93ebb18512d41d/yolox/data/data_augment.py
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
-from PIL import Image
-import cv2
-from huggingface_hub import hf_hub_download
-import numpy as np
-import onnxruntime
 from typing import List
 
+import cv2
+import numpy as np
+import onnxruntime
+from huggingface_hub import hf_hub_download
+from PIL import Image
+
 from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.models.unstructuredmodel import UnstructuredModel
-from unstructured_inference.visualize import draw_bounding_boxes
+from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
+from unstructured_inference.visualize import draw_yolox_bounding_boxes
 
 YOLOX_LABEL_MAP = {
     0: "Caption",
@@ -32,20 +33,24 @@ YOLOX_LABEL_MAP = {
 MODEL_TYPES = {
     "yolox": LazyDict(
         model_path=LazyEvaluateInfo(
-            hf_hub_download, "unstructuredio/yolo_x_layout", "yolox_l0.05.onnx"
+            hf_hub_download,
+            "unstructuredio/yolo_x_layout",
+            "yolox_l0.05.onnx",
         ),
         label_map=YOLOX_LABEL_MAP,
     ),
     "yolox_tiny": LazyDict(
         model_path=LazyEvaluateInfo(
-            hf_hub_download, "unstructuredio/yolo_x_layout", "yolox_tiny.onnx"
+            hf_hub_download,
+            "unstructuredio/yolo_x_layout",
+            "yolox_tiny.onnx",
         ),
         label_map=YOLOX_LABEL_MAP,
     ),
 }
 
 
-class UnstructuredYoloXModel(UnstructuredModel):
+class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
     def predict(self, x: Image):
         """Predict using YoloX model."""
         super().predict(x)
@@ -125,7 +130,7 @@ class UnstructuredYoloXModel(UnstructuredModel):
         origin_img = np.array(Image.open(image_fn))
         final_boxes, final_scores, final_cls_inds = dets[:, :4], dets[:, 4], dets[:, 5]
 
-        annotated_image = draw_bounding_boxes(
+        annotated_image = draw_yolox_bounding_boxes(
             origin_img,
             final_boxes,
             final_scores,
@@ -164,10 +169,7 @@ def demo_postprocess(outputs, img_size, p6=False):
     grids = []
     expanded_strides = []
 
-    if not p6:
-        strides = [8, 16, 32]
-    else:
-        strides = [8, 16, 32, 64]
+    strides = [8, 16, 32] if not p6 else [8, 16, 32, 64]
 
     hsizes = [img_size[0] // stride for stride in strides]
     wsizes = [img_size[1] // stride for stride in strides]
@@ -208,7 +210,8 @@ def multiclass_nms_class_agnostic(boxes, scores, nms_thr, score_thr):
     valid_cls_inds = cls_inds[valid_score_mask]
     keep = nms(valid_boxes, valid_scores, nms_thr)
     dets = np.concatenate(
-        [valid_boxes[keep], valid_scores[keep, None], valid_cls_inds[keep, None]], 1
+        [valid_boxes[keep], valid_scores[keep, None], valid_cls_inds[keep, None]],
+        1,
     )
     return dets
 

@@ -1,19 +1,20 @@
-from typing import Final, Optional, Union, List, Dict, Any
 from pathlib import Path
+from typing import Any, Dict, Final, List, Optional, Union
 
+from huggingface_hub import hf_hub_download
 from layoutparser.models.detectron2.layoutmodel import (
-    is_detectron2_available,
     Detectron2LayoutModel,
+    is_detectron2_available,
 )
 from layoutparser.models.model_config import LayoutModelConfig
 from PIL import Image
-from huggingface_hub import hf_hub_download
 
-from unstructured_inference.logger import logger
 from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.logger import logger
+from unstructured_inference.models.unstructuredmodel import (
+    UnstructuredObjectDetectionModel,
+)
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
-
 
 DETECTRON_CONFIG: Final = "lp://PubLayNet/faster_rcnn_R_50_FPN_3x/config"
 DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
@@ -29,7 +30,7 @@ DEFAULT_EXTRA_CONFIG: Final[List[Any]] = ["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0
 # NOTE(alan): Entries are implemented as LazyDicts so that models aren't downloaded until they are
 # needed.
 MODEL_TYPES = {
-    None: LazyDict(
+    "detectron2_lp": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download,
             "layoutparser/detectron2",
@@ -45,10 +46,14 @@ MODEL_TYPES = {
     ),
     "checkbox": LazyDict(
         model_path=LazyEvaluateInfo(
-            hf_hub_download, "unstructuredio/oer-checkbox", "detectron2_finetuned_oer_checkbox.pth"
+            hf_hub_download,
+            "unstructuredio/oer-checkbox",
+            "detectron2_finetuned_oer_checkbox.pth",
         ),
         config_path=LazyEvaluateInfo(
-            hf_hub_download, "unstructuredio/oer-checkbox", "detectron2_oer_checkbox.json"
+            hf_hub_download,
+            "unstructuredio/oer-checkbox",
+            "detectron2_oer_checkbox.json",
         ),
         label_map={0: "Unchecked", 1: "Checked"},
         extra_config=None,
@@ -56,7 +61,7 @@ MODEL_TYPES = {
 }
 
 
-class UnstructuredDetectronModel(UnstructuredModel):
+class UnstructuredDetectronModel(UnstructuredObjectDetectionModel):
     """Unstructured model wrapper for Detectron2LayoutModel."""
 
     def predict(self, x: Image):
@@ -78,7 +83,7 @@ class UnstructuredDetectronModel(UnstructuredModel):
         if not is_detectron2_available():
             raise ImportError(
                 "Failed to load the Detectron2 model. Ensure that the Detectron2 "
-                "module is correctly installed."
+                "module is correctly installed.",
             )
 
         config_path_str = str(config_path)
