@@ -1,5 +1,6 @@
 ## 0.5.4-dev
 
+* Table processing check for the area of the package to fix division by zero bug
 * Warning for onnx version of detectron2 for empty pages suppresed.
 
 ## 0.5.4
