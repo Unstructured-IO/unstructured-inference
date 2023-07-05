@@ -192,19 +192,26 @@ def slot_into_containers(
         for container_num, container in enumerate(container_objects):
             container_rect = Rect(container["bbox"])
             intersect_area = container_rect.intersect(Rect(package["bbox"])).get_area()
-            overlap_fraction = intersect_area / package_area
 
-            match_scores.append(
-                {"container": container, "container_num": container_num, "score": overlap_fraction},
-            )
+            if package_area > 0:
+                overlap_fraction = intersect_area / package_area
 
-        sorted_match_scores = sort_objects_by_score(match_scores)
+                match_scores.append(
+                    {
+                        "container": container,
+                        "container_num": container_num,
+                        "score": overlap_fraction,
+                    },
+                )
 
-        best_match_score = sorted_match_scores[0]
-        best_match_scores.append(best_match_score["score"])
-        if forced_assignment or best_match_score["score"] >= overlap_threshold:
-            container_assignments[best_match_score["container_num"]].append(package_num)
-            package_assignments[package_num].append(best_match_score["container_num"])
+        if len(match_scores) > 0:
+            sorted_match_scores = sort_objects_by_score(match_scores)
+
+            best_match_score = sorted_match_scores[0]
+            best_match_scores.append(best_match_score["score"])
+            if forced_assignment or best_match_score["score"] >= overlap_threshold:
+                container_assignments[best_match_score["container_num"]].append(package_num)
+                package_assignments[package_num].append(best_match_score["container_num"])
 
     return container_assignments, package_assignments, best_match_scores
 
