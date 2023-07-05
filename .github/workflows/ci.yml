@@ -130,10 +130,15 @@ jobs:
         sudo apt-get install -y libmagic-dev poppler-utils libreoffice pandoc
         sudo add-apt-repository -y ppa:alex-p/tesseract-ocr5
         sudo apt-get install -y tesseract-ocr
+        sudo apt-get install -y tesseract-ocr-kor
         tesseract --version
         make install-ingest-s3
         make install-ingest-azure
         make install-ingest-discord
+        make install-ingest-elasticsearch
+        make install-ingest-dropbox
+        make install-ingest-gcs
+        make install-ingest-google-drive
         make install-ingest-github
         make install-ingest-gitlab
         make install-ingest-slack
