@@ -1,6 +1,10 @@
-## 0.5.4-dev0
+## 0.5.4-dev
 
-* Add functionality to convert a PDF in small chunks of pages at a time in `load_pdf`
+* Warning for onnx version of detectron2 for empty pages suppresed.
+
+## 0.5.4
+
+* Tweak to element ordering to make it more deterministic
 
 ## 0.5.3
 

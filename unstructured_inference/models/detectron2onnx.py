@@ -8,11 +8,13 @@ from huggingface_hub import hf_hub_download
 from PIL import Image
 
 from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.logger import logger
+from unstructured_inference.logger import logger, logger_onnx
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
+
+onnxruntime.set_default_logger_severity(logger_onnx.getEffectiveLevel())
 
 DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
     0: "Text",
@@ -53,7 +55,9 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         try:
             bboxes, labels, confidence_scores, _ = self.model.run(None, prepared_input)
         except onnxruntime.capi.onnxruntime_pybind11_state.RuntimeException:
-            logger.error("Something happened while inferencing page")
+            logger_onnx.debug(
+                "Ignoring runtime error from onnx (likely due to encountering blank page).",
+            )
             return []
         input_w, input_h = image.size
         regions = self.postprocess(bboxes, labels, confidence_scores, input_w, input_h)
