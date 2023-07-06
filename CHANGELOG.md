@@ -1,8 +1,9 @@
-## 0.5.5-dev2
+## 0.5.5
 
 * Table processing check for the area of the package to fix division by zero bug
+* Rename large model to chipper
 
-## 0.5.5-dev1
+## 0.5.4
 
 * Added CUDA and TensorRT execution providers for yolox and detectron2onnx model. 
 * Warning for onnx version of detectron2 for empty pages suppresed.
