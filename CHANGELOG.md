@@ -1,7 +1,9 @@
-## 0.5.4-dev1
+## 0.5.5-dev3
 
-* Add functionality to write images to computer storage temporarily instead of keeping them in memory for `pdf2image.convert_from_path` 
-* Add functionality to convert a PDF in small chunks of pages at a time for `pdf2image.convert_from_path`
+* Added functionality to write images to computer storage temporarily instead of keeping them in memory for `pdf2image.convert_from_path` 
+* Added functionality to convert a PDF in small chunks of pages at a time for `pdf2image.convert_from_path`
+* Table processing check for the area of the package to fix division by zero bug
+* Added CUDA and TensorRT execution providers for yolox and detectron2onnx model. 
 * Warning for onnx version of detectron2 for empty pages suppresed.
 
 ## 0.5.4
