@@ -3,24 +3,24 @@ from unittest import mock
 import pytest
 from PIL import Image
 
-from unstructured_inference.models import largemodel
+from unstructured_inference.models import chipper
 
 
 def test_initialize():
     with mock.patch.object(
-        largemodel.AutoTokenizer,
+        chipper.AutoTokenizer,
         "from_pretrained",
     ) as mock_tokenizer, mock.patch.object(
-        largemodel,
+        chipper,
         "DonutProcessor",
     ) as mock_donut_processor, mock.patch.object(
-        largemodel,
+        chipper,
         "DonutImageProcessor",
     ) as mock_donut_image_processor, mock.patch.object(
-        largemodel.VisionEncoderDecoderModel,
+        chipper.VisionEncoderDecoderModel,
         "from_pretrained",
     ) as mock_vision_encoder_decoder_model:
-        model = largemodel.UnstructuredLargeModel()
+        model = chipper.UnstructuredChipperModel()
         model.initialize("", "", "")
         mock_tokenizer.assert_called_once()
         mock_donut_processor.assert_called_once()
@@ -44,8 +44,8 @@ def mock_initialize(self, *arg, **kwargs):
 
 
 def test_predict_tokens():
-    with mock.patch.object(largemodel.UnstructuredLargeModel, "initialize", mock_initialize):
-        model = largemodel.UnstructuredLargeModel()
+    with mock.patch.object(chipper.UnstructuredChipperModel, "initialize", mock_initialize):
+        model = chipper.UnstructuredChipperModel()
         model.initialize()
         with open("sample-docs/loremipsum.png", "rb") as fp:
             im = Image.open(fp)
@@ -64,9 +64,9 @@ def test_predict_tokens():
     ],
 )
 def test_postprocess(decoded_str, expected_classes):
-    with mock.patch.object(largemodel.UnstructuredLargeModel, "initialize", mock_initialize):
+    with mock.patch.object(chipper.UnstructuredChipperModel, "initialize", mock_initialize):
         pass
-    model = largemodel.UnstructuredLargeModel()
+    model = chipper.UnstructuredChipperModel()
     tokenizer_model = "xlm-roberta-large"
     pre_trained_model = "nielsr/donut-base"
     model.initialize(tokenizer_model, pre_trained_model, None)
@@ -81,13 +81,13 @@ def test_postprocess(decoded_str, expected_classes):
 
 def test_predict():
     with mock.patch.object(
-        largemodel.UnstructuredLargeModel,
+        chipper.UnstructuredChipperModel,
         "predict_tokens",
     ) as mock_predict_tokens, mock.patch.object(
-        largemodel.UnstructuredLargeModel,
+        chipper.UnstructuredChipperModel,
         "postprocess",
     ) as mock_postprocess:
-        model = largemodel.UnstructuredLargeModel()
+        model = chipper.UnstructuredChipperModel()
         model.predict("hello")
         mock_predict_tokens.assert_called_once()
         mock_postprocess.assert_called_once()

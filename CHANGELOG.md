@@ -1,5 +1,6 @@
-## 0.5.5-dev3
+## 0.5.5
 
+* Rename large model to chipper
 * Added functionality to write images to computer storage temporarily instead of keeping them in memory for `pdf2image.convert_from_path` 
 * Added functionality to convert a PDF in small chunks of pages at a time for `pdf2image.convert_from_path`
 * Table processing check for the area of the package to fix division by zero bug
