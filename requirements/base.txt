@@ -143,7 +143,9 @@ requests==2.31.0
     #   torchvision
     #   transformers
 safetensors==0.3.1
-    # via timm
+    # via
+    #   timm
+    #   transformers
 scipy==1.10.1
     # via layoutparser
 six==1.16.0
@@ -173,7 +175,7 @@ tqdm==4.65.0
     #   huggingface-hub
     #   iopath
     #   transformers
-transformers==4.29.2
+transformers==4.30.2
     # via -r base.in
 triton==2.0.0
     # via torch
