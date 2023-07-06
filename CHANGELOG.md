@@ -1,3 +1,7 @@
+## 0.5.5-dev2
+
+* Table processing check for the area of the package to fix division by zero bug
+
 ## 0.5.5-dev1
 
 * Added CUDA and TensorRT execution providers for yolox and detectron2onnx model. 
