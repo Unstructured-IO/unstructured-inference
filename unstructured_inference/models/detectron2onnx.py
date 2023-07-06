@@ -72,7 +72,14 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
     ):
         """Loads the detectron2 model using the specified parameters"""
         logger.info("Loading the Detectron2 layout model ...")
-        self.model = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+        self.model = onnxruntime.InferenceSession(
+            model_path,
+            providers=[
+                "TensorrtExecutionProvider",
+                "CUDAExecutionProvider",
+                "CPUExecutionProvider",
+            ],
+        )
         self.label_map = label_map
         if confidence_threshold is None:
             confidence_threshold = 0.5
