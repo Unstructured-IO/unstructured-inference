@@ -58,7 +58,14 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
     def initialize(self, model_path: str, label_map: dict):
         """Start inference session for YoloX model."""
-        self.model = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+        self.model = onnxruntime.InferenceSession(
+            model_path,
+            providers=[
+                "TensorrtExecutionProvider",
+                "CUDAExecutionProvider",
+                "CPUExecutionProvider",
+            ],
+        )
         self.layout_classes = label_map
 
     def image_processing(
