@@ -1,3 +1,12 @@
+## 0.5.6-dev
+
+* Updates:
+| Library       | From      | To       |
+|---------------|-----------|----------|
+| transformers  | 4.29.2    | 4.30.2   |
+| opencv-python | 4.7.0.72  | 4.8.0.74 |
+| ipython       | 8.12.2    | 8.14.0   |
+
 ## 0.5.5
 
 * Rename large model to chipper
