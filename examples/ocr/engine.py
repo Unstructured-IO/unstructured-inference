@@ -27,8 +27,11 @@ def run_ocr_with_layout_detection(
     printable=True,
 ):
     total_text_extraction_infer_time = 0
-    total_text = ""
+    total_extracted_text = {}
     for i, image in enumerate(images):
+        page_num = i + 1
+        page_num_str = f"page{page_num}"
+
         page = layout.PageLayout(
             number=i+1,
             image=image,
@@ -54,8 +57,8 @@ def run_ocr_with_layout_detection(
             page_text = ""
             for el in elements:
                 page_text += el.text
-            _page_text = remove_non_printable(page_text)
-            total_text += _page_text
+            filtered_page_text = remove_non_printable(page_text)
+            total_extracted_text[page_num_str] = filtered_page_text
         elif mode == "entire_page":
             # OCR'ing entire page (new approach to implement)
             text_extraction_start_time = time.time()
@@ -66,17 +69,21 @@ def run_ocr_with_layout_detection(
             for k in range(len(boxes)):
                 (x, y, w, h) = ocr_data['left'][k], ocr_data['top'][k], ocr_data['width'][k], ocr_data['height'][k]
                 extracted_text = ocr_data['text'][k]
+                if not extracted_text:
+                    continue
+
                 extracted_region = Rectangle(x1=x, y1=y, x2=x+w, y2=y+h)
 
                 extracted_is_subregion_of_inferred = False
                 for inferred_region in inferred_layout:
                     extracted_is_subregion_of_inferred = extracted_region.is_almost_subregion_of(
-                        inferred_region,
+                        inferred_region.pad(12),
+                        subregion_threshold=0.75
                     )
                     if extracted_is_subregion_of_inferred:
                         break
 
-                if extracted_is_subregion_of_inferred and extracted_text:
+                if extracted_is_subregion_of_inferred:
                     extracted_text_list.append(extracted_text)
 
                 if drawable:
@@ -89,8 +96,8 @@ def run_ocr_with_layout_detection(
             total_text_extraction_infer_time += text_extraction_infer_time
 
             page_text = " ".join(extracted_text_list)
-            _page_text = remove_non_printable(page_text)
-            total_text += page_text
+            filtered_page_text = remove_non_printable(page_text)
+            total_extracted_text[page_num_str] = filtered_page_text
         else:
             raise ValueError("Invalid mode")
 
@@ -106,14 +113,14 @@ def run_ocr_with_layout_detection(
                     lineType=None,
                 )
 
-            f_path = os.path.join(output_dir, f"ocr_{mode}_page_{i + 1}.jpg")
+            f_path = os.path.join(output_dir, f"ocr_{mode}_{page_num_str}.jpg")
             cv2.imwrite(f_path, cv_img)
 
         if printable:
             print(f"page: {i + 1} - n_layout_elements: {len(inferred_layout)} - "
                   f"text_extraction_infer_time: {text_extraction_infer_time}")
 
-    return total_text_extraction_infer_time, total_text
+    return total_text_extraction_infer_time, total_extracted_text
 
 
 def run_ocr(

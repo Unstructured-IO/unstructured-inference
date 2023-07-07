@@ -11,7 +11,7 @@ from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDe
     UnstructuredElementExtractionModel
 
 
-def run(filename, drawable=True):
+def run(filename, page_limit=None, drawable=True):
     print(">>> Start", filename)
 
     now_dt = datetime.utcnow()
@@ -39,8 +39,10 @@ def run(filename, drawable=True):
     n_pages = len(individual_page_images)
     print(f"number_of_pages: {n_pages}")
 
+    page_limit = page_limit if page_limit else n_pages
+
     print("individual_page_images:")
-    for i, image in enumerate(individual_page_images[:3]):
+    for i, image in enumerate(individual_page_images[:page_limit]):
         print(f"\timage{i + 1} - size: {image.size}")
 
     page_size = individual_page_images[0].size if len(individual_page_images) > 0 else None
@@ -62,7 +64,9 @@ def run(filename, drawable=True):
     # OCR'ing individual blocks
     print("OCR'ing individual blocks...")
 
-    infer_time_individual, text_individual = run_ocr_with_layout_detection(
+    individual_page_images = individual_page_images[:page_limit]
+
+    infer_time_individual, text_individual_dict = run_ocr_with_layout_detection(
         images=individual_page_images,
         detection_model=detection_model,
         element_extraction_model=element_extraction_model,
@@ -74,7 +78,7 @@ def run(filename, drawable=True):
     # OCR'ing entire page
     print("OCR'ing entire page...")
 
-    infer_time_entire, text_entire = run_ocr_with_layout_detection(
+    infer_time_entire, text_entire_dict = run_ocr_with_layout_detection(
         images=individual_page_images,
         detection_model=detection_model,
         element_extraction_model=element_extraction_model,
@@ -90,6 +94,11 @@ def run(filename, drawable=True):
     print("Processing Time (OCR'ing entire page)")
     print(f"\ttotal_infer_time: {infer_time_entire}")
     print(f"\tavg_infer_time_per_page: {infer_time_entire / n_pages}")
+
+    delimiter = " "
+
+    text_individual = delimiter.join(text_individual_dict.values())
+    text_entire = delimiter.join(text_entire_dict.values())
 
     # Calculate similarity ratio
     from difflib import SequenceMatcher
@@ -126,8 +135,6 @@ def run(filename, drawable=True):
     print(f"unique_words_in_text_individual: {unique_words_individual}\n")
     print(f"unique_words_in_text_entire: {unique_words_entire}")
 
-    delimiter = " ||| "
-
     report = {
         "file_info": {
             "filename": filename,
@@ -147,17 +154,23 @@ def run(filename, drawable=True):
             "individual_blocks": {
                 "n_word_list": n_word_list_individual,
                 "n_word_sets": n_word_sets_individual,
-                "unique_words": delimiter.join(list(unique_words_individual))
+                "unique_words": delimiter.join(list(unique_words_individual)),
             },
             "entire_page": {
                 "n_word_list": n_word_list_entire,
                 "n_word_sets": n_word_sets_entire,
-                "unique_words": delimiter.join(list(unique_words_entire))
+                "unique_words": delimiter.join(list(unique_words_entire)),
             }
         },
-        "text": {
-            "individual_blocks": text_individual,
-            "entire_page": text_entire,
+        "extracted_text": {
+            "individual_blocks": {
+                "text_by_page": text_individual_dict,
+                "text_all": text_individual,
+            },
+            "entire_page": {
+                "text_by_page": text_entire_dict,
+                "text_all": text_entire,
+            },
         }
     }
 
@@ -185,4 +198,4 @@ if __name__ == '__main__':
     ]
 
     for f_name in filenames:
-        run(f_name, False)
+        run(f_name, None, True)
