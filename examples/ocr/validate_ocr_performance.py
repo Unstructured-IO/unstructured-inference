@@ -191,10 +191,10 @@ if __name__ == '__main__':
 
     filenames = [
         "2023-Jan-economic-outlook.pdf",
-        # "recalibrating-risk-report.pdf",
-        # "Silent-Giant.pdf",
-        # "loremipsum_multipage.pdf",
-        # "layout-parser-paper.pdf",
+        "recalibrating-risk-report.pdf",
+        "Silent-Giant.pdf",
+        "loremipsum_multipage.pdf",
+        "layout-parser-paper.pdf",
     ]
 
     for f_name in filenames:
