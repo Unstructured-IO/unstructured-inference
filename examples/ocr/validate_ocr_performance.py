@@ -5,8 +5,13 @@ from datetime import datetime
 
 import pdf2image
 
+from engine import run_ocr_with_layout_detection
+from unstructured_inference.models.base import get_model
+from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel, \
+    UnstructuredElementExtractionModel
 
-def run(filename):
+
+def run(filename, drawable=True):
     print(">>> Start", filename)
 
     now_dt = datetime.utcnow()
@@ -15,7 +20,8 @@ def run(filename):
     f_path = os.path.join(example_docs_dir, filename)
 
     sub_output_dir = os.path.join(output_dir, now_str)
-    os.makedirs(sub_output_dir, exist_ok=True)
+    if drawable:
+        os.makedirs(sub_output_dir, exist_ok=True)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         images = pdf2image.convert_from_path(f_path, output_folder=tmpdir)
@@ -39,18 +45,43 @@ def run(filename):
 
     page_size = individual_page_images[0].size if len(individual_page_images) > 0 else None
 
+    model = get_model()
+    if isinstance(model, UnstructuredObjectDetectionModel):
+        detection_model = model
+        element_extraction_model = None
+        model_type = "UnstructuredObjectDetectionModel"
+    elif isinstance(model, UnstructuredElementExtractionModel):
+        detection_model = None
+        element_extraction_model = model
+        model_type = "UnstructuredElementExtractionModel"
+    else:
+        raise ValueError(f"Unsupported model type: {type(model)}")
+
+    print("model_type:", model_type)
+
     # OCR'ing individual blocks
-    from engine import run_ocr_with_layout_detection
+    print("OCR'ing individual blocks...")
 
     infer_time_individual, text_individual = run_ocr_with_layout_detection(
         images=individual_page_images,
+        detection_model=detection_model,
+        element_extraction_model=element_extraction_model,
+        mode="individual_blocks",
         output_dir=sub_output_dir,
+        drawable=drawable,
     )
 
     # OCR'ing entire page
-    from examples.ocr.engine import run_ocr
+    print("OCR'ing entire page...")
 
-    infer_time_entire, text_entire = run_ocr(images=individual_page_images)
+    infer_time_entire, text_entire = run_ocr_with_layout_detection(
+        images=individual_page_images,
+        detection_model=detection_model,
+        element_extraction_model=element_extraction_model,
+        mode="entire_page",
+        output_dir=sub_output_dir,
+        drawable=drawable,
+    )
 
     print("Processing Time (OCR'ing individual blocks)")
     print(f"\ttotal_infer_time: {infer_time_individual}")
@@ -103,6 +134,10 @@ def run(filename):
             "n_pages": n_pages,
             "page_size": page_size,
         },
+        "model": {
+            "model": str(model),
+            "model_type": model_type,
+        },
         "processing_time": {
             "individual_blocks": infer_time_individual,
             "entire_page": infer_time_entire,
@@ -143,11 +178,11 @@ if __name__ == '__main__':
 
     filenames = [
         "2023-Jan-economic-outlook.pdf",
-        "recalibrating-risk-report.pdf",
-        "Silent-Giant.pdf",
-        "loremipsum_multipage.pdf",
-        "layout-parser-paper.pdf",
+        # "recalibrating-risk-report.pdf",
+        # "Silent-Giant.pdf",
+        # "loremipsum_multipage.pdf",
+        # "layout-parser-paper.pdf",
     ]
 
     for f_name in filenames:
-        run(f_name)
+        run(f_name, False)
