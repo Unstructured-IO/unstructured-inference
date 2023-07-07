@@ -1,5 +1,7 @@
 from typing import Optional
 
+from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
+from unstructured_inference.models.chipper import UnstructuredChipperModel
 from unstructured_inference.models.detectron2 import (
     MODEL_TYPES as DETECTRON2_MODEL_TYPES,
 )
@@ -12,8 +14,6 @@ from unstructured_inference.models.detectron2onnx import (
 from unstructured_inference.models.detectron2onnx import (
     UnstructuredDetectronONNXModel,
 )
-from unstructured_inference.models.largemodel import MODEL_TYPES as LARGE_MODEL_TYPES
-from unstructured_inference.models.largemodel import UnstructuredLargeModel
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.models.yolox import (
     MODEL_TYPES as YOLOX_MODEL_TYPES,
@@ -41,9 +41,9 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     elif model_name in YOLOX_MODEL_TYPES:
         model = UnstructuredYoloXModel()
         model.initialize(**YOLOX_MODEL_TYPES[model_name])
-    elif model_name in LARGE_MODEL_TYPES:
-        model = UnstructuredLargeModel()
-        model.initialize(**LARGE_MODEL_TYPES[model_name])
+    elif model_name in CHIPPER_MODEL_TYPES:
+        model = UnstructuredChipperModel()
+        model.initialize(**CHIPPER_MODEL_TYPES[model_name])
     else:
         raise UnknownModelException(f"Unknown model type: {model_name}")
     return model

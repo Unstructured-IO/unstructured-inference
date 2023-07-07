@@ -15,7 +15,7 @@ from unstructured_inference.inference.layoutelement import LocationlessLayoutEle
 from unstructured_inference.models.unstructuredmodel import UnstructuredElementExtractionModel
 
 MODEL_TYPES = {
-    "large_model": {
+    "chipper": {
         "tokenizer_name": "xlm-roberta-large",
         "pre_trained_model_name": "unstructuredio/ved-fine-tuning",
     },
@@ -57,7 +57,7 @@ SPECIAL_TAGS = ["<sep/>"] + [
 ]
 
 
-class UnstructuredLargeModel(UnstructuredElementExtractionModel):
+class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     required_w: int = 1248
     required_h: int = 1664
 

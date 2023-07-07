@@ -382,6 +382,7 @@ def get_element_from_block(
 def load_pdf(
     filename: str,
     dpi: int = 200,
+    chunk_size: int = 100,
 ) -> Tuple[List[List[TextRegion]], List[Image.Image]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
@@ -406,5 +407,20 @@ def load_pdf(
                 layout.append(text_region)
         layouts.append(layout)
 
-    images = pdf2image.convert_from_path(filename, dpi=dpi)
+    # Convert a PDF in small chunks of pages at a time (e.g. 1-10, 11-20... and so on)
+    info = pdf2image.pdfinfo_from_path(filename)
+    total_pages = info["Pages"]
+    images = []
+
+    for start_page in range(1, total_pages + 1, chunk_size):
+        end_page = min(start_page + chunk_size - 1, total_pages)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            chunk_images = pdf2image.convert_from_path(
+                filename,
+                dpi=dpi,
+                first_page=start_page,
+                last_page=end_page,
+                output_folder=tmpdir,
+            )
+            images += chunk_images
     return layouts, images
