@@ -37,7 +37,7 @@ MODEL_TYPES: Dict[Optional[str], LazyDict] = {
         label_map=DEFAULT_LABEL_MAP,
         confidence_threshold=0.8,
     ),
-     "detectron2_mask_rcnn": LazyDict(
+    "detectron2_mask_rcnn": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download,
             "unstructuredio/detectron2_mask_rcnn_X_101_32x8d_FPN_3x",
@@ -45,7 +45,7 @@ MODEL_TYPES: Dict[Optional[str], LazyDict] = {
         ),
         label_map=DEFAULT_LABEL_MAP,
         confidence_threshold=0.8,
-    )
+    ),
 }
 
 
