@@ -37,6 +37,15 @@ MODEL_TYPES: Dict[Optional[str], LazyDict] = {
         label_map=DEFAULT_LABEL_MAP,
         confidence_threshold=0.8,
     ),
+     "detectron2_mask_rcnn": LazyDict(
+        model_path=LazyEvaluateInfo(
+            hf_hub_download,
+            "unstructuredio/detectron2_mask_rcnn_X_101_32x8d_FPN_3x"
+            "model.onnx",
+        ),
+        label_map=DEFAULT_LABEL_MAP,
+        confidence_threshold=0.8,
+    )
 }
 
 
@@ -53,7 +62,10 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
 
         prepared_input = self.preprocess(image)
         try:
-            bboxes, labels, confidence_scores, _ = self.model.run(None, prepared_input)
+            result = self.model.run(None, prepared_input)
+            bboxes = result[0]
+            labels = result[1]
+            confidence_scores = result[3]
         except onnxruntime.capi.onnxruntime_pybind11_state.RuntimeException:
             logger_onnx.debug(
                 "Ignoring runtime error from onnx (likely due to encountering blank page).",
