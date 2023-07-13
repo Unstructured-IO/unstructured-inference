@@ -1,10 +1,14 @@
+## 0.5.6-dev0
+
+* Warns users that Chipper is a beta model.
+
 ## 0.5.5
 
 * Rename large model to chipper
-* Added functionality to write images to computer storage temporarily instead of keeping them in memory for `pdf2image.convert_from_path` 
+* Added functionality to write images to computer storage temporarily instead of keeping them in memory for `pdf2image.convert_from_path`
 * Added functionality to convert a PDF in small chunks of pages at a time for `pdf2image.convert_from_path`
 * Table processing check for the area of the package to fix division by zero bug
-* Added CUDA and TensorRT execution providers for yolox and detectron2onnx model. 
+* Added CUDA and TensorRT execution providers for yolox and detectron2onnx model.
 * Warning for onnx version of detectron2 for empty pages suppresed.
 
 ## 0.5.4
