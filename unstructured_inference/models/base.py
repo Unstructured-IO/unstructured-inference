@@ -1,5 +1,6 @@
 from typing import Optional
 
+from unstructured_inference.logger import logger
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
 from unstructured_inference.models.chipper import UnstructuredChipperModel
 from unstructured_inference.models.detectron2 import (
@@ -42,6 +43,14 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
         model = UnstructuredYoloXModel()
         model.initialize(**YOLOX_MODEL_TYPES[model_name])
     elif model_name in CHIPPER_MODEL_TYPES:
+        logger.warning(
+            "The Chipper model is currently in Beta and is not yet ready for production use. "
+            "You can reach out to the Unstructured engineering team in the Unstructured "
+            "commnuity Slack if you have any feedback on the Chipper model. "
+            "You can join the community Slack here: "
+            "https://join.slack.com/t/unstructuredw-kbe4326/shared_invite/"
+            "zt-1x7cgo0pg-PTptXWylzPQF9xZolzCnwQ",
+        )
         model = UnstructuredChipperModel()
         model.initialize(**CHIPPER_MODEL_TYPES[model_name])
     else:
