@@ -1,6 +1,7 @@
-## 0.5.6-dev0
+## 0.5.6-dev1
 
 * Warns users that Chipper is a beta model.
+* Exposed control over dpi when converting PDF to an image.
 
 ## 0.5.5
 
