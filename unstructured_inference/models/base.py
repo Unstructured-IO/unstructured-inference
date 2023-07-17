@@ -23,7 +23,7 @@ from unstructured_inference.models.yolox import (
     UnstructuredYoloXModel,
 )
 
-DEFAULT_MODEL = "detectron2_onnx"
+DEFAULT_MODEL = "detectron2_mask_rcnn"
 
 
 def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
