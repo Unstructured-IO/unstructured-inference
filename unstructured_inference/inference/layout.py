@@ -77,10 +77,11 @@ class DocumentLayout:
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
         extract_tables: bool = False,
+        pdf_image_dpi: int = 200,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         logger.info(f"Reading PDF for file: {filename} ...")
-        layouts, images = load_pdf(filename)
+        layouts, images = load_pdf(filename, pdf_image_dpi)
         if len(layouts) > len(images):
             raise RuntimeError(
                 "Some images were not loaded. Check that poppler is installed and in your $PATH.",
@@ -297,6 +298,7 @@ def process_data_with_model(
     ocr_languages: str = "eng",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
+    pdf_image_dpi: int = 200,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
@@ -310,6 +312,7 @@ def process_data_with_model(
             ocr_languages=ocr_languages,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
+            pdf_image_dpi=pdf_image_dpi,
         )
 
     return layout
@@ -323,6 +326,7 @@ def process_file_with_model(
     ocr_languages: str = "eng",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
+    pdf_image_dpi: int = 200,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
@@ -353,6 +357,7 @@ def process_file_with_model(
             ocr_languages=ocr_languages,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
+            pdf_image_dpi=pdf_image_dpi,
         )
     )
     return layout
