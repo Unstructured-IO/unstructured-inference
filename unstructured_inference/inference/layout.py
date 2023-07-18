@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from pathlib import PurePath
 from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -80,30 +81,44 @@ class DocumentLayout:
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         logger.info(f"Reading PDF for file: {filename} ...")
-        layouts, images = load_pdf(filename)
-        if len(layouts) > len(images):
-            raise RuntimeError(
-                "Some images were not loaded. Check that poppler is installed and in your $PATH.",
-            )
-        pages: List[PageLayout] = []
-        if fixed_layouts is None:
-            fixed_layouts = [None for _ in layouts]
-        for i, (image, layout, fixed_layout) in enumerate(zip(images, layouts, fixed_layouts)):
-            # NOTE(robinson) - In the future, maybe we detect the page number and default
-            # to the index if it is not detected
-            page = PageLayout.from_image(
-                image,
-                number=i + 1,
-                detection_model=detection_model,
-                element_extraction_model=element_extraction_model,
-                layout=layout,
-                ocr_strategy=ocr_strategy,
-                ocr_languages=ocr_languages,
-                fixed_layout=fixed_layout,
-                extract_tables=extract_tables,
-            )
-            pages.append(page)
-        return cls.from_pages(pages)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            layouts, _image_paths = load_pdf(filename, output_folder=tmpdir, path_only=True)
+            image_paths = cast(List[str], _image_paths)
+            if len(layouts) > len(image_paths):
+                raise RuntimeError(
+                    "Some images were not loaded. "
+                    "Check that poppler is installed and in your $PATH.",
+                )
+            pages: List[PageLayout] = []
+            if fixed_layouts is None:
+                fixed_layouts = [None for _ in layouts]
+            for i, (image_path, layout, fixed_layout) in enumerate(
+                zip(image_paths, layouts, fixed_layouts),
+            ):
+                # NOTE(robinson) - In the future, maybe we detect the page number and default
+                # to the index if it is not detected
+                with Image.open(image_path) as image:
+                    page = PageLayout.from_image(
+                        image,
+                        number=i + 1,
+                        detection_model=detection_model,
+                        element_extraction_model=element_extraction_model,
+                        layout=layout,
+                        ocr_strategy=ocr_strategy,
+                        ocr_languages=ocr_languages,
+                        fixed_layout=fixed_layout,
+                        extract_tables=extract_tables,
+                    )
+
+                    page.image_metadata = {
+                        "format": page.image.format if page.image else None,
+                        "width": page.image.width if page.image else None,
+                        "height": page.image.height if page.image else None,
+                    }
+
+                    pages.append(page)
+            return cls.from_pages(pages)
 
     @classmethod
     def from_image_file(
@@ -149,6 +164,7 @@ class PageLayout:
         number: int,
         image: Image.Image,
         layout: Optional[List[TextRegion]],
+        image_metadata: Optional[dict] = None,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
@@ -158,6 +174,9 @@ class PageLayout:
         if detection_model is not None and element_extraction_model is not None:
             raise ValueError("Only one of detection_model and extraction_model should be passed.")
         self.image = image
+        if image_metadata is None:
+            image_metadata = {}
+        self.image_metadata = image_metadata
         self.image_array: Union[np.ndarray, None] = None
         self.layout = layout
         self.number = number
@@ -382,8 +401,9 @@ def get_element_from_block(
 def load_pdf(
     filename: str,
     dpi: int = 200,
-    chunk_size: int = 100,
-) -> Tuple[List[List[TextRegion]], List[Image.Image]]:
+    output_folder: Union[str, PurePath] = None,  # type: ignore
+    path_only: bool = False,
+) -> Tuple[List[List[TextRegion]], Union[List[Image.Image], List[str]]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
     layouts = []
@@ -407,20 +427,13 @@ def load_pdf(
                 layout.append(text_region)
         layouts.append(layout)
 
-    # Convert a PDF in small chunks of pages at a time (e.g. 1-10, 11-20... and so on)
-    info = pdf2image.pdfinfo_from_path(filename)
-    total_pages = info["Pages"]
-    images = []
+    if path_only and not output_folder:
+        raise ValueError("output_folder must be specified if path_only is true")
 
-    for start_page in range(1, total_pages + 1, chunk_size):
-        end_page = min(start_page + chunk_size - 1, total_pages)
-        with tempfile.TemporaryDirectory() as tmpdir:
-            chunk_images = pdf2image.convert_from_path(
-                filename,
-                dpi=dpi,
-                first_page=start_page,
-                last_page=end_page,
-                output_folder=tmpdir,
-            )
-            images += chunk_images
+    images = pdf2image.convert_from_path(
+        filename,
+        output_folder=output_folder,
+        paths_only=path_only,
+    )
+
     return layouts, images
