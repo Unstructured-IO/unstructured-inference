@@ -442,6 +442,7 @@ def load_pdf(
 
     images = pdf2image.convert_from_path(
         filename,
+        dpi=dpi,
         output_folder=output_folder,
         paths_only=path_only,
     )
