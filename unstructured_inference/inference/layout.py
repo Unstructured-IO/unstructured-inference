@@ -84,7 +84,12 @@ class DocumentLayout:
         logger.info(f"Reading PDF for file: {filename} ...")
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            layouts, _image_paths = load_pdf(filename, pdf_image_dpi, output_folder=tmpdir, path_only=True)
+            layouts, _image_paths = load_pdf(
+                filename,
+                pdf_image_dpi,
+                output_folder=tmpdir,
+                path_only=True,
+            )
             image_paths = cast(List[str], _image_paths)
             if len(layouts) > len(image_paths):
                 raise RuntimeError(
