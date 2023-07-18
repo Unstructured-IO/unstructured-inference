@@ -1,3 +1,4 @@
+import os.path
 import tempfile
 from functools import partial
 from itertools import product
@@ -141,31 +142,35 @@ def test_get_page_elements_with_ocr(monkeypatch):
     assert str(page) == "\n\nAn Even Catchier Title"
 
 
-def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout):
-    image = np.random.randint(12, 24, (40, 40))
-    images = [image, image]
+def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout, mock_image):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        image_path1 = os.path.join(tmpdir, "mock1.jpg")
+        image_path2 = os.path.join(tmpdir, "mock2.jpg")
+        mock_image.save(image_path1)
+        mock_image.save(image_path2)
+        image_paths = [image_path1, image_path2]
 
-    layouts = [mock_initial_layout, mock_initial_layout]
+        layouts = [mock_initial_layout, mock_initial_layout]
 
-    monkeypatch.setattr(
-        models,
-        "UnstructuredDetectronModel",
-        partial(MockLayoutModel, layout=mock_final_layout),
-    )
-    monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
+        monkeypatch.setattr(
+            models,
+            "UnstructuredDetectronModel",
+            partial(MockLayoutModel, layout=mock_final_layout),
+        )
+        monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
-    with patch.object(layout, "load_pdf", return_value=(layouts, images)):
-        model = layout.get_model("detectron2_lp")
-        doc = layout.DocumentLayout.from_file("fake-file.pdf", detection_model=model)
+        with patch.object(layout, "load_pdf", return_value=(layouts, image_paths)):
+            model = layout.get_model("detectron2_lp")
+            doc = layout.DocumentLayout.from_file("fake-file.pdf", detection_model=model)
 
-        assert str(doc).startswith("A Catchy Title")
-        assert str(doc).count("A Catchy Title") == 2  # Once for each page
-        assert str(doc).endswith("A very repetitive narrative. ")
+            assert str(doc).startswith("A Catchy Title")
+            assert str(doc).count("A Catchy Title") == 2  # Once for each page
+            assert str(doc).endswith("A very repetitive narrative. ")
 
-        assert doc.pages[0].elements[0].to_dict()["text"] == "A Catchy Title"
+            assert doc.pages[0].elements[0].to_dict()["text"] == "A Catchy Title"
 
-        pages = doc.pages
-        assert str(doc) == "\n\n".join([str(page) for page in pages])
+            pages = doc.pages
+            assert str(doc) == "\n\n".join([str(page) for page in pages])
 
 
 @pytest.mark.parametrize("model_name", [None, "checkbox", "fake"])
@@ -526,6 +531,14 @@ def test_load_pdf_image_placement():
     assert image_region.y2 < images[5].height / 2
 
 
+def test_load_pdf_raises_with_path_only_no_output_folder():
+    with pytest.raises(ValueError):
+        layout.load_pdf(
+            "sample-docs/loremipsum-flat.pdf",
+            path_only=True,
+        )
+
+
 @pytest.mark.skip("Temporarily removed multicolumn to fix ordering")
 def test_load_pdf_with_multicolumn_layout_and_ocr(filename="sample-docs/design-thinking.pdf"):
     layouts, images = layout.load_pdf(filename)
@@ -609,18 +622,21 @@ def ordering_layout():
     return elements
 
 
-def test_layout_order(ordering_layout):
-    with patch.object(layout, "get_model", lambda: lambda x: ordering_layout), patch.object(
-        layout,
-        "load_pdf",
-        lambda *args, **kwargs: ([[]], [mock_image]),
-    ), patch.object(
-        layout,
-        "UnstructuredObjectDetectionModel",
-        object,
-    ):
-        doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
-        page = doc.pages[0]
+def test_layout_order(mock_image, ordering_layout):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        mock_image_path = os.path.join(tmpdir, "mock.jpg")
+        mock_image.save(mock_image_path)
+        with patch.object(layout, "get_model", lambda: lambda x: ordering_layout), patch.object(
+            layout,
+            "load_pdf",
+            lambda *args, **kwargs: ([[]], [mock_image_path]),
+        ), patch.object(
+            layout,
+            "UnstructuredObjectDetectionModel",
+            object,
+        ):
+            doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
+            page = doc.pages[0]
     for n, element in enumerate(page.elements):
         assert element.text == str(n)
 
