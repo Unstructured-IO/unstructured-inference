@@ -122,6 +122,7 @@ class DocumentLayout:
                         "width": page.image.width if page.image else None,
                         "height": page.image.height if page.image else None,
                     }
+                    page.image = None
 
                     pages.append(page)
             return cls.from_pages(pages)
