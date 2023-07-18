@@ -755,4 +755,12 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             ocr_languages="eng",
             fixed_layouts=None,
             extract_tables=False,
+            pdf_image_dpi=200,
         )
+
+
+@pytest.mark.parametrize(("pdf_image_dpi", "expected"), [(200, 2200), (100, 1100)])
+def test_exposed_pdf_image_dpi(pdf_image_dpi, expected, monkeypatch):
+    with patch.object(layout.PageLayout, "from_image") as mock_from_image:
+        layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf", pdf_image_dpi=pdf_image_dpi)
+        assert mock_from_image.call_args[0][0].height == expected

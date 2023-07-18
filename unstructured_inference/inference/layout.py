@@ -78,12 +78,13 @@ class DocumentLayout:
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
         extract_tables: bool = False,
+        pdf_image_dpi: int = 200,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         logger.info(f"Reading PDF for file: {filename} ...")
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            layouts, _image_paths = load_pdf(filename, output_folder=tmpdir, path_only=True)
+            layouts, _image_paths = load_pdf(filename, pdf_image_dpi, output_folder=tmpdir, path_only=True)
             image_paths = cast(List[str], _image_paths)
             if len(layouts) > len(image_paths):
                 raise RuntimeError(
@@ -316,6 +317,7 @@ def process_data_with_model(
     ocr_languages: str = "eng",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
+    pdf_image_dpi: int = 200,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
@@ -329,6 +331,7 @@ def process_data_with_model(
             ocr_languages=ocr_languages,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
+            pdf_image_dpi=pdf_image_dpi,
         )
 
     return layout
@@ -342,6 +345,7 @@ def process_file_with_model(
     ocr_languages: str = "eng",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
+    pdf_image_dpi: int = 200,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
@@ -372,6 +376,7 @@ def process_file_with_model(
             ocr_languages=ocr_languages,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
+            pdf_image_dpi=pdf_image_dpi,
         )
     )
     return layout
