@@ -108,6 +108,7 @@ class DocumentLayout:
             with Image.open(image_path) as image:
                 page = PageLayout.from_image(
                     image,
+                    image_path=image_path,
                     number=i + 1,
                     detection_model=detection_model,
                     element_extraction_model=element_extraction_model,
@@ -117,15 +118,6 @@ class DocumentLayout:
                     fixed_layout=fixed_layout,
                     extract_tables=extract_tables,
                 )
-
-                page.image_metadata = {
-                    "format": page.image.format if page.image else None,
-                    "width": page.image.width if page.image else None,
-                    "height": page.image.height if page.image else None,
-                }
-                page.image_path = image_path
-                page.image = None
-
                 pages.append(page)
         return cls.from_pages(pages)
 
@@ -154,6 +146,7 @@ class DocumentLayout:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
         page = PageLayout.from_image(
             image,
+            image_path=filename,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
             layout=None,
@@ -289,6 +282,7 @@ class PageLayout:
     def from_image(
         cls,
         image: Image.Image,
+        image_path: Optional[Union[str, PurePath]],
         number: int = 1,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
@@ -316,6 +310,15 @@ class PageLayout:
             page.get_elements_with_detection_model()
         else:
             page.elements = page.get_elements_from_layout(fixed_layout)
+
+        page.image_metadata = {
+            "format": page.image.format if page.image else None,
+            "width": page.image.width if page.image else None,
+            "height": page.image.height if page.image else None,
+        }
+        page.image_path = os.path.abspath(image_path)
+        page.image = None
+
         return page
 
 

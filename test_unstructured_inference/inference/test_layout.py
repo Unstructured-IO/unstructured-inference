@@ -326,12 +326,53 @@ def test_from_image_file(monkeypatch, mock_final_layout, filetype):
         self.elements = [mock_final_layout]
 
     monkeypatch.setattr(layout.PageLayout, "get_elements_with_detection_model", mock_get_elements)
-    elements = (
-        layout.DocumentLayout.from_image_file(f"sample-docs/loremipsum.{filetype}")
-        .pages[0]
-        .elements
-    )
-    assert elements[0] == mock_final_layout
+    filename = f"sample-docs/loremipsum.{filetype}"
+    image = Image.open(filename)
+    image_metadata = {
+        "format": image.format,
+        "width": image.width,
+        "height": image.height,
+    }
+
+    doc = layout.DocumentLayout.from_image_file(filename)
+    page = doc.pages[0]
+    assert page.elements[0] == mock_final_layout
+    assert page.image is None
+    assert page.image_path == os.path.abspath(filename)
+    assert page.image_metadata == image_metadata
+
+
+def test_from_file(monkeypatch, mock_final_layout):
+    def mock_get_elements(self, *args, **kwargs):
+        self.elements = [mock_final_layout]
+
+    monkeypatch.setattr(layout.PageLayout, "get_elements_with_detection_model", mock_get_elements)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        image_path = os.path.join(tmpdir, "loremipsum.ppm")
+        image = Image.open('sample-docs/loremipsum.jpg')
+        image.save(image_path)
+        image_metadata = {
+            "format": 'PPM',
+            "width": image.width,
+            "height": image.height,
+        }
+
+        with patch.object(
+            layout,
+            "create_image_output_dir",
+            return_value=tmpdir,
+        ), patch.object(
+            layout,
+            "load_pdf",
+            lambda *args, **kwargs: ([[]], [image_path]),
+        ):
+            doc = layout.DocumentLayout.from_file("fake-file.pdf")
+            page = doc.pages[0]
+            assert page.elements[0] == mock_final_layout
+            assert page.image_metadata == image_metadata
+            assert page.image_path == image_path
+            assert page.image is None
 
 
 def test_from_image_file_raises_with_empty_fn():
@@ -777,28 +818,4 @@ def test_create_image_output_dir():
         assert output_dir == expected_output_dir
 
 
-def test_from_file(mock_image):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        expected_image_path = os.path.join(tmpdir, "loremipsum.ppm")
-        image = Image.open('sample-docs/loremipsum.jpg')
-        image.save(expected_image_path)
-        expected_image_metadata = {
-            "format": 'PPM',
-            "width": image.width,
-            "height": image.height,
-        }
 
-        with patch.object(
-            layout,
-            "create_image_output_dir",
-            return_value=tmpdir,
-        ), patch.object(
-            layout,
-            "load_pdf",
-            lambda *args, **kwargs: ([[]], [expected_image_path]),
-        ):
-            doc = layout.DocumentLayout.from_file("fake-file.pdf")
-            page = doc.pages[0]
-            assert page.image_metadata == expected_image_metadata
-            assert page.image_path == expected_image_path
-            assert page.image is None
