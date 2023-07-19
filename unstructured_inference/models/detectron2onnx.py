@@ -86,7 +86,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
     ):
         """Loads the detectron2 model using the specified parameters"""
         logger.info("Loading the Detectron2 layout model ...")
-        self.model_path = model_path
+        self.model_path = str(model_path)
         self.model = onnxruntime.InferenceSession(
             model_path,
             providers=[
