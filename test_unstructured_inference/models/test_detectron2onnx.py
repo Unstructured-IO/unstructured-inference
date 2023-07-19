@@ -14,7 +14,7 @@ class MockDetectron2ONNXLayoutModel:
         self.kwargs = kwargs
 
     def run(self, *args):
-        return ([(1, 2, 3, 4)], [0], [(4, 5)], [0.818] )
+        return ([(1, 2, 3, 4)], [0], [(4, 5)], [0.818])
 
     def get_inputs(self):
         class input_thing:
