@@ -65,7 +65,9 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
             result = self.model.run(None, prepared_input)
             bboxes = result[0]
             labels = result[1]
-            confidence_scores = result[2]
+            # Previous model detectron2_onnx stored confidence scores at index 2,
+            # bigger model stores it at index 3
+            confidence_scores = result[2] if 'R_50' in self.model_path else result[3]
         except onnxruntime.capi.onnxruntime_pybind11_state.RuntimeException:
             logger_onnx.debug(
                 "Ignoring runtime error from onnx (likely due to encountering blank page).",
@@ -84,6 +86,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
     ):
         """Loads the detectron2 model using the specified parameters"""
         logger.info("Loading the Detectron2 layout model ...")
+        self.model_path = model_path
         self.model = onnxruntime.InferenceSession(
             model_path,
             providers=[
