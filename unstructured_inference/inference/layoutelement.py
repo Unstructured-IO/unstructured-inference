@@ -116,6 +116,7 @@ def merge_inferred_layout_with_extracted_layout(
                     # Looks like these represent the same region
                     grow_region_to_match_region(inferred_region, extracted_region)
                     inferred_region.text = extracted_region.text
+                    inferred_region.type = inferred_region.type
                     region_matched = True
                 elif extracted_is_subregion_of_inferred and inferred_is_text and extracted_is_image:
                     grow_region_to_match_region(inferred_region, extracted_region)
