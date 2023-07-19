@@ -10,6 +10,7 @@ from PIL import Image
 
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
+from unstructured_inference.inference.layout import create_image_output_dir
 from unstructured_inference.models import detectron2, tesseract
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
@@ -764,3 +765,40 @@ def test_exposed_pdf_image_dpi(pdf_image_dpi, expected, monkeypatch):
     with patch.object(layout.PageLayout, "from_image") as mock_from_image:
         layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf", pdf_image_dpi=pdf_image_dpi)
         assert mock_from_image.call_args[0][0].height == expected
+
+
+def test_create_image_output_dir():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_f_path = os.path.join(tmpdir, "loremipsum.pdf")
+        output_dir = create_image_output_dir(tmp_f_path)
+        expected_output_dir = os.path.join(os.path.abspath(tmpdir), "loremipsum")
+        assert os.path.isdir(output_dir)
+        assert os.path.isabs(output_dir)
+        assert output_dir == expected_output_dir
+
+
+def test_from_file(mock_image):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        expected_image_path = os.path.join(tmpdir, "loremipsum.ppm")
+        image = Image.open('sample-docs/loremipsum.jpg')
+        image.save(expected_image_path)
+        expected_image_metadata = {
+            "format": 'PPM',
+            "width": image.width,
+            "height": image.height,
+        }
+
+        with patch.object(
+            layout,
+            "create_image_output_dir",
+            return_value=tmpdir,
+        ), patch.object(
+            layout,
+            "load_pdf",
+            lambda *args, **kwargs: ([[]], [expected_image_path]),
+        ):
+            doc = layout.DocumentLayout.from_file("fake-file.pdf")
+            page = doc.pages[0]
+            assert page.image_metadata == expected_image_metadata
+            assert page.image_path == expected_image_path
+            assert page.image is None

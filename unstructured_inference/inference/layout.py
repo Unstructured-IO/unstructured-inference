@@ -83,49 +83,51 @@ class DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         logger.info(f"Reading PDF for file: {filename} ...")
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            layouts, _image_paths = load_pdf(
-                filename,
-                pdf_image_dpi,
-                output_folder=tmpdir,
-                path_only=True,
+        # Store pdf images for later use
+        output_dir = create_image_output_dir(filename)
+        layouts, _image_paths = load_pdf(
+            filename,
+            pdf_image_dpi,
+            output_folder=output_dir,
+            path_only=True,
+        )
+        image_paths = cast(List[str], _image_paths)
+        if len(layouts) > len(image_paths):
+            raise RuntimeError(
+                "Some images were not loaded. "
+                "Check that poppler is installed and in your $PATH.",
             )
-            image_paths = cast(List[str], _image_paths)
-            if len(layouts) > len(image_paths):
-                raise RuntimeError(
-                    "Some images were not loaded. "
-                    "Check that poppler is installed and in your $PATH.",
+        pages: List[PageLayout] = []
+        if fixed_layouts is None:
+            fixed_layouts = [None for _ in layouts]
+        for i, (image_path, layout, fixed_layout) in enumerate(
+            zip(image_paths, layouts, fixed_layouts),
+        ):
+            # NOTE(robinson) - In the future, maybe we detect the page number and default
+            # to the index if it is not detected
+            with Image.open(image_path) as image:
+                page = PageLayout.from_image(
+                    image,
+                    number=i + 1,
+                    detection_model=detection_model,
+                    element_extraction_model=element_extraction_model,
+                    layout=layout,
+                    ocr_strategy=ocr_strategy,
+                    ocr_languages=ocr_languages,
+                    fixed_layout=fixed_layout,
+                    extract_tables=extract_tables,
                 )
-            pages: List[PageLayout] = []
-            if fixed_layouts is None:
-                fixed_layouts = [None for _ in layouts]
-            for i, (image_path, layout, fixed_layout) in enumerate(
-                zip(image_paths, layouts, fixed_layouts),
-            ):
-                # NOTE(robinson) - In the future, maybe we detect the page number and default
-                # to the index if it is not detected
-                with Image.open(image_path) as image:
-                    page = PageLayout.from_image(
-                        image,
-                        number=i + 1,
-                        detection_model=detection_model,
-                        element_extraction_model=element_extraction_model,
-                        layout=layout,
-                        ocr_strategy=ocr_strategy,
-                        ocr_languages=ocr_languages,
-                        fixed_layout=fixed_layout,
-                        extract_tables=extract_tables,
-                    )
 
-                    page.image_metadata = {
-                        "format": page.image.format if page.image else None,
-                        "width": page.image.width if page.image else None,
-                        "height": page.image.height if page.image else None,
-                    }
-                    page.image = None
+                page.image_metadata = {
+                    "format": page.image.format if page.image else None,
+                    "width": page.image.width if page.image else None,
+                    "height": page.image.height if page.image else None,
+                }
+                page.image_path = image_path
+                page.image = None
 
-                    pages.append(page)
-            return cls.from_pages(pages)
+                pages.append(page)
+        return cls.from_pages(pages)
 
     @classmethod
     def from_image_file(
@@ -172,6 +174,7 @@ class PageLayout:
         image: Image.Image,
         layout: Optional[List[TextRegion]],
         image_metadata: Optional[dict] = None,
+        image_path: Optional[Union[str, PurePath]] = None,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
@@ -184,6 +187,7 @@ class PageLayout:
         if image_metadata is None:
             image_metadata = {}
         self.image_metadata = image_metadata
+        self.image_path = image_path
         self.image_array: Union[np.ndarray, None] = None
         self.layout = layout
         self.number = number
@@ -449,3 +453,13 @@ def load_pdf(
     )
 
     return layouts, images
+
+
+def create_image_output_dir(
+    filename: Union[str, PurePath]
+) -> Union[str, PurePath]:
+    parent_dir = os.path.abspath(os.path.dirname(filename))
+    f_name_without_extension = os.path.splitext(os.path.basename(filename))[0]
+    output_dir = os.path.join(parent_dir, f_name_without_extension)
+    os.makedirs(output_dir, exist_ok=True)
+    return output_dir
