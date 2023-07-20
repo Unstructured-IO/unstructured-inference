@@ -49,12 +49,22 @@ def mock_final_layout():
 
 
 def test_pdf_page_converts_images_to_array(mock_image):
-    page = layout.PageLayout(number=0, image=mock_image, layout=[])
-    assert page.image_array is None
+    def verify_image_array():
+        assert page.image_array is None
+        image_array = page._get_image_array()
+        assert isinstance(image_array, np.ndarray)
+        assert page.image_array.all() == image_array.all()
 
-    image_array = page._get_image_array()
-    assert isinstance(image_array, np.ndarray)
-    assert page.image_array.all() == image_array.all()
+    # Scenario 1: where self.image exists
+    page = layout.PageLayout(number=0, image=mock_image, layout=[])
+    verify_image_array()
+
+    # Scenario 2: where self.image is None, but self.image_path exists
+    page.image_array = None
+    page.image = None
+    page.image_path = "fake-image-path"
+    with patch.object(Image, "open", return_value=mock_image):
+        verify_image_array()
 
 
 def test_ocr(monkeypatch):

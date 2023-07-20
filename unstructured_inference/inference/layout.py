@@ -259,7 +259,11 @@ class PageLayout:
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
         if self.image_array is None:
-            self.image_array = np.array(self.image)
+            if self.image:
+                self.image_array = np.array(self.image)
+            else:
+                image = Image.open(self.image_path)
+                self.image_array = np.array(image)
         return self.image_array
 
     def annotate(self, colors: Optional[Union[List[str], str]] = None) -> Image.Image:
