@@ -276,7 +276,11 @@ class PageLayout:
         if len(colors) < len(self.elements):
             n_copies = (len(self.elements) // len(colors)) + 1
             colors = colors * n_copies
-        img = self.image.copy()
+        if self.image:
+            img = self.image.copy()
+        else:
+            img = Image.open(self.image_path)
+
         for el, color in zip(self.elements, colors):
             if isinstance(el, Rectangle):
                 img = draw_bbox(img, el, color=color)

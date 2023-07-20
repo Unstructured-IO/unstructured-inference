@@ -62,7 +62,7 @@ def test_pdf_page_converts_images_to_array(mock_image):
     # Scenario 2: where self.image is None, but self.image_path exists
     page.image_array = None
     page.image = None
-    page.image_path = "fake-image-path"
+    page.image_path = "mock_path_to_image"  # This path is mocked by the previous mocker.patch call
     with patch.object(Image, "open", return_value=mock_image):
         verify_image_array()
 
@@ -609,6 +609,21 @@ def test_load_pdf_with_multicolumn_layout_and_ocr(filename="sample-docs/design-t
 
 @pytest.mark.parametrize("colors", ["red", None])
 def test_annotate(colors):
+    def check_annotated_image():
+        annotated_array = np.array(annotated_image)
+        for coords in [coords1, coords2]:
+            x1, y1, x2, y2 = coords
+            # Make sure the pixels on the edge of the box are red
+            for i, expected in zip(range(3), [255, 0, 0]):
+                assert all(annotated_array[y1, x1:x2, i] == expected)
+                assert all(annotated_array[y2, x1:x2, i] == expected)
+                assert all(annotated_array[y1:y2, x1, i] == expected)
+                assert all(annotated_array[y1:y2, x2, i] == expected)
+            # Make sure almost all the pixels are not changed
+            assert ((annotated_array[:, :, 0] == 1).mean()) > 0.992
+            assert ((annotated_array[:, :, 1] == 1).mean()) > 0.992
+            assert ((annotated_array[:, :, 2] == 1).mean()) > 0.992
+
     test_image_arr = np.ones((100, 100, 3), dtype="uint8")
     image = Image.fromarray(test_image_arr)
     page = layout.PageLayout(number=1, image=image, layout=None)
@@ -617,19 +632,17 @@ def test_annotate(colors):
     coords2 = (1, 10, 7, 11)
     rect2 = elements.Rectangle(*coords2)
     page.elements = [rect1, rect2]
+
+    # Scenario 1: where self.image exists
     annotated_image = page.annotate(colors=colors)
-    annotated_array = np.array(annotated_image)
-    for x1, y1, x2, y2 in [coords1, coords2]:
-        # Make sure the pixels on the edge of the box are red
-        for i, expected in zip(range(3), [255, 0, 0]):
-            assert all(annotated_array[y1, x1:x2, i] == expected)
-            assert all(annotated_array[y2, x1:x2, i] == expected)
-            assert all(annotated_array[y1:y2, x1, i] == expected)
-            assert all(annotated_array[y1:y2, x2, i] == expected)
-        # Make sure almost all the pixels are not changed
-        assert ((annotated_array[:, :, 0] == 1).mean()) > 0.992
-        assert ((annotated_array[:, :, 1] == 1).mean()) > 0.992
-        assert ((annotated_array[:, :, 2] == 1).mean()) > 0.992
+    check_annotated_image()
+
+    # Scenario 2: where self.image is None, but self.image_path exists
+    with patch.object(Image, "open", return_value=image):
+        page.image = None
+        page.image_path = "mock_path_to_image"  # This path is mocked by the previous mocker.patch call
+        annotated_image = page.annotate(colors=colors)
+        check_annotated_image()
 
 
 def test_textregion_returns_empty_ocr_never(mock_image):
