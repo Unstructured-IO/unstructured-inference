@@ -62,7 +62,7 @@ def test_pdf_page_converts_images_to_array(mock_image):
     # Scenario 2: where self.image is None, but self.image_path exists
     page.image_array = None
     page.image = None
-    page.image_path = "mock_path_to_image"  # This path is mocked by the previous mocker.patch call
+    page.image_path = "mock_path_to_image"
     with patch.object(Image, "open", return_value=mock_image):
         verify_image_array()
 
@@ -360,10 +360,10 @@ def test_from_file(monkeypatch, mock_final_layout):
 
     with tempfile.TemporaryDirectory() as tmpdir:
         image_path = os.path.join(tmpdir, "loremipsum.ppm")
-        image = Image.open('sample-docs/loremipsum.jpg')
+        image = Image.open("sample-docs/loremipsum.jpg")
         image.save(image_path)
         image_metadata = {
-            "format": 'PPM',
+            "format": "PPM",
             "width": image.width,
             "height": image.height,
         }
@@ -640,7 +640,7 @@ def test_annotate(colors):
     # Scenario 2: where self.image is None, but self.image_path exists
     with patch.object(Image, "open", return_value=image):
         page.image = None
-        page.image_path = "mock_path_to_image"  # This path is mocked by the previous mocker.patch call
+        page.image_path = "mock_path_to_image"
         annotated_image = page.annotate(colors=colors)
         check_annotated_image()
 
@@ -839,6 +839,3 @@ def test_create_image_output_dir():
         assert os.path.isdir(output_dir)
         assert os.path.isabs(output_dir)
         assert output_dir == expected_output_dir
-
-
-

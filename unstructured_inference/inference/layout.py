@@ -276,10 +276,7 @@ class PageLayout:
         if len(colors) < len(self.elements):
             n_copies = (len(self.elements) // len(colors)) + 1
             colors = colors * n_copies
-        if self.image:
-            img = self.image.copy()
-        else:
-            img = Image.open(self.image_path)
+        img = self.image.copy() if self.image else Image.open(self.image_path)
 
         for el, color in zip(self.elements, colors):
             if isinstance(el, Rectangle):
@@ -290,7 +287,7 @@ class PageLayout:
     def from_image(
         cls,
         image: Image.Image,
-        image_path: Optional[Union[str, PurePath]],
+        image_path: Union[str, PurePath],
         number: int = 1,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
@@ -467,8 +464,10 @@ def load_pdf(
 
 
 def create_image_output_dir(
-    filename: Union[str, PurePath]
+    filename: Union[str, PurePath],
 ) -> Union[str, PurePath]:
+    """Creates a directory to store the converted images from the pdf pages and returns the
+    directory path"""
     parent_dir = os.path.abspath(os.path.dirname(filename))
     f_name_without_extension = os.path.splitext(os.path.basename(filename))[0]
     output_dir = os.path.join(parent_dir, f_name_without_extension)
