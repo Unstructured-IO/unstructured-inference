@@ -287,7 +287,7 @@ class PageLayout:
     def from_image(
         cls,
         image: Image.Image,
-        image_path: Union[str, PurePath],
+        image_path: Optional[Union[str, PurePath]],
         number: int = 1,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
@@ -321,7 +321,7 @@ class PageLayout:
             "width": page.image.width if page.image else None,
             "height": page.image.height if page.image else None,
         }
-        page.image_path = os.path.abspath(image_path)
+        page.image_path = os.path.abspath(image_path) if image_path else None
         page.image = None
 
         return page

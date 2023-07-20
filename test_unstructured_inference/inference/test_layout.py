@@ -771,6 +771,7 @@ def test_from_image(
     ) as mock_detection:
         layout.PageLayout.from_image(
             mock_image,
+            image_path=None,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
         )
