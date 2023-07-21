@@ -29,7 +29,7 @@ install-base-pip-packages:
 
 .PHONY: install-detectron2
 install-detectron2:
-	pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@e2ce8dc#egg=detectron2"
+	pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@a2e43ea#egg=detectron2"
 
 .PHONY: install-paddleocr
 install-paddleocr:
