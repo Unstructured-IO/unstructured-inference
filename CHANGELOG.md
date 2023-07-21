@@ -1,7 +1,8 @@
-## 0.5.6-dev1
+## 0.5.6-dev2
 
 * Warns users that Chipper is a beta model.
 * Exposed control over dpi when converting PDF to an image.
+* Updated detectron2 version to avoid errors related to deprecated PIL reference
 
 ## 0.5.5
 
