@@ -7,6 +7,7 @@
 * Update `load_pdf` to return either Image objects or Image paths.
 * Warns users that Chipper is a beta model.
 * Exposed control over dpi when converting PDF to an image.
+* Updated detectron2 version to avoid errors related to deprecated PIL reference
 
 ## 0.5.5
 
