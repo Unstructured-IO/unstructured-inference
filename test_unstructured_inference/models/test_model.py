@@ -1,12 +1,19 @@
+from typing import Any
 import pytest
+from unittest import mock
 
 import unstructured_inference.models.base as models
+from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.models.unstructuredmodel import ModelNotInitializedError
 
 
-class MockModel:
-    def initialize(self, *args, **kwargs):
-        pass
+class MockModel(UnstructuredObjectDetectionModel):
+    initialize = mock.MagicMock()
+    # def initialize(self, *args, **kwargs):
+    #     pass
+
+    def predict(self, x: Any) -> Any:
+        return []
 
 
 def test_get_model(monkeypatch):
@@ -36,3 +43,11 @@ def test_raises_invalid_model():
 def test_raises_uninitialized():
     with pytest.raises(ModelNotInitializedError):
         models.UnstructuredDetectronModel().predict(None)
+
+
+def test_model_initializes_once():
+    with mock.patch.object(models, "UnstructuredDetectronONNXModel", MockModel) as f:
+        from unstructured_inference.inference.layout import DocumentLayout
+
+        DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
+        f.initialize.assert_called_once()
