@@ -1,5 +1,10 @@
 ## 0.5.6-dev2
 
+* Update the `annotate` and `_get_image_array` methods of `PageLayout` to get the image from the `image_path` property if the `image` property is `None`.
+* Add functionality to store pdf images for later use.
+* Add `image_metadata` property to `PageLayout` & set `page.image` to None to reduce memory usage.
+* Update `DocumentLayout.from_file` to open only one image.
+* Update `load_pdf` to return either Image objects or Image paths.
 * Warns users that Chipper is a beta model.
 * Exposed control over dpi when converting PDF to an image.
 * Updated detectron2 version to avoid errors related to deprecated PIL reference

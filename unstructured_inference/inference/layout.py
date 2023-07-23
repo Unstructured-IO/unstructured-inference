@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from pathlib import PurePath
 from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -81,29 +82,43 @@ class DocumentLayout:
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         logger.info(f"Reading PDF for file: {filename} ...")
-        layouts, images = load_pdf(filename, pdf_image_dpi)
-        if len(layouts) > len(images):
+
+        # Store pdf images for later use
+        output_dir = create_image_output_dir(filename)
+        layouts, _image_paths = load_pdf(
+            filename,
+            pdf_image_dpi,
+            output_folder=output_dir,
+            path_only=True,
+        )
+        image_paths = cast(List[str], _image_paths)
+        if len(layouts) > len(image_paths):
             raise RuntimeError(
-                "Some images were not loaded. Check that poppler is installed and in your $PATH.",
+                "Some images were not loaded. "
+                "Check that poppler is installed and in your $PATH.",
             )
         pages: List[PageLayout] = []
         if fixed_layouts is None:
             fixed_layouts = [None for _ in layouts]
-        for i, (image, layout, fixed_layout) in enumerate(zip(images, layouts, fixed_layouts)):
+        for i, (image_path, layout, fixed_layout) in enumerate(
+            zip(image_paths, layouts, fixed_layouts),
+        ):
             # NOTE(robinson) - In the future, maybe we detect the page number and default
             # to the index if it is not detected
-            page = PageLayout.from_image(
-                image,
-                number=i + 1,
-                detection_model=detection_model,
-                element_extraction_model=element_extraction_model,
-                layout=layout,
-                ocr_strategy=ocr_strategy,
-                ocr_languages=ocr_languages,
-                fixed_layout=fixed_layout,
-                extract_tables=extract_tables,
-            )
-            pages.append(page)
+            with Image.open(image_path) as image:
+                page = PageLayout.from_image(
+                    image,
+                    image_path=image_path,
+                    number=i + 1,
+                    detection_model=detection_model,
+                    element_extraction_model=element_extraction_model,
+                    layout=layout,
+                    ocr_strategy=ocr_strategy,
+                    ocr_languages=ocr_languages,
+                    fixed_layout=fixed_layout,
+                    extract_tables=extract_tables,
+                )
+                pages.append(page)
         return cls.from_pages(pages)
 
     @classmethod
@@ -131,6 +146,7 @@ class DocumentLayout:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
         page = PageLayout.from_image(
             image,
+            image_path=filename,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
             layout=None,
@@ -150,6 +166,8 @@ class PageLayout:
         number: int,
         image: Image.Image,
         layout: Optional[List[TextRegion]],
+        image_metadata: Optional[dict] = None,
+        image_path: Optional[Union[str, PurePath]] = None,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
@@ -159,6 +177,10 @@ class PageLayout:
         if detection_model is not None and element_extraction_model is not None:
             raise ValueError("Only one of detection_model and extraction_model should be passed.")
         self.image = image
+        if image_metadata is None:
+            image_metadata = {}
+        self.image_metadata = image_metadata
+        self.image_path = image_path
         self.image_array: Union[np.ndarray, None] = None
         self.layout = layout
         self.number = number
@@ -237,7 +259,11 @@ class PageLayout:
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
         if self.image_array is None:
-            self.image_array = np.array(self.image)
+            if self.image:
+                self.image_array = np.array(self.image)
+            else:
+                image = Image.open(self.image_path)
+                self.image_array = np.array(image)
         return self.image_array
 
     def annotate(self, colors: Optional[Union[List[str], str]] = None) -> Image.Image:
@@ -250,7 +276,8 @@ class PageLayout:
         if len(colors) < len(self.elements):
             n_copies = (len(self.elements) // len(colors)) + 1
             colors = colors * n_copies
-        img = self.image.copy()
+        img = self.image.copy() if self.image else Image.open(self.image_path)
+
         for el, color in zip(self.elements, colors):
             if isinstance(el, Rectangle):
                 img = draw_bbox(img, el, color=color)
@@ -260,6 +287,7 @@ class PageLayout:
     def from_image(
         cls,
         image: Image.Image,
+        image_path: Optional[Union[str, PurePath]],
         number: int = 1,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
@@ -287,6 +315,15 @@ class PageLayout:
             page.get_elements_with_detection_model()
         else:
             page.elements = page.get_elements_from_layout(fixed_layout)
+
+        page.image_metadata = {
+            "format": page.image.format if page.image else None,
+            "width": page.image.width if page.image else None,
+            "height": page.image.height if page.image else None,
+        }
+        page.image_path = os.path.abspath(image_path) if image_path else None
+        page.image = None
+
         return page
 
 
@@ -387,8 +424,9 @@ def get_element_from_block(
 def load_pdf(
     filename: str,
     dpi: int = 200,
-    chunk_size: int = 100,
-) -> Tuple[List[List[TextRegion]], List[Image.Image]]:
+    output_folder: Union[str, PurePath] = None,  # type: ignore
+    path_only: bool = False,
+) -> Tuple[List[List[TextRegion]], Union[List[Image.Image], List[str]]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
     layouts = []
@@ -412,20 +450,26 @@ def load_pdf(
                 layout.append(text_region)
         layouts.append(layout)
 
-    # Convert a PDF in small chunks of pages at a time (e.g. 1-10, 11-20... and so on)
-    info = pdf2image.pdfinfo_from_path(filename)
-    total_pages = info["Pages"]
-    images = []
+    if path_only and not output_folder:
+        raise ValueError("output_folder must be specified if path_only is true")
 
-    for start_page in range(1, total_pages + 1, chunk_size):
-        end_page = min(start_page + chunk_size - 1, total_pages)
-        with tempfile.TemporaryDirectory() as tmpdir:
-            chunk_images = pdf2image.convert_from_path(
-                filename,
-                dpi=dpi,
-                first_page=start_page,
-                last_page=end_page,
-                output_folder=tmpdir,
-            )
-            images += chunk_images
+    images = pdf2image.convert_from_path(
+        filename,
+        dpi=dpi,
+        output_folder=output_folder,
+        paths_only=path_only,
+    )
+
     return layouts, images
+
+
+def create_image_output_dir(
+    filename: Union[str, PurePath],
+) -> Union[str, PurePath]:
+    """Creates a directory to store the converted images from the pdf pages and returns the
+    directory path"""
+    parent_dir = os.path.abspath(os.path.dirname(filename))
+    f_name_without_extension = os.path.splitext(os.path.basename(filename))[0]
+    output_dir = os.path.join(parent_dir, f_name_without_extension)
+    os.makedirs(output_dir, exist_ok=True)
+    return output_dir
