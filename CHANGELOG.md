@@ -1,4 +1,4 @@
-## 0.5.6-dev2
+## 0.5.6
 
 * Update the `annotate` and `_get_image_array` methods of `PageLayout` to get the image from the `image_path` property if the `image` property is `None`.
 * Add functionality to store pdf images for later use.
