@@ -1,3 +1,7 @@
+## 0.5.7
+
+* hotfix to handle issue storing images in a new dir when the pdf has no file extension
+
 ## 0.5.6
 
 * Update the `annotate` and `_get_image_array` methods of `PageLayout` to get the image from the `image_path` property if the `image` property is `None`.
