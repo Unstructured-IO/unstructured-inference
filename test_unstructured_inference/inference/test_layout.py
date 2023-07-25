@@ -836,7 +836,17 @@ def test_create_image_output_dir():
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_f_path = os.path.join(tmpdir, "loremipsum.pdf")
         output_dir = create_image_output_dir(tmp_f_path)
-        expected_output_dir = os.path.join(os.path.abspath(tmpdir), "loremipsum")
+        expected_output_dir = os.path.join(os.path.abspath(tmpdir), "loremipsum_images")
+        assert os.path.isdir(output_dir)
+        assert os.path.isabs(output_dir)
+        assert output_dir == expected_output_dir
+
+
+def test_create_image_output_dir_no_ext():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_f_path = os.path.join(tmpdir, "loremipsum_no_ext")
+        output_dir = create_image_output_dir(tmp_f_path)
+        expected_output_dir = os.path.join(os.path.abspath(tmpdir), "loremipsum_no_ext_images")
         assert os.path.isdir(output_dir)
         assert os.path.isabs(output_dir)
         assert output_dir == expected_output_dir
