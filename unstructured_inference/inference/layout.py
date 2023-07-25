@@ -211,7 +211,11 @@ class PageLayout:
             return None
         return elements
 
-    def get_elements_with_detection_model(self, inplace=True) -> Optional[List[LayoutElement]]:
+    def get_elements_with_detection_model(
+        self,
+        inplace: bool = True,
+        ocr_mode: str = "entire_page"
+    ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
         if self.detection_model is None:
@@ -224,14 +228,18 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         inferred_layout: List[TextRegion] = cast(List[TextRegion], self.detection_model(self.image))
-        if self.layout is not None:
-            inferred_layout = cast(
-                List[TextRegion],
-                merge_inferred_layout_with_extracted_layout(
-                    inferred_layout=cast(Collection[LayoutElement], inferred_layout),
-                    extracted_layout=self.layout,
-                ),
-            )
+
+        if ocr_mode == "individual_blocks":
+            if self.layout is not None:
+                inferred_layout = cast(
+                    List[TextRegion],
+                    merge_inferred_layout_with_extracted_layout(
+                        inferred_layout=cast(Collection[LayoutElement], inferred_layout),
+                        extracted_layout=self.layout,
+                    ),
+                )
+        else:
+            pass
         elements = self.get_elements_from_layout(inferred_layout)
 
         if inplace:
