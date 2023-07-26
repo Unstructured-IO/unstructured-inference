@@ -140,8 +140,11 @@ def merge_inferred_layout_with_extracted_layout(
     inferred_regions_to_add = [
         region for region in inferred_layout if region not in inferred_regions_to_remove
     ]
+    inferred_regions_to_add_without_text = [
+        region for region in inferred_regions_to_add if not region.text
+    ]
     if ocr_layout is not None:
-        for inferred_region in inferred_regions_to_add:
+        for inferred_region in inferred_regions_to_add_without_text:
             inferred_region.text = extract_text_from_region_in_ocr_layout(
                 ocr_layout,
                 inferred_region,
