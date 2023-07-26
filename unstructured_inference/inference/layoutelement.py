@@ -145,7 +145,7 @@ def merge_inferred_layout_with_extracted_layout(
     ]
     if ocr_layout is not None:
         for inferred_region in inferred_regions_to_add_without_text:
-            inferred_region.text = extract_text_from_region_in_ocr_layout(
+            inferred_region.text = aggregate_ocr_text_by_block(
                 ocr_layout,
                 inferred_region,
                 subregion_threshold,
@@ -160,7 +160,7 @@ def merge_inferred_layout_with_ocr_layout(
     subregion_threshold: float = 0.75,
 ) -> List[LayoutElement]:
     for inferred_region in inferred_layout:
-        inferred_region.text = extract_text_from_region_in_ocr_layout(
+        inferred_region.text = aggregate_ocr_text_by_block(
             ocr_layout,
             inferred_region,
             subregion_threshold,
@@ -168,12 +168,13 @@ def merge_inferred_layout_with_ocr_layout(
     return inferred_layout
 
 
-def extract_text_from_region_in_ocr_layout(
+def aggregate_ocr_text_by_block(
     ocr_layout: Collection[TextRegion],
     region: TextRegion,
     subregion_threshold: float = 0.75,
 ) -> str:
-    """Extract text from a specific region of an ocr layout."""
+    """Extracts the text aggregated from the regions of the ocr layout that lie within the given
+    block."""
 
     extracted_texts = []
 
