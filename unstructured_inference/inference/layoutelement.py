@@ -148,18 +148,32 @@ def merge_inferred_layout_with_ocr_layout(
     subregion_threshold: float = 0.75,
 ) -> List[LayoutElement]:
     for inferred_region in inferred_layout:
-        region_text_list = []
-        for orc_region in ocr_layout:
-            extracted_is_subregion_of_inferred = orc_region.is_almost_subregion_of(
-                inferred_region,
-                subregion_threshold=subregion_threshold,
-            )
-            if extracted_is_subregion_of_inferred:
-                region_text_list.append(orc_region.text)
-        region_text = " ".join(region_text_list)
-        inferred_region.text = region_text
-
+        inferred_region.text = extract_text_from_region_in_ocr_layout(
+            ocr_layout,
+            inferred_region,
+            subregion_threshold,
+        )
     return inferred_layout
+
+
+def extract_text_from_region_in_ocr_layout(
+    ocr_layout: Collection[TextRegion],
+    region: TextRegion,
+    subregion_threshold: float = 0.75,
+) -> str:
+    """Extract text from a specific region of an ocr layout."""
+
+    extracted_texts = []
+
+    for orc_region in ocr_layout:
+        extracted_is_subregion_of_inferred = orc_region.is_almost_subregion_of(
+            region.pad(12),
+            subregion_threshold=subregion_threshold,
+        )
+        if extracted_is_subregion_of_inferred:
+            extracted_texts.append(orc_region.text)
+
+    return " ".join(extracted_texts)
 
 
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
