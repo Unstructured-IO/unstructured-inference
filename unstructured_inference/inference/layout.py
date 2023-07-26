@@ -7,9 +7,11 @@ from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pdf2image
+import pytesseract
 from pdfminer import psparser
 from pdfminer.high_level import extract_pages
 from PIL import Image
+from pytesseract import Output
 
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
@@ -20,7 +22,7 @@ from unstructured_inference.inference.elements import (
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
     LocationlessLayoutElement,
-    merge_inferred_layout_with_extracted_layout,
+    merge_inferred_layout_with_extracted_layout, merge_inferred_layout_with_ocr_layout,
 )
 from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
@@ -239,7 +241,16 @@ class PageLayout:
                     ),
                 )
         else:
-            pass
+            ocr_data = pytesseract.image_to_data(self.image, lang='eng', output_type=Output.DICT)
+            ocr_layout = parse_ocr_data(ocr_data)
+            if self.layout is not None:
+                pass
+            else:
+                inferred_layout = merge_inferred_layout_with_ocr_layout(
+                    inferred_layout=cast(List[LayoutElement], inferred_layout),
+                    ocr_layout=ocr_layout
+                )
+
         elements = self.get_elements_from_layout(inferred_layout)
 
         if inplace:
@@ -483,3 +494,17 @@ def create_image_output_dir(
     output_dir = os.path.join(parent_dir, f"{f_name_without_extension}_images")
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
+
+
+def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
+    levels = ocr_data['level']
+    text_regions = []
+    for i, level in enumerate(levels):
+        (l, t, w, h) = ocr_data['left'][i], ocr_data['top'][i], ocr_data['width'][i], ocr_data['height'][i]
+        (x1, y1, x2, y2) = l, t, l+w, t+h
+        text = ocr_data['text'][i]
+        if text:
+            text_region = TextRegion(x1, y1, x2, y2, text)
+            text_regions.append(text_region)
+
+    return text_regions
