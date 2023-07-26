@@ -4,11 +4,13 @@ import tempfile
 from datetime import datetime
 
 import pdf2image
-
 from engine import run_ocr_with_layout_detection
+
 from unstructured_inference.models.base import get_model
-from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel, \
-    UnstructuredElementExtractionModel
+from unstructured_inference.models.unstructuredmodel import (
+    UnstructuredElementExtractionModel,
+    UnstructuredObjectDetectionModel,
+)
 
 
 def run(filename, page_limit=None, drawable=True):
@@ -115,7 +117,7 @@ def run(filename, page_limit=None, drawable=True):
     word_list_individual = nltk.word_tokenize(text_individual)
     n_word_list_individual = len(word_list_individual)
     print("n_word_list_in_text_individual:", n_word_list_individual)
-    word_sets_individual = set(list(word_list_individual))
+    word_sets_individual = set(word_list_individual)
     n_word_sets_individual = len(word_sets_individual)
     print(f"n_word_sets_in_text_individual: {n_word_sets_individual}")
     # print("word_sets_merged:", word_sets_merged)
@@ -123,7 +125,7 @@ def run(filename, page_limit=None, drawable=True):
     word_list_entire = nltk.word_tokenize(text_entire)
     n_word_list_entire = len(word_list_entire)
     print("n_word_list_individual:", n_word_list_entire)
-    word_sets_entire = set(list(word_list_entire))
+    word_sets_entire = set(word_list_entire)
     n_word_sets_entire = len(word_sets_entire)
     print(f"n_word_sets_individual: {n_word_sets_entire}")
     # print("word_sets_individual:", word_sets_individual)
@@ -160,7 +162,7 @@ def run(filename, page_limit=None, drawable=True):
                 "n_word_list": n_word_list_entire,
                 "n_word_sets": n_word_sets_entire,
                 "unique_words": delimiter.join(list(unique_words_entire)),
-            }
+            },
         },
         "extracted_text": {
             "individual_blocks": {
@@ -171,7 +173,7 @@ def run(filename, page_limit=None, drawable=True):
                 "text_by_page": text_entire_dict,
                 "text_all": text_entire,
             },
-        }
+        },
     }
 
     report_f_name = f"validate-ocr-{now_str}.json"

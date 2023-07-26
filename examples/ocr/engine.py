@@ -9,7 +9,7 @@ import pytesseract
 from pytesseract import Output
 
 from unstructured_inference.inference import layout
-from unstructured_inference.inference.elements import TextRegion, Rectangle
+from unstructured_inference.inference.elements import Rectangle, TextRegion
 
 
 def remove_non_printable(s):
@@ -37,7 +37,7 @@ def run_ocr_with_layout_detection(
             image=image,
             layout=None,
             detection_model=detection_model,
-            element_extraction_model=element_extraction_model
+            element_extraction_model=element_extraction_model,
         )
 
         inferred_layout: List[TextRegion] = cast(List[TextRegion], page.detection_model(page.image))
@@ -78,7 +78,7 @@ def run_ocr_with_layout_detection(
                 for inferred_region in inferred_layout:
                     extracted_is_subregion_of_inferred = extracted_region.is_almost_subregion_of(
                         inferred_region.pad(12),
-                        subregion_threshold=0.75
+                        subregion_threshold=0.75,
                     )
                     if extracted_is_subregion_of_inferred:
                         break
@@ -125,7 +125,7 @@ def run_ocr_with_layout_detection(
 
 def run_ocr(
     images,
-    printable=True
+    printable=True,
 ):
     total_text_extraction_infer_time = 0
     total_text = ""

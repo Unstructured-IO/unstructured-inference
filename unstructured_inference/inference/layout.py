@@ -22,7 +22,8 @@ from unstructured_inference.inference.elements import (
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
     LocationlessLayoutElement,
-    merge_inferred_layout_with_extracted_layout, merge_inferred_layout_with_ocr_layout,
+    merge_inferred_layout_with_extracted_layout,
+    merge_inferred_layout_with_ocr_layout,
 )
 from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
@@ -216,7 +217,7 @@ class PageLayout:
     def get_elements_with_detection_model(
         self,
         inplace: bool = True,
-        ocr_mode: str = "entire_page"
+        ocr_mode: str = "entire_page",
     ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
@@ -241,14 +242,14 @@ class PageLayout:
                     ),
                 )
         else:
-            ocr_data = pytesseract.image_to_data(self.image, lang='eng', output_type=Output.DICT)
+            ocr_data = pytesseract.image_to_data(self.image, lang="eng", output_type=Output.DICT)
             ocr_layout = parse_ocr_data(ocr_data)
             if self.layout is not None:
                 pass
             else:
                 inferred_layout = merge_inferred_layout_with_ocr_layout(
                     inferred_layout=cast(List[LayoutElement], inferred_layout),
-                    ocr_layout=ocr_layout
+                    ocr_layout=ocr_layout,
                 )
 
         elements = self.get_elements_from_layout(inferred_layout)
@@ -497,12 +498,17 @@ def create_image_output_dir(
 
 
 def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
-    levels = ocr_data['level']
+    levels = ocr_data["level"]
     text_regions = []
     for i, level in enumerate(levels):
-        (l, t, w, h) = ocr_data['left'][i], ocr_data['top'][i], ocr_data['width'][i], ocr_data['height'][i]
-        (x1, y1, x2, y2) = l, t, l+w, t+h
-        text = ocr_data['text'][i]
+        (l, t, w, h) = (
+            ocr_data["left"][i],
+            ocr_data["top"][i],
+            ocr_data["width"][i],
+            ocr_data["height"][i],
+        )
+        (x1, y1, x2, y2) = l, t, l + w, t + h
+        text = ocr_data["text"][i]
         if text:
             text_region = TextRegion(x1, y1, x2, y2, text)
             text_regions.append(text_region)
