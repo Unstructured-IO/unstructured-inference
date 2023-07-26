@@ -79,6 +79,7 @@ def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
 def merge_inferred_layout_with_extracted_layout(
     inferred_layout: Collection[LayoutElement],
     extracted_layout: Collection[TextRegion],
+    ocr_layout: Optional[Collection[TextRegion]] = None,
     same_region_threshold: float = 0.75,
     subregion_threshold: float = 0.75,
 ) -> List[LayoutElement]:
@@ -136,9 +137,17 @@ def merge_inferred_layout_with_extracted_layout(
         )
         for el in extracted_elements_to_add
     ]
-    out_layout = categorized_extracted_elements_to_add + [
+    inferred_regions_to_add = [
         region for region in inferred_layout if region not in inferred_regions_to_remove
     ]
+    if ocr_layout is not None:
+        for inferred_region in inferred_regions_to_add:
+            inferred_region.text = extract_text_from_region_in_ocr_layout(
+                ocr_layout,
+                inferred_region,
+                subregion_threshold,
+            )
+    out_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
     return out_layout
 
 

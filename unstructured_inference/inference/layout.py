@@ -245,7 +245,14 @@ class PageLayout:
             ocr_data = pytesseract.image_to_data(self.image, lang="eng", output_type=Output.DICT)
             ocr_layout = parse_ocr_data(ocr_data)
             if self.layout is not None:
-                pass
+                inferred_layout = cast(
+                    List[TextRegion],
+                    merge_inferred_layout_with_extracted_layout(
+                        inferred_layout=cast(Collection[LayoutElement], inferred_layout),
+                        extracted_layout=self.layout,
+                        ocr_layout=ocr_layout,
+                    ),
+                )
             else:
                 inferred_layout = merge_inferred_layout_with_ocr_layout(
                     inferred_layout=cast(List[LayoutElement], inferred_layout),
