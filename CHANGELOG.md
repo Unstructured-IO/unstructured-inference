@@ -1,3 +1,5 @@
+## 0.5.8-dev0
+
 ## 0.5.7
 
 * hotfix to handle issue storing images in a new dir when the pdf has no file extension
