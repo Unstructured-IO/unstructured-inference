@@ -25,7 +25,7 @@ Run `pip install unstructured-inference`.
 but is not automatically installed with this package. 
 For MacOS and Linux, build from source with:
 ```shell
-pip install 'git+https://github.com/facebookresearch/detectron2.git@a2e43ea#egg=detectron2'
+pip install 'git+https://github.com/facebookresearch/detectron2.git@57bdb21249d5418c130d54e2ebdc94dda7a4c01a'
 ```
 Other install options can be found in the 
 [Detectron2 installation guide](https://detectron2.readthedocs.io/en/latest/tutorials/install.html).
