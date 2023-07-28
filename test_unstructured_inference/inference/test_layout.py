@@ -1,3 +1,4 @@
+import os.path
 import tempfile
 from functools import partial
 from itertools import product
@@ -9,6 +10,7 @@ from PIL import Image
 
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
+from unstructured_inference.inference.layout import create_image_output_dir
 from unstructured_inference.models import detectron2, tesseract
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
@@ -47,12 +49,22 @@ def mock_final_layout():
 
 
 def test_pdf_page_converts_images_to_array(mock_image):
-    page = layout.PageLayout(number=0, image=mock_image, layout=[])
-    assert page.image_array is None
+    def verify_image_array():
+        assert page.image_array is None
+        image_array = page._get_image_array()
+        assert isinstance(image_array, np.ndarray)
+        assert page.image_array.all() == image_array.all()
 
-    image_array = page._get_image_array()
-    assert isinstance(image_array, np.ndarray)
-    assert page.image_array.all() == image_array.all()
+    # Scenario 1: where self.image exists
+    page = layout.PageLayout(number=0, image=mock_image, layout=[])
+    verify_image_array()
+
+    # Scenario 2: where self.image is None, but self.image_path exists
+    page.image_array = None
+    page.image = None
+    page.image_path = "mock_path_to_image"
+    with patch.object(Image, "open", return_value=mock_image):
+        verify_image_array()
 
 
 def test_ocr(monkeypatch):
@@ -141,31 +153,35 @@ def test_get_page_elements_with_ocr(monkeypatch):
     assert str(page) == "\n\nAn Even Catchier Title"
 
 
-def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout):
-    image = np.random.randint(12, 24, (40, 40))
-    images = [image, image]
+def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout, mock_image):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        image_path1 = os.path.join(tmpdir, "mock1.jpg")
+        image_path2 = os.path.join(tmpdir, "mock2.jpg")
+        mock_image.save(image_path1)
+        mock_image.save(image_path2)
+        image_paths = [image_path1, image_path2]
 
-    layouts = [mock_initial_layout, mock_initial_layout]
+        layouts = [mock_initial_layout, mock_initial_layout]
 
-    monkeypatch.setattr(
-        models,
-        "UnstructuredDetectronModel",
-        partial(MockLayoutModel, layout=mock_final_layout),
-    )
-    monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
+        monkeypatch.setattr(
+            models,
+            "UnstructuredDetectronModel",
+            partial(MockLayoutModel, layout=mock_final_layout),
+        )
+        monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
-    with patch.object(layout, "load_pdf", return_value=(layouts, images)):
-        model = layout.get_model("detectron2_lp")
-        doc = layout.DocumentLayout.from_file("fake-file.pdf", detection_model=model)
+        with patch.object(layout, "load_pdf", return_value=(layouts, image_paths)):
+            model = layout.get_model("detectron2_lp")
+            doc = layout.DocumentLayout.from_file("fake-file.pdf", detection_model=model)
 
-        assert str(doc).startswith("A Catchy Title")
-        assert str(doc).count("A Catchy Title") == 2  # Once for each page
-        assert str(doc).endswith("A very repetitive narrative. ")
+            assert str(doc).startswith("A Catchy Title")
+            assert str(doc).count("A Catchy Title") == 2  # Once for each page
+            assert str(doc).endswith("A very repetitive narrative. ")
 
-        assert doc.pages[0].elements[0].to_dict()["text"] == "A Catchy Title"
+            assert doc.pages[0].elements[0].to_dict()["text"] == "A Catchy Title"
 
-        pages = doc.pages
-        assert str(doc) == "\n\n".join([str(page) for page in pages])
+            pages = doc.pages
+            assert str(doc) == "\n\n".join([str(page) for page in pages])
 
 
 @pytest.mark.parametrize("model_name", [None, "checkbox", "fake"])
@@ -320,12 +336,53 @@ def test_from_image_file(monkeypatch, mock_final_layout, filetype):
         self.elements = [mock_final_layout]
 
     monkeypatch.setattr(layout.PageLayout, "get_elements_with_detection_model", mock_get_elements)
-    elements = (
-        layout.DocumentLayout.from_image_file(f"sample-docs/loremipsum.{filetype}")
-        .pages[0]
-        .elements
-    )
-    assert elements[0] == mock_final_layout
+    filename = f"sample-docs/loremipsum.{filetype}"
+    image = Image.open(filename)
+    image_metadata = {
+        "format": image.format,
+        "width": image.width,
+        "height": image.height,
+    }
+
+    doc = layout.DocumentLayout.from_image_file(filename)
+    page = doc.pages[0]
+    assert page.elements[0] == mock_final_layout
+    assert page.image is None
+    assert page.image_path == os.path.abspath(filename)
+    assert page.image_metadata == image_metadata
+
+
+def test_from_file(monkeypatch, mock_final_layout):
+    def mock_get_elements(self, *args, **kwargs):
+        self.elements = [mock_final_layout]
+
+    monkeypatch.setattr(layout.PageLayout, "get_elements_with_detection_model", mock_get_elements)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        image_path = os.path.join(tmpdir, "loremipsum.ppm")
+        image = Image.open("sample-docs/loremipsum.jpg")
+        image.save(image_path)
+        image_metadata = {
+            "format": "PPM",
+            "width": image.width,
+            "height": image.height,
+        }
+
+        with patch.object(
+            layout,
+            "create_image_output_dir",
+            return_value=tmpdir,
+        ), patch.object(
+            layout,
+            "load_pdf",
+            lambda *args, **kwargs: ([[]], [image_path]),
+        ):
+            doc = layout.DocumentLayout.from_file("fake-file.pdf")
+            page = doc.pages[0]
+            assert page.elements[0] == mock_final_layout
+            assert page.image_metadata == image_metadata
+            assert page.image_path == image_path
+            assert page.image is None
 
 
 def test_from_image_file_raises_with_empty_fn():
@@ -526,6 +583,14 @@ def test_load_pdf_image_placement():
     assert image_region.y2 < images[5].height / 2
 
 
+def test_load_pdf_raises_with_path_only_no_output_folder():
+    with pytest.raises(ValueError):
+        layout.load_pdf(
+            "sample-docs/loremipsum-flat.pdf",
+            path_only=True,
+        )
+
+
 @pytest.mark.skip("Temporarily removed multicolumn to fix ordering")
 def test_load_pdf_with_multicolumn_layout_and_ocr(filename="sample-docs/design-thinking.pdf"):
     layouts, images = layout.load_pdf(filename)
@@ -544,6 +609,21 @@ def test_load_pdf_with_multicolumn_layout_and_ocr(filename="sample-docs/design-t
 
 @pytest.mark.parametrize("colors", ["red", None])
 def test_annotate(colors):
+    def check_annotated_image():
+        annotated_array = np.array(annotated_image)
+        for coords in [coords1, coords2]:
+            x1, y1, x2, y2 = coords
+            # Make sure the pixels on the edge of the box are red
+            for i, expected in zip(range(3), [255, 0, 0]):
+                assert all(annotated_array[y1, x1:x2, i] == expected)
+                assert all(annotated_array[y2, x1:x2, i] == expected)
+                assert all(annotated_array[y1:y2, x1, i] == expected)
+                assert all(annotated_array[y1:y2, x2, i] == expected)
+            # Make sure almost all the pixels are not changed
+            assert ((annotated_array[:, :, 0] == 1).mean()) > 0.992
+            assert ((annotated_array[:, :, 1] == 1).mean()) > 0.992
+            assert ((annotated_array[:, :, 2] == 1).mean()) > 0.992
+
     test_image_arr = np.ones((100, 100, 3), dtype="uint8")
     image = Image.fromarray(test_image_arr)
     page = layout.PageLayout(number=1, image=image, layout=None)
@@ -552,19 +632,17 @@ def test_annotate(colors):
     coords2 = (1, 10, 7, 11)
     rect2 = elements.Rectangle(*coords2)
     page.elements = [rect1, rect2]
+
+    # Scenario 1: where self.image exists
     annotated_image = page.annotate(colors=colors)
-    annotated_array = np.array(annotated_image)
-    for x1, y1, x2, y2 in [coords1, coords2]:
-        # Make sure the pixels on the edge of the box are red
-        for i, expected in zip(range(3), [255, 0, 0]):
-            assert all(annotated_array[y1, x1:x2, i] == expected)
-            assert all(annotated_array[y2, x1:x2, i] == expected)
-            assert all(annotated_array[y1:y2, x1, i] == expected)
-            assert all(annotated_array[y1:y2, x2, i] == expected)
-        # Make sure almost all the pixels are not changed
-        assert ((annotated_array[:, :, 0] == 1).mean()) > 0.992
-        assert ((annotated_array[:, :, 1] == 1).mean()) > 0.992
-        assert ((annotated_array[:, :, 2] == 1).mean()) > 0.992
+    check_annotated_image()
+
+    # Scenario 2: where self.image is None, but self.image_path exists
+    with patch.object(Image, "open", return_value=image):
+        page.image = None
+        page.image_path = "mock_path_to_image"
+        annotated_image = page.annotate(colors=colors)
+        check_annotated_image()
 
 
 def test_textregion_returns_empty_ocr_never(mock_image):
@@ -609,18 +687,21 @@ def ordering_layout():
     return elements
 
 
-def test_layout_order(ordering_layout):
-    with patch.object(layout, "get_model", lambda: lambda x: ordering_layout), patch.object(
-        layout,
-        "load_pdf",
-        lambda *args, **kwargs: ([[]], [mock_image]),
-    ), patch.object(
-        layout,
-        "UnstructuredObjectDetectionModel",
-        object,
-    ):
-        doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
-        page = doc.pages[0]
+def test_layout_order(mock_image, ordering_layout):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        mock_image_path = os.path.join(tmpdir, "mock.jpg")
+        mock_image.save(mock_image_path)
+        with patch.object(layout, "get_model", lambda: lambda x: ordering_layout), patch.object(
+            layout,
+            "load_pdf",
+            lambda *args, **kwargs: ([[]], [mock_image_path]),
+        ), patch.object(
+            layout,
+            "UnstructuredObjectDetectionModel",
+            object,
+        ):
+            doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
+            page = doc.pages[0]
     for n, element in enumerate(page.elements):
         assert element.text == str(n)
 
@@ -690,6 +771,7 @@ def test_from_image(
     ) as mock_detection:
         layout.PageLayout.from_image(
             mock_image,
+            image_path=None,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
         )
@@ -748,3 +830,23 @@ def test_exposed_pdf_image_dpi(pdf_image_dpi, expected, monkeypatch):
     with patch.object(layout.PageLayout, "from_image") as mock_from_image:
         layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf", pdf_image_dpi=pdf_image_dpi)
         assert mock_from_image.call_args[0][0].height == expected
+
+
+def test_create_image_output_dir():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_f_path = os.path.join(tmpdir, "loremipsum.pdf")
+        output_dir = create_image_output_dir(tmp_f_path)
+        expected_output_dir = os.path.join(os.path.abspath(tmpdir), "loremipsum_images")
+        assert os.path.isdir(output_dir)
+        assert os.path.isabs(output_dir)
+        assert output_dir == expected_output_dir
+
+
+def test_create_image_output_dir_no_ext():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_f_path = os.path.join(tmpdir, "loremipsum_no_ext")
+        output_dir = create_image_output_dir(tmp_f_path)
+        expected_output_dir = os.path.join(os.path.abspath(tmpdir), "loremipsum_no_ext_images")
+        assert os.path.isdir(output_dir)
+        assert os.path.isabs(output_dir)
+        assert output_dir == expected_output_dir

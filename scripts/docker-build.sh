@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+PIP_VERSION="${PIP_VERSION:-23.1.2}"
+DOCKER_IMAGE="unstructured-inference:dev"
 
-DOCKER_BUILDKIT=1 docker buildx build --load --platform=linux/amd64 -f Dockerfile \
+DOCKER_BUILD_CMD=(docker buildx build --load -f Dockerfile \
   --build-arg PIP_VERSION="$PIP_VERSION" \
+  --build-arg BUILDKIT_INLINE_CACHE=1 \
   --progress plain \
-  -t unstructured-inference-dev:latest .
+  -t "$DOCKER_IMAGE" .)
+
+DOCKER_BUILDKIT=1 "${DOCKER_BUILD_CMD[@]}"
