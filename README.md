@@ -83,7 +83,7 @@ from unstructured_inference.models.base import get_model
 from unstructured_inference.inference.layout import DocumentLayout
 
 model = get_model("yolox")
-layout = DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf", model=model)
+layout = DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf", detection_model=model)
 ```
 
 ### Using models from the layoutparser model zoo
