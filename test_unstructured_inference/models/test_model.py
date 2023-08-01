@@ -1,10 +1,13 @@
 from typing import Any
-import pytest
 from unittest import mock
 
+import pytest
+
 import unstructured_inference.models.base as models
-from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
-from unstructured_inference.models.unstructuredmodel import ModelNotInitializedError
+from unstructured_inference.models.unstructuredmodel import (
+    ModelNotInitializedError,
+    UnstructuredObjectDetectionModel,
+)
 
 
 class MockModel(UnstructuredObjectDetectionModel):
