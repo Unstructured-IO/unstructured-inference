@@ -11,15 +11,23 @@ from unstructured_inference.models.unstructuredmodel import (
 
 
 class MockModel(UnstructuredObjectDetectionModel):
+    call_count = 0
+
     initialize = mock.MagicMock()
-    # def initialize(self, *args, **kwargs):
-    #     pass
+
+    def __init__(self):
+        self.initializer = mock.MagicMock()
+        super().__init__()
+
+    def initialize(self, *args, **kwargs):
+        return self.initializer(self, *args, **kwargs)
 
     def predict(self, x: Any) -> Any:
         return []
 
 
 def test_get_model(monkeypatch):
+    monkeypatch.setattr(models, "models", {})
     monkeypatch.setattr(
         models,
         "UnstructuredDetectronModel",
@@ -49,8 +57,13 @@ def test_raises_uninitialized():
 
 
 def test_model_initializes_once():
-    with mock.patch.object(models, "UnstructuredDetectronONNXModel", MockModel) as f:
-        from unstructured_inference.inference.layout import DocumentLayout
+    from unstructured_inference.inference import layout
 
-        DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
-        f.initialize.assert_called_once()
+    with mock.patch.object(models, "UnstructuredDetectronONNXModel", MockModel), mock.patch.object(
+        models, "models", {}
+    ):
+        doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
+
+        # print(f"Call count: {doc.pages[0].detection_model.call_count}")
+        print(type(doc.pages[0].detection_model))
+        doc.pages[0].detection_model.initializer.assert_called_once()

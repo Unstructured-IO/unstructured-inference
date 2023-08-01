@@ -17,14 +17,17 @@ class MockDetectron2LayoutModel:
 
 def test_load_default_model(monkeypatch):
     monkeypatch.setattr(detectron2, "Detectron2LayoutModel", MockDetectron2LayoutModel)
+    monkeypatch.setattr(models, "models", {})
 
     with patch.object(detectron2, "is_detectron2_available", return_value=True):
         model = models.get_model("detectron2_lp")
 
+    print(type(model))
     assert isinstance(model.model, MockDetectron2LayoutModel)
 
 
-def test_load_default_model_raises_when_not_available():
+def test_load_default_model_raises_when_not_available(monkeypatch):
+    monkeypatch.setattr(models, "models", {})
     with patch.object(detectron2, "is_detectron2_available", return_value=False):
         with pytest.raises(ImportError):
             models.get_model("detectron2_lp")
