@@ -1,4 +1,4 @@
-## 0.5.8-dev1
+## 0.5.8-dev2
 
 * Add alternative architecture for detectron2
 * Updates:
@@ -8,6 +8,8 @@
 | transformers  | 4.29.2    | 4.30.2   |
 | opencv-python | 4.7.0.72  | 4.8.0.74 |
 | ipython       | 8.12.2    | 8.14.0   |
+
+* Cache named models that have been loaded
 
 ## 0.5.7
 
