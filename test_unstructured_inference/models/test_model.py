@@ -66,6 +66,4 @@ def test_model_initializes_once():
     ):
         doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
 
-        # print(f"Call count: {doc.pages[0].detection_model.call_count}")
-        print(type(doc.pages[0].detection_model))
         doc.pages[0].detection_model.initializer.assert_called_once()

@@ -22,7 +22,6 @@ def test_load_default_model(monkeypatch):
     with patch.object(detectron2, "is_detectron2_available", return_value=True):
         model = models.get_model("detectron2_lp")
 
-    print(type(model))
     assert isinstance(model.model, MockDetectron2LayoutModel)
 
 
