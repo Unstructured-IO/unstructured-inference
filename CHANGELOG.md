@@ -1,4 +1,4 @@
-## 0.5.8-dev
+## 0.5.8-dev1
 
 * Add alternative architecture for detectron2
 * Updates:
