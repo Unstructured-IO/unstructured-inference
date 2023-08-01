@@ -23,7 +23,8 @@ class MockDetectron2ONNXLayoutModel:
         return [input_thing()]
 
 
-def test_load_default_model():
+def test_load_default_model(monkeypatch):
+    monkeypatch.setattr(models, "models", {})
     with patch.object(
         detectron2.onnxruntime,
         "InferenceSession",

@@ -1,4 +1,6 @@
-## 0.5.8-dev0
+## 0.5.8-dev1
+
+* Cache named models that have been lodaed
 
 ## 0.5.7
 
