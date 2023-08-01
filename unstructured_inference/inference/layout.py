@@ -470,6 +470,8 @@ def create_image_output_dir(
     directory path"""
     parent_dir = os.path.abspath(os.path.dirname(filename))
     f_name_without_extension = os.path.splitext(os.path.basename(filename))[0]
-    output_dir = os.path.join(parent_dir, f_name_without_extension)
+
+    # Add a suffix to avoid conflicts in case original file doesn't have an extension
+    output_dir = os.path.join(parent_dir, f"{f_name_without_extension}_images")
     os.makedirs(output_dir, exist_ok=True)
     return output_dir

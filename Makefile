@@ -1,5 +1,6 @@
 PACKAGE_NAME := unstructured_inference
-PIP_VERSION := 23.1.2
+PIP_VERSION := 23.2.1
+CURRENT_DIR := $(shell pwd)
 
 
 .PHONY: help
@@ -29,7 +30,7 @@ install-base-pip-packages:
 
 .PHONY: install-detectron2
 install-detectron2:
-	pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@a2e43ea#egg=detectron2"
+	pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@57bdb21249d5418c130d54e2ebdc94dda7a4c01a"
 
 .PHONY: install-paddleocr
 install-paddleocr:
@@ -116,3 +117,23 @@ version-sync:
 .PHONY: check-coverage
 check-coverage:
 	coverage report --fail-under=95
+
+##########
+# Docker #
+##########
+
+# Docker targets are provided for convenience only and are not required in a standard development environment
+
+DOCKER_IMAGE ?= unstructured-inference:dev
+
+.PHONY: docker-build
+docker-build:
+	PIP_VERSION=${PIP_VERSION} DOCKER_IMAGE_NAME=${DOCKER_IMAGE} ./scripts/docker-build.sh
+
+.PHONY: docker-test
+docker-test: docker-build
+	docker run --rm \
+	-v ${CURRENT_DIR}/test_unstructured_inference:/home/test_unstructured_inference \
+	-v ${CURRENT_DIR}/sample-docs:/home/sample-docs \
+	$(DOCKER_IMAGE) \
+	bash -c "pytest $(if $(TEST_NAME),-k $(TEST_NAME),) test_unstructured_inference"

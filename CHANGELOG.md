@@ -1,6 +1,13 @@
-## 0.5.6-dev3
+## 0.5.8-dev1
 
 * Cache named models that have been lodaed
+
+## 0.5.7
+
+* hotfix to handle issue storing images in a new dir when the pdf has no file extension
+
+## 0.5.6
+
 * Update the `annotate` and `_get_image_array` methods of `PageLayout` to get the image from the `image_path` property if the `image` property is `None`.
 * Add functionality to store pdf images for later use.
 * Add `image_metadata` property to `PageLayout` & set `page.image` to None to reduce memory usage.
