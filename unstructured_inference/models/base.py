@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from unstructured_inference.logger import logger
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
@@ -25,7 +25,7 @@ from unstructured_inference.models.yolox import (
 
 DEFAULT_MODEL = "detectron2_onnx"
 
-models = {}
+models: Dict[str, UnstructuredModel] = {}
 
 
 def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
