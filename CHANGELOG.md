@@ -1,3 +1,7 @@
+## 0.5.8-dev1
+
+* Cache named models that have been lodaed
+
 ## 0.5.7
 
 * hotfix to handle issue storing images in a new dir when the pdf has no file extension

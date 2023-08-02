@@ -1,5 +1,5 @@
 PACKAGE_NAME := unstructured_inference
-PIP_VERSION := 23.1.2
+PIP_VERSION := 23.2.1
 CURRENT_DIR := $(shell pwd)
 
 
@@ -30,7 +30,7 @@ install-base-pip-packages:
 
 .PHONY: install-detectron2
 install-detectron2:
-	pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@a2e43ea#egg=detectron2"
+	pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@57bdb21249d5418c130d54e2ebdc94dda7a4c01a"
 
 .PHONY: install-paddleocr
 install-paddleocr:
