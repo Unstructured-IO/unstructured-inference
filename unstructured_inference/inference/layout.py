@@ -80,6 +80,7 @@ class DocumentLayout:
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
+        ocr_mode: str = "entire_page",
         extract_tables: bool = False,
         pdf_image_dpi: int = 200,
     ) -> DocumentLayout:
@@ -118,6 +119,7 @@ class DocumentLayout:
                     layout=layout,
                     ocr_strategy=ocr_strategy,
                     ocr_languages=ocr_languages,
+                    ocr_mode=ocr_mode,
                     fixed_layout=fixed_layout,
                     extract_tables=extract_tables,
                 )
@@ -132,6 +134,7 @@ class DocumentLayout:
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
+        ocr_mode: str = "entire_page",
         fixed_layout: Optional[List[TextRegion]] = None,
         extract_tables: bool = False,
     ) -> DocumentLayout:
@@ -155,6 +158,7 @@ class DocumentLayout:
             layout=None,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
+            ocr_mode=ocr_mode,
             fixed_layout=fixed_layout,
             extract_tables=extract_tables,
         )
@@ -175,6 +179,7 @@ class PageLayout:
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
+        ocr_mode: str = "entire_page",
         extract_tables: bool = False,
     ):
         if detection_model is not None and element_extraction_model is not None:
@@ -194,6 +199,7 @@ class PageLayout:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
         self.ocr_languages = ocr_languages
+        self.ocr_mode = ocr_mode
         self.extract_tables = extract_tables
 
     def __str__(self) -> str:
@@ -217,7 +223,6 @@ class PageLayout:
     def get_elements_with_detection_model(
         self,
         inplace: bool = True,
-        ocr_mode: str = "entire_page",
     ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
@@ -232,10 +237,13 @@ class PageLayout:
         # remote call in the future.
         inferred_layout: List[TextRegion] = cast(List[TextRegion], self.detection_model(self.image))
 
-        ocr_layout = None
-        if ocr_mode == "entire_page":
+        if self.ocr_mode == "individual_blocks":
+            ocr_layout = None
+        elif self.ocr_mode == "entire_page":
             ocr_data = pytesseract.image_to_data(self.image, lang=self.ocr_languages, output_type=Output.DICT)
             ocr_layout = parse_ocr_data(ocr_data)
+        else:
+            raise ValueError("Invalid OCR mode")
 
         if self.layout is not None:
             inferred_layout = cast(
@@ -246,7 +254,7 @@ class PageLayout:
                     ocr_layout=ocr_layout,
                 ),
             )
-        else:
+        elif ocr_layout is not None:
             inferred_layout = merge_inferred_layout_with_ocr_layout(
                 inferred_layout=cast(List[LayoutElement], inferred_layout),
                 ocr_layout=ocr_layout,
@@ -314,6 +322,7 @@ class PageLayout:
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
+        ocr_mode: str = "entire_page",
         extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
     ):
@@ -326,6 +335,7 @@ class PageLayout:
             element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
+            ocr_mode=ocr_mode,
             extract_tables=extract_tables,
         )
         if page.element_extraction_model is not None:
@@ -353,6 +363,7 @@ def process_data_with_model(
     is_image: bool = False,
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
+    ocr_mode: str = "entire_page",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
@@ -367,6 +378,7 @@ def process_data_with_model(
             is_image=is_image,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
+            ocr_mode=ocr_mode,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
@@ -381,6 +393,7 @@ def process_file_with_model(
     is_image: bool = False,
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
+    ocr_mode: str = "entire_page",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
@@ -403,6 +416,7 @@ def process_file_with_model(
             element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
+            ocr_mode=ocr_mode,
             extract_tables=extract_tables,
         )
         if is_image
@@ -412,6 +426,7 @@ def process_file_with_model(
             element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
+            ocr_mode=ocr_mode,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
