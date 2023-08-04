@@ -232,32 +232,25 @@ class PageLayout:
         # remote call in the future.
         inferred_layout: List[TextRegion] = cast(List[TextRegion], self.detection_model(self.image))
 
-        if ocr_mode == "individual_blocks":
-            if self.layout is not None:
-                inferred_layout = cast(
-                    List[TextRegion],
-                    merge_inferred_layout_with_extracted_layout(
-                        inferred_layout=cast(Collection[LayoutElement], inferred_layout),
-                        extracted_layout=self.layout,
-                    ),
-                )
-        else:
-            ocr_data = pytesseract.image_to_data(self.image, lang="eng", output_type=Output.DICT)
+        ocr_layout = None
+        if ocr_mode == "entire_page":
+            ocr_data = pytesseract.image_to_data(self.image, lang=self.ocr_languages, output_type=Output.DICT)
             ocr_layout = parse_ocr_data(ocr_data)
-            if self.layout is not None:
-                inferred_layout = cast(
-                    List[TextRegion],
-                    merge_inferred_layout_with_extracted_layout(
-                        inferred_layout=cast(Collection[LayoutElement], inferred_layout),
-                        extracted_layout=self.layout,
-                        ocr_layout=ocr_layout,
-                    ),
-                )
-            else:
-                inferred_layout = merge_inferred_layout_with_ocr_layout(
-                    inferred_layout=cast(List[LayoutElement], inferred_layout),
+
+        if self.layout is not None:
+            inferred_layout = cast(
+                List[TextRegion],
+                merge_inferred_layout_with_extracted_layout(
+                    inferred_layout=cast(Collection[LayoutElement], inferred_layout),
+                    extracted_layout=self.layout,
                     ocr_layout=ocr_layout,
-                )
+                ),
+            )
+        else:
+            inferred_layout = merge_inferred_layout_with_ocr_layout(
+                inferred_layout=cast(List[LayoutElement], inferred_layout),
+                ocr_layout=ocr_layout,
+            )
 
         elements = self.get_elements_from_layout(inferred_layout)
 
