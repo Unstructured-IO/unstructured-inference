@@ -1,4 +1,4 @@
-## 0.5.8-dev2
+## 0.5.8
 
 * Add alternative architecture for detectron2
 * Updates:
@@ -10,6 +10,7 @@
 | ipython       | 8.12.2    | 8.14.0   |
 
 * Cache named models that have been loaded
+* Handle exceptions from Tesseract
 
 ## 0.5.7
 

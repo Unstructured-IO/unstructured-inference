@@ -83,6 +83,21 @@ def test_ocr(monkeypatch):
     assert elements.ocr(text_block, image=image) == mock_text
 
 
+def test_ocr_with_error(monkeypatch):
+    class MockOCRAgent:
+        def detect(self, *args):
+            # We sometimes get this error on very small images
+            raise tesseract.TesseractError(-8, "Estimating resolution as 1023")
+
+    monkeypatch.setattr(tesseract, "ocr_agents", {"eng": MockOCRAgent})
+    monkeypatch.setattr(tesseract, "is_pytesseract_available", lambda *args: True)
+
+    image = Image.fromarray(np.random.randint(12, 24, (40, 40)), mode="RGB")
+    text_block = layout.TextRegion(1, 2, 3, 4, text=None)
+
+    assert elements.ocr(text_block, image=image) == ""
+
+
 class MockLayoutModel:
     def __init__(self, layout):
         self.layout_return = layout
