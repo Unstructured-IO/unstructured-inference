@@ -1,7 +1,7 @@
 from typing import Dict
 
-from layoutparser.ocr.tesseract_agent import TesseractAgent, is_pytesseract_available
 import pytesseract
+from layoutparser.ocr.tesseract_agent import TesseractAgent, is_pytesseract_available
 
 from unstructured_inference.logger import logger
 
