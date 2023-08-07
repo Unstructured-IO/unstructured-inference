@@ -1,5 +1,6 @@
-## 0.5.8-dev2
+## 0.5.8-dev3
 
+* Perform full-page OCR
 * Add alternative architecture for detectron2
 * Updates:
 
