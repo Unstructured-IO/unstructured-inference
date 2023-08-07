@@ -748,3 +748,19 @@ def test_exposed_pdf_image_dpi(pdf_image_dpi, expected, monkeypatch):
     with patch.object(layout.PageLayout, "from_image") as mock_from_image:
         layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf", pdf_image_dpi=pdf_image_dpi)
         assert mock_from_image.call_args[0][0].height == expected
+
+
+def test_merged_layout_keeps_inferred_type():
+    inferred_layout = [
+        layoutelement.LayoutElement(
+            x1=0, y1=0, x2=100, y2=100, text="I am inferred text", type="InferredType"
+        )
+    ]
+    extracted_layout = [elements.TextRegion(x1=0, y1=0, x2=100, y2=100, text="I am extracted text")]
+    merged = layoutelement.merge_inferred_layout_with_extracted_layout(
+        inferred_layout=inferred_layout, extracted_layout=extracted_layout
+    )
+    assert len(merged) == 1
+    element = merged[0]
+    assert element.text == "I am extracted text"
+    assert element.type == "InferredType"
