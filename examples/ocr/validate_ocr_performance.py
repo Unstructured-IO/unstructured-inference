@@ -91,6 +91,7 @@ def validate_performance(
     compare_result = compare_processed_text(individual_mode_full_text, entire_mode_full_text)
 
     report = {
+        "validation_mode": validation_mode,
         "file_info": {
             "filename": f_name,
             "n_pages": n_pages,
@@ -171,12 +172,11 @@ def write_report(report, now_str, validation_mode):
 
 def run():
     test_files = [
-        # {"name": "layout-parser-paper-fast.pdf", "mode": "image", "is_image_file": False},
-        {"name": "layout-parser-paper-fast.jpg", "mode": "image", "is_image_file": True},
-        # {"name": "loremipsum_multipage.pdf", "mode": "pdf", "is_image_file": False},
-        # {"name": "2023-Jan-economic-outlook.pdf", "mode": "pdf", "is_image_file": False},
-        # {"name": "recalibrating-risk-report.pdf", "mode": "pdf", "is_image_file": False},
-        # {"name": "Silent-Giant.pdf", "mode": "pdf", "is_image_file": False},
+        {"name": "layout-parser-paper-fast.pdf", "mode": "image", "is_image_file": False},
+        {"name": "loremipsum_multipage.pdf", "mode": "pdf", "is_image_file": False},
+        {"name": "2023-Jan-economic-outlook.pdf", "mode": "pdf", "is_image_file": False},
+        {"name": "recalibrating-risk-report.pdf", "mode": "pdf", "is_image_file": False},
+        {"name": "Silent-Giant.pdf", "mode": "pdf", "is_image_file": False},
     ]
 
     for test_file in test_files:
