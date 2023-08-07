@@ -855,12 +855,18 @@ def test_create_image_output_dir_no_ext():
 def test_merged_layout_keeps_inferred_type():
     inferred_layout = [
         layoutelement.LayoutElement(
-            x1=0, y1=0, x2=100, y2=100, text="I am inferred text", type="InferredType"
-        )
+            x1=0,
+            y1=0,
+            x2=100,
+            y2=100,
+            text="I am inferred text",
+            type="InferredType",
+        ),
     ]
     extracted_layout = [elements.TextRegion(x1=0, y1=0, x2=100, y2=100, text="I am extracted text")]
     merged = layoutelement.merge_inferred_layout_with_extracted_layout(
-        inferred_layout=inferred_layout, extracted_layout=extracted_layout
+        inferred_layout=inferred_layout,
+        extracted_layout=extracted_layout,
     )
     assert len(merged) == 1
     element = merged[0]
