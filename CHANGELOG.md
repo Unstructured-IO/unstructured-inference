@@ -1,5 +1,6 @@
-## 0.5.8-dev2
+## 0.5.8-dev3
 
+* Keep inferred types when merging inferred and extracted layouts
 * Add alternative architecture for detectron2
 * Updates:
 
