@@ -14,7 +14,7 @@ class MockDetectron2ONNXLayoutModel:
         self.kwargs = kwargs
 
     def run(self, *args):
-        return ([(1, 2, 3, 4)], [0], [0.818], [(4, 5)])
+        return ([(1, 2, 3, 4)], [0], [(4, 5)], [0.818])
 
     def get_inputs(self):
         class input_thing:
@@ -23,13 +23,14 @@ class MockDetectron2ONNXLayoutModel:
         return [input_thing()]
 
 
-def test_load_default_model():
+def test_load_default_model(monkeypatch):
+    monkeypatch.setattr(models, "models", {})
     with patch.object(
         detectron2.onnxruntime,
         "InferenceSession",
         new=MockDetectron2ONNXLayoutModel,
     ):
-        model = models.get_model("detectron2_onnx")
+        model = models.get_model("detectron2_mask_rcnn")
 
     assert isinstance(model.model, MockDetectron2ONNXLayoutModel)
 

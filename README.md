@@ -25,7 +25,7 @@ Run `pip install unstructured-inference`.
 but is not automatically installed with this package. 
 For MacOS and Linux, build from source with:
 ```shell
-pip install 'git+https://github.com/facebookresearch/detectron2.git@e2ce8dc#egg=detectron2'
+pip install 'git+https://github.com/facebookresearch/detectron2.git@57bdb21249d5418c130d54e2ebdc94dda7a4c01a'
 ```
 Other install options can be found in the 
 [Detectron2 installation guide](https://detectron2.readthedocs.io/en/latest/tutorials/install.html).
@@ -83,7 +83,7 @@ from unstructured_inference.models.base import get_model
 from unstructured_inference.inference.layout import DocumentLayout
 
 model = get_model("yolox")
-layout = DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf", model=model)
+layout = DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf", detection_model=model)
 ```
 
 ### Using models from the layoutparser model zoo

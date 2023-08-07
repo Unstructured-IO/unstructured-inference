@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from unstructured_inference.logger import logger
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
@@ -23,15 +23,23 @@ from unstructured_inference.models.yolox import (
     UnstructuredYoloXModel,
 )
 
-DEFAULT_MODEL = "detectron2_onnx"
+DEFAULT_MODEL = "detectron2_mask_rcnn"
+
+models: Dict[str, UnstructuredModel] = {}
 
 
 def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     """Gets the model object by model name."""
     # TODO(alan): These cases are similar enough that we can probably do them all together with
     # importlib
+
+    global models
+
     if model_name is None:
         model_name = DEFAULT_MODEL
+
+    if model_name in models:
+        return models[model_name]
 
     if model_name in DETECTRON2_MODEL_TYPES:
         model: UnstructuredModel = UnstructuredDetectronModel()
@@ -55,6 +63,7 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
         model.initialize(**CHIPPER_MODEL_TYPES[model_name])
     else:
         raise UnknownModelException(f"Unknown model type: {model_name}")
+    models[model_name] = model
     return model
 
 
