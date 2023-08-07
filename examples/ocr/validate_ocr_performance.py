@@ -18,7 +18,8 @@ def validate_performance(
     validation_mode,
     is_image_file=False,
 ):
-    print(">>> Start performance comparison - filename:", f_name)
+    print(f">>> Start performance comparison - filename: {f_name} - validation_mode: {validation_mode}"
+          f" - is_image_file: {is_image_file}")
 
     now_dt = datetime.utcnow()
     now_str = now_dt.strftime("%Y_%m_%d-%H_%M_%S")
@@ -173,10 +174,10 @@ def write_report(report, now_str, validation_mode):
 def run():
     test_files = [
         {"name": "layout-parser-paper-fast.pdf", "mode": "image", "is_image_file": False},
-        {"name": "loremipsum_multipage.pdf", "mode": "pdf", "is_image_file": False},
-        {"name": "2023-Jan-economic-outlook.pdf", "mode": "pdf", "is_image_file": False},
-        {"name": "recalibrating-risk-report.pdf", "mode": "pdf", "is_image_file": False},
-        {"name": "Silent-Giant.pdf", "mode": "pdf", "is_image_file": False},
+        {"name": "loremipsum_multipage.pdf", "mode": "image", "is_image_file": False},
+        {"name": "2023-Jan-economic-outlook.pdf", "mode": "image", "is_image_file": False},
+        {"name": "recalibrating-risk-report.pdf", "mode": "image", "is_image_file": False},
+        {"name": "Silent-Giant.pdf", "mode": "image", "is_image_file": False},
     ]
 
     for test_file in test_files:
