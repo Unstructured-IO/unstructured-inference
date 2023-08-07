@@ -148,7 +148,6 @@ def merge_inferred_layout_with_extracted_layout(
             inferred_region.text = aggregate_ocr_text_by_block(
                 ocr_layout,
                 inferred_region,
-                subregion_threshold,
             )
     out_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
     return out_layout
@@ -157,7 +156,7 @@ def merge_inferred_layout_with_extracted_layout(
 def merge_inferred_layout_with_ocr_layout(
     inferred_layout: List[LayoutElement],
     ocr_layout: List[TextRegion],
-    subregion_threshold: float = 0.75,
+    subregion_threshold: float = 0.5,
 ) -> List[LayoutElement]:
     for inferred_region in inferred_layout:
         inferred_region.text = aggregate_ocr_text_by_block(
@@ -171,7 +170,7 @@ def merge_inferred_layout_with_ocr_layout(
 def aggregate_ocr_text_by_block(
     ocr_layout: Collection[TextRegion],
     region: TextRegion,
-    subregion_threshold: float = 0.75,
+    subregion_threshold: float = 0.5,
 ) -> str:
     """Extracts the text aggregated from the regions of the ocr layout that lie within the given
     block."""
@@ -180,7 +179,7 @@ def aggregate_ocr_text_by_block(
 
     for orc_region in ocr_layout:
         extracted_is_subregion_of_inferred = orc_region.is_almost_subregion_of(
-            region.pad(12),
+            region,
             subregion_threshold=subregion_threshold,
         )
         if extracted_is_subregion_of_inferred:
