@@ -3,6 +3,7 @@ from typing import List, cast
 from unstructured_inference.inference.elements import TextRegion
 from unstructured_inference.inference.layout import DocumentLayout
 from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.logger import logger
 
 
 def order_layout(
@@ -69,9 +70,15 @@ def order_two_column_document(document: DocumentLayout) -> DocumentLayout:
     for page in document.pages:
         bbox_elements = [el for el in page.elements if isinstance(el, LayoutElement)]
         no_bbox_elements = [el for el in page.elements if not isinstance(el, LayoutElement)]
+        if len(no_bbox_elements) > 0:
+            logger.warning(
+                "This document contents LocationlessLayoutElements, probably produced by Chipper model, no changes \
+                           will be performed",
+            )
+            return document
         ordered_elements = order_two_column_page(
             cast(List[LayoutElement], bbox_elements),
             width_page=page.image_metadata["width"],
         )
-        page.elements = ordered_elements + no_bbox_elements
+        page.elements = ordered_elements
     return document
