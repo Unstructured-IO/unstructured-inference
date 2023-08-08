@@ -87,7 +87,9 @@ def merge_inferred_layout_with_extracted_layout(
     inferred_regions_to_remove = []
     for extracted_region in extracted_layout:
         region_matched = False
-        extracted_region_type = "Image" if isinstance(extracted_region, ImageTextRegion) else "UncategorizedText"
+        extracted_region_type = (
+            "Image" if isinstance(extracted_region, ImageTextRegion) else "UncategorizedText"
+        )
         for inferred_region in inferred_layout:
             if inferred_region.intersects(extracted_region):
                 same_bbox = region_bounding_boxes_are_almost_the_same(
@@ -118,13 +120,18 @@ def merge_inferred_layout_with_extracted_layout(
                     grow_region_to_match_region(inferred_region, extracted_region)
                     inferred_region.text = extracted_region.text
                     region_matched = True
-                elif extracted_is_subregion_of_inferred :
-                    if inferred_is_text and extracted_is_image:
-                        grow_region_to_match_region(inferred_region, extracted_region)
-                        region_matched = True
-                    else:
-                        extracted_region_type = inferred_region.type
+                elif extracted_is_subregion_of_inferred and inferred_is_text and extracted_is_image:
+                    # In some cases text is constructed from embedded images. Here we are
+                    # checking for the case that the detection model has found a region of text
+                    # and an embedded image is a subregion. In this case we'll make sure the
+                    # inferred region subsumes this image, and the extracted image is ignored.
+                    grow_region_to_match_region(inferred_region, extracted_region)
+                    region_matched = True
                 elif either_region_is_subregion_of_other and inferred_region.type != "Table":
+                    # In this case we have significant overlap between an extracted and an inferred
+                    # element, and we want to keep the extracted subregion and discard the inferred
+                    # element, so we will give it the type of the inferred region.
+                    extracted_region_type = inferred_region.type or "UncategorizedText"
                     inferred_regions_to_remove.append(inferred_region)
         if not region_matched:
             # Need to classify the extracted layout elements we're keeping.
@@ -136,7 +143,7 @@ def merge_inferred_layout_with_extracted_layout(
                     extracted_region.y2,
                     text=extracted_region.text,
                     type=extracted_region_type,
-                )
+                ),
             )
     out_layout = categorized_extracted_elements_to_add + [
         region for region in inferred_layout if region not in inferred_regions_to_remove
