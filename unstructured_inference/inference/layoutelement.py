@@ -179,7 +179,7 @@ def aggregate_ocr_text_by_block(
     ocr_layout: List[TextRegion],
     region: TextRegion,
     subregion_threshold: float = 0.5,
-) -> str:
+) -> Optional[str]:
     """Extracts the text aggregated from the regions of the ocr layout that lie within the given
     block."""
 
@@ -193,7 +193,7 @@ def aggregate_ocr_text_by_block(
         if ocr_region_is_subregion_of_given_region and orc_region.text:
             extracted_texts.append(orc_region.text)
 
-    return " ".join(extracted_texts)
+    return " ".join(extracted_texts) if extracted_texts else None
 
 
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
