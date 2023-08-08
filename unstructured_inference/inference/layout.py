@@ -22,7 +22,6 @@ from unstructured_inference.inference.layoutelement import (
     LocationlessLayoutElement,
     merge_inferred_layout_with_extracted_layout,
 )
-from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import (
@@ -336,6 +335,7 @@ def process_data_with_model(
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
+    two_columns: bool = False,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
@@ -350,6 +350,7 @@ def process_data_with_model(
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
+            two_columns=two_columns,
         )
 
     return layout
@@ -364,6 +365,7 @@ def process_file_with_model(
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
+    two_columns: bool = False,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
@@ -397,6 +399,10 @@ def process_file_with_model(
             pdf_image_dpi=pdf_image_dpi,
         )
     )
+    if two_columns:
+        from unstructured_inference.inference.ordering import order_two_column_document
+
+        layout = order_two_column_document(layout)
     return layout
 
 
@@ -475,3 +481,7 @@ def create_image_output_dir(
     output_dir = os.path.join(parent_dir, f"{f_name_without_extension}_images")
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
+
+
+# Note (Benjamin): moved import here to avoid circular import
+from unstructured_inference.inference.ordering import order_layout  # noqa
