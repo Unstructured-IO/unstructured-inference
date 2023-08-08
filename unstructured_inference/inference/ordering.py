@@ -73,5 +73,5 @@ def order_two_column_document(document: DocumentLayout) -> DocumentLayout:
             cast(List[LayoutElement], bbox_elements),
             width_page=page.image_metadata["width"],
         )
-        page.elements = ordered_elements
+        page.elements = ordered_elements + no_bbox_elements
     return document
