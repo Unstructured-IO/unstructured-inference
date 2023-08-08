@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, cast
 
 from unstructured_inference.inference.elements import TextRegion
 from unstructured_inference.inference.layout import DocumentLayout
