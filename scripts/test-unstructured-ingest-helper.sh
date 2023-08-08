@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # This is intended to be run from an unstructured checkout, not in this repo
 # The goal here is to see what changes the current branch would introduce to unstructured
 # fixtures
