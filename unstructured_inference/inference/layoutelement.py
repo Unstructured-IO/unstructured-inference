@@ -83,10 +83,11 @@ def merge_inferred_layout_with_extracted_layout(
     subregion_threshold: float = 0.75,
 ) -> List[LayoutElement]:
     """Merge two layouts to produce a single layout."""
-    extracted_elements_to_add: List[TextRegion] = []
+    categorized_extracted_elements_to_add: List[LayoutElement] = []
     inferred_regions_to_remove = []
     for extracted_region in extracted_layout:
         region_matched = False
+        extracted_region_type = "Image" if isinstance(extracted_region, ImageTextRegion) else "UncategorizedText"
         for inferred_region in inferred_layout:
             if inferred_region.intersects(extracted_region):
                 same_bbox = region_bounding_boxes_are_almost_the_same(
@@ -116,27 +117,27 @@ def merge_inferred_layout_with_extracted_layout(
                     # Looks like these represent the same region
                     grow_region_to_match_region(inferred_region, extracted_region)
                     inferred_region.text = extracted_region.text
-                    inferred_region.type = inferred_region.type
                     region_matched = True
-                elif extracted_is_subregion_of_inferred and inferred_is_text and extracted_is_image:
-                    grow_region_to_match_region(inferred_region, extracted_region)
-                    region_matched = True
+                elif extracted_is_subregion_of_inferred :
+                    if inferred_is_text and extracted_is_image:
+                        grow_region_to_match_region(inferred_region, extracted_region)
+                        region_matched = True
+                    else:
+                        extracted_region_type = inferred_region.type
                 elif either_region_is_subregion_of_other and inferred_region.type != "Table":
                     inferred_regions_to_remove.append(inferred_region)
         if not region_matched:
-            extracted_elements_to_add.append(extracted_region)
-    # Need to classify the extracted layout elements we're keeping.
-    categorized_extracted_elements_to_add = [
-        LayoutElement(
-            el.x1,
-            el.y1,
-            el.x2,
-            el.y2,
-            text=el.text,
-            type="Image" if isinstance(el, ImageTextRegion) else "UncategorizedText",
-        )
-        for el in extracted_elements_to_add
-    ]
+            # Need to classify the extracted layout elements we're keeping.
+            categorized_extracted_elements_to_add.append(
+                LayoutElement(
+                    extracted_region.x1,
+                    extracted_region.y1,
+                    extracted_region.x2,
+                    extracted_region.y2,
+                    text=extracted_region.text,
+                    type=extracted_region_type,
+                )
+            )
     out_layout = categorized_extracted_elements_to_add + [
         region for region in inferred_layout if region not in inferred_regions_to_remove
     ]
