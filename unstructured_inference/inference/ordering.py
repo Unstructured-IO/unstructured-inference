@@ -67,8 +67,10 @@ def order_two_column_page(elements: List[LayoutElement], width_page: int) -> Lis
 def order_two_column_document(document: DocumentLayout) -> DocumentLayout:
     """Orders all pages in the document assuming the existence of two columns"""
     for page in document.pages:
+        bbox_elements = [el for el in page.elements if isinstance(el, LayoutElement)]
+        no_bbox_elements = [el for el in page.elements if not isinstance(el, LayoutElement)]
         ordered_elements = order_two_column_page(
-            page.elements,
+            cast(List[LayoutElement], bbox_elements),
             width_page=page.image_metadata["width"],
         )
         page.elements = ordered_elements
