@@ -7,7 +7,11 @@ from difflib import SequenceMatcher
 import nltk
 import pdf2image
 
-from unstructured_inference.inference.layout import process_file_with_model, create_image_output_dir, DocumentLayout
+from unstructured_inference.inference.layout import (
+    DocumentLayout,
+    create_image_output_dir,
+    process_file_with_model,
+)
 
 # Download the required resources (run this once)
 nltk.download('punkt')
@@ -160,7 +164,7 @@ def compare_processed_text(individual_mode_full_text, entire_mode_full_text, del
             "n_word_list": n_word_list_entire,
             "n_word_sets": n_word_sets_entire,
             "unique_words": delimiter.join(list(unique_words_entire)),
-        }
+        },
     }
 
 

@@ -235,32 +235,33 @@ class PageLayout:
 
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
-        inferred_layout: List[TextRegion] = cast(List[TextRegion], self.detection_model(self.image))
+        inferred_layout: List[LayoutElement] = self.detection_model(self.image)
 
         if self.ocr_mode == "individual_blocks":
             ocr_layout = None
         elif self.ocr_mode == "entire_page":
-            ocr_data = pytesseract.image_to_data(self.image, lang=self.ocr_languages, output_type=Output.DICT)
+            ocr_data = pytesseract.image_to_data(
+                self.image,
+                lang=self.ocr_languages,
+                output_type=Output.DICT,
+            )
             ocr_layout = parse_ocr_data(ocr_data)
         else:
             raise ValueError("Invalid OCR mode")
 
         if self.layout is not None:
-            inferred_layout = cast(
-                List[TextRegion],
-                merge_inferred_layout_with_extracted_layout(
-                    inferred_layout=cast(Collection[LayoutElement], inferred_layout),
-                    extracted_layout=self.layout,
-                    ocr_layout=ocr_layout,
-                ),
+            inferred_layout = merge_inferred_layout_with_extracted_layout(
+                inferred_layout=inferred_layout,
+                extracted_layout=self.layout,
+                ocr_layout=ocr_layout,
             )
         elif ocr_layout is not None:
             inferred_layout = merge_inferred_layout_with_ocr_layout(
-                inferred_layout=cast(List[LayoutElement], inferred_layout),
+                inferred_layout=inferred_layout,
                 ocr_layout=ocr_layout,
             )
 
-        elements = self.get_elements_from_layout(inferred_layout)
+        elements = self.get_elements_from_layout(cast(List[TextRegion], inferred_layout))
 
         if inplace:
             self.elements = elements
@@ -513,6 +514,27 @@ def create_image_output_dir(
 
 
 def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
+    """
+    Parse the OCR result data to extract a list of TextRegion objects.
+
+    The function processes the OCR result dictionary, looking for bounding
+    box information and associated text to create instances of the TextRegion
+    class, which are then appended to a list.
+
+    Parameters:
+    - ocr_data (dict): A dictionary containing the OCR result data, expected
+                      to have keys like "level", "left", "top", "width",
+                      "height", and "text".
+
+    Returns:
+    - List[TextRegion]: A list of TextRegion objects, each representing a
+                        detected text region within the OCR-ed image.
+
+    Note:
+    - An empty string or a None value for the 'text' key in the input
+      dictionary will result in its associated bounding box being ignored.
+    """
+
     levels = ocr_data["level"]
     text_regions = []
     for i, level in enumerate(levels):

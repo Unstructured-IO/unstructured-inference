@@ -79,7 +79,7 @@ def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
 def merge_inferred_layout_with_extracted_layout(
     inferred_layout: Collection[LayoutElement],
     extracted_layout: Collection[TextRegion],
-    ocr_layout: Optional[Collection[TextRegion]] = None,
+    ocr_layout: Optional[List[TextRegion]] = None,
     same_region_threshold: float = 0.75,
     subregion_threshold: float = 0.75,
 ) -> List[LayoutElement]:
@@ -158,6 +158,14 @@ def merge_inferred_layout_with_ocr_layout(
     ocr_layout: List[TextRegion],
     subregion_threshold: float = 0.5,
 ) -> List[LayoutElement]:
+    """
+    Merge the inferred layout with the OCR-detected text regions.
+
+    This function iterates over each inferred layout element and aggregates the
+    associated text from the OCR layout using the specified threshold. The inferred
+    layout's text attribute is then updated with this aggregated text.
+    """
+
     for inferred_region in inferred_layout:
         inferred_region.text = aggregate_ocr_text_by_block(
             ocr_layout,
@@ -168,7 +176,7 @@ def merge_inferred_layout_with_ocr_layout(
 
 
 def aggregate_ocr_text_by_block(
-    ocr_layout: Collection[TextRegion],
+    ocr_layout: List[TextRegion],
     region: TextRegion,
     subregion_threshold: float = 0.5,
 ) -> str:
@@ -178,11 +186,11 @@ def aggregate_ocr_text_by_block(
     extracted_texts = []
 
     for orc_region in ocr_layout:
-        extracted_is_subregion_of_inferred = orc_region.is_almost_subregion_of(
+        ocr_region_is_subregion_of_given_region = orc_region.is_almost_subregion_of(
             region,
             subregion_threshold=subregion_threshold,
         )
-        if extracted_is_subregion_of_inferred:
+        if ocr_region_is_subregion_of_given_region and orc_region.text:
             extracted_texts.append(orc_region.text)
 
     return " ".join(extracted_texts)
