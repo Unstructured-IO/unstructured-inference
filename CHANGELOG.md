@@ -1,4 +1,4 @@
-## 0.5.9-dev0
+## 0.5.9
 
 * Handle exceptions from Tesseract
 
