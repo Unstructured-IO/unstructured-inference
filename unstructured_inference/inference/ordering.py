@@ -71,9 +71,9 @@ def order_two_column_document(document: DocumentLayout) -> DocumentLayout:
         bbox_elements = [el for el in page.elements if isinstance(el, LayoutElement)]
         no_bbox_elements = [el for el in page.elements if not isinstance(el, LayoutElement)]
         if len(no_bbox_elements) > 0:
-            logger.warning(
-                "This document contents LocationlessLayoutElements, probably produced by Chipper model, no changes \
-                           will be performed",
+            logger.warning( #pragma: no cover Currently chipper is under beta
+                "This document contents LocationlessLayoutElements, probably produced by \
+                Chipper model, no changes will be performed",
             )
             return document
         ordered_elements = order_two_column_page(

@@ -7,11 +7,14 @@ from unittest.mock import mock_open, patch
 import numpy as np
 import pytest
 from PIL import Image
+from unstructured.file_utils.filetype import document_to_element_list
 
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
 from unstructured_inference.inference.layout import create_image_output_dir
+from unstructured_inference.inference.ordering import order_two_column_document
 from unstructured_inference.models import detectron2, tesseract
+from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -850,3 +853,17 @@ def test_create_image_output_dir_no_ext():
         assert os.path.isdir(output_dir)
         assert os.path.isabs(output_dir)
         assert output_dir == expected_output_dir
+
+
+def test_two_column_ordering():
+    reference_file = "test_unstructured_inference/expected_outputs/result_two_columns.txt"
+    file = "sample-docs/Dense-Passage-Retrieval-for-Open-Domain-Question-Answering.pdf"
+    detectron2_onnx = get_model("detectron2_onnx")
+    doc = layout.DocumentLayout.from_file(file, detection_model=detectron2_onnx)
+
+    ordered_document = order_two_column_document(doc)
+    content = " ".join([e.text for e in document_to_element_list(ordered_document)])
+
+    with open(reference_file) as file:
+        reference_content = file.read()
+        assert content == reference_content
