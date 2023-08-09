@@ -1,3 +1,4 @@
+import filecmp
 import os.path
 import tempfile
 from functools import partial
@@ -865,6 +866,7 @@ def test_two_column_ordering():
     elements = sum(pages_element, [])
     content = " ".join([e.text for e in elements])
 
-    with open(reference_file) as file:
-        reference_content = file.read()
-        assert content == reference_content
+    with tempfile.NamedTemporaryFile("wt") as tmp:
+        print(tmp.name)
+        tmp.write(content)
+        assert filecmp.cmp(tmp.name, reference_file)
