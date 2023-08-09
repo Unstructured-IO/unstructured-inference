@@ -7,7 +7,6 @@ from unittest.mock import mock_open, patch
 import numpy as np
 import pytest
 from PIL import Image
-from unstructured.file_utils.filetype import document_to_element_list
 
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
@@ -862,7 +861,9 @@ def test_two_column_ordering():
     doc = layout.DocumentLayout.from_file(file, detection_model=detectron2_onnx)
 
     ordered_document = order_two_column_document(doc)
-    content = " ".join([e.text for e in document_to_element_list(ordered_document)])
+    pages_element = [p.elements for p in ordered_document.pages]
+    elements = sum(pages_element, [])
+    content = " ".join([e.text for e in elements])
 
     with open(reference_file) as file:
         reference_content = file.read()
