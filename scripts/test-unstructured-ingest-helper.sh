@@ -4,7 +4,6 @@
 # The goal here is to see what changes the current branch would introduce to unstructured
 # fixtures
 
-# Define your commands in an array
 INGEST_COMMANDS=(
     test_unstructured_ingest/test-ingest-azure.sh
     test_unstructured_ingest/test-ingest-biomed-api.sh
@@ -16,7 +15,6 @@ INGEST_COMMANDS=(
     test_unstructured_ingest/test-ingest-s3.sh
 )
 
-# An array to store exit statuses
 EXIT_STATUSES=()
 
 # Run each command and capture its exit status
