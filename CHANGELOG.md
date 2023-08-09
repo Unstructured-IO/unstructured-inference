@@ -1,6 +1,6 @@
-## 0.5.8-dev2
+## 0.5.8
 
-* Add alternative architecture for detectron2
+* Add alternative architecture for detectron2 (but default is unchanged)
 * Updates:
 
 | Library       | From      | To       |
