@@ -1,6 +1,10 @@
 ## 0.5.9-dev0
 
-* Add alternative architecture for detectron2
+* Handle exceptions from Tesseract
+
+## 0.5.8
+
+* Add alternative architecture for detectron2 (but default is unchanged)
 * Updates:
 
 | Library       | From      | To       |
@@ -10,7 +14,6 @@
 | ipython       | 8.12.2    | 8.14.0   |
 
 * Cache named models that have been loaded
-* Handle exceptions from Tesseract
 
 ## 0.5.7
 
