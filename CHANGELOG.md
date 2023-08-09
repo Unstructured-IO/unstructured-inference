@@ -1,3 +1,7 @@
+## 0.5.9-dev0
+
+* Implement full-page OCR
+
 ## 0.5.8
 
 * Add alternative architecture for detectron2 (but default is unchanged)
