@@ -1,6 +1,10 @@
-## 0.5.8-dev3
+## 0.5.9-dev
 
-* Add alternative architecture for detectron2
+* Added logic for two column documents
+
+## 0.5.8
+
+* Add alternative architecture for detectron2 (but default is unchanged)
 * Updates:
 
 | Library       | From      | To       |
@@ -10,7 +14,6 @@
 | ipython       | 8.12.2    | 8.14.0   |
 
 * Cache named models that have been loaded
-* Added logic for two column documents
 
 ## 0.5.7
 
