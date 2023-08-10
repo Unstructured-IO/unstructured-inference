@@ -50,9 +50,9 @@ def order_two_column_page(elements: List[LayoutElement], width_page: int) -> Lis
     for i, bbox in enumerate(elements):
         x_min = bbox.x1
         x_max = bbox.x2
-        if x_min < vertical_line_x and x_max < vertical_line_x:
+        if x_max < vertical_line_x:
             left_boxes.append(bbox)
-        elif x_min > vertical_line_x and x_max > vertical_line_x:
+        elif x_min > vertical_line_x:
             right_boxes.append(bbox)
         else:
             both_sided_boxes.append(bbox)
