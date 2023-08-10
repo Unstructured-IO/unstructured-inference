@@ -1,6 +1,10 @@
-## 0.5.9-dev
+## 0.5.10-dev
 
 * Added logic for two column documents
+
+## 0.5.9
+
+* Handle exceptions from Tesseract
 
 ## 0.5.8
 
