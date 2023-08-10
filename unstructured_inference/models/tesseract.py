@@ -1,10 +1,13 @@
 from typing import Dict
 
+import pytesseract
 from layoutparser.ocr.tesseract_agent import TesseractAgent, is_pytesseract_available
 
 from unstructured_inference.logger import logger
 
 ocr_agents: Dict[str, TesseractAgent] = {}
+
+TesseractError = pytesseract.pytesseract.TesseractError
 
 
 def load_agent(languages: str = "eng"):
