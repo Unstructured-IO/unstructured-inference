@@ -1,5 +1,6 @@
 import filecmp
 import os.path
+import platform
 import tempfile
 from functools import partial
 from itertools import product
@@ -856,7 +857,11 @@ def test_create_image_output_dir_no_ext():
 
 
 def test_two_column_ordering():
-    reference_file = "test_unstructured_inference/expected_outputs/result_two_columns.txt"
+    if platform.machine() == "x86_64":
+        reference_file = "test_unstructured_inference/expected_outputs/result_two_columns_x64.txt"
+    else:
+        reference_file = "test_unstructured_inference/expected_outputs/result_two_columns_arm.txt"
+
     file = "sample-docs/Dense-Passage-Retrieval-for-Open-Domain-Question-Answering.pdf"
     detectron2_onnx = get_model("detectron2_onnx")
     doc = layout.DocumentLayout.from_file(file, detection_model=detectron2_onnx)
