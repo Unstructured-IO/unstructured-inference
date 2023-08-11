@@ -532,7 +532,7 @@ scaling) are tuned using development sets.
 94.1
  67.6
 78.6
- 90a x ©oS 3 oSTop-k accuracy (%)uw°40     BM25—— # Train:—— # Train:—— # Train:—— # Train:—— # Train:  1k10k20k40kall (59k) 204060 80k: # of retrieved passages100  Figure 1: Retriever top-k accuracy with different num-
+ 90   0 3 x °     BM25 —— # Train: 1k —<— # Train: 10k —<— # Train: 20k —— # Train: 40k —— # Train: all (59k)    Top-k accuracy (%) a 3 uw 3 40   20 40 60 80 100 k: # of retrieved passages Figure 1: Retriever top-k accuracy with different num-
 bers of training examples used in our dense passage re-
 triever vs BM25. The results are measured on the de-
 velopment set of Natural Questions. Our DPR trained
@@ -607,7 +607,7 @@ help further.
  Impact of gold passages We use passages that
 match the gold contexts in the original datasets
 (when available) as positive examples (Section 4.2).
- IB Top-5 Top-20 Top-100 Type RandomBM25Gold GoldGoldGold #N 777 731127 (cid:55)(cid:55)(cid:55) 47.050.042.6(cid:51) 51.1(cid:51) 52.1(cid:51) 55.8 (cid:51) 65.0G.+BM25(1) 31+32(cid:51) 64.5G.+BM25(2) 31+64G.+BM25(1) 127+128 (cid:51) 65.8 64.363.363.1 69.170.873.0 77.376.478.0 77.874.878.3 80.882.183.1 84.484.084.9 Type
+       Type #N IB Top-5 Top-20 Top-100 Random 7 x 470 643 718 BM25 7 x 500 633 74.8 Gold 7 xX 426 63.1 78.3 Gold 7 Y Sil 69.1 80.8 Gold 31 Y 52.1 70.8 82.1 Gold 127 Y 558 73.0 83.1 G.+BM25 31432 Y 65.0 77.3 84.4 G.+BM25° 31464 JY 64.5 76.4 84.0 G.+BM25 1274128 Y 65.8 78.0 84.9   Type
  #N
  IB Top-5 Top-20 Top-100
  (cid:55)
