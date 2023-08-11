@@ -80,7 +80,7 @@ class DocumentLayout:
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
-        ocr_mode: str = "entire_page",
+        ocr_mode: str = "individual_blocks",
         extract_tables: bool = False,
         pdf_image_dpi: int = 200,
     ) -> DocumentLayout:
@@ -134,7 +134,7 @@ class DocumentLayout:
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
-        ocr_mode: str = "entire_page",
+        ocr_mode: str = "individual_blocks",
         fixed_layout: Optional[List[TextRegion]] = None,
         extract_tables: bool = False,
     ) -> DocumentLayout:
@@ -179,7 +179,7 @@ class PageLayout:
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
-        ocr_mode: str = "entire_page",
+        ocr_mode: str = "individual_blocks",
         extract_tables: bool = False,
     ):
         if detection_model is not None and element_extraction_model is not None:
@@ -323,7 +323,7 @@ class PageLayout:
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
-        ocr_mode: str = "entire_page",
+        ocr_mode: str = "individual_blocks",
         extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
     ):
@@ -364,7 +364,7 @@ def process_data_with_model(
     is_image: bool = False,
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
-    ocr_mode: str = "entire_page",
+    ocr_mode: str = "individual_blocks",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
@@ -394,7 +394,7 @@ def process_file_with_model(
     is_image: bool = False,
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
-    ocr_mode: str = "entire_page",
+    ocr_mode: str = "individual_blocks",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
