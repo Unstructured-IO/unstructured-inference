@@ -1,3 +1,7 @@
+## 0.5.10
+
+* Implement full-page OCR
+
 ## 0.5.9
 
 * Handle exceptions from Tesseract
