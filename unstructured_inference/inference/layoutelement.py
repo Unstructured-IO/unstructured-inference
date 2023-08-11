@@ -79,6 +79,7 @@ def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
 def merge_inferred_layout_with_extracted_layout(
     inferred_layout: Collection[LayoutElement],
     extracted_layout: Collection[TextRegion],
+    ocr_layout: Optional[List[TextRegion]] = None,
     same_region_threshold: float = 0.75,
     subregion_threshold: float = 0.75,
 ) -> List[LayoutElement]:
@@ -136,10 +137,63 @@ def merge_inferred_layout_with_extracted_layout(
         )
         for el in extracted_elements_to_add
     ]
-    out_layout = categorized_extracted_elements_to_add + [
+    inferred_regions_to_add = [
         region for region in inferred_layout if region not in inferred_regions_to_remove
     ]
+    inferred_regions_to_add_without_text = [
+        region for region in inferred_regions_to_add if not region.text
+    ]
+    if ocr_layout is not None:
+        for inferred_region in inferred_regions_to_add_without_text:
+            inferred_region.text = aggregate_ocr_text_by_block(
+                ocr_layout,
+                inferred_region,
+            )
+    out_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
     return out_layout
+
+
+def merge_inferred_layout_with_ocr_layout(
+    inferred_layout: List[LayoutElement],
+    ocr_layout: List[TextRegion],
+    subregion_threshold: float = 0.5,
+) -> List[LayoutElement]:
+    """
+    Merge the inferred layout with the OCR-detected text regions.
+
+    This function iterates over each inferred layout element and aggregates the
+    associated text from the OCR layout using the specified threshold. The inferred
+    layout's text attribute is then updated with this aggregated text.
+    """
+
+    for inferred_region in inferred_layout:
+        inferred_region.text = aggregate_ocr_text_by_block(
+            ocr_layout,
+            inferred_region,
+            subregion_threshold,
+        )
+    return inferred_layout
+
+
+def aggregate_ocr_text_by_block(
+    ocr_layout: List[TextRegion],
+    region: TextRegion,
+    subregion_threshold: float = 0.5,
+) -> Optional[str]:
+    """Extracts the text aggregated from the regions of the ocr layout that lie within the given
+    block."""
+
+    extracted_texts = []
+
+    for orc_region in ocr_layout:
+        ocr_region_is_subregion_of_given_region = orc_region.is_almost_subregion_of(
+            region,
+            subregion_threshold=subregion_threshold,
+        )
+        if ocr_region_is_subregion_of_given_region and orc_region.text:
+            extracted_texts.append(orc_region.text)
+
+    return " ".join(extracted_texts) if extracted_texts else None
 
 
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different

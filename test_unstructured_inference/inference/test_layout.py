@@ -114,7 +114,7 @@ class MockLayoutModel:
 
 
 def test_get_page_elements(monkeypatch, mock_final_layout):
-    image = np.random.randint(12, 24, (40, 40))
+    image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
     page = layout.PageLayout(
         number=0,
         image=image,
@@ -838,6 +838,7 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             element_extraction_model=element_extraction_model,
             ocr_strategy="auto",
             ocr_languages="eng",
+            ocr_mode="entire_page",
             fixed_layouts=None,
             extract_tables=False,
             pdf_image_dpi=200,

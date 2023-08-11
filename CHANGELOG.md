@@ -1,6 +1,10 @@
-## 0.5.10-dev
+## 0.5.11-dev
 
 * Added logic for two column documents
+
+## 0.5.10
+
+* Implement full-page OCR
 
 ## 0.5.9
 

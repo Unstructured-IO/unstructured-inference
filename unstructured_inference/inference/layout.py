@@ -7,9 +7,11 @@ from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pdf2image
+import pytesseract
 from pdfminer import psparser
 from pdfminer.high_level import extract_pages
 from PIL import Image
+from pytesseract import Output
 
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
@@ -21,6 +23,7 @@ from unstructured_inference.inference.layoutelement import (
     LayoutElement,
     LocationlessLayoutElement,
     merge_inferred_layout_with_extracted_layout,
+    merge_inferred_layout_with_ocr_layout,
 )
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
@@ -76,6 +79,7 @@ class DocumentLayout:
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
+        ocr_mode: str = "entire_page",
         extract_tables: bool = False,
         pdf_image_dpi: int = 200,
     ) -> DocumentLayout:
@@ -114,6 +118,7 @@ class DocumentLayout:
                     layout=layout,
                     ocr_strategy=ocr_strategy,
                     ocr_languages=ocr_languages,
+                    ocr_mode=ocr_mode,
                     fixed_layout=fixed_layout,
                     extract_tables=extract_tables,
                 )
@@ -128,6 +133,7 @@ class DocumentLayout:
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
+        ocr_mode: str = "entire_page",
         fixed_layout: Optional[List[TextRegion]] = None,
         extract_tables: bool = False,
     ) -> DocumentLayout:
@@ -151,6 +157,7 @@ class DocumentLayout:
             layout=None,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
+            ocr_mode=ocr_mode,
             fixed_layout=fixed_layout,
             extract_tables=extract_tables,
         )
@@ -171,6 +178,7 @@ class PageLayout:
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
+        ocr_mode: str = "entire_page",
         extract_tables: bool = False,
     ):
         if detection_model is not None and element_extraction_model is not None:
@@ -190,6 +198,7 @@ class PageLayout:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
         self.ocr_languages = ocr_languages
+        self.ocr_mode = ocr_mode
         self.extract_tables = extract_tables
 
     def __str__(self) -> str:
@@ -210,7 +219,10 @@ class PageLayout:
             return None
         return elements
 
-    def get_elements_with_detection_model(self, inplace=True) -> Optional[List[LayoutElement]]:
+    def get_elements_with_detection_model(
+        self,
+        inplace: bool = True,
+    ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
         logger.info("Detecting page elements ...")
         if self.detection_model is None:
@@ -222,16 +234,33 @@ class PageLayout:
 
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
-        inferred_layout: List[TextRegion] = cast(List[TextRegion], self.detection_model(self.image))
-        if self.layout is not None:
-            inferred_layout = cast(
-                List[TextRegion],
-                merge_inferred_layout_with_extracted_layout(
-                    inferred_layout=cast(Collection[LayoutElement], inferred_layout),
-                    extracted_layout=self.layout,
-                ),
+        inferred_layout: List[LayoutElement] = self.detection_model(self.image)
+
+        if self.ocr_mode == "individual_blocks":
+            ocr_layout = None
+        elif self.ocr_mode == "entire_page":
+            ocr_data = pytesseract.image_to_data(
+                self.image,
+                lang=self.ocr_languages,
+                output_type=Output.DICT,
             )
-        elements = self.get_elements_from_layout(inferred_layout)
+            ocr_layout = parse_ocr_data(ocr_data)
+        else:
+            raise ValueError("Invalid OCR mode")
+
+        if self.layout is not None:
+            inferred_layout = merge_inferred_layout_with_extracted_layout(
+                inferred_layout=inferred_layout,
+                extracted_layout=self.layout,
+                ocr_layout=ocr_layout,
+            )
+        elif ocr_layout is not None:
+            inferred_layout = merge_inferred_layout_with_ocr_layout(
+                inferred_layout=inferred_layout,
+                ocr_layout=ocr_layout,
+            )
+
+        elements = self.get_elements_from_layout(cast(List[TextRegion], inferred_layout))
 
         if inplace:
             self.elements = elements
@@ -293,6 +322,7 @@ class PageLayout:
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
+        ocr_mode: str = "entire_page",
         extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
     ):
@@ -305,6 +335,7 @@ class PageLayout:
             element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
+            ocr_mode=ocr_mode,
             extract_tables=extract_tables,
         )
         if page.element_extraction_model is not None:
@@ -332,6 +363,7 @@ def process_data_with_model(
     is_image: bool = False,
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
+    ocr_mode: str = "entire_page",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
@@ -347,6 +379,7 @@ def process_data_with_model(
             is_image=is_image,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
+            ocr_mode=ocr_mode,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
@@ -362,6 +395,7 @@ def process_file_with_model(
     is_image: bool = False,
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
+    ocr_mode: str = "entire_page",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
@@ -385,6 +419,7 @@ def process_file_with_model(
             element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
+            ocr_mode=ocr_mode,
             extract_tables=extract_tables,
         )
         if is_image
@@ -394,6 +429,7 @@ def process_file_with_model(
             element_extraction_model=element_extraction_model,
             ocr_strategy=ocr_strategy,
             ocr_languages=ocr_languages,
+            ocr_mode=ocr_mode,
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
@@ -482,6 +518,46 @@ def create_image_output_dir(
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
 
+def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
+    """
+    Parse the OCR result data to extract a list of TextRegion objects.
 
+    The function processes the OCR result dictionary, looking for bounding
+
+box information and associated text to create instances of the TextRegion
+    class, which are then appended to a list.
+
+    Parameters:
+    - ocr_data (dict): A dictionary containing the OCR result data, expected
+                      to have keys like "level", "left", "top", "width",
+                      "height", and "text".
+
+    Returns:
+    - List[TextRegion]: A list of TextRegion objects, each representing a
+                        detected text region within the OCR-ed image.
+
+    Note:
+    - An empty string or a None value for the 'text' key in the input
+      dictionary will result in its associated bounding box being ignored.
+    """
+
+    levels = ocr_data["level"]
+    text_regions = []
+    for i, level in enumerate(levels):
+        (l, t, w, h) = (
+            ocr_data["left"][i],
+            ocr_data["top"][i],
+            ocr_data["width"][i],
+            ocr_data["height"][i],
+        )
+        (x1, y1, x2, y2) = l, t, l + w, t + h
+        text = ocr_data["text"][i]
+        if text:
+            text_region = TextRegion(x1, y1, x2, y2, text)
+            text_regions.append(text_region)
+
+    return text_regions
+
+  
 # Note (Benjamin): moved import here to avoid circular import
 from unstructured_inference.inference.ordering import order_layout  # noqa
