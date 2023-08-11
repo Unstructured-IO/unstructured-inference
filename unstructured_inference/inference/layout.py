@@ -518,27 +518,28 @@ def create_image_output_dir(
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
 
+
 def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
     """
-    Parse the OCR result data to extract a list of TextRegion objects.
+        Parse the OCR result data to extract a list of TextRegion objects.
 
-    The function processes the OCR result dictionary, looking for bounding
+        The function processes the OCR result dictionary, looking for bounding
 
-box information and associated text to create instances of the TextRegion
-    class, which are then appended to a list.
+    box information and associated text to create instances of the TextRegion
+        class, which are then appended to a list.
 
-    Parameters:
-    - ocr_data (dict): A dictionary containing the OCR result data, expected
-                      to have keys like "level", "left", "top", "width",
-                      "height", and "text".
+        Parameters:
+        - ocr_data (dict): A dictionary containing the OCR result data, expected
+                          to have keys like "level", "left", "top", "width",
+                          "height", and "text".
 
-    Returns:
-    - List[TextRegion]: A list of TextRegion objects, each representing a
-                        detected text region within the OCR-ed image.
+        Returns:
+        - List[TextRegion]: A list of TextRegion objects, each representing a
+                            detected text region within the OCR-ed image.
 
-    Note:
-    - An empty string or a None value for the 'text' key in the input
-      dictionary will result in its associated bounding box being ignored.
+        Note:
+        - An empty string or a None value for the 'text' key in the input
+          dictionary will result in its associated bounding box being ignored.
     """
 
     levels = ocr_data["level"]
@@ -558,6 +559,6 @@ box information and associated text to create instances of the TextRegion
 
     return text_regions
 
-  
+
 # Note (Benjamin): moved import here to avoid circular import
 from unstructured_inference.inference.ordering import order_layout  # noqa
