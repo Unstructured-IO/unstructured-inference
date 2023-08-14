@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from pdf2image import convert_from_path
 from PIL import Image
 
 from unstructured_inference.models import chipper
@@ -91,3 +92,15 @@ def test_predict():
         model.predict("hello")
         mock_predict_tokens.assert_called_once()
         mock_postprocess.assert_called_once()
+
+
+def test_full_model():
+    model = chipper.UnstructuredChipperModel()
+
+    images = convert_from_path("sample-docs/loremipsum.pdf")
+    model.initialize(
+        tokenizer_name="xlm-roberta-large",
+        pre_trained_model_name="unstructuredio/ved-fine-tuning",
+    )
+    out = model.predict(images[0])
+    assert "Lorem ipsum" in out[0].text
