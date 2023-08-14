@@ -10,7 +10,7 @@ import pdf2image
 import pytesseract
 from pdfminer import psparser
 from pdfminer.high_level import extract_pages
-from PIL import Image
+from PIL import Image, ImageSequence
 from pytesseract import Output
 
 from unstructured_inference.inference.elements import (
@@ -143,26 +143,45 @@ class DocumentLayout:
         try:
             image = Image.open(filename)
             format = image.format
-            image = image.convert("RGB")
+            if format == "TIFF":
+                images = [im.convert("RGB") for i, im in enumerate(ImageSequence.Iterator(image))]
+            else:
+                image = image.convert("RGB")
             image.format = format
         except Exception as e:
             if os.path.isdir(filename) or os.path.isfile(filename):
                 raise e
             else:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
-        page = PageLayout.from_image(
-            image,
-            image_path=filename,
-            detection_model=detection_model,
-            element_extraction_model=element_extraction_model,
-            layout=None,
-            ocr_strategy=ocr_strategy,
-            ocr_languages=ocr_languages,
-            ocr_mode=ocr_mode,
-            fixed_layout=fixed_layout,
-            extract_tables=extract_tables,
-        )
-        return cls.from_pages([page])
+        if image.format == "TIFF":
+            pages = []
+            for image in images:
+                page = PageLayout.from_image(
+                    image,
+                    image_path=filename,
+                    detection_model=detection_model,
+                    element_extraction_model=element_extraction_model,
+                    layout=None,
+                    ocr_strategy=ocr_strategy,
+                    ocr_languages=ocr_languages,
+                    fixed_layout=fixed_layout,
+                    extract_tables=extract_tables,
+                )
+                pages.append(page)
+            return cls.from_pages(pages)
+        else:
+            page = PageLayout.from_image(
+                image,
+                image_path=filename,
+                detection_model=detection_model,
+                element_extraction_model=element_extraction_model,
+                layout=None,
+                ocr_strategy=ocr_strategy,
+                ocr_languages=ocr_languages,
+                fixed_layout=fixed_layout,
+                extract_tables=extract_tables,
+            )
+            return cls.from_pages([page])
 
 
 class PageLayout:
