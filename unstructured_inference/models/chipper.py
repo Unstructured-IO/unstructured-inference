@@ -61,6 +61,10 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     required_w: int = 1248
     required_h: int = 1664
 
+    def __init__(self):
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        super().__init__()
+
     def initialize(
         self,
         tokenizer_name: str,
@@ -68,7 +72,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         auth_token: Optional[str] = os.environ.get("UNSTRUCTURED_HF_TOKEN"),
     ):
         """Load the model for inference."""
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.tokenizer: AutoTokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
 
