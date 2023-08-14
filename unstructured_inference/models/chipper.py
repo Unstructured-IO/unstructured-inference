@@ -68,6 +68,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         auth_token: Optional[str] = os.environ.get("UNSTRUCTURED_HF_TOKEN"),
     ):
         """Load the model for inference."""
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
         self.tokenizer: AutoTokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
 
         self.processor: DonutProcessor = DonutProcessor(
@@ -85,6 +87,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             ignore_mismatched_sizes=True,
             use_auth_token=auth_token,
         )
+        self.model.to(self.device)
+        self.model.eval()
 
     def predict(self, image) -> List[LocationlessLayoutElement]:
         """Do inference using the wrapped model."""
@@ -94,21 +98,24 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
     def predict_tokens(self, image: Image) -> List[int]:
         """Predict tokens from image."""
-        annotation = self.model.generate(
-            self.processor(
-                np.array(
-                    image,
-                    np.float32,
-                ),
-                return_tensors="pt",
-            ).pixel_values,
-            decoder_input_ids=torch.tensor([[0]]),
-            do_sample=True,
-            top_p=0.92,
-            top_k=0,
-            no_repeat_ngram_size=10,
-            num_beams=3,
-        ).tolist()[0]
+        with torch.no_grad():
+            annotation = self.model.generate(
+                self.processor(
+                    np.array(
+                        image,
+                        np.float32,
+                    ),
+                    return_tensors="pt",
+                ).pixel_values.to(self.device),
+                decoder_input_ids=torch.tensor([[0]], device=self.device),
+                do_sample=True,
+                top_p=0.92,
+                top_k=0,
+                no_repeat_ngram_size=10,
+                num_beams=3,
+                output_attentions=False,
+                output_hidden_states=False,
+            ).tolist()[0]
 
         tokens = (
             [self.processor.tokenizer.bos_token_id]
