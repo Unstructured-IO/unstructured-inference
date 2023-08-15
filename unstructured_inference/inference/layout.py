@@ -401,6 +401,13 @@ def process_file_with_model(
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
+
+    if (pdf_image_dpi < 300) and (model_name == "chipper"):
+        logger.warning(
+            "The chipper model performs better when images are rendered with DPI >= 300 "
+            f"(currently {pdf_image_dpi})."
+        )
+
     model = get_model(model_name)
     if isinstance(model, UnstructuredObjectDetectionModel):
         detection_model = model
