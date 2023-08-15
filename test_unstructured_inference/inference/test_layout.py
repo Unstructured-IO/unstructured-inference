@@ -209,7 +209,7 @@ def test_process_data_with_model(monkeypatch, mock_final_layout, model_name):
     )
 
     def new_isinstance(obj, cls):
-        if type(obj) == MockLayoutModel:
+        if type(obj) is MockLayoutModel:
             return True
         else:
             return isinstance(obj, cls)

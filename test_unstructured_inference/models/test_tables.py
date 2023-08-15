@@ -31,7 +31,7 @@ def test_load_table_model_raises_when_not_available(model_path):
 def test_load_donut_model(model_path):
     table_model = tables.UnstructuredTableTransformerModel()
     table_model.initialize(model=model_path)
-    assert type(table_model.model.model.decoder) == TableTransformerDecoder
+    assert type(table_model.model.model.decoder) is TableTransformerDecoder
 
 
 @pytest.fixture()
