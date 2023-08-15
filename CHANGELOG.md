@@ -1,3 +1,7 @@
+## 0.5.11-dev0
+
+* Add warning when chipper is used with < 300 DPI
+
 ## 0.5.10
 
 * Implement full-page OCR
