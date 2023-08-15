@@ -155,10 +155,11 @@ class DocumentLayout:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
         if image.format == "TIFF":
             pages = []
-            for image in images:
+            for i, image in enumerate(images):
                 page = PageLayout.from_image(
                     image,
                     image_path=filename,
+                    number=i,
                     detection_model=detection_model,
                     element_extraction_model=element_extraction_model,
                     layout=None,

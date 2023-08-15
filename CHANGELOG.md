@@ -9,6 +9,7 @@
 ## 0.5.9
 
 * Handle exceptions from Tesseract
+* Add multipage TIFF extraction support
 
 ## 0.5.8
 
