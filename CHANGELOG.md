@@ -1,6 +1,7 @@
 ## 0.5.11-dev0
 
 * Add warning when chipper is used with < 300 DPI
+* Add multipage TIFF extraction support
 
 ## 0.5.10
 
@@ -9,7 +10,6 @@
 ## 0.5.9
 
 * Handle exceptions from Tesseract
-* Add multipage TIFF extraction support
 
 ## 0.5.8
 
