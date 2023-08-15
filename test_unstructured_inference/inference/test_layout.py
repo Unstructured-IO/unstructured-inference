@@ -11,7 +11,7 @@ from PIL import Image
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
 from unstructured_inference.inference.layout import create_image_output_dir
-from unstructured_inference.models import detectron2, tesseract
+from unstructured_inference.models import chipper, detectron2, tesseract
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -866,3 +866,14 @@ def test_create_image_output_dir_no_ext():
         assert os.path.isdir(output_dir)
         assert os.path.isabs(output_dir)
         assert output_dir == expected_output_dir
+
+
+def test_warning_if_chipper_and_low_dpi(caplog):
+    with patch.object(layout.DocumentLayout, "from_file") as mock_from_file, patch.object(
+        chipper.UnstructuredChipperModel,
+        "initialize",
+    ):
+        layout.process_file_with_model("asdf", model_name="chipper", pdf_image_dpi=299)
+        mock_from_file.assert_called_once()
+        assert caplog.records[0].levelname == "WARNING"
+        assert "DPI >= 300" in caplog.records[0].msg
