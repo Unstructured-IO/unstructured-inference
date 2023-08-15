@@ -42,8 +42,9 @@ def test_get_model_warns_on_chipper(monkeypatch, caplog):
         "UnstructuredChipperModel",
         MockModel,
     )
-    models.get_model("chipper")
-    assert caplog.records[0].levelname == "WARNING"
+    with mock.patch.object(models, "models", {}):
+        models.get_model("chipper")
+        assert caplog.records[0].levelname == "WARNING"
 
 
 def test_raises_invalid_model():
