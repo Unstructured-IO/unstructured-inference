@@ -1,6 +1,7 @@
-## 0.5.11-dev0
+## 0.5.11
 
 * Add warning when chipper is used with < 300 DPI
+* Fix for incorrect type assignation at ingest test
 
 ## 0.5.10
 
