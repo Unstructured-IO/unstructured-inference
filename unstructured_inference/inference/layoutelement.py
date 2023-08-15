@@ -80,8 +80,8 @@ def merge_inferred_layout_with_extracted_layout(
     inferred_layout: Collection[LayoutElement],
     extracted_layout: Collection[TextRegion],
     ocr_layout: Optional[List[TextRegion]] = None,
-    same_region_threshold: float = 0.50, #0.50
-    subregion_threshold: float = 0.50, #0.50
+    same_region_threshold: float = 0.50,
+    subregion_threshold: float = 0.50,
 ) -> List[LayoutElement]:
     """Merge two layouts to produce a single layout."""
     extracted_elements_to_add: List[TextRegion] = []
@@ -156,7 +156,7 @@ def merge_inferred_layout_with_extracted_layout(
 def merge_inferred_layout_with_ocr_layout(
     inferred_layout: List[LayoutElement],
     ocr_layout: List[TextRegion],
-    subregion_threshold: float = 0.3, #0.3
+    subregion_threshold: float = 0.3,
 ) -> List[LayoutElement]:
     """
     Merge the inferred layout with the OCR-detected text regions.
