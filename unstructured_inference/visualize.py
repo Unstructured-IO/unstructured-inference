@@ -44,7 +44,7 @@ def draw_yolox_bounding_boxes(img, boxes, scores, cls_ids, conf=0.5, class_names
         y1 = int(box[3])
 
         color = (_COLORS[cls_id] * 255).astype(np.uint8).tolist()
-        text = "{}:{:.1f}%".format(class_names[cls_id], score * 100)
+        text = f"{class_names[cls_id]}:{score * 100:.1f}%"
         txt_color = (0, 0, 0) if np.mean(_COLORS[cls_id]) > 0.5 else (255, 255, 255)
         font = cv2.FONT_HERSHEY_SIMPLEX
 
