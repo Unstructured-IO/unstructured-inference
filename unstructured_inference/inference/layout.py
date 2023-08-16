@@ -373,6 +373,7 @@ def process_data_with_model(
     DocumentLayout by using a model identified by model_name."""
     with tempfile.NamedTemporaryFile() as tmp_file:
         tmp_file.write(data.read())
+        tmp_file.flush()  # Make sure the file is written out
         layout = process_file_with_model(
             tmp_file.name,
             model_name,
