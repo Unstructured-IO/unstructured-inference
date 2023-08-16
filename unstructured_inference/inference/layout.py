@@ -367,7 +367,7 @@ def process_data_with_model(
     ocr_mode: str = "entire_page",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
-    pdf_image_dpi: int = 200,
+    pdf_image_dpi: Optional[int] = None,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
@@ -397,11 +397,13 @@ def process_file_with_model(
     ocr_mode: str = "entire_page",
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
-    pdf_image_dpi: int = 200,
+    pdf_image_dpi: Optional[int] = None,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
 
+    if pdf_image_dpi is None:
+        pdf_image_dpi = 200
     if (pdf_image_dpi < 300) and (model_name == "chipper"):
         logger.warning(
             "The Chipper model performs better when images are rendered with DPI >= 300 "
