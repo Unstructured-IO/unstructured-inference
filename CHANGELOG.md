@@ -1,3 +1,7 @@
+## 0.5.12
+
+* Fix a pdfminer error when using `process_data_with_model`
+
 ## 0.5.11
 
 * Add warning when chipper is used with < 300 DPI
