@@ -403,7 +403,7 @@ def process_file_with_model(
     model_name."""
 
     if pdf_image_dpi is None:
-        pdf_image_dpi = 200
+        pdf_image_dpi = 300 if model_name == "chipper" else 200
     if (pdf_image_dpi < 300) and (model_name == "chipper"):
         logger.warning(
             "The Chipper model performs better when images are rendered with DPI >= 300 "
