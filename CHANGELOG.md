@@ -1,6 +1,7 @@
-## 0.5.11-dev0
+## 0.5.11
 
 * Add warning when chipper is used with < 300 DPI
+* Use None default for dpi so defaults can be properly handled upstream
 
 ## 0.5.10
 
