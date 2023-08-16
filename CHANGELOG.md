@@ -1,3 +1,7 @@
+## 0.5.11-dev0
+
+* Fix extracted image elements being included in layout merge
+
 ## 0.5.11
 
 * Add warning when chipper is used with < 300 DPI
