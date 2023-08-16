@@ -1,6 +1,7 @@
 ## 0.5.12
 
 * Add multipage TIFF extraction support
+* Fix a pdfminer error when using `process_data_with_model`
 
 ## 0.5.11
 
