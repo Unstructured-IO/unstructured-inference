@@ -146,7 +146,7 @@ class DocumentLayout:
             images = []
             for i, im in enumerate(ImageSequence.Iterator(image)):
                 im = im.convert("RGB")
-                im.format = format 
+                im.format = format
                 images.append(im)
         except Exception as e:
             if os.path.isdir(filename) or os.path.isfile(filename):
