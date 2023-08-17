@@ -87,6 +87,10 @@ def merge_inferred_layout_with_extracted_layout(
     extracted_elements_to_add: List[TextRegion] = []
     inferred_regions_to_remove = []
     for extracted_region in extracted_layout:
+        if isinstance(extracted_region, ImageTextRegion):
+            # Skip extracted images for this purpose, we don't have the text from them and they
+            # don't provide good text bounding boxes.
+            continue
         region_matched = False
         for inferred_region in inferred_layout:
             if inferred_region.intersects(extracted_region):

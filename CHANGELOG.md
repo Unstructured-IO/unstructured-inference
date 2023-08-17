@@ -1,3 +1,7 @@
+## 0.5.13
+
+* Fix extracted image elements being included in layout merge
+
 ## 0.5.12
 
 * Fix a pdfminer error when using `process_data_with_model`
