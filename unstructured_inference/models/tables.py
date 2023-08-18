@@ -1,7 +1,6 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
 import logging
-import platform
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
@@ -57,27 +56,23 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def get_tokens(self, x: Image):
         """Get OCR tokens from either paddleocr or tesseract"""
-        if platform.machine() == "x86_64":
-            try:
-                from unstructured_inference.models import paddle_ocr
+        try:
+            from ppocronnx.predict_system import TextSystem
 
-                paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
+            text_sys = TextSystem()
+            detections = text_sys.detect_and_ocr(np.array(x))
 
-                tokens = []
-                for idx in range(len(paddle_result)):
-                    res = paddle_result[idx]
-                    for line in res:
-                        xmin = min([i[0] for i in line[0]])
-                        ymin = min([i[1] for i in line[0]])
-                        xmax = max([i[0] for i in line[0]])
-                        ymax = max([i[1] for i in line[0]])
-                        tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
-                return tokens
-            except ModuleNotFoundError:
-                logging.warning(
-                    "No module named 'unstructured_paddleocr', falling back to tesseract",
-                )
-                pass
+            tokens = []
+            for detection in detections:
+                (xmin, ymin), _, (xmax, ymax), _ = detection.box
+
+                tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": detection.ocr_text})
+            return tokens
+        except ModuleNotFoundError:
+            logging.warning(
+                "No module named 'unstructured_paddleocr', falling back to tesseract",
+            )
+            pass
         zoom = 6
         img = cv2.resize(
             cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
