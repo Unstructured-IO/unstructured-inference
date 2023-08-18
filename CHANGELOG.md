@@ -1,6 +1,7 @@
 ## 0.5.13
 
 * Fix extracted image elements being included in layout merge
+* Add TIFF test file and TIFF filetype to `test_from_image_file` in `test_layout`
 
 ## 0.5.12
 
