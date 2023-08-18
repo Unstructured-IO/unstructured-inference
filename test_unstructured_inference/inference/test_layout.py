@@ -209,7 +209,7 @@ def test_process_data_with_model(monkeypatch, mock_final_layout, model_name):
     )
 
     def new_isinstance(obj, cls):
-        if type(obj) == MockLayoutModel:
+        if type(obj) is MockLayoutModel:
             return True
         else:
             return isinstance(obj, cls)
@@ -345,7 +345,7 @@ def test_get_elements_from_block_raises():
         layout.get_element_from_block(block, None, None)
 
 
-@pytest.mark.parametrize("filetype", ["png", "jpg"])
+@pytest.mark.parametrize("filetype", ["png", "jpg", "tiff"])
 def test_from_image_file(monkeypatch, mock_final_layout, filetype):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_final_layout]
