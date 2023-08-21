@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Union
 
@@ -5,6 +6,7 @@ import cv2
 import numpy as np
 import onnxruntime
 from huggingface_hub import hf_hub_download
+from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
 from unstructured_inference.inference.layoutelement import LayoutElement
@@ -13,11 +15,6 @@ from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
-import onnxruntime
-import numpy as np
-import cv2
-from onnxruntime.quantization import quantize_dynamic, QuantType
-import os
 
 onnxruntime.set_default_logger_severity(logger_onnx.getEffectiveLevel())
 
@@ -93,8 +90,16 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         logger.info("Loading the Detectron2 layout model ...")
         quantized_path = "detectron2_quantized.onnx"
         if not os.path.exists(quantized_path):
-            quantize_dynamic(model_path, quantized_path,weight_type=QuantType.QUInt8)
-        self.model = onnxruntime.InferenceSession(quantized_path, providers=["TensorrtExecutionProvider","CUDAExecutionProvider","CPUExecutionProvider"])
+            quantize_dynamic(model_path, quantized_path, weight_type=QuantType.QUInt8)
+        self.model = onnxruntime.InferenceSession(
+            quantized_path,
+            providers=[
+                "TensorrtExecutionProvider",
+                "CUDAExecutionProvider",
+                "CPUExecutionProvider",
+            ],
+        )
+        self.model_path = quantized_path
         self.label_map = label_map
         if confidence_threshold is None:
             confidence_threshold = 0.5

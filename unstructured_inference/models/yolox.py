@@ -3,20 +3,20 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/237e943ac64aa32eb32f875faa93ebb18512d41d/yolox/data/data_augment.py
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
+import os
 from typing import List
 
 import cv2
 import numpy as np
 import onnxruntime
 from huggingface_hub import hf_hub_download
+from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 from unstructured_inference.visualize import draw_yolox_bounding_boxes
-from onnxruntime.quantization import quantize_dynamic, QuantType
-import os
 
 YOLOX_LABEL_MAP = {
     0: "Caption",
@@ -63,10 +63,17 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
         quantized_path = "yolox_quantized.onnx"
         if not os.path.exists(quantized_path):
-            quantize_dynamic(model_path, quantized_path,weight_type=QuantType.QUInt8)
+            quantize_dynamic(model_path, quantized_path, weight_type=QuantType.QUInt8)
 
-        self.model = onnxruntime.InferenceSession(quantized_path, providers=["TensorrtExecutionProvider","CUDAExecutionProvider","CPUExecutionProvider"])
-        
+        self.model = onnxruntime.InferenceSession(
+            quantized_path,
+            providers=[
+                "TensorrtExecutionProvider",
+                "CUDAExecutionProvider",
+                "CPUExecutionProvider",
+            ],
+        )
+
         self.layout_classes = label_map
 
     def image_processing(
