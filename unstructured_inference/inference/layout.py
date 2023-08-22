@@ -542,20 +542,6 @@ def load_pdf(
     return layouts, images
 
 
-def create_image_output_dir(
-    filename: Union[str, PurePath],
-) -> Union[str, PurePath]:
-    """Creates a directory to store the converted images from the pdf pages and returns the
-    directory path"""
-    parent_dir = os.path.abspath(os.path.dirname(filename))
-    f_name_without_extension = os.path.splitext(os.path.basename(filename))[0]
-
-    # Add a suffix to avoid conflicts in case original file doesn't have an extension
-    output_dir = os.path.join(parent_dir, f"{f_name_without_extension}_images")
-    os.makedirs(output_dir, exist_ok=True)
-    return output_dir
-
-
 def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
     """
     Parse the OCR result data to extract a list of TextRegion objects.
