@@ -195,7 +195,7 @@ class PageLayout:
         if image_metadata is None:
             image_metadata = {}
         self.image_metadata = image_metadata
-        self.image_path = None
+        self.image_path = image_path
         self.image_array: Union[np.ndarray, None] = None
         self.document_filename = document_filename
         self.layout = layout
@@ -513,7 +513,7 @@ def get_element_from_block(
 def load_pdf(
     filename: str,
     dpi: int = 200,
-    output_folder: Union[str, PurePath] = None,
+    output_folder: Optional[Union[str, PurePath]] = None,
     path_only: bool = False,
 ) -> Tuple[List[List[TextRegion]], Union[List[Image.Image], List[str]]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
@@ -542,12 +542,19 @@ def load_pdf(
     if path_only and not output_folder:
         raise ValueError("output_folder must be specified if path_only is true")
 
-    images = pdf2image.convert_from_path(
-        filename,
-        dpi=dpi,
-        output_folder=output_folder,
-        paths_only=path_only,
-    )
+    if output_folder is not None:
+        images = pdf2image.convert_from_path(
+            filename,
+            dpi=dpi,
+            output_folder=output_folder,
+            paths_only=path_only,
+        )
+    else:
+        images = pdf2image.convert_from_path(
+            filename,
+            dpi=dpi,
+            paths_only=path_only,
+        )
 
     return layouts, images
 
