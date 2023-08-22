@@ -304,7 +304,9 @@ class PageLayout:
         return self.image_array
 
     def annotate(
-        self, colors: Optional[Union[List[str], str]] = None, image_dpi: int = 200
+        self,
+        colors: Optional[Union[List[str], str]] = None,
+        image_dpi: int = 200,
     ) -> Image.Image:
         """Annotates the elements on the page image."""
         if colors is None:
