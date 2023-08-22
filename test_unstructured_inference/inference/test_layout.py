@@ -127,6 +127,26 @@ def test_get_page_elements(monkeypatch, mock_final_layout):
     assert elements == page.elements
 
 
+def test_get_page_elements_with_tesseract_error(monkeypatch, mock_final_layout):
+    def mock_image_to_data(*args, **kwargs):
+        raise tesseract.TesseractError(-2, "Estimating resolution as 1023")
+
+    monkeypatch.setattr(layout.pytesseract, "image_to_data", mock_image_to_data)
+
+    image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
+    page = layout.PageLayout(
+        number=0,
+        image=image,
+        layout=mock_final_layout,
+        detection_model=MockLayoutModel(mock_final_layout),
+    )
+
+    elements = page.get_elements_with_detection_model(inplace=False)
+
+    assert str(elements[0]) == "A Catchy Title"
+    assert str(elements[1]).startswith("A very repetitive narrative.")
+
+
 class MockPool:
     def map(self, f, xs):
         return [f(x) for x in xs]
