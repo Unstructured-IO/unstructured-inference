@@ -248,12 +248,16 @@ class PageLayout:
         if self.ocr_mode == "individual_blocks":
             ocr_layout = None
         elif self.ocr_mode == "entire_page":
-            ocr_data = pytesseract.image_to_data(
-                self.image,
-                lang=self.ocr_languages,
-                output_type=Output.DICT,
-            )
-            ocr_layout = parse_ocr_data(ocr_data)
+            ocr_layout = None
+            try:
+                ocr_data = pytesseract.image_to_data(
+                    self.image,
+                    lang=self.ocr_languages,
+                    output_type=Output.DICT,
+                )
+                ocr_layout = parse_ocr_data(ocr_data)
+            except pytesseract.pytesseract.TesseractError:
+                logger.warning("TesseractError: Skipping page", exc_info=True)
         else:
             raise ValueError("Invalid OCR mode")
 

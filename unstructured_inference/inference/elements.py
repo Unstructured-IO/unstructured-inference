@@ -273,6 +273,7 @@ def ocr(text_block: TextRegion, image: Image.Image, languages: str = "eng") -> s
     try:
         return agent.detect(cropped_image)
     except tesseract.TesseractError:
+        logger.warning("TesseractError: Skipping region", exc_info=True)
         return ""
 
 

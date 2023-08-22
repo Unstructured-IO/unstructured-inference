@@ -1,7 +1,12 @@
-## 0.5.15-dev0
+## 0.5.16
 
 * Fix to no longer create a directory for storing processed images
 * Hot-load images for annotation
+
+## 0.5.15
+
+* Handle an uncaught TesseractError
+
 
 ## 0.5.14
 
