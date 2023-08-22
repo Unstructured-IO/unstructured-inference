@@ -255,7 +255,7 @@ class PageLayout:
                 )
                 ocr_layout = parse_ocr_data(ocr_data)
             except pytesseract.pytesseract.TesseractError:
-                logger.warning("TesseractError: Skipping page")
+                logger.warning("TesseractError: Skipping page", exc_info=True)
         else:
             raise ValueError("Invalid OCR mode")
 
