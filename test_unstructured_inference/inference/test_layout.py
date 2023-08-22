@@ -396,7 +396,6 @@ def test_from_file(monkeypatch, mock_final_layout):
             page = doc.pages[0]
             assert page.elements[0] == mock_final_layout
             assert page.image_metadata == image_metadata
-            assert page.image_path == image_path
             assert page.image is None
 
 

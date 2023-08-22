@@ -87,44 +87,44 @@ class DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         logger.info(f"Reading PDF for file: {filename} ...")
 
-        # Store pdf images for later use
-        output_dir = create_image_output_dir(filename)
-        layouts, _image_paths = load_pdf(
-            filename,
-            pdf_image_dpi,
-            output_folder=output_dir,
-            path_only=True,
-        )
-        image_paths = cast(List[str], _image_paths)
-        if len(layouts) > len(image_paths):
-            raise RuntimeError(
-                "Some images were not loaded. "
-                "Check that poppler is installed and in your $PATH.",
+        with tempfile.TemporaryDirectory() as temp_dir:
+            layouts, _image_paths = load_pdf(
+                filename,
+                pdf_image_dpi,
+                output_folder=temp_dir,
+                path_only=True,
             )
-        pages: List[PageLayout] = []
-        if fixed_layouts is None:
-            fixed_layouts = [None for _ in layouts]
-        for i, (image_path, layout, fixed_layout) in enumerate(
-            zip(image_paths, layouts, fixed_layouts),
-        ):
-            # NOTE(robinson) - In the future, maybe we detect the page number and default
-            # to the index if it is not detected
-            with Image.open(image_path) as image:
-                page = PageLayout.from_image(
-                    image,
-                    image_path=image_path,
-                    number=i + 1,
-                    detection_model=detection_model,
-                    element_extraction_model=element_extraction_model,
-                    layout=layout,
-                    ocr_strategy=ocr_strategy,
-                    ocr_languages=ocr_languages,
-                    ocr_mode=ocr_mode,
-                    fixed_layout=fixed_layout,
-                    extract_tables=extract_tables,
+            image_paths = cast(List[str], _image_paths)
+            if len(layouts) > len(image_paths):
+                raise RuntimeError(
+                    "Some images were not loaded. "
+                    "Check that poppler is installed and in your $PATH.",
                 )
-                pages.append(page)
-        return cls.from_pages(pages)
+
+            pages: List[PageLayout] = []
+            if fixed_layouts is None:
+                fixed_layouts = [None for _ in layouts]
+            for i, (image_path, layout, fixed_layout) in enumerate(
+                zip(image_paths, layouts, fixed_layouts),
+            ):
+                # NOTE(robinson) - In the future, maybe we detect the page number and default
+                # to the index if it is not detected
+                with Image.open(image_path) as image:
+                    page = PageLayout.from_image(
+                        image,
+                        number=i + 1,
+                        document_filename=filename,
+                        detection_model=detection_model,
+                        element_extraction_model=element_extraction_model,
+                        layout=layout,
+                        ocr_strategy=ocr_strategy,
+                        ocr_languages=ocr_languages,
+                        ocr_mode=ocr_mode,
+                        fixed_layout=fixed_layout,
+                        extract_tables=extract_tables,
+                    )
+                    pages.append(page)
+            return cls.from_pages(pages)
 
     @classmethod
     def from_image_file(
@@ -174,7 +174,8 @@ class PageLayout:
         image: Image.Image,
         layout: Optional[List[TextRegion]],
         image_metadata: Optional[dict] = None,
-        image_path: Optional[Union[str, PurePath]] = None,
+        image_path: Optional[Union[str, PurePath]] = None,  # TODO: Deprecate
+        document_filename: Optional[Union[str, PurePath]] = None,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
@@ -188,8 +189,9 @@ class PageLayout:
         if image_metadata is None:
             image_metadata = {}
         self.image_metadata = image_metadata
-        self.image_path = image_path
+        self.image_path = None
         self.image_array: Union[np.ndarray, None] = None
+        self.document_filename = document_filename
         self.layout = layout
         self.number = number
         self.detection_model = detection_model
@@ -295,7 +297,7 @@ class PageLayout:
                 self.image_array = np.array(image)
         return self.image_array
 
-    def annotate(self, colors: Optional[Union[List[str], str]] = None) -> Image.Image:
+    def annotate(self, colors: Optional[Union[List[str], str]] = None, image_dpi: int = 200) -> Image.Image:
         """Annotates the elements on the page image."""
         if colors is None:
             colors = ["red" for _ in self.elements]
@@ -305,18 +307,46 @@ class PageLayout:
         if len(colors) < len(self.elements):
             n_copies = (len(self.elements) // len(colors)) + 1
             colors = colors * n_copies
-        img = self.image.copy() if self.image else Image.open(self.image_path)
+
+        # Hotload image if it hasn't been loaded yet
+        if self.image:
+            img = self.image.copy()
+        elif self.image_path:
+            img = Image.open(self.image_path)
+        else:
+            img = self._get_image(self.document_filename, self.number, image_dpi)
 
         for el, color in zip(self.elements, colors):
             if isinstance(el, Rectangle):
                 img = draw_bbox(img, el, color=color)
+
         return img
+
+    def _get_image(self, filename, page_number, pdf_image_dpi: int = 200) -> Image.Image:
+        """Hotloads a page image from a pdf file."""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            _image_paths = pdf2image.convert_from_path(
+                filename,
+                dpi=pdf_image_dpi,
+                output_folder=temp_dir,
+                paths_only=True,
+            )
+            image_paths = cast(List[str], _image_paths)
+            if page_number > len(image_paths):
+                raise ValueError(
+                    f"Page number {page_number} is greater than the number of pages in the PDF.",
+                )
+
+            with Image.open(image_paths[page_number - 1]) as image:
+                return image.copy()
 
     @classmethod
     def from_image(
         cls,
         image: Image.Image,
-        image_path: Optional[Union[str, PurePath]],
+        image_path: Optional[Union[str, PurePath]] = None,
+        document_filename: Optional[Union[str, PurePath]] = None,
         number: int = 1,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
@@ -353,6 +383,9 @@ class PageLayout:
             "height": page.image.height if page.image else None,
         }
         page.image_path = os.path.abspath(image_path) if image_path else None
+        page.document_filename = os.path.abspath(document_filename) if document_filename else None
+
+        # Clear the image to save memory
         page.image = None
 
         return page
@@ -470,7 +503,7 @@ def get_element_from_block(
 def load_pdf(
     filename: str,
     dpi: int = 200,
-    output_folder: Union[str, PurePath] = None,  # type: ignore
+    output_folder: Union[str, PurePath] = None,
     path_only: bool = False,
 ) -> Tuple[List[List[TextRegion]], Union[List[Image.Image], List[str]]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
