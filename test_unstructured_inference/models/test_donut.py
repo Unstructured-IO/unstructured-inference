@@ -41,7 +41,7 @@ def test_load_donut_model(model_path, processor_path, config_path):
         config=config_path,
         task_prompt="<s>",
     )
-    assert type(donut_model.model.encoder) == DonutSwinModel
+    assert type(donut_model.model.encoder) is DonutSwinModel
 
 
 @pytest.fixture()
