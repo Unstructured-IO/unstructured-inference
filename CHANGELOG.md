@@ -1,3 +1,8 @@
+## 0.5.15-dev0
+
+* Fix to no longer create a directory for storing processed images
+* Hot-load images for annotation
+
 ## 0.5.14
 
 * Add TIFF test file and TIFF filetype to `test_from_image_file` in `test_layout`
