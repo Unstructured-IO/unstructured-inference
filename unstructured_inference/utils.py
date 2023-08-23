@@ -1,6 +1,10 @@
 from collections.abc import Mapping
 from typing import Any, Callable, Hashable, Iterator, Union
 
+import cv2
+import numpy as np
+from PIL.Image import Image
+
 
 class LazyEvaluateInfo:
     """Class that stores the information needed to lazily evaluate a function with given arguments.
@@ -39,3 +43,12 @@ class LazyDict(Mapping):
 
     def __len__(self) -> int:
         return len(self._raw_dict)
+
+
+def write_image(image: Union[Image, np.ndarray], output_image_path: str):
+    if isinstance(image, Image):
+        image.save(output_image_path)
+    elif isinstance(image, np.ndarray):
+        cv2.imwrite(output_image_path, image)
+    else:
+        raise ValueError("Unsupported Image Type")

@@ -83,6 +83,7 @@ class DocumentLayout:
         ocr_mode: str = "entire_page",
         extract_tables: bool = False,
         pdf_image_dpi: int = 200,
+        **kwargs,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
         logger.info(f"Reading PDF for file: {filename} ...")
@@ -122,6 +123,7 @@ class DocumentLayout:
                         ocr_mode=ocr_mode,
                         fixed_layout=fixed_layout,
                         extract_tables=extract_tables,
+                        **kwargs,
                     )
                     pages.append(page)
             return cls.from_pages(pages)
@@ -137,6 +139,7 @@ class DocumentLayout:
         ocr_mode: str = "entire_page",
         fixed_layout: Optional[List[TextRegion]] = None,
         extract_tables: bool = False,
+        **kwargs,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
@@ -166,6 +169,7 @@ class DocumentLayout:
                 ocr_languages=ocr_languages,
                 fixed_layout=fixed_layout,
                 extract_tables=extract_tables,
+                **kwargs,
             )
             pages.append(page)
         return cls.from_pages(pages)
@@ -188,6 +192,7 @@ class PageLayout:
         ocr_languages: str = "eng",
         ocr_mode: str = "entire_page",
         extract_tables: bool = False,
+        analysis: bool = False,
     ):
         if detection_model is not None and element_extraction_model is not None:
             raise ValueError("Only one of detection_model and extraction_model should be passed.")
@@ -209,6 +214,9 @@ class PageLayout:
         self.ocr_languages = ocr_languages
         self.ocr_mode = ocr_mode
         self.extract_tables = extract_tables
+        self.analysis = analysis
+        self.inferred_layout: Optional[List[LayoutElement]] = None
+        self.ocr_layout: Optional[List[TextRegion]] = None
 
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
@@ -275,6 +283,10 @@ class PageLayout:
 
         elements = self.get_elements_from_layout(cast(List[TextRegion], inferred_layout))
 
+        if self.analysis:
+            self.inferred_layout = inferred_layout
+            self.ocr_layout = ocr_layout
+
         if inplace:
             self.elements = elements
             return None
@@ -311,6 +323,7 @@ class PageLayout:
         self,
         colors: Optional[Union[List[str], str]] = None,
         image_dpi: int = 200,
+        annotation_layout_map: Optional[dict[str, dict]] = None,
     ) -> Image.Image:
         """Annotates the elements on the page image."""
         if colors is None:
@@ -330,9 +343,18 @@ class PageLayout:
         else:
             img = self._get_image(self.document_filename, self.number, image_dpi)
 
-        for el, color in zip(self.elements, colors):
-            if isinstance(el, Rectangle):
-                img = draw_bbox(img, el, color=color)
+        if annotation_layout_map is None:
+            for el, color in zip(self.elements, colors):
+                if isinstance(el, Rectangle):
+                    img = draw_bbox(img, el, color=color, width=2)
+        else:
+            for attribute, style in annotation_layout_map.items():
+                if hasattr(self, attribute) and getattr(self, attribute):
+                    color = style["color"]
+                    width = style["width"]
+                    for region in getattr(self, attribute):
+                        if isinstance(region, Rectangle):
+                            img = draw_bbox(img, region, color=color, width=width)
 
         return img
 
@@ -370,8 +392,11 @@ class PageLayout:
         ocr_mode: str = "entire_page",
         extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
+        **kwargs,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
+        analysis = kwargs.get("analysis", False)
+
         page = cls(
             number=number,
             image=image,
@@ -382,6 +407,7 @@ class PageLayout:
             ocr_languages=ocr_languages,
             ocr_mode=ocr_mode,
             extract_tables=extract_tables,
+            analysis=analysis,
         )
         if page.element_extraction_model is not None:
             page.get_elements_using_image_extraction()
@@ -415,6 +441,7 @@ def process_data_with_model(
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: Optional[int] = None,
+    **kwargs,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
@@ -431,6 +458,7 @@ def process_data_with_model(
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
+            **kwargs,
         )
 
     return layout
@@ -446,6 +474,7 @@ def process_file_with_model(
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: Optional[int] = None,
+    **kwargs,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
@@ -476,6 +505,7 @@ def process_file_with_model(
             ocr_languages=ocr_languages,
             ocr_mode=ocr_mode,
             extract_tables=extract_tables,
+            **kwargs,
         )
         if is_image
         else DocumentLayout.from_file(
@@ -488,6 +518,7 @@ def process_file_with_model(
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
+            **kwargs,
         )
     )
     return layout
