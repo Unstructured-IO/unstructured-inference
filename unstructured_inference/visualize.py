@@ -1,7 +1,7 @@
 # Copyright (c) Megvii Inc. All rights reserved.
 # Unstructured modified the original source code found at
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/visualize.py
-from typing import Union
+from typing import Optional, Union
 
 import cv2
 import matplotlib.pyplot as plt
@@ -66,7 +66,26 @@ def draw_yolox_bounding_boxes(img, boxes, scores, cls_ids, conf=0.5, class_names
     return img
 
 
-def show_plot(image: Union[Image, np.ndarray], desired_width=None):
+def show_plot(
+    image: Union[Image, np.ndarray],
+    desired_width: Optional[int] = None,
+):
+    """
+    Display an image using matplotlib with an optional desired width while maintaining the aspect
+     ratio.
+
+    Parameters:
+    - image (Union[Image, np.ndarray]): An image in PIL Image format or a numpy ndarray format.
+    - desired_width (Optional[int]): Desired width for the display size of the image.
+        If provided, the height is calculated based on the original aspect ratio.
+        If not provided, the image will be displayed with its original dimensions.
+
+    Raises:
+    - ValueError: If the provided image type is neither PIL Image nor numpy ndarray.
+
+    Returns:
+    - None: The function displays the image using matplotlib but does not return any value.
+    """
     if isinstance(image, Image):
         image_width, image_height = image.size
     elif isinstance(image, np.ndarray):
