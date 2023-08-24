@@ -190,13 +190,13 @@ def aggregate_ocr_text_by_block(
 
     extracted_texts = []
 
-    for orc_region in ocr_layout:
-        ocr_region_is_subregion_of_given_region = orc_region.is_almost_subregion_of(
+    for ocr_region in ocr_layout:
+        ocr_region_is_subregion_of_given_region = ocr_region.is_almost_subregion_of(
             region,
             subregion_threshold=subregion_threshold,
         )
-        if ocr_region_is_subregion_of_given_region and orc_region.text:
-            extracted_texts.append(orc_region.text)
+        if ocr_region_is_subregion_of_given_region and ocr_region.text:
+            extracted_texts.append(ocr_region.text)
 
     return " ".join(extracted_texts) if extracted_texts else None
 
