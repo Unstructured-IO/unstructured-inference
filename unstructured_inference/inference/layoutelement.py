@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Optional
+from typing import Collection, List, Optional, cast
 
 from layoutparser.elements.layout import TextBlock
 from PIL import Image
@@ -11,6 +11,7 @@ from unstructured_inference.inference.elements import (
     Rectangle,
     TextRegion,
     grow_region_to_match_region,
+    partition_groups_from_regions,
     region_bounding_boxes_are_almost_the_same,
 )
 from unstructured_inference.models import tables
@@ -198,6 +199,49 @@ def aggregate_ocr_text_by_block(
             extracted_texts.append(orc_region.text)
 
     return " ".join(extracted_texts) if extracted_texts else None
+
+
+def merge_ocr_regions(group: List[TextRegion]) -> TextRegion:
+    """
+    Merge a group of TextRegion objects into a single TextRegion.
+
+    Parameters:
+    - group (List[TextRegion]): A list of TextRegion objects to be merged.
+
+    Returns:
+    - TextRegion: A single merged TextRegion object.
+    """
+
+    min_x1 = min([tr.x1 for tr in group])
+    min_y1 = min([tr.y1 for tr in group])
+    max_x2 = max([tr.x2 for tr in group])
+    max_y2 = max([tr.y2 for tr in group])
+
+    merged_text = " ".join([tr.text for tr in group if tr.text])
+
+    return TextRegion(min_x1, min_y1, max_x2, max_y2, merged_text)
+
+
+def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
+    """
+    Get layout elements from OCR regions
+    """
+    grouped_regions = cast(
+        List[List[TextRegion]],
+        partition_groups_from_regions(ocr_regions),
+    )
+    merged_regions = [merge_ocr_regions(group) for group in grouped_regions]
+    return [
+        LayoutElement(
+            r.x1,
+            r.y1,
+            r.x2,
+            r.y2,
+            text=r.text,
+            type="UncategorizedText",
+        )
+        for r in merged_regions
+    ]
 
 
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
