@@ -69,7 +69,8 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": detection.ocr_text})
             return tokens
         except ModuleNotFoundError:
-            logging.warning(
+            import pdb; pdb.set_trace()
+            logging.warning(    
                 "No module named 'unstructured_paddleocr', falling back to tesseract",
             )
             pass
