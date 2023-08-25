@@ -1,7 +1,33 @@
+## 0.5.17-dev0
+
+* Fix for incorrect type assignation at ingest test
+
+## 0.5.16
+
+* Fix to no longer create a directory for storing processed images
+* Hot-load images for annotation
+
+## 0.5.15
+
+* Handle an uncaught TesseractError
+
+## 0.5.14
+
+* Add TIFF test file and TIFF filetype to `test_from_image_file` in `test_layout`
+
+## 0.5.13
+
+* Fix extracted image elements being included in layout merge
+
+## 0.5.12
+
+* Add multipage TIFF extraction support
+* Fix a pdfminer error when using `process_data_with_model`
+
 ## 0.5.11
 
 * Add warning when chipper is used with < 300 DPI
-* Fix for incorrect type assignation at ingest test
+* Use None default for dpi so defaults can be properly handled upstream
 
 ## 0.5.10
 
