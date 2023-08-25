@@ -168,6 +168,7 @@ class DocumentLayout:
                 layout=None,
                 ocr_strategy=ocr_strategy,
                 ocr_languages=ocr_languages,
+                ocr_mode=ocr_mode,
                 fixed_layout=fixed_layout,
                 extract_tables=extract_tables,
                 **kwargs,
