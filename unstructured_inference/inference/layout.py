@@ -195,6 +195,7 @@ class PageLayout:
         ocr_mode: str = OCR_MODE_FULL_PAGE,
         extract_tables: bool = False,
         analysis: bool = False,
+        supplement_with_ocr_elements: bool = True,
     ):
         if detection_model is not None and element_extraction_model is not None:
             raise ValueError("Only one of detection_model and extraction_model should be passed.")
@@ -219,6 +220,7 @@ class PageLayout:
         self.analysis = analysis
         self.inferred_layout: Optional[List[LayoutElement]] = None
         self.ocr_layout: Optional[List[TextRegion]] = None
+        self.supplement_with_ocr_elements = supplement_with_ocr_elements
 
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
@@ -276,11 +278,13 @@ class PageLayout:
                 inferred_layout=inferred_layout,
                 extracted_layout=self.layout,
                 ocr_layout=ocr_layout,
+                supplement_with_ocr_elements=self.supplement_with_ocr_elements,
             )
         elif ocr_layout is not None:
             inferred_layout = merge_inferred_layout_with_ocr_layout(
                 inferred_layout=inferred_layout,
                 ocr_layout=ocr_layout,
+                supplement_with_ocr_elements=self.supplement_with_ocr_elements,
             )
 
         elements = self.get_elements_from_layout(cast(List[TextRegion], inferred_layout))
@@ -398,6 +402,7 @@ class PageLayout:
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
         analysis = kwargs.get("analysis", False)
+        supplement_with_ocr_elements = kwargs.get("supplement_with_ocr_elements", True)
 
         page = cls(
             number=number,
@@ -410,6 +415,7 @@ class PageLayout:
             ocr_mode=ocr_mode,
             extract_tables=extract_tables,
             analysis=analysis,
+            supplement_with_ocr_elements=supplement_with_ocr_elements,
         )
         if page.element_extraction_model is not None:
             page.get_elements_using_image_extraction()

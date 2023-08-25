@@ -82,6 +82,7 @@ def merge_inferred_layout_with_extracted_layout(
     inferred_layout: Collection[LayoutElement],
     extracted_layout: Collection[TextRegion],
     ocr_layout: Optional[List[TextRegion]] = None,
+    supplement_with_ocr_elements: bool = True,
     same_region_threshold: float = 0.75,
     subregion_threshold: float = 0.75,
 ) -> List[LayoutElement]:
@@ -157,7 +158,11 @@ def merge_inferred_layout_with_extracted_layout(
                 SUBREGION_THRESHOLD_FOR_OCR,
             )
         out_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
-        final_layout = supplement_layout_with_ocr_elements(out_layout, ocr_layout)
+        final_layout = (
+            supplement_layout_with_ocr_elements(out_layout, ocr_layout)
+            if supplement_with_ocr_elements
+            else out_layout
+        )
     else:
         final_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
 
@@ -167,6 +172,7 @@ def merge_inferred_layout_with_extracted_layout(
 def merge_inferred_layout_with_ocr_layout(
     inferred_layout: List[LayoutElement],
     ocr_layout: List[TextRegion],
+    supplement_with_ocr_elements: bool = True,
 ) -> List[LayoutElement]:
     """
     Merge the inferred layout with the OCR-detected text regions.
@@ -183,7 +189,11 @@ def merge_inferred_layout_with_ocr_layout(
             SUBREGION_THRESHOLD_FOR_OCR,
         )
 
-    final_layout = supplement_layout_with_ocr_elements(inferred_layout, ocr_layout)
+    final_layout = (
+        supplement_layout_with_ocr_elements(inferred_layout, ocr_layout)
+        if supplement_with_ocr_elements
+        else inferred_layout
+    )
 
     return final_layout
 
