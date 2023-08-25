@@ -7,11 +7,9 @@ from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pdf2image
-import pytesseract
 from pdfminer import psparser
 from pdfminer.high_level import extract_pages
 from PIL import Image, ImageSequence
-from pytesseract import Output
 
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
@@ -246,11 +244,15 @@ class PageLayout:
         if self.ocr_mode == "individual_blocks":
             ocr_layout = None
         elif self.ocr_mode == "entire_page":
-            ocr_data = pytesseract.image_to_data(
-                self.image,
-                lang=self.ocr_languages,
-                output_type=Output.DICT,
-            )
+            from ppocronnx.predict_system import TextSystem
+            text_sys = TextSystem()
+            # import pdb; pdb.set_trace()
+            ocr_data = text_sys.detect_and_ocr(np.array(self.image))
+            # ocr_data = pytesseract.image_to_data(
+            #     self.image,
+            #     lang=self.ocr_languages,
+            #     output_type=Output.DICT,
+            # )
             ocr_layout = parse_ocr_data(ocr_data)
         else:
             raise ValueError("Invalid OCR mode")
@@ -551,19 +553,26 @@ def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
       dictionary will result in its associated bounding box being ignored.
     """
 
-    levels = ocr_data["level"]
+    # levels = ocr_data["level"]
+    # text_regions = []
+    # for i, level in enumerate(levels):
+    #     (l, t, w, h) = (
+    #         ocr_data["left"][i],
+    #         ocr_data["top"][i],
+    #         ocr_data["width"][i],
+    #         ocr_data["height"][i],
+    #     )
+    #     (x1, y1, x2, y2) = l, t, l + w, t + h
+    #     text = ocr_data["text"][i]
+    #     if text:
+    #         text_region = TextRegion(x1, y1, x2, y2, text)
+    #         text_regions.append(text_region)
     text_regions = []
-    for i, level in enumerate(levels):
-        (l, t, w, h) = (
-            ocr_data["left"][i],
-            ocr_data["top"][i],
-            ocr_data["width"][i],
-            ocr_data["height"][i],
-        )
-        (x1, y1, x2, y2) = l, t, l + w, t + h
-        text = ocr_data["text"][i]
+    for detection in ocr_data:
+        (xmin, ymin), _, (xmax, ymax), _ = detection.box
+        text = detection.ocr_text
         if text:
-            text_region = TextRegion(x1, y1, x2, y2, text)
+            text_region = TextRegion(xmin, ymin, xmax, ymax, text)
             text_regions.append(text_region)
 
     return text_regions
