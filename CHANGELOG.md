@@ -1,3 +1,7 @@
+## 0.5.17
+
+* Use `OMP_THREAD_LIMIT` to improve tesseract performance
+
 ## 0.5.16
 
 * Fix to no longer create a directory for storing processed images
