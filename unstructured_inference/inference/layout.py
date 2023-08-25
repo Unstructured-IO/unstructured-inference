@@ -323,7 +323,7 @@ class PageLayout:
         self,
         colors: Optional[Union[List[str], str]] = None,
         image_dpi: int = 200,
-        annotation_layout_map: Optional[dict[str, dict]] = None,
+        annotation_data: Optional[dict[str, dict]] = None,
     ) -> Image.Image:
         """Annotates the elements on the page image."""
         if colors is None:
@@ -343,12 +343,12 @@ class PageLayout:
         else:
             img = self._get_image(self.document_filename, self.number, image_dpi)
 
-        if annotation_layout_map is None:
+        if annotation_data is None:
             for el, color in zip(self.elements, colors):
                 if isinstance(el, Rectangle):
                     img = draw_bbox(img, el, color=color, width=2)
         else:
-            for attribute, style in annotation_layout_map.items():
+            for attribute, style in annotation_data.items():
                 if hasattr(self, attribute) and getattr(self, attribute):
                     color = style["color"]
                     width = style["width"]
