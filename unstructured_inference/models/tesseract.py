@@ -1,3 +1,4 @@
+import os
 from typing import Dict
 
 import pytesseract
@@ -8,6 +9,11 @@ from unstructured_inference.logger import logger
 ocr_agents: Dict[str, TesseractAgent] = {}
 
 TesseractError = pytesseract.pytesseract.TesseractError
+
+# Force tesseract to be single threaded,
+# otherwise we see major performance problems
+if "OMP_THREAD_LIMIT" not in os.environ:
+    os.environ["OMP_THREAD_LIMIT"] = "1"
 
 
 def load_agent(languages: str = "eng"):

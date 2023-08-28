@@ -1,6 +1,10 @@
-## 0.5.17-dev0
+## 0.5.18-dev0
 
 * Fix for incorrect type assignation at ingest test
+
+## 0.5.17
+
+* Use `OMP_THREAD_LIMIT` to improve tesseract performance
 
 ## 0.5.16
 
