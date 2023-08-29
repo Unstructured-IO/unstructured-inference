@@ -265,33 +265,33 @@ class PageLayout:
             raise ValueError("Invalid OCR mode")
 
         if self.layout is not None:
-            kwargs = {}
+            threshold_kwargs = {}
             # NOTE(Benjamin): With this the thresholds are only changed for detextron2_mask_rcnn
             # In other case the default values for the functions are used
             if (
                 isinstance(self.detection_model, UnstructuredDetectronONNXModel)
                 and "R_50" in self.detection_model.model_path
             ):
-                kwargs = {"same_region_threshold": 0.5, "subregion_threshold": 0.5}
+                threshold_kwargs = {"same_region_threshold": 0.5, "subregion_threshold": 0.5}
             inferred_layout = merge_inferred_layout_with_extracted_layout(
                 inferred_layout=inferred_layout,
                 extracted_layout=self.layout,
                 ocr_layout=ocr_layout,
-                **kwargs,
+                **threshold_kwargs,
             )
         elif ocr_layout is not None:
-            kwargs = {}
+            threshold_kwargs = {}
             # NOTE(Benjamin): With this the thresholds are only changed for detextron2_mask_rcnn
             # In other case the default values for the functions are used
             if (
                 isinstance(self.detection_model, UnstructuredDetectronONNXModel)
                 and "R_50" in self.detection_model.model_path
             ):
-                kwargs = {"subregion_threshold": 0.3}
+                threshold_kwargs = {"subregion_threshold": 0.3}
             inferred_layout = merge_inferred_layout_with_ocr_layout(
                 inferred_layout=inferred_layout,
                 ocr_layout=ocr_layout,
-                **kwargs,
+                **threshold_kwargs,
             )
 
         elements = self.get_elements_from_layout(cast(List[TextRegion], inferred_layout))
