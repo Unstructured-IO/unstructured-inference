@@ -1,3 +1,8 @@
+## 0.5.18
+
+* Add functionality to supplement detected layout with elements from the full page OCR
+* Add functionality to annotate any layout(extracted, inferred, OCR) on a page
+
 ## 0.5.17
 
 * Use `OMP_THREAD_LIMIT` to improve tesseract performance
