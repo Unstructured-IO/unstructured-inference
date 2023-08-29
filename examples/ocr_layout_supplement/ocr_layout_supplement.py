@@ -13,7 +13,6 @@ def run(f_path, file_type):
     print(">>> Start...")
     print(f">>> file_path: {f_path} - file_type: {file_type}")
 
-    file_type = sys.argv[2]
     if file_type == "pdf":
         is_image = False
     elif file_type == "image":
