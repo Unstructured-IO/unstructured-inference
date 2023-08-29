@@ -270,7 +270,7 @@ class PageLayout:
             # In other case the default values for the functions are used
             if (
                 isinstance(self.detection_model, UnstructuredDetectronONNXModel)
-                and "R_50" in self.detection_model.model_path
+                and "R_50" not in self.detection_model.model_path
             ):
                 threshold_kwargs = {"same_region_threshold": 0.5, "subregion_threshold": 0.5}
             inferred_layout = merge_inferred_layout_with_extracted_layout(
@@ -285,7 +285,7 @@ class PageLayout:
             # In other case the default values for the functions are used
             if (
                 isinstance(self.detection_model, UnstructuredDetectronONNXModel)
-                and "R_50" in self.detection_model.model_path
+                and "R_50" not in self.detection_model.model_path
             ):
                 threshold_kwargs = {"subregion_threshold": 0.3}
             inferred_layout = merge_inferred_layout_with_ocr_layout(
