@@ -1,7 +1,11 @@
-## 0.5.18
+## 0.5.19
 
 * Add functionality to supplement detected layout with elements from the full page OCR
 * Add functionality to annotate any layout(extracted, inferred, OCR) on a page
+
+## 0.5.18
+
+* Fix for incorrect type assignation at ingest test
 
 ## 0.5.17
 

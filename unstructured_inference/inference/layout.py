@@ -29,6 +29,9 @@ from unstructured_inference.inference.layoutelement import (
 from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
+from unstructured_inference.models.detectron2onnx import (
+    UnstructuredDetectronONNXModel,
+)
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -274,17 +277,35 @@ class PageLayout:
             raise ValueError("Invalid OCR mode")
 
         if self.layout is not None:
+            threshold_kwargs = {}
+            # NOTE(Benjamin): With this the thresholds are only changed for detextron2_mask_rcnn
+            # In other case the default values for the functions are used
+            if (
+                isinstance(self.detection_model, UnstructuredDetectronONNXModel)
+                and "R_50" not in self.detection_model.model_path
+            ):
+                threshold_kwargs = {"same_region_threshold": 0.5, "subregion_threshold": 0.5}
             inferred_layout = merge_inferred_layout_with_extracted_layout(
                 inferred_layout=inferred_layout,
                 extracted_layout=self.layout,
                 ocr_layout=ocr_layout,
                 supplement_with_ocr_elements=self.supplement_with_ocr_elements,
+                **threshold_kwargs,
             )
         elif ocr_layout is not None:
+            threshold_kwargs = {}
+            # NOTE(Benjamin): With this the thresholds are only changed for detextron2_mask_rcnn
+            # In other case the default values for the functions are used
+            if (
+                isinstance(self.detection_model, UnstructuredDetectronONNXModel)
+                and "R_50" not in self.detection_model.model_path
+            ):
+                threshold_kwargs = {"subregion_threshold": 0.3}
             inferred_layout = merge_inferred_layout_with_ocr_layout(
                 inferred_layout=inferred_layout,
                 ocr_layout=ocr_layout,
                 supplement_with_ocr_elements=self.supplement_with_ocr_elements,
+                **threshold_kwargs,
             )
 
         elements = self.get_elements_from_layout(cast(List[TextRegion], inferred_layout))
