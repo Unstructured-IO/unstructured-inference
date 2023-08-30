@@ -1,4 +1,4 @@
-## 0.5.18-dev0
+## 0.5.18
 
 * Fix for incorrect type assignation at ingest test
 
