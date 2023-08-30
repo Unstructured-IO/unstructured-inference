@@ -352,7 +352,7 @@ class PageLayout:
         if annotation_data is None:
             for el, color in zip(self.elements, colors):
                 if isinstance(el, Rectangle):
-                    img = draw_bbox(img, el, color=color, width=2)
+                    img = draw_bbox(img, el, color=color)
         else:
             for attribute, style in annotation_data.items():
                 if hasattr(self, attribute) and getattr(self, attribute):
