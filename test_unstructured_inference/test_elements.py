@@ -4,6 +4,7 @@ from unittest.mock import PropertyMock, patch
 import pytest
 
 from unstructured_inference.inference import elements
+from unstructured_inference.inference.layoutelement import merge_text_regions
 
 
 def intersect_brute(rect1, rect2):
@@ -261,3 +262,16 @@ def test_intersection_over_min(
     assert (
         rect1.intersection_over_minimum(rect2) == rect2.intersection_over_minimum(rect1) == expected
     )
+
+
+def test_merge_text_regions(sample_layout):
+    expected = elements.TextRegion(
+        x1=437.83888888888885,
+        y1=317.319341111111,
+        x2=1256.334784222222,
+        y2=406.9837855555556,
+        text="LayoutParser: A Unified Toolkit for Deep Learning Based Document Image",
+    )
+
+    merged_text_region = merge_text_regions(sample_layout)
+    assert merged_text_region == expected
