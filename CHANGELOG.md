@@ -1,3 +1,7 @@
+## 0.5.19-dev0
+
+* Adds YoloX quantized model
+
 ## 0.5.18
 
 * Fix for incorrect type assignation at ingest test
