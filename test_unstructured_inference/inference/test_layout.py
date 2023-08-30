@@ -10,7 +10,6 @@ from PIL import Image
 
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
-from unstructured_inference.inference.layout import create_image_output_dir
 from unstructured_inference.models import chipper, detectron2, tesseract
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
@@ -127,6 +126,26 @@ def test_get_page_elements(monkeypatch, mock_final_layout):
     assert elements == page.elements
 
 
+def test_get_page_elements_with_tesseract_error(monkeypatch, mock_final_layout):
+    def mock_image_to_data(*args, **kwargs):
+        raise tesseract.TesseractError(-2, "Estimating resolution as 1023")
+
+    monkeypatch.setattr(layout.pytesseract, "image_to_data", mock_image_to_data)
+
+    image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
+    page = layout.PageLayout(
+        number=0,
+        image=image,
+        layout=mock_final_layout,
+        detection_model=MockLayoutModel(mock_final_layout),
+    )
+
+    elements = page.get_elements_with_detection_model(inplace=False)
+
+    assert str(elements[0]) == "A Catchy Title"
+    assert str(elements[1]).startswith("A very repetitive narrative.")
+
+
 class MockPool:
     def map(self, f, xs):
         return [f(x) for x in xs]
@@ -209,7 +228,7 @@ def test_process_data_with_model(monkeypatch, mock_final_layout, model_name):
     )
 
     def new_isinstance(obj, cls):
-        if type(obj) == MockLayoutModel:
+        if type(obj) is MockLayoutModel:
             return True
         else:
             return isinstance(obj, cls)
@@ -345,7 +364,7 @@ def test_get_elements_from_block_raises():
         layout.get_element_from_block(block, None, None)
 
 
-@pytest.mark.parametrize("filetype", ["png", "jpg"])
+@pytest.mark.parametrize("filetype", ["png", "jpg", "tiff"])
 def test_from_image_file(monkeypatch, mock_final_layout, filetype):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_final_layout]
@@ -385,10 +404,6 @@ def test_from_file(monkeypatch, mock_final_layout):
 
         with patch.object(
             layout,
-            "create_image_output_dir",
-            return_value=tmpdir,
-        ), patch.object(
-            layout,
             "load_pdf",
             lambda *args, **kwargs: ([[]], [image_path]),
         ):
@@ -396,7 +411,6 @@ def test_from_file(monkeypatch, mock_final_layout):
             page = doc.pages[0]
             assert page.elements[0] == mock_final_layout
             assert page.image_metadata == image_metadata
-            assert page.image_path == image_path
             assert page.image is None
 
 
@@ -846,26 +860,6 @@ def test_exposed_pdf_image_dpi(pdf_image_dpi, expected, monkeypatch):
     with patch.object(layout.PageLayout, "from_image") as mock_from_image:
         layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf", pdf_image_dpi=pdf_image_dpi)
         assert mock_from_image.call_args[0][0].height == expected
-
-
-def test_create_image_output_dir():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_f_path = os.path.join(tmpdir, "loremipsum.pdf")
-        output_dir = create_image_output_dir(tmp_f_path)
-        expected_output_dir = os.path.join(os.path.abspath(tmpdir), "loremipsum_images")
-        assert os.path.isdir(output_dir)
-        assert os.path.isabs(output_dir)
-        assert output_dir == expected_output_dir
-
-
-def test_create_image_output_dir_no_ext():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_f_path = os.path.join(tmpdir, "loremipsum_no_ext")
-        output_dir = create_image_output_dir(tmp_f_path)
-        expected_output_dir = os.path.join(os.path.abspath(tmpdir), "loremipsum_no_ext_images")
-        assert os.path.isdir(output_dir)
-        assert os.path.isabs(output_dir)
-        assert output_dir == expected_output_dir
 
 
 def test_warning_if_chipper_and_low_dpi(caplog):
