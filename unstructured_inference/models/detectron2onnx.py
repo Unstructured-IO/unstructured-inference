@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import onnxruntime
 from huggingface_hub import hf_hub_download
+from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
@@ -39,6 +40,15 @@ MODEL_TYPES: Dict[Optional[str], LazyDict] = {
         label_map=DEFAULT_LABEL_MAP,
         confidence_threshold=0.8,
     ),
+    "detectron2_quantized": {
+        "model_path": os.path.join(
+            HUGGINGFACE_HUB_CACHE,
+            "detectron2_quantized",
+            "detectrin2_quantized.onnx",
+        ),
+        "label_map": DEFAULT_LABEL_MAP,
+        "confidence_threshold":0.8,
+    },
     "detectron2_mask_rcnn": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download,
@@ -87,19 +97,21 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         confidence_threshold: Optional[float] = None,
     ):
         """Loads the detectron2 model using the specified parameters"""
-        logger.info("Loading the Detectron2 layout model ...")
-        quantized_path = "detectron2_quantized.onnx"
-        if not os.path.exists(quantized_path):
-            quantize_dynamic(model_path, quantized_path, weight_type=QuantType.QUInt8)
+        if not os.path.exists(model_path) and "detectron2_quantized" in model_path:
+            logger.info("Quantized model don't currently exists, quantizing now...")
+            os.mkdir("".join(os.path.split(model_path)[:-1]))
+            source_path = MODEL_TYPES["detectron2_onnx"]["model_path"]
+            quantize_dynamic(source_path, model_path, weight_type=QuantType.QUInt8)
+
         self.model = onnxruntime.InferenceSession(
-            quantized_path,
+            model_path,
             providers=[
                 "TensorrtExecutionProvider",
                 "CUDAExecutionProvider",
                 "CPUExecutionProvider",
             ],
         )
-        self.model_path = quantized_path
+        self.model_path = model_path
         self.label_map = label_map
         if confidence_threshold is None:
             confidence_threshold = 0.5
