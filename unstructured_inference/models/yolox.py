@@ -10,10 +10,12 @@ import cv2
 import numpy as np
 import onnxruntime
 from huggingface_hub import hf_hub_download
+from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
 from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 from unstructured_inference.visualize import draw_yolox_bounding_boxes
@@ -49,6 +51,14 @@ MODEL_TYPES = {
         ),
         label_map=YOLOX_LABEL_MAP,
     ),
+    "yolox_quantized": {
+        "model_path": os.path.join(
+            HUGGINGFACE_HUB_CACHE,
+            "yolox_quantized",
+            "yolox_quantized.onnx",
+        ),
+        "label_map": YOLOX_LABEL_MAP,
+    },
 }
 
 
@@ -61,12 +71,14 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
     def initialize(self, model_path: str, label_map: dict):
         """Start inference session for YoloX model."""
 
-        quantized_path = "yolox_quantized.onnx"
-        if not os.path.exists(quantized_path):
-            quantize_dynamic(model_path, quantized_path, weight_type=QuantType.QUInt8)
+        if not os.path.exists(model_path) and "yolox_quantized" in model_path:
+            logger.info("Quantized model don't currently exists, quantizing now...")
+            os.mkdir("".join(os.path.split(model_path)[:-1]))
+            source_path = MODEL_TYPES["yolox"]["model_path"]
+            quantize_dynamic(source_path, model_path, weight_type=QuantType.QUInt8)
 
         self.model = onnxruntime.InferenceSession(
-            quantized_path,
+            model_path,
             providers=[
                 "TensorrtExecutionProvider",
                 "CUDAExecutionProvider",
