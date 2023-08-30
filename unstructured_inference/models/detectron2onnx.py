@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from typing import Dict, Final, List, Optional, Union
 
 import cv2
@@ -30,7 +29,7 @@ DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
 
 # NOTE(alan): Entries are implemented as LazyDicts so that models aren't downloaded until they are
 # needed.
-MODEL_TYPES: Dict[Optional[str], LazyDict] = {
+MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
     "detectron2_onnx": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download,
@@ -47,7 +46,7 @@ MODEL_TYPES: Dict[Optional[str], LazyDict] = {
             "detectrin2_quantized.onnx",
         ),
         "label_map": DEFAULT_LABEL_MAP,
-        "confidence_threshold":0.8,
+        "confidence_threshold": 0.8,
     },
     "detectron2_mask_rcnn": LazyDict(
         model_path=LazyEvaluateInfo(
@@ -92,7 +91,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
 
     def initialize(
         self,
-        model_path: Union[str, Path],
+        model_path: str,
         label_map: Dict[int, str],
         confidence_threshold: Optional[float] = None,
     ):
