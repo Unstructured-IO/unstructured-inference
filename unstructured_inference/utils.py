@@ -55,7 +55,7 @@ class LazyDict(Mapping):
         return len(self._raw_dict)
 
 
-def write_image(image: Union[Image, np.ndarray, Any], output_image_path: str):
+def write_image(image: Union[Image, np.ndarray], output_image_path: str):
     """
     Write an image to a specified file path, supporting both PIL Image and numpy ndarray formats.
 

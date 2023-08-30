@@ -2,12 +2,14 @@ import os
 import tempfile
 from unittest.mock import patch
 
-import numpy as np
 import pytest
 from PIL import Image
 
 from unstructured_inference import utils
-from unstructured_inference.constants import ANNOTATION_RESULT_WITH_IMAGE, ANNOTATION_RESULT_WITH_PLOT
+from unstructured_inference.constants import (
+    ANNOTATION_RESULT_WITH_IMAGE,
+    ANNOTATION_RESULT_WITH_PLOT,
+)
 from unstructured_inference.inference.layout import DocumentLayout
 from unstructured_inference.utils import (
     LazyDict,
@@ -15,16 +17,6 @@ from unstructured_inference.utils import (
     annotate_layout_elements,
     write_image,
 )
-
-
-@pytest.fixture()
-def mock_pil_image():
-    return Image.new("RGB", (50, 50))
-
-
-@pytest.fixture()
-def mock_numpy_image():
-    return np.zeros((50, 50, 3), np.uint8)
 
 
 # Mocking the DocumentLayout and Page classes
@@ -135,7 +127,7 @@ def test_annotate_layout_elements_with_plot_result():
             annotation_data_map,
             output_dir_path,
             output_f_basename,
-            result=ANNOTATION_RESULT_WITH_PLOT
+            result=ANNOTATION_RESULT_WITH_PLOT,
         )
 
     mock_show_plot.assert_called_with("mock_image", desired_width=14)
