@@ -12,7 +12,7 @@ from pdfminer import psparser
 from pdfminer.high_level import extract_pages
 from PIL import Image, ImageSequence
 from pytesseract import Output
-
+from unstructured_inference.models import paddle_ocr
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
@@ -253,12 +253,8 @@ class PageLayout:
         elif self.ocr_mode == "entire_page":
             ocr_layout = None
             try:
-                ocr_data = pytesseract.image_to_data(
-                    self.image,
-                    lang=self.ocr_languages,
-                    output_type=Output.DICT,
-                )
-                ocr_layout = parse_ocr_data(ocr_data)
+                paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
+                ocr_layout = parse_ocr_data(paddle_result)
             except pytesseract.pytesseract.TesseractError:
                 logger.warning("TesseractError: Skipping page", exc_info=True)
         else:
@@ -606,17 +602,15 @@ def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
       dictionary will result in its associated bounding box being ignored.
     """
 
-    levels = ocr_data["level"]
     text_regions = []
-    for i, level in enumerate(levels):
-        (l, t, w, h) = (
-            ocr_data["left"][i],
-            ocr_data["top"][i],
-            ocr_data["width"][i],
-            ocr_data["height"][i],
-        )
-        (x1, y1, x2, y2) = l, t, l + w, t + h
-        text = ocr_data["text"][i]
+    for idx in range(len(ocr_data)):
+        res = paddle_result[idx]
+        for line in res:
+            x1 = min([i[0] for i in line[0]])
+            y1 = min([i[1] for i in line[0]])
+            x2 = max([i[0] for i in line[0]])
+            y2 = max([i[1] for i in line[0]])
+            text = line[1][0]
         if text:
             text_region = TextRegion(x1, y1, x2, y2, text)
             text_regions.append(text_region)
