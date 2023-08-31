@@ -126,7 +126,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         boxes_xyxy[:, 2] = boxes[:, 0] + boxes[:, 2] / 2.0
         boxes_xyxy[:, 3] = boxes[:, 1] + boxes[:, 3] / 2.0
         boxes_xyxy /= ratio
-        dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.45, score_thr=0.1)
+        dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.0, score_thr=0.07)
 
         regions = []
 
