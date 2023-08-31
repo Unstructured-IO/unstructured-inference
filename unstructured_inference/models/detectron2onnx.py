@@ -90,8 +90,8 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         self.model = onnxruntime.InferenceSession(
             model_path,
             providers=[
-                "TensorrtExecutionProvider",
-                "CUDAExecutionProvider",
+                # "TensorrtExecutionProvider",
+                # "CUDAExecutionProvider",
                 "CPUExecutionProvider",
             ],
         )

@@ -253,7 +253,7 @@ class PageLayout:
         elif self.ocr_mode == "entire_page":
             ocr_layout = None
             try:
-                paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
+                paddle_result = paddle_ocr.load_agent().ocr(np.array(self.image), cls=True)
                 ocr_layout = parse_ocr_data(paddle_result)
             except pytesseract.pytesseract.TesseractError:
                 logger.warning("TesseractError: Skipping page", exc_info=True)
