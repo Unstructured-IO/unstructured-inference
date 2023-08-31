@@ -13,7 +13,7 @@ from pdfminer.high_level import extract_pages
 from PIL import Image, ImageSequence
 from pytesseract import Output
 
-from unstructured_inference.constants import OCR_MODE_FULL_PAGE, OCR_MODE_INDIVIDUAL_BLOCKS
+from unstructured_inference.constants import OCRMode
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
@@ -84,7 +84,7 @@ class DocumentLayout:
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
-        ocr_mode: str = OCR_MODE_FULL_PAGE,
+        ocr_mode: str = OCRMode.FULL_PAGE.value,
         extract_tables: bool = False,
         pdf_image_dpi: int = 200,
         **kwargs,
@@ -140,7 +140,7 @@ class DocumentLayout:
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
-        ocr_mode: str = OCR_MODE_FULL_PAGE,
+        ocr_mode: str = OCRMode.FULL_PAGE.value,
         fixed_layout: Optional[List[TextRegion]] = None,
         extract_tables: bool = False,
         **kwargs,
@@ -195,7 +195,7 @@ class PageLayout:
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
-        ocr_mode: str = OCR_MODE_FULL_PAGE,
+        ocr_mode: str = OCRMode.FULL_PAGE.value,
         extract_tables: bool = False,
         analysis: bool = False,
         supplement_with_ocr_elements: bool = True,
@@ -260,9 +260,9 @@ class PageLayout:
         # remote call in the future.
         inferred_layout: List[LayoutElement] = self.detection_model(self.image)
 
-        if self.ocr_mode == OCR_MODE_INDIVIDUAL_BLOCKS:
+        if self.ocr_mode == OCRMode.INDIVIDUAL_BLOCKS.value:
             ocr_layout = None
-        elif self.ocr_mode == OCR_MODE_FULL_PAGE:
+        elif self.ocr_mode == OCRMode.FULL_PAGE.value:
             ocr_layout = None
             try:
                 ocr_data = pytesseract.image_to_data(
@@ -416,7 +416,7 @@ class PageLayout:
         layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
-        ocr_mode: str = OCR_MODE_FULL_PAGE,
+        ocr_mode: str = OCRMode.FULL_PAGE.value,
         extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
         **kwargs,
@@ -466,7 +466,7 @@ def process_data_with_model(
     is_image: bool = False,
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
-    ocr_mode: str = OCR_MODE_FULL_PAGE,
+    ocr_mode: str = OCRMode.FULL_PAGE.value,
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: Optional[int] = None,
@@ -499,7 +499,7 @@ def process_file_with_model(
     is_image: bool = False,
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
-    ocr_mode: str = OCR_MODE_FULL_PAGE,
+    ocr_mode: str = OCRMode.FULL_PAGE.value,
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: Optional[int] = None,

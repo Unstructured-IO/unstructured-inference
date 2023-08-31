@@ -1,5 +1,11 @@
-OCR_MODE_INDIVIDUAL_BLOCKS = "individual_blocks"
-OCR_MODE_FULL_PAGE = "entire_page"
+from enum import Enum
+
+
+class OCRMode(Enum):
+    INDIVIDUAL_BLOCKS = "individual_blocks"
+    FULL_PAGE = "entire_page"
+
+
 SUBREGION_THRESHOLD_FOR_OCR = 0.5
 
 ANNOTATION_RESULT_WITH_IMAGE = "image"
