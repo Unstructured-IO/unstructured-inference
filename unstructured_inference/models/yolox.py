@@ -70,12 +70,14 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
     def initialize(self, model_path: str, label_map: dict):
         """Start inference session for YoloX model."""
-        self.model_path = model_path
         if not os.path.exists(model_path) and "yolox_quantized" in model_path:
             logger.info("Quantized model don't currently exists, quantizing now...")
-            os.mkdir("".join(os.path.split(model_path)[:-1]))
+            model_folder = "".join(os.path.split(model_path)[:-1])
+            if not os.path.exists(model_folder):
+                os.mkdir(model_folder)
             source_path = MODEL_TYPES["yolox"]["model_path"]
             quantize_dynamic(source_path, model_path, weight_type=QuantType.QUInt8)
+        self.model_path = model_path
 
         self.model = onnxruntime.InferenceSession(
             model_path,
