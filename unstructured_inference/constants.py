@@ -6,7 +6,9 @@ class OCRMode(Enum):
     FULL_PAGE = "entire_page"
 
 
-SUBREGION_THRESHOLD_FOR_OCR = 0.5
+class AnnotationResult(Enum):
+    IMAGE = "image"
+    PLOT = "plot"
 
-ANNOTATION_RESULT_WITH_IMAGE = "image"
-ANNOTATION_RESULT_WITH_PLOT = "plot"
+
+SUBREGION_THRESHOLD_FOR_OCR = 0.5

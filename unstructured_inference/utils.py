@@ -6,10 +6,7 @@ import cv2
 import numpy as np
 from PIL.Image import Image
 
-from unstructured_inference.constants import (
-    ANNOTATION_RESULT_WITH_IMAGE,
-    ANNOTATION_RESULT_WITH_PLOT,
-)
+from unstructured_inference.constants import AnnotationResult
 from unstructured_inference.visualize import show_plot
 
 if TYPE_CHECKING:
@@ -84,7 +81,7 @@ def annotate_layout_elements(
     annotation_data_map: dict,
     output_dir_path: str,
     output_f_basename: str,
-    result: str = ANNOTATION_RESULT_WITH_IMAGE,
+    result: AnnotationResult = AnnotationResult.IMAGE,
     plot_desired_width: int = 14,
 ):
     """
@@ -121,8 +118,8 @@ def annotate_layout_elements(
                 output_dir_path,
                 f"{output_f_basename}_{idx + 1}_{action_type}.jpg",
             )
-            if result == ANNOTATION_RESULT_WITH_IMAGE:
+            if result == AnnotationResult.IMAGE:
                 write_image(img, output_f_path)
                 print(f"wrote {output_f_path}")
-            elif result == ANNOTATION_RESULT_WITH_PLOT:
+            elif result == AnnotationResult.PLOT:
                 show_plot(img, desired_width=plot_desired_width)

@@ -2,7 +2,7 @@ import os
 import pathlib
 import sys
 
-from unstructured_inference.constants import ANNOTATION_RESULT_WITH_IMAGE
+from unstructured_inference.constants import AnnotationResult
 from unstructured_inference.inference.layout import process_file_with_model
 from unstructured_inference.utils import annotate_layout_elements
 
@@ -41,7 +41,7 @@ def run(f_path, file_type):
             analysis=True,
         )
 
-        annotate_layout_elements(doc, annotation_data_map, output_dir_path, f_basename, ANNOTATION_RESULT_WITH_IMAGE)
+        annotate_layout_elements(doc, annotation_data_map, output_dir_path, f_basename, AnnotationResult.IMAGE)
 
     print("<<< Finished")
 
