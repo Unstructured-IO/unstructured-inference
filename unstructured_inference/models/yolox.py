@@ -70,7 +70,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
     def initialize(self, model_path: str, label_map: dict):
         """Start inference session for YoloX model."""
-
+        self.model_path = model_path
         if not os.path.exists(model_path) and "yolox_quantized" in model_path:
             logger.info("Quantized model don't currently exists, quantizing now...")
             os.mkdir("".join(os.path.split(model_path)[:-1]))
@@ -126,7 +126,13 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         boxes_xyxy[:, 2] = boxes[:, 0] + boxes[:, 2] / 2.0
         boxes_xyxy[:, 3] = boxes[:, 1] + boxes[:, 3] / 2.0
         boxes_xyxy /= ratio
-        dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.0, score_thr=0.07)
+
+        # Note (Benjamin): Distinct models (quantized and original) requires distincts
+        # levels of thresholds
+        if "quantized" in self.model_path:
+            dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.0, score_thr=0.07)
+        else:
+            dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.1, score_thr=0.25)
 
         regions = []
 
