@@ -123,5 +123,6 @@ def annotate_layout_elements(
             )
             if result == ANNOTATION_RESULT_WITH_IMAGE:
                 write_image(img, output_f_path)
+                print(f"wrote {output_f_path}")
             elif result == ANNOTATION_RESULT_WITH_PLOT:
                 show_plot(img, desired_width=plot_desired_width)
