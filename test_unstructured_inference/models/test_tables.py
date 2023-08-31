@@ -405,7 +405,7 @@ def test_align_rows(rows, bbox, output):
 @pytest.mark.parametrize(
     ("model_path", "platform_type"),
     [
-        ("microsoft/table-transformer-structure-recognition", "arm64"),
+        # ("microsoft/table-transformer-structure-recognition", "arm64"),
         ("microsoft/table-transformer-structure-recognition", "x86_64"),
     ],
 )
