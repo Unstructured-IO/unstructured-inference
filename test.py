@@ -24,7 +24,7 @@ for file_name in all_files:
     file_path = os.path.join(input_directory, file_name)
     
     # Check if the file ends with ".pdf" (only process PDF files)
-    if file_name.endswith(".pdf") and file_name != "pdf2image-memory-error-test-400p.pdf":
+    if file_name.endswith(".pdf"):
         try:
             print(f"Analyzing layout for {file_name}...")
             start_time = time.time()
