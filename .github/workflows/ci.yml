@@ -107,6 +107,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: 'Unstructured-IO/unstructured'
+        ref: 'feat/enhance-yolox-types-integration'
     - name: Checkout this repo
       uses: actions/checkout@v3
       with:
