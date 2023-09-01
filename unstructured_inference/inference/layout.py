@@ -611,8 +611,8 @@ def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
             x2 = max([i[0] for i in line[0]])
             y2 = max([i[1] for i in line[0]])
             text = line[1][0]
-        if text:
-            text_region = TextRegion(x1, y1, x2, y2, text)
-            text_regions.append(text_region)
+            if text:
+                text_region = TextRegion(x1, y1, x2, y2, text)
+                text_regions.append(text_region)
 
     return text_regions
