@@ -1,0 +1,878 @@
+[
+    {
+        "text": "US011723901B2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "a2) United States Patent Eder et al.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "US 11,723,901 B2 Aug. 15, 2023 (10) Patent No.: (45) Date of Patent:",
+        "type": "Title"
+    },
+    {
+        "text": "(54)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "USES OF PIPERIDINYL-INDOLE DERIVATIVES",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "USPC ie ccccceeccceeceesesesneneneaeeeeeeeeceseeeeeens 514/323 See application file for complete search history.",
+        "type": "Text"
+    },
+    {
+        "text": "(71)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Applicant: NOVARTIS AG, Basel (CH)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(56)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "References Cited",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(72)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Jorg Eder, Rheinfelden (DE); Richard Alexander Harrison, Shropshire (GB); Boerje Haraldsson, Basel (CH); Anna Svenja Schubart, Basel (CH)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Inventors:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "U.S. PATENT DOCUMENTS",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2008/0233113",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Al*",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "9/2008",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Bansal",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "A61P 5/00",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "wee",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "514/1.1",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Adams",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2016/0152605",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "6/2016",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Al",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(73)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Assignee:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Novartis AG, Basel (CH)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "FOREIGN PATENT DOCUMENTS",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "* )",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Notice:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Subject to any disclaimer, the term of this J y patent is extended or adjusted under 35 U.S.C. 154(b) by 0 days.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1/2014 1/2015 6/2017",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "WO WO WO",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2014002058 2015009616 2017/109208",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "A2 Al Al",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "— 16/642,905",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(21)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Appl. No.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "OTHER PUBLICATIONS",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(22)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PCT Filed:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Aug. 30, 2018",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Karpman et al. “Complement contribute to the pathogenesis of Shiga toxin-associated hemolytic uremic syndrome,” Kidney Inter- national, 2016, vol. 90, pp. 726-739 (Year: 2016).* Holers, Complement, Clinical Immunology, 1995, 363-391, chapter 24.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(86)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PCT No.:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PCT/IB2018/056618",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "§ 371 (c)(), (2) Date:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Feb. 28, 2020",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Konar, et al., Eculizumab treatment and impaired opsonophagocytic killing of meningococci by whole blood from immunized adults, Blood, Aug. 17, 2017, 891-899, 130(7). Lesavre, et al., Mechanism of action of factor D of the alternative complement pathway, J Exp Med., Dec. 1978, 1498-1509, 148. Volanakis, et al., Renal filtration and catabolism of complement protein D, N Engl J Med., 1985, 395-399, 312(7).",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(87)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PCT Pub. No.:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "WO2019/043609",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PCT Pub. Date: Mar. 7, 2019",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(65)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Prior Publication Data",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "US 2020/0338059 Al",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Oct. 29, 2020",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "* cited by examiner",
+        "type": "Text"
+    },
+    {
+        "text": "(30)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Foreign Application Priority Data",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Primary Examiner — Shengjun Wang (74) Attorney, Agent, or Firm — Francine F. Li",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "= (EP)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "once eee eeeee",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Aug. 31, 2017",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "17188870",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(51)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Int. Cl.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "ABSTRACT",
+        "type": "Title"
+    },
+    {
+        "text": "(57)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(2006.01) (2006.01) (2006.01)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "AGIK 31/445",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "AGIK 31/454",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "The present invention relates to the novel use of certain piperidinyl-indole derivatives in the treatment of patients suffering from renal diseases or disorders, and in particular for the treatment of patients suffering from C3G (C3 glom- erulopathy) and IgAN (gA nephropathy).",
+        "type": "Text"
+    },
+    {
+        "text": "AGIP 13/12",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(52)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "U.S. Cl.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "AGIK 31/454 (2013.01); A6IP 13/12 (2018.01)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "CPC",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "we.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(58)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Field of Classification Search",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "CPC wieieececceecceeeeeeeeeees A61K 31/4439; A61P 13/12",
+        "type": "Text"
+    },
+    {
+        "text": "14 Claims, No Drawings",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "US 11,723,901 B2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "20 25 thesis and some utilities of the piperidinyl-indole deriva- tives. The said compounds are powerful factor B inhibitors and suppress the amplification of the complement system caused by C3 activation irrespective of the initial mecha- nism of activation (including for example activation of the classical, lectin or alternative pathways). WO2015/009616 discloses a wide variety of indications including the renal diseases atypicaly hemolytic uremic syndrome (aHUS) and glomerulonephritis including membrane proliferative glom- erulonephritis. It is silent about the use of the piperidinyl- indole derivatives in other renal diseases which are separate conditions with a distinctly different causality from the above, in particular it does not describe the use in classical HUS (£. coli induced hemolytic uremic syndrome) and membranous nephropathy. In contrast to the polypeptide construct according to WO2017/109208, the low molecular weight compounds as disclosed in WO2015/009616 specifi- cally inhibit the protease complement factor B, which is responsible for cleaving C3 and C5 of the AP. Thereby the direct generation of C3a, CS5a and C5b-9 through the clas- sical pathway is spared. In 2017, Konar and Dranoff (Konar M and Granoff D M 2017. Eculizumab treatment and impaired opsonophagocytic killing of meningococci by whole blood from immunized adults. Blood. 130(7):891- 899) have elegantly shown that selective inhibition of Factor D, the protease that activates FB, did not impair the protec- tive immune response against NV. meningitidis in vaccinated individuals, whereas inhibition at the level of CS does. SUMMARY OF THE INVENTION",
+        "type": "List"
+    },
+    {
+        "text": "USES OF PIPERIDINYL-INDOLE DERIVATIVES",
+        "type": "Title"
+    },
+    {
+        "text": "FIELD OF THE INVENTION",
+        "type": "Title"
+    },
+    {
+        "text": "The invention relates to the use of certain piperidinyl- indole derivatives in the treatment of patients suffering from conditions and diseases associated with complement alter- native pathway activation such as renal diseases and in particular for the treatment of patients suffering from C3G (C3 glomerulopathy) and IgZAN Gmmunoglobuline A neph- ropathy).",
+        "type": "List"
+    },
+    {
+        "text": "BACKGROUND OF THE INVENTION",
+        "type": "Title"
+    },
+    {
+        "text": "The complement system is an important component of the innate immune system and comprises a cascade of proteases that are normally present in an inactive state. These pro- teases are organized in three activation pathways: the clas- sical, the lectin, and the alternative pathways that all con- verge on C3 and C5 cleavage and a common terminal pathway (V. M. Holers, In Clinical Immunology: Principles and Practice, ed. R. R. Rich, Mosby Press; 1996, 363-391). Molecules from microorganisms, antibodies or cellular com- ponents can activate these pathways resulting in the forma- tion of protease complexes known as the C3-convertases and the CS-convertases. The classical pathway is a calcium/ magnesium-dependent cascade, which is normally activated by the formation of antigen-antibody complexes. It can also be activated in an antibody-independent manner by the binding of C-reactive protein complexed to ligand and by many pathogens including gram-negative bacteria. The lec- tin pathway is also calcium and magnesium dependent and is normally stimulated by lectins. The alternative pathway is a magnesium-dependent cascade which 1s activated by depo- sition and activation of C3 on certain susceptible surfaces (e.g., cell wall polysaccharides of yeast and bacteria, and certain biopolymer materials). In addition to alternative pathway-specific stimulation, the alternative pathway also serves as an amplification loop for the other complement pathways. 20 25 40",
+        "type": "List"
+    },
+    {
+        "text": "The complement system is an important component of the innate immune system and comprises a cascade of proteases that are normally present in an inactive state. These pro- teases are organized in three activation pathways: the clas- sical, the lectin, and the alternative pathways that all con- verge on C3 and C5 cleavage and a common terminal pathway (V. M. Holers, In Clinical Immunology: Principles and Practice, ed. R. R. Rich, Mosby Press; 1996, 363-391). Molecules from microorganisms, antibodies or cellular com- ponents can activate these pathways resulting in the forma- tion of protease complexes known as the C3-convertases and the CS-convertases. The classical pathway is a calcium/ magnesium-dependent cascade, which is normally activated by the formation of antigen-antibody complexes. It can also be activated in an antibody-independent manner by the binding of C-reactive protein complexed to ligand and by many pathogens including gram-negative bacteria. The lec- tin pathway is also calcium and magnesium dependent and is normally stimulated by lectins. The alternative pathway is a magnesium-dependent cascade which 1s activated by depo- sition and activation of C3 on certain susceptible surfaces (e.g., cell wall polysaccharides of yeast and bacteria, and certain biopolymer materials). In addition to alternative pathway-specific stimulation, the alternative pathway also serves as an amplification loop for the other complement pathways. Factor B is of the alternative and 20 25 40",
+        "type": "Text"
+    },
+    {
+        "text": "Surprisingly, the present invention provides now a method of treating or preventing factor B mediated diseases, which consists of administering a compound of Formula (1) to a patient suffering from a renal disease or disorder selected from the complement-driven renal disease C3G (C3 glomerulopathy) and IgAN Gmmunoglobuline A nephropa- thy) and other nephropathies with evidence of glomerular C3 deposition such as MN (membranous nephropathy) and HUS (&. coli induced hemolytic uremic syndrome).",
+        "type": "Text"
+    },
+    {
+        "text": "DETAILED DESCRIPTION OF THE",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "INVENTION",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "45 In a first embodiment, the invention provides a compound of formula (1) or a pharmaceutically acceptable salt thereof, for use in the treatment of the complement-driven renal diseases C3G (C3 glomerulopathy), IgAN Gmmunoglobu- line A nephropathy) and other nephropathies with evidence of glomerular C3 deposition such as MN (membranous nephropathy) and HUS (£. coli induced hemolytic uremic syndrome). Compounds of Formula (1) or pharmaceutically acceptable salts thereof, are represented by the following structure:",
+        "type": "Text"
+    },
+    {
+        "text": "45 In a first embodiment, the invention provides a compound of formula (1) or a pharmaceutically acceptable salt thereof, for use in the treatment of the complement-driven renal diseases C3G (C3 glomerulopathy), IgAN Gmmunoglobu- line A nephropathy) and other nephropathies with evidence of glomerular C3 deposition such as MN (membranous nephropathy) and HUS (£. coli induced hemolytic uremic syndrome). Compounds of Formula (1) or pharmaceutically acceptable salts thereof, are represented by the following structure:",
+        "type": "List"
+    },
+    {
+        "text": "Factor B is a key protease of the alternative pathway and may be a suitable target for the inhibition of the alternative pathway as well as the amplification of the other comple- ment pathways. Its plasma concentration in humans 1s typically about 300 ug/mL (or about 3 uM), and it has been shown to be a critical enzyme for activation of the alterna- tive complement pathway (P. H. Lesavre and H. J. Miller- Eberhard. J. Exp. Med., 1978; 148: 1498-1510; J. E. Vol- anakis et al.. New Eng. J. Med., 1985; 312:395-401). W02017/109208 discloses certain polypeptides for inhibit- ing complement activation and their use in disorders such as atypical hemolytic uremic syndrome (aHUS), C3G and IgA nephropathy. It describes a fusion construct in which mul- tiple active domains from naturally occurring complement regulators (complement factor H (FH) and complement FH related protein 1 (FHR1)) were combined to a single mol- ecule. The FH part of the molecule dissociates the C3 convertase of the AP, and at the same time acts as a cofactor of Complement factor I, which cleaves C3b to smaller, inactive fragments. In addition, the fusion construct also binds to C5 and inhibits the (AP) C5 convertase. Finally, the FHR1-part of the construct inhibits the classical complement pathway (CP), as shown in the Wieslab assay for classical pathway activity. Therefore this should result in a dual inhibition of the classical pathway and the alternative path- way/amplification loop. WO2015/009616 describes the syn-",
+        "type": "Text"
+    },
+    {
+        "text": "ment pathways. Its plasma concentration in humans 1s typically about 300 ug/mL (or about 3 uM), and it has been shown to be a critical enzyme for activation of the alterna- tive complement pathway (P. H. Lesavre and H. J. Miller- Eberhard. J. Exp. Med., 1978; 148: 1498-1510; J. E. Vol- anakis et al.. New Eng. J. Med., 1985; 312:395-401). W02017/109208 discloses certain polypeptides for inhibit- ing complement activation and their use in disorders such as atypical hemolytic uremic syndrome (aHUS), C3G and IgA nephropathy. It describes a fusion construct in which mul- tiple active domains from naturally occurring complement regulators (complement factor H (FH) and complement FH related protein 1 (FHR1)) were combined to a single mol- ecule. The FH part of the molecule dissociates the C3 convertase of the AP, and at the same time acts as a cofactor of Complement factor I, which cleaves C3b to smaller, inactive fragments. In addition, the fusion construct also binds to C5 and inhibits the (AP) C5 convertase. Finally, the FHR1-part of the construct inhibits the classical complement pathway (CP), as shown in the Wieslab assay for classical pathway activity. Therefore this should result in a dual inhibition of the classical pathway and the alternative path- way/amplification loop. WO2015/009616 describes the syn- 45 60 65",
+        "type": "List"
+    },
+    {
+        "text": "(I)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "A, Ro",
+        "type": "Figure"
+    },
+    {
+        "text": "US 11,723,901 B2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "4",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Wherein R is hydrogen, C,-C,alkyl, or C,-C,alkoxy; R! is C,-C,alkoxy; R* is C,-C,alkyl; R° is C,-C,alkoxy; C,-C,alkyl; or hydroxy]; R* is phenyl, optionally substituted by —C(O)R®*, and R® is hydroxy, C,-C,alkoxy, or amino. In a second embodiment, the invention provides com- pounds or pharmaceutically acceptable salts thereof for use in accordance to the first embodiment, wherein R is hydrogen; or C,-C,alky]; R' is C,-C,alkoxy; R* is C,-C,alky]; R° is C,-C,alkoxy; or C,-C,alkyl; and R* is phenyl, optionally substituted by —C(O)R®*, and R®* is hydroxyl or C,-C alkoxy. In a third embodiment, the invention provides compounds or pharmaceutically acceptable salts thereof for use in accordance to the first embodiment wherein R is hydrogen; R' is C,-C, alkoxy; R* is C,-C, alkyl; R° is C,-C, alkoxy; and R* is phenyl, optionally substituted by —C(O)R®*, and R®* is hydroxy. In a forth embodiment, the invention provides compounds for in accordance the first wherein the 20 25 In a further embodiment, the invention provides a com- pound for use in accordance to any one of claims 1-5, wherein the use is in the treatment of IZAN G@mmuneglobu- line A nephropathy). In a further embodiment, the invention provides a com- pound for use in accordance to any one of claims 1-5, wherein the use is in the treatment of MN (membranous nephropathy). In a further embodiment, the invention provides a com- pound for use in accordance to any one of claims 1-5, wherein the use is in the treatment of HUS (£. coli induced hemolytic uremic syndrome). In a further embodiment the invention relates to a phar- maceutical composition comprising a therapeutically effec- tive amount of a compound of formula (I) or a pharmaceu- tically acceptable salt thereof in accordance to the definition of embodiment 1 and one or more pharmaceutically accept- able carriers, for use in the treatment of a disease or disorder selected from of C3G (C3 glomerulopathy), IgAN G@mmu- noglobuline A nephropathy) and other nephropathies with evidence of glomerular C3 deposition such as MN (mem- branous nephropathy) and HUS (£. co/i induced hemolytic uremic syndrome). For purposes of interpreting this specification, the follow- ing definitions will apply and whenever appropriate, terms used in the singular will also include the plural and vice versa. As used the refers saturated",
+        "type": "List"
+    },
+    {
+        "text": "Wherein",
+        "type": "Title"
+    },
+    {
+        "text": "wherein the use is in the treatment of IZAN G@mmuneglobu- line A nephropathy). In a further embodiment, the invention provides a com- pound for use in accordance to any one of claims 1-5, wherein the use is in the treatment of MN (membranous nephropathy).",
+        "type": "List"
+    },
+    {
+        "text": "In a further embodiment, the invention provides a com- pound for use in accordance to any one of claims 1-5, wherein the use is in the treatment of HUS (£. coli induced hemolytic uremic syndrome).",
+        "type": "Text"
+    },
+    {
+        "text": "20 In a further embodiment the invention relates to a phar- maceutical composition comprising a therapeutically effec- tive amount of a compound of formula (I) or a pharmaceu- tically acceptable salt thereof in accordance to the definition of embodiment 1 and one or more pharmaceutically accept- able carriers, for use in the treatment of a disease or disorder selected from of C3G (C3 glomerulopathy), IgAN G@mmu- noglobuline A nephropathy) and other nephropathies with evidence of glomerular C3 deposition such as MN (mem- branous nephropathy) and HUS (£. co/i induced hemolytic uremic syndrome).",
+        "type": "List"
+    },
+    {
+        "text": "25 For purposes of interpreting this specification, the follow- ing definitions will apply and whenever appropriate, terms used in the singular will also include the plural and vice versa.",
+        "type": "Text"
+    },
+    {
+        "text": "30 40 45 versa. As used herein, the term “alkyl” refers to a fully saturated branched or unbranched hydrocarbon moiety having up to 20 carbon atoms. Unless otherwise provided, alkyl refers to hydrocarbon moieties having 1 to 16 carbon atoms, 1 to 10 carbon atoms, 1 to 7 carbon atoms, or 1 to 4 carbon atoms. Representative examples of alkyl include, but are not limited to, methyl, ethyl, n-propyl, iso-propyl, n-butyl, sec-butyl, iso-butyl, tert-butyl, n-pentyl, isopentyl, neopentyl, n-hexy], 3-methylhexyl, 2,2-dimethylpentyl, 2,3-dimethylpenty], n-heptyl, n-octyl, n-nonyl, n-decyl and the like. As used herein, the term “alkoxy” refers to alkyl-O—, Wherein alkyl is defined herein above. Representative examples of alkoxy include, but are not limited to, methoxy, ethoxy, propoxy, 2-propoxy, butoxy, tert-butoxy, pentyloxy, hexyloxy, cyclopropyloxy-, cyclohexyloxy- and the like. Typically, alkoxy groups have about 1-7, more preferably about 1-4 carbons. Pharmaceutically acceptable acid addition salts may be formed with inorganic acids and organic acids. Pharmaceutically acceptable base addition salts may be formed with inorganic and organic bases. Representative examples of pharmaceutically acceptable salts of compounds of formula (1) were already described in",
+        "type": "List"
+    },
+    {
+        "text": "As used herein, the term “alkyl” refers to a fully saturated branched or unbranched hydrocarbon moiety having up to 20 carbon atoms. Unless otherwise provided, alkyl refers to hydrocarbon moieties having 1 to 16 carbon atoms, 1 to 10 carbon atoms, 1 to 7 carbon atoms, or 1 to 4 carbon atoms. Representative examples of alkyl include, but are not limited to, methyl, ethyl, n-propyl, iso-propyl, n-butyl, sec-butyl, iso-butyl, tert-butyl, n-pentyl, isopentyl, neopentyl, n-hexy], 3-methylhexyl, 2,2-dimethylpentyl, 2,3-dimethylpenty], n-heptyl, n-octyl, n-nonyl, n-decyl and the like. As used herein, the term “alkoxy” refers to alkyl-O—,",
+        "type": "List"
+    },
+    {
+        "text": "to embodiment, compound or a pharmaceutically acceptable salt thereof is selected from the group consisting of: 4-(1-((S-methoxy-7-methy]-1H-indol-4-yl)methy])-4-meth- ylpiperidin-2-yl)benzoic acid; 4-(4-methoxy-1-((5-methoxy-7-methyl-1H-indol-4-yl) methyl)piperidin-2-yl)benzoic acid; 4-(4-ethoxy-1-((5-methoxy-7-methy1-1 H-indol-4-yl) methyl)piperidin-2-yl)benzoic acid; 4-(5-methoxy-1-((5-methoxy-7-methyl-1H-indol-4-yl) methyl)piperidin-2-yl)benzoic acid; 4-(5-hydroxy-1-((5-methoxy-7-methyl-1H-indol-4-yl) methyl)piperidin-2-yl)benzoic acid; 4-ethyl-1-((S5-methoxy-7-methy]l-1H-indol-4-yl)methy]l)pip- eridin-2-yl-benzoic acid; 4-(ethyl-1-((S-methoxy-7-methyl-1H-indol-4-yl)methy1)p1- peridin-2-yl)benzoic acid; ethyl 4-((2S,4R)-1-((S-methoxy-7-methyl-1H-indol-4-yl) methy1)-4-methylpiperidin-2-yl)benzoate; and ethyl 4-((2S,4S)-4-ethoxy-1-((5-methoxy-7-methyl-1H-1in- dol-4-yl)methy])piperidin-2-yl )benzoate. In a fifth embodiment, the invention provides a compound for use in accordance to the first embodiment, wherein the compound or a pharmaceutically acceptable salt thereof is 4-((2S,4S)-4-ethoxy-1-((5-methoxy-7-methyl]-1H-indol-4- yl)methy]l)piperidin-2-yl)benzoic acid.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "use",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "W0O2015/009616 and are likewise suitable for this inven- tion.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "As used herein, the term “pharmaceutically acceptable carrier” includes any and all solvents, dispersion media, coatings, surfactants, antioxidants, preservatives (e.g., anti- bacterial agents, antifungal agents), isotonic agents, absorp- tion delaying agents, salts, preservatives, drugs, drug stabi- lizers, binders, excipients, disintegration agents, lubricants, sweetening agents, flavoring agents, dyes, and the like and combinations thereof, as would be known to those skilled in the art (see, for example, Remington’s Pharmaceutical Sci- ences, 18th Ed. Mack Printing Company, 1990, pp. 1289- 1329). Except insofar as any conventional carrier is incom- patible with the active ingredient, its use in the therapeutic or pharmaceutical compositions is contemplated. The term “a effective amount” of",
+        "type": "List"
+    },
+    {
+        "text": "In a sixth embodiment the invention relates to a method of treating or preventing C3G (C3 glomerulopathy), IgAN Gmmunoglobuline A nephropathy) or other nephropathies with evidence of glomerular C3 deposition such as MN (membranous nephropathy) and HUS (£. coli induced hemolytic uremic syndrome), in patient suffering therefrom, which consists of administering an effective amount of a compound of formula (1) or a pharmaceutically acceptable salt thereof in accordance to anyone of the definitions of the embodiments 1, 2,3, 4 or 5 to a patient suffering therefrom. In a further embodiment, the invention provides a com- pound for use in accordance to any one of claims 1-5,",
+        "type": "List"
+    },
+    {
+        "text": "60",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "pound for use in accordance to any one of claims 1-5, wherein the use is in the treatment of C3G (C3 glomeru- lopathy).",
+        "type": "Text"
+    },
+    {
+        "text": "65",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "The term “a therapeutically effective amount” of a com- pound of the present invention refers to an amount of the",
+        "type": "Text"
+    },
+    {
+        "text": "US 11,723,901 B2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "6",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "m)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "compound of the present invention that will elicit the biological or medical response of a subject, for example, reduction or inhibition of an enzyme or a protein activity, or ameliorate symptoms, alleviate conditions, slow or delay disease progression, or prevent a disease, etc. In one non- limiting embodiment, the term “a therapeutically effective amount” refers to the amount of the compound of the present invention that, when administered to a subject, 1s effective to (1) at least partially alleviating, inhibiting, preventing and/or ameliorating a condition, or a disorder, or a disease or biological process (e.g., tissue regeneration and reproduc- tion) (4) mediated by Factor B, or (41) associated with Factor B activity, or (411) characterized by activity (normal or abnormal) of the complement alternative pathway; or (2) reducing or inhibiting the activity of Factor B; or (3) reducing or inhibiting the expression of Factor B; or (4) reducing or inhibiting activation of the complement system and particularly reducing or inhibiting generation of C3a, iC3b, C5a or the membrane attack complex generated by activation of the complement alternative pathway. In another non-limiting embodiment, the term “a therapeutically effec- tive amount” refers to the amount of the compound of the present invention that, when administered to a cell, or a tissue, or a non-cellular biological material, or a medium, 1s effective to at least partially reducing or inhibiting the activity of Factor B and/or the complement alternative pathway; or at least partially reducing or inhibiting the expression of Factor B and/or the complement alternative pathway. The meaning of the term “a therapeutically effec- tive amount” as illustrated in the above embodiment for Factor B and/or the complement alternative pathway. 10 15 20 25 30",
+        "type": "Text"
+    },
+    {
+        "text": "compound of the present invention that will elicit the biological or medical response of a subject, for example, reduction or inhibition of an enzyme or a protein activity, or ameliorate symptoms, alleviate conditions, slow or delay disease progression, or prevent a disease, etc. In one non- limiting embodiment, the term “a therapeutically effective amount” refers to the amount of the compound of the present invention that, when administered to a subject, 1s effective to (1) at least partially alleviating, inhibiting, preventing and/or ameliorating a condition, or a disorder, or a disease or biological process (e.g., tissue regeneration and reproduc- tion) (4) mediated by Factor B, or (41) associated with Factor B activity, or (411) characterized by activity (normal or abnormal) of the complement alternative pathway; or (2) reducing or inhibiting the activity of Factor B; or (3) reducing or inhibiting the expression of Factor B; or (4) reducing or inhibiting activation of the complement system and particularly reducing or inhibiting generation of C3a, iC3b, C5a or the membrane attack complex generated by activation of the complement alternative pathway. In another non-limiting embodiment, the term “a therapeutically effec- tive amount” refers to the amount of the compound of the present invention that, when administered to a cell, or a tissue, or a non-cellular biological material, or a medium, 1s effective to at least partially reducing or inhibiting the activity of Factor B and/or the complement alternative pathway; or at least partially reducing or inhibiting the expression of Factor B and/or the complement alternative pathway. The meaning of the term “a therapeutically effec- tive amount” as illustrated in the above embodiment for Factor B and/or the complement alternative pathway.",
+        "type": "List"
+    },
+    {
+        "text": "clearly contradicted by context. The use of any and all examples, or exemplary language (e.g. “such as’’) provided herein is intended merely to better illuminate the invention and does not pose a limitation on the scope of the invention otherwise claimed.",
+        "type": "Text"
+    },
+    {
+        "text": "that will elicit the subject, for example, a protein activity, or conditions, slow or delay disease, etc. In one non- therapeutically effective compound of the present subject, 1s effective to preventing and/or or a disease or regeneration and reproduc- associated with Factor activity (normal or pathway; or (2) of Factor B; or (3) of Factor B; or (4) complement system generation of C3a, complex generated by pathway. In another therapeutically effec- the compound of the to a cell, or a material, or a medium, 1s or inhibiting the complement alternative or inhibiting the complement alternative therapeutically effec- above embodiment for alternative pathway. refers to an animal. subject also refers to cows, sheep, goats, fish, birds and the like. a primate. In yet other “inhibition” or “inhib- suppression of a given disease, or a significant biological activity or “treating” or “treatment” one embodiment, to (1.e., slowing or arrest- disease or at least one another embodiment refers to alleviating or parameter including those patient. In yet another “treatment” refers to either physically, (e.g., physiologically, parameter), or both. In yet or “treatment” onset or development or need of” a treatment if medically or in “the’”’ and similar terms (especially in the to cover both the indicated herein or 10 15 20 25 30 35 40 45 50 55 60 65 clearly contradicted by context. The use of any and examples, or exemplary language (e.g. “such as’’) provided herein is intended merely to better illuminate the invention and does not pose a limitation on the scope of the invention otherwise claimed. Any asymmetric atom (e.g., carbon or the like) of compound(s) of the present invention can be present racemic or enantiomerically enriched, for example the (S)- or (R,S)-configuration. In certain embodiments, asymmetric atom has at least 50% enantiomeric excess, least 60% enantiomeric excess, at least 70% enantiomeric excess, at least 80% enantiomeric excess, at least enantiomeric excess, at least 95% enantiomeric excess, or least 99% enantiomeric excess in the (R)- or (S)-configura- tion. Substituents at atoms with unsaturated bonds may, possible, be present in cis-(Z)- or trans-(E)-form. Accordingly, as used herein the use of a compound of present invention may be in the form of one of the possible isomers such as rotamers, atropisomers, tautomers or tures thereof, for example, as substantially pure geometric (cis or trans) isomers, diastereomers, optical isomers tipodes), racemates or mixtures thereof. For clarity, tional isomer are not encompassed by the above. Any resulting mixtures of isomers can be separated on basis of the physicochemical differences of the constituents, into the pure or substantially pure geometric or optical isomers, diastereomers, racemates, for example, by chroma- tography and/or fractional crystallization. Any resulting racemates of final products or intermediates can be resolved into the optical antipodes by known meth- ods, e.g., by separation of the diastereomeric salts thereof, obtained with an optically active acid or base, and liberating the optically active acidic or basic compound. In particular, a basic moiety may thus be employed to resolve the com- pounds of the present invention into their optical antipodes, e.g., by fractional crystallization of a salt formed with optically active acid, e.g., tartaric acid, dibenzoyl tartaric acid, diacetyl tartaric acid, di-O,O'-p-toluoyl! tartaric mandelic acid, malic acid or camphor-10-sulfonic Racemic products can also be resolved by chiral chroma- tography, e.g., high performance liquid chromatography (HPLC) or supercritical fluid chromatography (SFC) using chiral adsorbent. Prophylactic and Therapeutic Uses In another embodiment, the present invention provides methods of treating a renal disease or disorder, comprising administering to a subject in need of such treatment effective amount of a compound or a pharmaceutically acceptable salt thereof in accordance to the definition of one of embodiments 1-5, wherein said disease or disorder selected from C3G, IgAN and other nephropathies evidence of glomerular C3 deposition. Compounds of formula (1) or pharmaceutically acceptable salts thereof may be administered in unit dosage of about 0.1-1000 mg of active ingredient(s) for a subject of about 50-70 kg, or about 0.1-500 mg or about 0.1-250 mg or about 0.1-150 mg or about 0.5-100 mg, or about 0.5-50 mg active ingredients. The therapeutically effective dosage thereof, may depend on the species of the subject, the weight, age and individual condition, the disorder or disease or the severity thereof being treated. A physician, clinician or veterinarian of ordinary skill may readily determine effective amount of each of the active ingredients necessary to prevent, treat or inhibit the progress of the disorder disease.",
+        "type": "List"
+    },
+    {
+        "text": "10 15 20 25 30 Any asymmetric atom (e.g., carbon or the like) of the compound(s) of the present invention can be present in racemic or enantiomerically enriched, for example the (R)-, (S)- or (R,S)-configuration. In certain embodiments, each asymmetric atom has at least 50% enantiomeric excess, at least 60% enantiomeric excess, at least 70% enantiomeric excess, at least 80% enantiomeric excess, at least 90% enantiomeric excess, at least 95% enantiomeric excess, or at least 99% enantiomeric excess in the (R)- or (S)-configura- tion. Substituents at atoms with unsaturated bonds may, if possible, be present in cis-(Z)- or trans-(E)-form. Accordingly, as used herein the use of a compound of the present invention may be in the form of one of the possible isomers such as rotamers, atropisomers, tautomers or m1x- tures thereof, for example, as substantially pure geometric (cis or trans) isomers, diastereomers, optical isomers (an- tipodes), racemates or mixtures thereof. For clarity, posi- tional isomer are not encompassed by the above. Any resulting mixtures of isomers can be separated on the basis of the physicochemical differences of the constituents, into the pure or substantially pure geometric or optical isomers, diastereomers, racemates, for example, by chroma- tography and/or fractional crystallization. Any resulting racemates of final products or intermediates can be resolved into the optical antipodes by known meth-",
+        "type": "List"
+    },
+    {
+        "text": "Any asymmetric atom (e.g., carbon or the like) of the compound(s) of the present invention can be present in racemic or enantiomerically enriched, for example the (R)-, (S)- or (R,S)-configuration. In certain embodiments, each asymmetric atom has at least 50% enantiomeric excess, at least 60% enantiomeric excess, at least 70% enantiomeric excess, at least 80% enantiomeric excess, at least 90% enantiomeric excess, at least 95% enantiomeric excess, or at least 99% enantiomeric excess in the (R)- or (S)-configura- tion. Substituents at atoms with unsaturated bonds may, if possible, be present in cis-(Z)- or trans-(E)-form.",
+        "type": "Text"
+    },
+    {
+        "text": "Any resulting racemates products or can be resolved into the optical antipodes by known meth- ods, e.g., by separation of the diastereomeric salts thereof, obtained with an optically active acid or base, and liberating the optically active acidic or basic compound. In particular, a basic moiety may thus be employed to resolve the com- pounds of the present invention into their optical antipodes, e.g., by fractional crystallization of a salt formed with optically active acid, e.g., tartaric acid, dibenzoyl tartaric acid, diacetyl tartaric acid, di-O,O'-p-toluoyl! tartaric acid, mandelic acid, malic acid or camphor-10-sulfonic acid. Racemic products can also be resolved by chiral chroma- tography, e.g., high performance liquid chromatography (HPLC) or supercritical fluid chromatography (SFC) using chiral adsorbent. Prophylactic and Therapeutic Uses",
+        "type": "List"
+    },
+    {
+        "text": "35 40 45 50 55 60 65 ods, e.g., by separation of the diastereomeric salts thereof, obtained with an optically active acid or base, and liberating the optically active acidic or basic compound. In particular, a basic moiety may thus be employed to resolve the com- pounds of the present invention into their optical antipodes, e.g., by fractional crystallization of a salt formed with optically active acid, e.g., tartaric acid, dibenzoyl tartaric acid, diacetyl tartaric acid, di-O,O'-p-toluoyl! tartaric acid, mandelic acid, malic acid or camphor-10-sulfonic acid. Racemic products can also be resolved by chiral chroma- tography, e.g., high performance liquid chromatography (HPLC) or supercritical fluid chromatography (SFC) using chiral adsorbent. Prophylactic and Therapeutic Uses In another embodiment, the present invention provides methods of treating a renal disease or disorder, comprising administering to a subject in need of such treatment effective amount of a compound or a pharmaceutically acceptable salt thereof in accordance to the definition of one of embodiments 1-5, wherein said disease or disorder selected from C3G, IgAN and other nephropathies with evidence of glomerular C3 deposition. Compounds of formula (1) or pharmaceutically acceptable salts thereof may be administered in unit dosage of about 0.1-1000 mg of active ingredient(s) for a subject of about 50-70 kg, or about 0.1-500 mg or about 0.1-250 mg or about 0.1-150 mg or about 0.5-100 mg, or about 0.5-50 mg active ingredients. The therapeutically effective dosage thereof, may depend on the species of the subject, the body weight, age and individual condition, the disorder or disease or the severity thereof being treated. A physician, clinician or veterinarian of ordinary skill may readily determine effective amount of each of the active ingredients necessary to prevent, treat or inhibit the progress of the disorder disease. The efficacy of a compound according to embodiment may be assessed by the following methods:",
+        "type": "List"
+    },
+    {
+        "text": "As used herein, the term “subject” Typically the animal is a mammal. A for example, primates (e.g., humans), horses, dogs, cats, rabbits, rats, mice, In certain embodiments, the subject is embodiments, the subject 1s a human. As used herein, the term “ainhibit’’,",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "an",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "iting” refers to the reduction or suppression of a given condition, symptom, or disorder, or disease, or a significant decrease in the baseline activity of a biological activity or process.",
+        "type": "Text"
+    },
+    {
+        "text": "a",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "As used herein, the term “treat’’, “treating” or “treatment” of any disease or disorder refers in one embodiment, to ameliorating the disease or disorder (1.e., slowing or arrest- ing or reducing the development of the disease or at least one of the clinical symptoms thereof). In another embodiment “treat”, “treating” or “treatment” refers to alleviating or ameliorating at least one physical parameter including those which may not be discernible by the patient. In yet another embodiment, “treat”, “treating” or “treatment” refers to modulating the disease or disorder, either physically, (e.g., stabilization of a discernible symptom), physiologically, (e.g., stabilization of a physical parameter), or both. In yet another embodiment, “treat”, “treating” or “treatment” refers to preventing or delaying the onset or development or progression of the disease or disorder. As used herein, a subject is “in need of” a treatment if",
+        "type": "List"
+    },
+    {
+        "text": "In another embodiment, the present invention provides methods of treating a renal disease or disorder, comprising administering to a subject in need of such treatment an effective amount of a compound or a pharmaceutically acceptable salt thereof in accordance to the definition of any one of embodiments 1-5, wherein said disease or disorder is selected from C3G, IgAN and other nephropathies with evidence of glomerular C3 deposition.",
+        "type": "Text"
+    },
+    {
+        "text": "55 60 65 Compounds of formula (1) or pharmaceutically acceptable salts thereof may be administered in unit dosage of about 0.1-1000 mg of active ingredient(s) for a subject of about 50-70 kg, or about 0.1-500 mg or about 0.1-250 mg or about 0.1-150 mg or about 0.5-100 mg, or about 0.5-50 mg of active ingredients. The therapeutically effective dosage thereof, may depend on the species of the subject, the body weight, age and individual condition, the disorder or disease or the severity thereof being treated. A physician, clinician or veterinarian of ordinary skill may readily determine the effective amount of each of the active ingredients necessary to prevent, treat or inhibit the progress of the disorder or disease. The efficacy of a compound according to embodiment 1",
+        "type": "List"
+    },
+    {
+        "text": "As used herein, a subject is “in need of” a treatment if such subject would benefit biologically, medically or in quality of life from such treatment.",
+        "type": "Text"
+    },
+    {
+        "text": "As used herein, the term “a,” “an,” used in the context of the present invention context of the claims) are to be construed singular and plural unless clearly contradicted by the context.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "otherwise",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "All methods described herein can be performed in any suitable order unless otherwise indicated herein or otherwise",
+        "type": "Text"
+    },
+    {
+        "text": "US 11,723,901 B2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "8",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "7",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1. Clinical Trials for Complement Driven Renal Disease; Specifically IgAN",
+        "type": "Text"
+    },
+    {
+        "text": "Compounds of formula (I) or pharmaceutically acceptable salts thereof as disclosed in embodiments 1-5 are potent inhibitors of factor B and are tested in the clinical trials (1) and (2) described above. Experimental Part:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Specifically IgAN Patients are recruited in accordance to the following criteria: Adult IgAN patients diagnosed within 2 years Fulfilling diagnostic criteria as high risk of fast progres- sion such as high blood pressure and/or on antihyper- tensives and >1 g/d proteinuria Renal biopsy=IgAN, including IgAN with vasculitis eGER (glomerular filtration rate) 1s >40 and <100 ml/min/ 1.73 m* Supportive care (incl. diuretic, ACE (Angiotensin Con- verting Enzyme) inhibitors, ARB (Angiotensin Renin Blocker), statins) to be maintained in trial. Randomization after run-in period.",
+        "type": "List"
+    },
+    {
+        "text": "sion such as high blood pressure and/or on antihyper- tensives and >1 g/d proteinuria Renal biopsy=IgAN, including IgAN with vasculitis eGER (glomerular filtration rate) 1s >40 and <100 ml/min/ 1.73 m*",
+        "type": "List"
+    },
+    {
+        "text": "1. Inhibition of Complement Dysregulation was Mea- sured by Immunofixation Electrophoresis",
+        "type": "Text"
+    },
+    {
+        "text": "(described by Zhang et al., Clin J Am Soc Nephrology 7, pp 265-274 (2012)).",
+        "type": "Text"
+    },
+    {
+        "text": "This assay is based on stabilized C3 convertase in patient serum. Patient serum is mixed 1:1 with normal serum and incubated for 30 minutes at 37° C. Normal serum serves as source for C3, since patient C3 levels can be very low. Outcome is the proportion of C3 that 1s cleaved vs uncleaved C3. Maximal cleavage was determined by incubating serum in Mg** EGTA-PBS, background cleavage was determined by incubating the serum in EDTA-PBS. Inhibition by a test compound was calculated by the following formula:",
+        "type": "Text"
+    },
+    {
+        "text": "For the trial patients are vaccinated to eliminate the risk of infections caused by encapsulated organisms, including Streptococcus pneumoniae, Neisseria meningitidis, and Haemophilus influenzae. Vaccination may be effected for example with 23-valent polysaccharide (PS) vaccine, with heptavalent protein-polysaccharide conjugate (PCV-7) vaccine.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "— 5",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "or",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "20",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(Cleavage in presence of test compound—background cleavage)/(maximal cleavage—background cleav- age)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Pursuant to vaccination, patients are then treated with a daily dosage of a compound of formula (I) of 25, 50, 100 and 200 mg given twice per day (BID). The blood pressure is monitored per standard practice and proteinuria is deter- mined by regularly determining the low molecular weight proteins in the urine, such as albumines and globulines.",
+        "type": "Text"
+    },
+    {
+        "text": "The assay was performed in samples of 9 patients with C3G with the following causes for alternative pathway (AP) dysregulation: C3Nef (autoantibodies stabilizing C3 convertase) in 3 patients Autoantibodies against FH (factor H) in 2 patients Unknown cause in 2 patients Autoantibodies against FB (factor B) in 2 patients. Samples of patients with both C3G (C3 glomerulonephritis) and DDD (dense deposit disease) were included. In this assay, we tested the compounds of embodiment 4. For example, the compound of embodiment 5 inhibited C3 cleavage at a concentration of 3.3 micromolar by >97%, and in the presence of 1.1 micromolar by 63%.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "25",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "The duration of treatment with a compound of formula (I) is at least 3 months, and the primary endpoints for an effective treatment is achieved with a reduction of urine protein creatinine ratio (UPCR) being 25% or more.",
+        "type": "Text"
+    },
+    {
+        "text": "As secondary endpoints, a renal histology is carried out in selected patients, wherein a reduced complement activation, less inflammation, reduced mesangial expansion 1s aimed at in the histological scores.",
+        "type": "Text"
+    },
+    {
+        "text": "35",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2. Clinical Trials for Complement Driven Renal Disease,",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Specifically C3G: Patients are recruited in accordance to the following criteria: Adult patients diagnosed with C3G Renal biopsy evidencing C3G (confirmed results within 3 months) Patients with low serum C3 (convertase) or FB (factor B) levels and any level of GFR (Glomerular Filtration Rate) GFR=40 ml/min/1.73 m* Supportive care (incl. diuretic, ACE inhibitors, ARB, statins) to be maintained in trial.",
+        "type": "List"
+    },
+    {
+        "text": "40 2. Inhibition of Preformed C3 Convertase that is Stabi- lized by C3Nefs or FB Autoantibodies",
+        "type": "Text"
+    },
+    {
+        "text": "45 ‘Al Inhibition of the preformed and stabilized C3 convertase was measured by C3 Convertase Stabilizing Assay (C3CSA) (described by Zhang et al., Clin J Am Soc Nephrology 7, pp 265-274 (2012)). In this assay, C3 convertase 1s artificially constructed on the surface of sheep erythrocytes. While C3 convertase normally has a half-life of 90 seconds at 37° C., the decay is delayed by addition of IgG purified from patients. Compounds were added at the same time as the patient derived IgG in order to inhibit convertase stabiliza- tion/convertase activity and allow its decay. After IgG (and compound) administration, convertase was allowed to decay for 15 minutes at 30° C. Then, rat serum in EDTA was added for 30 minutes at 37° C. to allow the stabilized C3 con- vertases to activate the terminal complement pathway and lyse the erythrocytes. Erythrocyte lysis 1s associated with hemoglobin release and therefore was quantified via absorp- tion in the supernatant at 415 nm. Maximal hemolysis was determined by lysis at time O and as a background, hemoly- sis in EDTA buffer (full inhibition of all complement path- ways) was measured.",
+        "type": "List"
+    },
+    {
+        "text": "45 Al ‘Al Inhibition of the preformed and stabilized C3 convertase was measured by C3 Convertase Stabilizing Assay (C3CSA) (described by Zhang et al., Clin J Am Soc Nephrology 7, pp 265-274 (2012)). In this assay, C3 convertase 1s artificially constructed on the surface of sheep erythrocytes. While C3 convertase normally has a half-life of 90 seconds at 37° C., the decay is delayed by addition of IgG purified from patients. Compounds were added at the same time as the patient derived IgG in order to inhibit convertase stabiliza- tion/convertase activity and allow its decay. After IgG (and compound) administration, convertase was allowed to decay for 15 minutes at 30° C. Then, rat serum in EDTA was added for 30 minutes at 37° C. to allow the stabilized C3 con- vertases to activate the terminal complement pathway and lyse the erythrocytes. Erythrocyte lysis 1s associated with hemoglobin release and therefore was quantified via absorp- tion in the supernatant at 415 nm. Maximal hemolysis was determined by lysis at time O and as a background, hemoly- sis in EDTA buffer (full inhibition of all complement path- ways) was measured.",
+        "type": "Text"
+    },
+    {
+        "text": "Randomization after run-in period For the trial, patients are vaccinated to eliminate the risk of infections caused by encapsulated organisms, including Streptococcus pneumoniae, Neisseria meningitidis, and Haemophilus influenzae. Vaccination may be effected for example with 23-valent polysaccharide (PS) vaccine, with heptavalent protein—polysaccharide conjugate (PCV- 7) vaccine.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "or",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Pursuant to vaccination, patients are then treated with a daily dosage of a compound of formula (I) of 25, 50, 100 and 200 mg given twice per day (BID).",
+        "type": "Text"
+    },
+    {
+        "text": "The duration of treatment with a compound of formula (I) is at least 2 months.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Inhibition of the stabilized C3 convertase was measured using IgGs from 15 patients with C3G, wherein 7 patients had DDD and 8 patients had C3GN. Four of the patients had antibodies directed against FB, and 11 patients had C3 nephritic factors, i.e. antibodies directed against the C3 convertase. The compound of embodiment 5 inhibited hemolysis of the C3-convertase-loaded erythrocytes by",
+        "type": "Text"
+    },
+    {
+        "text": "The primary endpoint for an effective treatment 1s achieved if proteinuria is reduced by more than 25%. A secondary endpoint for an effective treatment is an improved eGFR as well as an improved histology in renal biopsy, target effects in tissue after 3 months of treatment (if possible, after 6 months of therapy).",
+        "type": "List"
+    },
+    {
+        "text": "US 11,723,901 B2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "9",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "10",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "after manifestation of proteinuria (6 days post serum trans- fer) blocked further progression of the disease. Proteinuria increased from 0.79 on day 6 to 1.93 on day 14 in the control group, but remained stable in the group treated with the FB inhibitor of embodiment 5 (0.74 and 0.81 on days 6 and 14, respectively. The combined histopathology scores was reduced from 2.7 in the vehicle-treated group to 1.1 in the FB inhibitor-treated group, p<0.005).",
+        "type": "Text"
+    },
+    {
+        "text": ">99% compared to the level observed in the presence of EDTA (no complement activity) at compound concentra- tions of 0.15 micromolar.",
+        "type": "Text"
+    },
+    {
+        "text": "3. Inhibition of C3 Deposition on Human Microvascular Endothelial Cells Stimulated with Serum Derived from Patients with Shiga-Toxin Producing F. coli-Induced Hemo- lytic Uremic Syndrome (STEC-HUS or Classical HUS)",
+        "type": "Text"
+    },
+    {
+        "text": "As described in Morigi et al., 2011 (Morigi M, Galbusera M, Gastoldi S, Locatelli, M, Buelli, S, Pezzotta A, Pagani C, Noris M, Gobbi M, Stravalaci M, Rottoli D, Tedesco F, Remuzzi G and Joja C: 2011. Alternative pathway activation of complement by Shiga toxin promotes exuberant C3a formation that triggers microvascular thrombosis. J /mmu- nol. 187(1):172-80), human microvascular endothelial cell line of dermal origin (HMEC-1, ATCC CRL-3243) were plated on glass slides and used when confluent. Cells were activated with 10 uM ADP for 10 minutes and then incu- bated for 4 hours with serum (collected from 3 STEC-HUS patients during the acute phase of the disease or healthy controls) diluted 1:2 with test medium (HBSS with 0.5% BSA), 1n the presence or in the absence of the CFB inhibitor of embodiment 5 at 2 different concentrations (1 and 10 microM). At the end of the incubation step HMEC-1 were treated with fluorochrome-conyugated anti-human C3c. In each experiment, a pool of sera from healthy controls was tested in parallel with patient serum. A confocal inverted laser microscope was used for acquisition of the fluorescent staining on endothelial cell surface. Fifteen fields per sample were acquired and the area occupied by the fluorescent staining was evaluated by auto- matic edge detection using built-in specific functions of the software Image J and expressed as p1xel2 per field analyzed. The highest and lowest values were discarded and the mean+SE was calculated on the remaining 13 fields. Results: Serum from patients with acute STEC-HUS induced a massive C3 deposition on ADP-activated endothe- lial cells in respect to sera from healthy controls (P<0.0001). The presence of the CFB inhibitor of embodiment 5 1n serum of STEC-HUS patients induced a dose-response decrease of C3 deposition on ADP-activated HMEC.-1 (73% reduction for 1 microM and 89% reduction for 10 microM, p<0.0001 for both). Notably the amount of C3 deposits on endothelial cells exposed to STEC-HUS serum added with the CFB inhibitor of embodiment 5 at 10 microM concentration did — 0 — 5 td 0 40",
+        "type": "List"
+    },
+    {
+        "text": "The invention claimed 1s:",
+        "type": "Title"
+    },
+    {
+        "text": "1. A method of treating IZAN Gmmuneglobuline A neph- ropathy), in a patient suffering therefrom, comprising the step of administering an effective amount of a compound of formula (1) or a pharmaceutically acceptable salt thereof to said patient, wherein",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(I)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "R Ry N Ry HZ, Ro",
+        "type": "Figure"
+    },
+    {
+        "text": "R is hydrogen, C,-Cyalkyl, or C,-C,alkoxy;",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "R' is C,-C,alkoxy; R? is C,-C,alkyl: R° is C,-C,alkoxy; C,-C,alkyl; or hydroxy]; R* is phenyl, optionally substituted by —C(O)R*, and R®* is hydroxy, C,-C,alkoxy, or amino. 2. The method of claim 1, wherein R is hydrogen or C,-C,alkyl; R' is C,-C,alkoxy; R? is C,-C,alkyl: R° is C,-C,alkoxy or C,-C,alkyl; and R* is phenyl, optionally substituted by —C(O)R*, and",
+        "type": "List"
+    },
+    {
+        "text": "R*",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "is hydroxyl or C,-C,alkoxy. 3. The method of claim 1, wherein R is hydrogen; R* is C,-C, alkoxy; R? is C,-C, alkyl: R° is C,-C, alkoxy; and R* is phenyl, optionally substituted by —C(O)R®*, and R*",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "not significantly differ from C3 deposits observed on cells exposed to control sera.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "4. FB Inhibitor Prevents the Development and Progres- sion of Passive Heymann Nephritis in Rats",
+        "type": "Text"
+    },
+    {
+        "text": "Passive Heymann nephritis in the rat 1s the most common animal model for membranous nephropathy (see Jefferson J A, Pippin J W and Shankland S J 2010. Experimental Models of membranous nephropathy. Drug Discov Today Dis Models. 7(1-2):27-33). It is induced by the transfer of a polyclonal serum derived from rabbits immunized with rat megalin and manifests inflammatory changes in the kidney that are highly reminiscent with the human disease. Signifi- cant proteinuria is observed 4 days after the antibody transfer and increases until 2 weeks post transfer. Prophylactic treatment with the Factor B inhibitor of embodiment 5 (twice daily oral gavage, 20 or 60 mg/kg/d) significantly reduced proteinuria at 14 days post transfer by 82% or 75% (p<0.0001) and significantly reduced his- topathological changes (combined scores are 2.2, 0.3 and 0.4 for vehicle and the FB inhibitor of embodiment 5 at 20 and 60 mg/kg, respectively, p<0.005). Moreover, in a separate experiment, therapeutic treatment with 60 mg/kg of the FB inhibitor of embodiment 5 (twice daily oral gavage) starting 55 65",
+        "type": "List"
+    },
+    {
+        "text": "is hydroxy. 4. The method of claim 1, wherein the compound of formula (1) is selected from the group consisting of: 4-(1-((S5-methoxy-7-methyl-1H-indol-4-yl)methy1)-4- methylpiperidin-2-yl)benzoic acid; 4-(4-methoxy-1-((5-methoxy-7-methyl-1H-indol-4-yl) methyl )piperidin-2-yl(benzoic acid; 4-(4-ethoxy-1-((S5-methoxy-7-methy]-1H-indol-4-yl) methyl )piperidin-2-yl(benzoic acid; 4-(5-methoxy-1-((5-methoxy-7-methyl-1H-indol-4-yl) methyl )piperidin-2-yl(benzoic acid; 4-(5-hydroxy-1-((5-methoxy-7-methyl-1H-indol-4-yl) methyl )piperidin-2-yl(benzoic acid; ethyl 4-((2S,4R)-1-((5-methoxy-7-methy1]-1H-indol-4-yl) methyl )-4-methylpiperidin-2-yl(benzoate; and ethyl 4-((2S,4S)-4-ethoxy-1-((5-methoxy-7-methyl-1H- indol-4-yl)methyl )piperidin-2-yl(benzoate.",
+        "type": "List"
+    },
+    {
+        "text": "4. The method of claim 1, wherein the compound of formula (1) is selected from the group consisting of: 4-(1-((S5-methoxy-7-methyl-1H-indol-4-yl)methy1)-4-",
+        "type": "Text"
+    },
+    {
+        "text": "Prophylactic treatment with the Factor B inhibitor of embodiment 5 (twice daily oral gavage, 20 or 60 mg/kg/d) significantly reduced proteinuria at 14 days post transfer by 82% or 75% (p<0.0001) and significantly reduced his- topathological changes (combined scores are 2.2, 0.3 and 0.4 for vehicle and the FB inhibitor of embodiment 5 at 20 and 60 mg/kg, respectively, p<0.005). Moreover, in a separate experiment, therapeutic treatment with 60 mg/kg of the FB inhibitor of embodiment 5 (twice daily oral gavage) starting 65",
+        "type": "Text"
+    },
+    {
+        "text": "US 11,723,901 B2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "11",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "12",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "10. The method of claim 1, wherein the compound of formula (1) is 4-((28,4S)-4-ethoxy-1-((S5-methoxy-7-methyl- 1 H-indol-4-yl)methyl)piperidin-2-yl(benzoic acid or a phar- maceutically acceptable salt thereof.",
+        "type": "Text"
+    },
+    {
+        "text": "5. The method of claim 1, wherein the effective amount of the compound of formula (1) or the pharmaceutically accept- able salt thereof is 25 50 100 or 200",
+        "type": "Text"
+    },
+    {
+        "text": "able salt thereof is 25 mg, 50 mg, 100 mg or 200 mg. 6. The method of claim 1, wherein the effective amount of the compound of formula (I) or the pharmaceutically accept- able salt thereof is administered to the patient twice a day. 7. The method of claim 1, wherein 25 mg, 50 mg, 100 mg or 200 mg of the compound of formula (1) or the pharma- ceutically acceptable salt thereof is administered to the patient twice a day.",
+        "type": "List"
+    },
+    {
+        "text": "6. The method of claim 1, wherein the effective amount of the compound of formula (I) or the pharmaceutically accept- able salt thereof is administered to the patient twice a day. 7. The method of claim 1, wherein 25 50 100",
+        "type": "Text"
+    },
+    {
+        "text": "11. The method of claim 10, wherein the effective amount of the compound of formula (1) or the pharmaceutically acceptable salt thereof is 25 mg, 50 mg, 100 mg or 200 mg. 12. The method of claim 10, wherein the effective amount of the compound of formula (1) or the pharmaceutically acceptable salt thereof is administered to the patient twice a",
+        "type": "Text"
+    },
+    {
+        "text": "5",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1, mg, mg, mg or 200 mg of the compound of formula (1) or the pharma- ceutically acceptable salt thereof is administered to the patient twice a day.",
+        "type": "Text"
+    },
+    {
+        "text": "day.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "13. The method of claim 10, wherein 25 mg, 50 mg, 100 mg or 200 mg of the compound of formula (J) or the pharmaceutically acceptable salt thereof is administered to the twice",
+        "type": "Text"
+    },
+    {
+        "text": "8. The method of claim 1, wherein 200 mg of the compound of formula (1) or the pharmaceutically acceptable salt thereof is administered to the patient twice a day.",
+        "type": "Text"
+    },
+    {
+        "text": "patient a day. 14. The method of claim 10, wherein 200 mg of the compound of formula (1) or the pharmaceutically acceptable salt thereof is administered to the patient twice a day.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "9. The method of claim 1, wherein the compound of formula (I) or a pharmaceutically acceptable salt thereof is administered to the patient in a unit dosage of 0.1-1000 mg, 0.1-500 mg, 0.1-250 mg, 0.1-150 mg, 0.5-100 mg, or 0.5-50 mg.",
+        "type": "List"
+    },
+    {
+        "text": "15",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "*",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "*",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "*",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "*",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "*",
+        "type": "UncategorizedText"
+    }
+]

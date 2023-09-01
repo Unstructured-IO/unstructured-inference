@@ -1,0 +1,338 @@
+[
+    {
+        "text": "US011723901B2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "a2) United States Patent Eder et al.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "US 11,723,901 B2 Aug. 15, 2023 (10) Patent No.: (45) Date of Patent:",
+        "type": "Title"
+    },
+    {
+        "text": "(54)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "USES OF PIPERIDINYL-INDOLE DERIVATIVES",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "USPC ie ccccceeccceeceesesesneneneaeeeeeeeeceseeeeeens 514/323 See application file for complete search history.",
+        "type": "Text"
+    },
+    {
+        "text": "(71)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Applicant: NOVARTIS AG, Basel (CH)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(56)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "References Cited",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(72)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Jorg Eder, Rheinfelden (DE); Richard Alexander Harrison, Shropshire (GB); Boerje Haraldsson, Basel (CH); Anna Svenja Schubart, Basel (CH)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Inventors:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "U.S. PATENT DOCUMENTS",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2008/0233113",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Al*",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "9/2008",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Bansal",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "A61P 5/00",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "wee",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "514/1.1",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Adams",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2016/0152605",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "6/2016",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Al",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(73)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Assignee:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Novartis AG, Basel (CH)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "FOREIGN PATENT DOCUMENTS",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "* )",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Notice:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Subject to any disclaimer, the term of this J y patent is extended or adjusted under 35 U.S.C. 154(b) by 0 days.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1/2014 1/2015 6/2017",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "WO WO WO",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2014002058 2015009616 2017/109208",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "A2 Al Al",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "— 16/642,905",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(21)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Appl. No.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "OTHER PUBLICATIONS",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(22)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PCT Filed:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Aug. 30, 2018",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Karpman et al. “Complement contribute to the pathogenesis of Shiga toxin-associated hemolytic uremic syndrome,” Kidney Inter- national, 2016, vol. 90, pp. 726-739 (Year: 2016).* Holers, Complement, Clinical Immunology, 1995, 363-391, chapter 24.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(86)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PCT No.:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PCT/IB2018/056618",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "§ 371 (c)(), (2) Date:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Feb. 28, 2020",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Konar, et al., Eculizumab treatment and impaired opsonophagocytic killing of meningococci by whole blood from immunized adults, Blood, Aug. 17, 2017, 891-899, 130(7). Lesavre, et al., Mechanism of action of factor D of the alternative complement pathway, J Exp Med., Dec. 1978, 1498-1509, 148. Volanakis, et al., Renal filtration and catabolism of complement protein D, N Engl J Med., 1985, 395-399, 312(7).",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(87)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PCT Pub. No.:",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "WO2019/043609",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PCT Pub. Date: Mar. 7, 2019",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(65)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Prior Publication Data",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "US 2020/0338059 Al",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Oct. 29, 2020",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "* cited by examiner",
+        "type": "Text"
+    },
+    {
+        "text": "(30)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Foreign Application Priority Data",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Primary Examiner — Shengjun Wang (74) Attorney, Agent, or Firm — Francine F. Li",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "= (EP)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "once eee eeeee",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Aug. 31, 2017",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "17188870",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(51)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Int. Cl.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "ABSTRACT",
+        "type": "Title"
+    },
+    {
+        "text": "(57)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(2006.01) (2006.01) (2006.01)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "AGIK 31/445",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "AGIK 31/454",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "The present invention relates to the novel use of certain piperidinyl-indole derivatives in the treatment of patients suffering from renal diseases or disorders, and in particular for the treatment of patients suffering from C3G (C3 glom- erulopathy) and IgAN (gA nephropathy).",
+        "type": "Text"
+    },
+    {
+        "text": "AGIP 13/12",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(52)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "U.S. Cl.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "AGIK 31/454 (2013.01); A6IP 13/12 (2018.01)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "CPC",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "we.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(58)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Field of Classification Search",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "CPC wieieececceecceeeeeeeeeees A61K 31/4439; A61P 13/12",
+        "type": "Text"
+    },
+    {
+        "text": "14 Claims, No Drawings",
+        "type": "UncategorizedText"
+    }
+]
