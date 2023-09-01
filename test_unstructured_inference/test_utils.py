@@ -6,10 +6,7 @@ import pytest
 from PIL import Image
 
 from unstructured_inference import utils
-from unstructured_inference.constants import (
-    ANNOTATION_RESULT_WITH_IMAGE,
-    ANNOTATION_RESULT_WITH_PLOT,
-)
+from unstructured_inference.constants import AnnotationResult
 from unstructured_inference.inference.layout import DocumentLayout
 from unstructured_inference.utils import (
     LazyDict,
@@ -108,7 +105,7 @@ def test_annotate_layout_elements_with_image_result():
             annotation_data_map,
             output_dir_path,
             output_f_basename,
-            result=ANNOTATION_RESULT_WITH_IMAGE,
+            result=AnnotationResult.IMAGE,
         )
 
     expected_output_f_path = os.path.join(output_dir_path, "test_output_2_final.jpg")
@@ -127,7 +124,7 @@ def test_annotate_layout_elements_with_plot_result():
             annotation_data_map,
             output_dir_path,
             output_f_basename,
-            result=ANNOTATION_RESULT_WITH_PLOT,
+            result=AnnotationResult.PLOT,
         )
 
     mock_show_plot.assert_called_with("mock_image", desired_width=14)
