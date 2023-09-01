@@ -1,4 +1,4 @@
-## 0.5.20-dev0
+## 0.5.20
 
 * Adds YoloX quantized model
 
