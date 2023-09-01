@@ -70,7 +70,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             return tokens
         except ModuleNotFoundError:
             logging.warning(    
-                "No module named 'unstructured_paddleocr', falling back to tesseract",
+                "No module named 'ppocronnx', falling back to tesseract",
             )
             pass
         zoom = 6

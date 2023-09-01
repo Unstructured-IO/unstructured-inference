@@ -263,17 +263,16 @@ class ImageTextRegion(TextRegion):
 def ocr(text_block: TextRegion, image: Image.Image, languages: str = "eng") -> str:
     """Runs a cropped text block image through and OCR agent."""
     logger.debug("Running OCR on text block ...")
-    tesseract.load_agent(languages=languages)
     padded_block = text_block.pad(12)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
-    agent = tesseract.ocr_agents.get(languages)
-    if agent is None:
-        raise RuntimeError("OCR agent is not loaded for {languages}.")
-
-    try:
-        return agent.detect(cropped_image)
-    except tesseract.TesseractError:
-        return ""
+    from ppocronnx.predict_system import TextSystem
+    text_sys = TextSystem()
+    detections = text_sys.detect_and_ocr(np.array(cropped_image))
+    recognized_text = ""
+    for detection in detections:
+        text = detection.ocr_text
+        recognized_text += text
+    return recognized_text
 
 
 def needs_ocr(

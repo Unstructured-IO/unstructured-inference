@@ -553,20 +553,6 @@ def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
       dictionary will result in its associated bounding box being ignored.
     """
 
-    # levels = ocr_data["level"]
-    # text_regions = []
-    # for i, level in enumerate(levels):
-    #     (l, t, w, h) = (
-    #         ocr_data["left"][i],
-    #         ocr_data["top"][i],
-    #         ocr_data["width"][i],
-    #         ocr_data["height"][i],
-    #     )
-    #     (x1, y1, x2, y2) = l, t, l + w, t + h
-    #     text = ocr_data["text"][i]
-    #     if text:
-    #         text_region = TextRegion(x1, y1, x2, y2, text)
-    #         text_regions.append(text_region)
     text_regions = []
     for detection in ocr_data:
         (xmin, ymin), _, (xmax, ymax), _ = detection.box
