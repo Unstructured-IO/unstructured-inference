@@ -19,9 +19,6 @@ class MockModel(UnstructuredObjectDetectionModel):
         self.initializer = mock.MagicMock()
         super().__init__()
 
-    def initialize(self, *args, **kwargs):
-        return self.initializer(self, *args, **kwargs)
-
     def predict(self, x: Any) -> Any:
         return []
 
