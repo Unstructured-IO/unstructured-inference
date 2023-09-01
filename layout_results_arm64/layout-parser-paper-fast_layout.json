@@ -1,0 +1,138 @@
+[
+    {
+        "text": "LayoutParser: A Uniﬁed Toolkit for Deep\nLearning Based Document Image Analysis\n",
+        "type": "Title"
+    },
+    {
+        "text": "Zejiang Shen1 ((cid:0)), Ruochen Zhang2, Melissa Dell3, Benjamin Charles Germain\nLee4, Jacob Carlson3, and Weining Li5\n",
+        "type": "Text"
+    },
+    {
+        "text": "1 Allen Institute for AI\nshannons@allenai.org\n2 Brown University\nruochen zhang@brown.edu\n3 Harvard University\n{melissadell,jacob carlson}@fas.harvard.edu\n4 University of Washington\nbcgl@cs.washington.edu\n5 University of Waterloo\nw422li@uwaterloo.ca\n",
+        "type": "List"
+    },
+    {
+        "text": "1\n2\n0\n2\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": " \n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "n\nu\nJ\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": " \n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1\n2\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": " \n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": " \n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "]\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "V\nC\n.\ns\nc\n[\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Abstract. Recent advances in document image analysis (DIA) have been\nprimarily driven by the application of neural networks. Ideally, research\noutcomes could be easily deployed in production and extended for further\ninvestigation. However, various factors like loosely organized codebases\nand sophisticated model conﬁgurations complicate the easy reuse of im-\nportant innovations by a wide audience. Though there have been on-going\neﬀorts to improve reusability and simplify deep learning (DL) model\ndevelopment in disciplines like natural language processing and computer\nvision, none of them are optimized for challenges in the domain of DIA.\nThis represents a major gap in the existing toolkit, as DIA is central to\nacademic research across a wide range of disciplines in the social sciences\nand humanities. This paper introduces LayoutParser, an open-source\nlibrary for streamlining the usage of DL in DIA research and applica-\ntions. The core LayoutParser library comes with a set of simple and\nintuitive interfaces for applying and customizing DL models for layout de-\ntection, character recognition, and many other document processing tasks.\nTo promote extensibility, LayoutParser also incorporates a community\nplatform for sharing both pre-trained models and full document digiti-\nzation pipelines. We demonstrate that LayoutParser is helpful for both\nlightweight and large-scale digitization pipelines in real-word use cases.\nThe library is publicly available at https://layout-parser.github.io.\n",
+        "type": "Text"
+    },
+    {
+        "text": " \n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": " \n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2\nv\n8\n4\n3\n5\n1\n.\n3\n0\n1\n2\n:\nv\ni\nX\nr\na\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Keywords: Document Image Analysis · Deep Learning · Layout Analysis\n· Character Recognition · Open Source library · Toolkit.\n",
+        "type": "Text"
+    },
+    {
+        "text": "Introduction\n",
+        "type": "Title"
+    },
+    {
+        "text": "1\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Deep Learning(DL)-based approaches are the state-of-the-art for a wide range of\ndocument image analysis (DIA) tasks including document image classiﬁcation [11,\n",
+        "type": "Text"
+    },
+    {
+        "text": "2\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Z. Shen et al.\n",
+        "type": "Title"
+    },
+    {
+        "text": "37], layout detection [38, 22], table detection [26], and scene text detection [4].\nA generalized learning-based framework dramatically reduces the need for the\nmanual speciﬁcation of complicated rules, which is the status quo with traditional\nmethods. DL has the potential to transform DIA pipelines and beneﬁt a broad\nspectrum of large-scale document digitization projects.\n",
+        "type": "Text"
+    },
+    {
+        "text": "However, there are several practical diﬃculties for taking advantages of re-\ncent advances in DL-based methods: 1) DL models are notoriously convoluted\nfor reuse and extension. Existing models are developed using distinct frame-\nworks like TensorFlow [1] or PyTorch [24], and the high-level parameters can\nbe obfuscated by implementation details [8]. It can be a time-consuming and\nfrustrating experience to debug, reproduce, and adapt existing models for DIA,\nand many researchers who would beneﬁt the most from using these methods lack\nthe technical background to implement them from scratch. 2) Document images\ncontain diverse and disparate patterns across domains, and customized training\nis often required to achieve a desirable detection accuracy. Currently there is no\nfull-ﬂedged infrastructure for easily curating the target document image datasets\nand ﬁne-tuning or re-training the models. 3) DIA usually requires a sequence of\nmodels and other processing to obtain the ﬁnal outputs. Often research teams use\nDL models and then perform further document analyses in separate processes,\nand these pipelines are not documented in any central location (and often not\ndocumented at all). This makes it diﬃcult for research teams to learn about how\nfull pipelines are implemented and leads them to invest signiﬁcant resources in\nreinventing the DIA wheel.\n",
+        "type": "Text"
+    },
+    {
+        "text": "LayoutParser provides a uniﬁed toolkit to support DL-based document image\nanalysis and processing. To address the aforementioned challenges, LayoutParser\nis built with the following components:\n",
+        "type": "Text"
+    },
+    {
+        "text": "1. An oﬀ-the-shelf toolkit for applying DL models for layout detection, character\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "recognition, and other DIA tasks (Section 3)\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2. A rich repository of pre-trained neural network models (Model Zoo) that\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "underlies the oﬀ-the-shelf usage\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3. Comprehensive tools for eﬃcient document image data annotation and model\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "tuning to support diﬀerent levels of customization\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "4. A DL model hub and community platform for the easy sharing, distribu-\ntion, and discussion of DIA models and pipelines, to promote reusability,\nreproducibility, and extensibility (Section 4)\n",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "The library implements simple and intuitive Python APIs without sacriﬁcing\ngeneralizability and versatility, and can be easily installed via pip. Its convenient\nfunctions for handling document image data can be seamlessly integrated with\nexisting DIA pipelines. With detailed documentations and carefully curated\ntutorials, we hope this tool will beneﬁt a variety of end-users, and will lead to\nadvances in applications in both industry and academic research.\n",
+        "type": "Text"
+    },
+    {
+        "text": "LayoutParser is well aligned with recent eﬀorts for improving DL model\nreusability in other disciplines like natural language processing [8, 34] and com-\nputer vision [35], but with a focus on unique challenges in DIA. We show\nLayoutParser can be applied in sophisticated and large-scale digitization projects\n",
+        "type": "Text"
+    }
+]
