@@ -13,11 +13,12 @@ from unstructured_inference.models.unstructuredmodel import (
 class MockModel(UnstructuredObjectDetectionModel):
     call_count = 0
 
-    initialize = mock.MagicMock()
-
     def __init__(self):
         self.initializer = mock.MagicMock()
         super().__init__()
+
+    def initialize(self, *args, **kwargs):
+        return self.initializer(self, *args, **kwargs)
 
     def predict(self, x: Any) -> Any:
         return []
