@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements/test.in
 #
-anyio==3.7.1
+anyio==4.0.0
     # via httpcore
 black==23.7.0
     # via -r requirements/test.in

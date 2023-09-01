@@ -1,6 +1,11 @@
-## 0.5.19-dev0
+## 0.5.20-dev0
 
 * Adds YoloX quantized model
+
+## 0.5.19
+
+* Add functionality to supplement detected layout with elements from the full page OCR
+* Add functionality to annotate any layout(extracted, inferred, OCR) on a page
 
 ## 0.5.18
 
