@@ -1,7 +1,7 @@
 import os
 from unstructured_inference.inference.layout import DocumentLayout
 import platform  # Import the platform module to get system information
-
+import json
 # Directory where the files are located
 input_directory = "sample-docs"
 
@@ -38,7 +38,7 @@ for file_name in all_files:
                 elements_dict_list.append(element.to_dict())
         
         # Write the layout elements to the output JSON file
-        with open(output_json_file, "w", encoding="utf-8") as json_file:
+        with open(output_file, "w", encoding="utf-8") as json_file:
             json.dump(elements_dict_list, json_file)
 
         print(f"Layout analysis for {file_name} completed. Results saved to {output_file}")
