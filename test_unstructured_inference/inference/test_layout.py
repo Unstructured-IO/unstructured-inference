@@ -849,7 +849,7 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             element_extraction_model=element_extraction_model,
             ocr_strategy="auto",
             ocr_languages="eng",
-            ocr_mode=OCRMode.FULL_PAGE,
+            ocr_mode=OCRMode.FULL_PAGE.value,
             fixed_layouts=None,
             extract_tables=False,
             pdf_image_dpi=200,
