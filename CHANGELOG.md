@@ -1,3 +1,7 @@
+## 0.5.19
+
+* Add object-detection classification probabilities to LayoutElement for all currently implemented object detection models
+
 ## 0.5.18
 
 * Fix for incorrect type assignation at ingest test

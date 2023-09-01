@@ -141,6 +141,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
                     y2 * height_conversion,
                     text=None,
                     type=detected_class,
+                    prob=conf,
                 )
 
                 regions.append(region)
