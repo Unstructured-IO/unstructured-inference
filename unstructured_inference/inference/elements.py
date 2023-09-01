@@ -263,17 +263,21 @@ class ImageTextRegion(TextRegion):
 def ocr(text_block: TextRegion, image: Image.Image, languages: str = "eng") -> str:
     """Runs a cropped text block image through and OCR agent."""
     logger.debug("Running OCR on text block ...")
-    tesseract.load_agent(languages=languages)
     padded_block = text_block.pad(12)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
-    agent = tesseract.ocr_agents.get(languages)
-    if agent is None:
-        raise RuntimeError("OCR agent is not loaded for {languages}.")
-
     try:
-        return agent.detect(cropped_image)
-    except tesseract.TesseractError:
-        logger.warning("TesseractError: Skipping region", exc_info=True)
+        from unstructured_inference.models import paddle_ocr
+        paddle_result = paddle_ocr.load_agent().ocr(np.array(cropped_image), cls=True)
+        recognized_text = ""
+        for idx in range(len(paddle_result)):
+            res = paddle_result[idx]
+            for line in res:
+                recognized_text += line[1][0]
+        return recognized_text
+    except ModuleNotFoundError:
+        logging.warning(
+            "No module named 'unstructured_paddleocr', do nothing here",
+        )
         return ""
 
 
