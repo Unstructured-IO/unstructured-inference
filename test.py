@@ -28,13 +28,18 @@ for file_name in all_files:
         layout = DocumentLayout.from_file(file_path)
         
         # Construct the output file path for storing the layout results
-        output_file = os.path.join(output_directory, f"{os.path.splitext(file_name)[0]}_layout.txt")
+        output_file = os.path.join(output_directory, f"{file_name}_layout.json")
         
-        # Write the layout output to the output file
-        with open(output_file, "w", encoding="utf-8") as output_file:
-            for page in layout.pages:
-                for element in page.elements:
-                    output_file.write(element.text + "\n")
+        # Create a list to store the layout elements as dictionaries
+        elements_dict_list = []
+        
+        for page in layout.pages:
+            for element in page.elements:
+                elements_dict_list.append(element.to_dict())
+        
+        # Write the layout elements to the output JSON file
+        with open(output_json_file, "w", encoding="utf-8") as json_file:
+            json.dump(elements_dict_list, json_file)
 
         print(f"Layout analysis for {file_name} completed. Results saved to {output_file}")
     except Exception as e:
