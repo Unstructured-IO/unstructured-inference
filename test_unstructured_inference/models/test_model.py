@@ -58,7 +58,7 @@ def test_raises_uninitialized():
 def test_model_initializes_once():
     from unstructured_inference.inference import layout
 
-    with mock.patch.object(models, "UnstructuredYoloXModel", MockModel), mock.patch.object(
+    with mock.patch.object(models, "UnstructuredDetectronONNXModel", MockModel), mock.patch.object(
         models,
         "models",
         {},
