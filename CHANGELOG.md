@@ -1,3 +1,8 @@
+## 0.5.21
+
+* adds `safe_division` to replae 0 with machine epsilon for `float` to avoid division by 0
+* apply `safe_division` to area overlap calculations in `unstructured_inference/inference/elements.py`
+
 ## 0.5.20
 
 * Adds YoloX quantized model
