@@ -9,6 +9,7 @@ import pytest
 from PIL import Image
 
 import unstructured_inference.models.base as models
+from unstructured_inference.constants import OCRMode
 from unstructured_inference.inference import elements, layout, layoutelement
 from unstructured_inference.models import chipper, detectron2, tesseract
 from unstructured_inference.models.unstructuredmodel import (
@@ -848,7 +849,7 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             element_extraction_model=element_extraction_model,
             ocr_strategy="auto",
             ocr_languages="eng",
-            ocr_mode="entire_page",
+            ocr_mode=OCRMode.FULL_PAGE.value,
             fixed_layouts=None,
             extract_tables=False,
             pdf_image_dpi=200,

@@ -1,6 +1,15 @@
-## 0.5.19
+## 0.5.21-dev0
 
 * Add object-detection classification probabilities to LayoutElement for all currently implemented object detection models
+
+## 0.5.20
+
+* Adds YoloX quantized model
+
+## 0.5.19
+
+* Add functionality to supplement detected layout with elements from the full page OCR
+* Add functionality to annotate any layout(extracted, inferred, OCR) on a page
 
 ## 0.5.18
 

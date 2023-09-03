@@ -13,8 +13,6 @@ from unstructured_inference.models.unstructuredmodel import (
 class MockModel(UnstructuredObjectDetectionModel):
     call_count = 0
 
-    initialize = mock.MagicMock()
-
     def __init__(self):
         self.initializer = mock.MagicMock()
         super().__init__()

@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Optional
+from typing import Collection, List, Optional, cast
 
 from layoutparser.elements.layout import TextBlock
 from PIL import Image
 
+from unstructured_inference.constants import SUBREGION_THRESHOLD_FOR_OCR
 from unstructured_inference.inference.elements import (
     ImageTextRegion,
     Rectangle,
     TextRegion,
     grow_region_to_match_region,
+    partition_groups_from_regions,
     region_bounding_boxes_are_almost_the_same,
 )
 from unstructured_inference.models import tables
@@ -83,6 +85,7 @@ def merge_inferred_layout_with_extracted_layout(
     inferred_layout: Collection[LayoutElement],
     extracted_layout: Collection[TextRegion],
     ocr_layout: Optional[List[TextRegion]] = None,
+    supplement_with_ocr_elements: bool = True,
     same_region_threshold: float = 0.75,
     subregion_threshold: float = 0.75,
 ) -> List[LayoutElement]:
@@ -155,15 +158,24 @@ def merge_inferred_layout_with_extracted_layout(
             inferred_region.text = aggregate_ocr_text_by_block(
                 ocr_layout,
                 inferred_region,
+                SUBREGION_THRESHOLD_FOR_OCR,
             )
-    out_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
-    return out_layout
+        out_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
+        final_layout = (
+            supplement_layout_with_ocr_elements(out_layout, ocr_layout)
+            if supplement_with_ocr_elements
+            else out_layout
+        )
+    else:
+        final_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
+
+    return final_layout
 
 
 def merge_inferred_layout_with_ocr_layout(
     inferred_layout: List[LayoutElement],
     ocr_layout: List[TextRegion],
-    subregion_threshold: float = 0.5,
+    supplement_with_ocr_elements: bool = True,
 ) -> List[LayoutElement]:
     """
     Merge the inferred layout with the OCR-detected text regions.
@@ -177,30 +189,132 @@ def merge_inferred_layout_with_ocr_layout(
         inferred_region.text = aggregate_ocr_text_by_block(
             ocr_layout,
             inferred_region,
-            subregion_threshold,
+            SUBREGION_THRESHOLD_FOR_OCR,
         )
-    return inferred_layout
+
+    final_layout = (
+        supplement_layout_with_ocr_elements(inferred_layout, ocr_layout)
+        if supplement_with_ocr_elements
+        else inferred_layout
+    )
+
+    return final_layout
 
 
 def aggregate_ocr_text_by_block(
     ocr_layout: List[TextRegion],
     region: TextRegion,
-    subregion_threshold: float = 0.5,
+    subregion_threshold: float,
 ) -> Optional[str]:
     """Extracts the text aggregated from the regions of the ocr layout that lie within the given
     block."""
 
     extracted_texts = []
 
-    for orc_region in ocr_layout:
-        ocr_region_is_subregion_of_given_region = orc_region.is_almost_subregion_of(
+    for ocr_region in ocr_layout:
+        ocr_region_is_subregion_of_given_region = ocr_region.is_almost_subregion_of(
             region,
             subregion_threshold=subregion_threshold,
         )
-        if ocr_region_is_subregion_of_given_region and orc_region.text:
-            extracted_texts.append(orc_region.text)
+        if ocr_region_is_subregion_of_given_region and ocr_region.text:
+            extracted_texts.append(ocr_region.text)
 
     return " ".join(extracted_texts) if extracted_texts else None
+
+
+def supplement_layout_with_ocr_elements(
+    layout: List[LayoutElement],
+    ocr_layout: List[TextRegion],
+) -> List[LayoutElement]:
+    """
+    Supplement the existing layout with additional OCR-derived elements.
+
+    This function takes two lists: one list of pre-existing layout elements (`layout`)
+    and another list of OCR-detected text regions (`ocr_layout`). It identifies OCR regions
+    that are subregions of the elements in the existing layout and removes them from the
+    OCR-derived list. Then, it appends the remaining OCR-derived regions to the existing layout.
+
+    Parameters:
+    - layout (List[LayoutElement]): A list of existing layout elements, each of which is
+                                    an instance of `LayoutElement`.
+    - ocr_layout (List[TextRegion]): A list of OCR-derived text regions, each of which is
+                                     an instance of `TextRegion`.
+
+    Returns:
+    - List[LayoutElement]: The final combined layout consisting of both the original layout
+                           elements and the new OCR-derived elements.
+
+    Note:
+    - The function relies on `is_almost_subregion_of()` method to determine if an OCR region
+      is a subregion of an existing layout element.
+    - It also relies on `get_elements_from_ocr_regions()` to convert OCR regions to layout elements.
+    - The `SUBREGION_THRESHOLD_FOR_OCR` constant is used to specify the subregion matching
+     threshold.
+    """
+
+    ocr_regions_to_remove = []
+    for ocr_region in ocr_layout:
+        for el in layout:
+            ocr_region_is_subregion_of_out_el = ocr_region.is_almost_subregion_of(
+                cast(Rectangle, el),
+                SUBREGION_THRESHOLD_FOR_OCR,
+            )
+            if ocr_region_is_subregion_of_out_el:
+                ocr_regions_to_remove.append(ocr_region)
+                break
+
+    ocr_regions_to_add = [region for region in ocr_layout if region not in ocr_regions_to_remove]
+    if ocr_regions_to_add:
+        ocr_elements_to_add = get_elements_from_ocr_regions(ocr_regions_to_add)
+        final_layout = layout + ocr_elements_to_add
+    else:
+        final_layout = layout
+
+    return final_layout
+
+
+def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
+    """
+    Merge a list of TextRegion objects into a single TextRegion.
+
+    Parameters:
+    - group (List[TextRegion]): A list of TextRegion objects to be merged.
+
+    Returns:
+    - TextRegion: A single merged TextRegion object.
+    """
+
+    min_x1 = min([tr.x1 for tr in regions])
+    min_y1 = min([tr.y1 for tr in regions])
+    max_x2 = max([tr.x2 for tr in regions])
+    max_y2 = max([tr.y2 for tr in regions])
+
+    merged_text = " ".join([tr.text for tr in regions if tr.text])
+
+    return TextRegion(min_x1, min_y1, max_x2, max_y2, merged_text)
+
+
+def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
+    """
+    Get layout elements from OCR regions
+    """
+
+    grouped_regions = cast(
+        List[List[TextRegion]],
+        partition_groups_from_regions(ocr_regions),
+    )
+    merged_regions = [merge_text_regions(group) for group in grouped_regions]
+    return [
+        LayoutElement(
+            r.x1,
+            r.y1,
+            r.x2,
+            r.y2,
+            text=r.text,
+            type="UncategorizedText",
+        )
+        for r in merged_regions
+    ]
 
 
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
