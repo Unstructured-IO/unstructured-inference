@@ -37,7 +37,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
             "model.onnx",
         ),
         label_map=DEFAULT_LABEL_MAP,
-        confidence_threshold=0.8,
+        confidence_threshold=0.5,
     ),
     "detectron2_quantized": {
         "model_path": os.path.join(
