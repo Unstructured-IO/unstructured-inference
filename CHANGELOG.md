@@ -1,6 +1,11 @@
-## 0.5.21-dev0
+## 0.5.22-dev0
 
 * Add object-detection classification probabilities to LayoutElement for all currently implemented object detection models
+
+## 0.5.21
+
+* adds `safe_division` to replae 0 with machine epsilon for `float` to avoid division by 0
+* apply `safe_division` to area overlap calculations in `unstructured_inference/inference/elements.py`
 
 ## 0.5.20
 
