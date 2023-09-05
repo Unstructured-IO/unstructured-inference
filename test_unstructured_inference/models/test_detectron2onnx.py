@@ -70,6 +70,14 @@ def test_inference():
         assert len(elements) == 1
         element = elements[0]
         (x1, y1), _, (x2, y2), _ = element.coordinates
+        assert hasattr(
+            element,
+            "prob",
+        )  # NOTE(pravin) New Assertion to Make Sure element has probabilities
+        assert isinstance(
+            element.prob,
+            float,
+        )  # NOTE(pravin) New Assertion to Make Sure Populated Probability is Float
         # NOTE(alan): The bbox coordinates get resized, so check their relative proportions
         assert x2 / x1 == pytest.approx(3.0)  # x1 == 1, x2 == 3 before scaling
         assert y2 / y1 == pytest.approx(2.0)  # y1 == 2, y2 == 4 before scaling

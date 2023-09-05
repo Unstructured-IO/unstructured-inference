@@ -1,3 +1,7 @@
+## 0.5.22
+
+* Add object-detection classification probabilities to LayoutElement for all currently implemented object detection models
+
 ## 0.5.21
 
 * adds `safe_division` to replae 0 with machine epsilon for `float` to avoid division by 0

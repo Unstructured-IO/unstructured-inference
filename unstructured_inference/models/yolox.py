@@ -141,9 +141,9 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         for det in dets:
             # Each detection should have (x1,y1,x2,y2,probability,class) format
             # being (x1,y1) the top left and (x2,y2) the bottom right
-            x1, y1, x2, y2, _, class_id = det.tolist()
+            x1, y1, x2, y2, prob, class_id = det.tolist()
             detected_class = self.layout_classes[int(class_id)]
-            region = LayoutElement(x1, y1, x2, y2, text=None, type=detected_class)
+            region = LayoutElement(x1, y1, x2, y2, text=None, type=detected_class, prob=prob)
 
             regions.append(region)
 
