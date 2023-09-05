@@ -143,3 +143,4 @@ dmypy.json
 .vscode/
 
 sample-docs/*_images
+examples/**/output

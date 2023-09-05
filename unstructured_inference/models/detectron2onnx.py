@@ -1,10 +1,12 @@
-from pathlib import Path
+import os
 from typing import Dict, Final, List, Optional, Union
 
 import cv2
 import numpy as np
 import onnxruntime
 from huggingface_hub import hf_hub_download
+from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
+from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
 from unstructured_inference.inference.layoutelement import LayoutElement
@@ -27,7 +29,7 @@ DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
 
 # NOTE(alan): Entries are implemented as LazyDicts so that models aren't downloaded until they are
 # needed.
-MODEL_TYPES: Dict[Optional[str], LazyDict] = {
+MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
     "detectron2_onnx": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download,
@@ -37,6 +39,15 @@ MODEL_TYPES: Dict[Optional[str], LazyDict] = {
         label_map=DEFAULT_LABEL_MAP,
         confidence_threshold=0.8,
     ),
+    "detectron2_quantized": {
+        "model_path": os.path.join(
+            HUGGINGFACE_HUB_CACHE,
+            "detectron2_quantized",
+            "detectrin2_quantized.onnx",
+        ),
+        "label_map": DEFAULT_LABEL_MAP,
+        "confidence_threshold": 0.8,
+    },
     "detectron2_mask_rcnn": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download,
@@ -80,13 +91,17 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
 
     def initialize(
         self,
-        model_path: Union[str, Path],
+        model_path: str,
         label_map: Dict[int, str],
         confidence_threshold: Optional[float] = None,
     ):
         """Loads the detectron2 model using the specified parameters"""
-        logger.info("Loading the Detectron2 layout model ...")
-        self.model_path = str(model_path)
+        if not os.path.exists(model_path) and "detectron2_quantized" in model_path:
+            logger.info("Quantized model don't currently exists, quantizing now...")
+            os.mkdir("".join(os.path.split(model_path)[:-1]))
+            source_path = MODEL_TYPES["detectron2_onnx"]["model_path"]
+            quantize_dynamic(source_path, model_path, weight_type=QuantType.QUInt8)
+
         self.model = onnxruntime.InferenceSession(
             model_path,
             providers=[
@@ -95,6 +110,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
                 "CPUExecutionProvider",
             ],
         )
+        self.model_path = model_path
         self.label_map = label_map
         if confidence_threshold is None:
             confidence_threshold = 0.5
