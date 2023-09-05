@@ -68,7 +68,8 @@ def test_model_initializes_once():
         doc = layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf")
         doc.pages[0].detection_model.initializer.assert_called_once()
         assert hasattr(
-            doc.pages[0].elements[0], "prob",
+            doc.pages[0].elements[0],
+            "prob",
         )  # NOTE(pravin) New Assertion to Make Sure Elements have probability attribute
         assert (
             doc.pages[0].elements[0].prob is None
