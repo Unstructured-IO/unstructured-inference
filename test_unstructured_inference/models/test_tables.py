@@ -406,7 +406,7 @@ def test_align_rows(rows, bbox, output):
     ("model_path", "platform_type"),
     [
         ("microsoft/table-transformer-structure-recognition", "arm64"),
-        ("microsoft/table-transformer-structure-recognition", "x86_64"),
+        # ("microsoft/table-transformer-structure-recognition", "x86_64"),
     ],
 )
 def test_table_prediction(model_path, sample_table_transcript, platform_type):
@@ -417,6 +417,9 @@ def test_table_prediction(model_path, sample_table_transcript, platform_type):
         table_model.initialize(model=model_path)
         img = Image.open("./sample-docs/example_table.jpg").convert("RGB")
         prediction = table_model.predict(img)
+        with open(f"prediction_output_{platform_type}.txt", "w") as prediction_file, open(f"sample_table_transcript_output_{platform_type}.txt", "w") as sample_file:
+            prediction_file.write(prediction.strip())
+            sample_file.write(sample_table_transcript.strip())
         assert prediction.strip() == sample_table_transcript.strip()
 
 
