@@ -1,3 +1,7 @@
+## 0.5.23-dev0
+
+* Fix for incorrect order when perform OCR supplementation
+
 ## 0.5.22
 
 * Add object-detection classification probabilities to LayoutElement for all currently implemented object detection models
