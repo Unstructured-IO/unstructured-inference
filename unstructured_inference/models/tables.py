@@ -120,8 +120,8 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             outputs_structure = self.model(**encoding)
 
         tokens = self.get_tokens(x=x)
-
-        sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
+        # sort tokens top down then left to right
+        tokens = sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
 
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
