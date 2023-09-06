@@ -1,3 +1,7 @@
+## 0.5.23
+
+* use sorted tokens (top down then left to right) in table layout recognition
+
 ## 0.5.22
 
 * Add object-detection classification probabilities to LayoutElement for all currently implemented object detection models
