@@ -288,6 +288,7 @@ class PageLayout:
             merged_layout = merge_inferred_layout_with_extracted_layout(
                 inferred_layout=inferred_layout,
                 extracted_layout=self.layout,
+                page_image_size=self.image.size,
                 ocr_layout=ocr_layout,
                 supplement_with_ocr_elements=self.supplement_with_ocr_elements,
                 **threshold_kwargs,
