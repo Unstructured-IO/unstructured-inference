@@ -17,7 +17,7 @@ def mock_numpy_image():
 
 # TODO(alan): Make a better test layout
 @pytest.fixture()
-def sample_layout():
+def mock_embedded_text_regions():
     return [
         EmbeddedTextRegion(
             x1=453.00277777777774,

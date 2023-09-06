@@ -87,8 +87,8 @@ def test_minimal_containing_rect():
         assert rect2.is_in(big_rect)
 
 
-def test_partition_groups_from_regions(sample_layout):
-    words = sample_layout
+def test_partition_groups_from_regions(mock_embedded_text_regions):
+    words = mock_embedded_text_regions
     groups = elements.partition_groups_from_regions(words)
     assert len(groups) == 1
     sorted_groups = sorted(groups, key=lambda group: group[0].y1)

@@ -21,7 +21,7 @@ def test_aggregate_ocr_text_by_block():
     assert text == expected
 
 
-def test_merge_text_regions(sample_layout):
+def test_merge_text_regions(mock_embedded_text_regions):
     expected = TextRegion(
         x1=437.83888888888885,
         y1=317.319341111111,
@@ -30,11 +30,11 @@ def test_merge_text_regions(sample_layout):
         text="LayoutParser: A Unified Toolkit for Deep Learning Based Document Image",
     )
 
-    merged_text_region = merge_text_regions(sample_layout)
+    merged_text_region = merge_text_regions(mock_embedded_text_regions)
     assert merged_text_region == expected
 
 
-def test_get_elements_from_ocr_regions(sample_layout):
+def test_get_elements_from_ocr_regions(mock_embedded_text_regions):
     expected = [
         LayoutElement(
             x1=437.83888888888885,
@@ -46,5 +46,5 @@ def test_get_elements_from_ocr_regions(sample_layout):
         ),
     ]
 
-    elements = get_elements_from_ocr_regions(sample_layout)
+    elements = get_elements_from_ocr_regions(mock_embedded_text_regions)
     assert elements == expected
