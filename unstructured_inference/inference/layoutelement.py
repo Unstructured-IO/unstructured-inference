@@ -15,6 +15,7 @@ from unstructured_inference.inference.elements import (
     partition_groups_from_regions,
     region_bounding_boxes_are_almost_the_same,
 )
+from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.models import tables
 
 
@@ -270,7 +271,8 @@ def supplement_layout_with_ocr_elements(
     else:
         final_layout = layout
 
-    return final_layout
+    result = order_layout(cast(List[TextRegion], final_layout))
+    return cast(List[LayoutElement], result)
 
 
 def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
