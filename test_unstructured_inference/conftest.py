@@ -115,3 +115,18 @@ def mock_layout(mock_embedded_text_regions):
         )
         for r in mock_embedded_text_regions
     ]
+
+
+@pytest.fixture()
+def mock_inferred_layout(mock_embedded_text_regions):
+    return [
+        LayoutElement(
+            r.x1,
+            r.y1,
+            r.x2,
+            r.y2,
+            text=None,
+            type="Text",
+        )
+        for r in mock_embedded_text_regions
+    ]
