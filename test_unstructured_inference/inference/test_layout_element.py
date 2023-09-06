@@ -1,9 +1,11 @@
+from unstructured_inference.constants import SUBREGION_THRESHOLD_FOR_OCR
 from unstructured_inference.inference.elements import TextRegion
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
     aggregate_ocr_text_by_block,
     get_elements_from_ocr_regions,
     merge_text_regions,
+    supplement_layout_with_ocr_elements,
 )
 
 
@@ -48,3 +50,32 @@ def test_get_elements_from_ocr_regions(mock_embedded_text_regions):
 
     elements = get_elements_from_ocr_regions(mock_embedded_text_regions)
     assert elements == expected
+
+
+def test_supplement_layout_with_ocr_elements(mock_layout, mock_ocr_regions):
+    ocr_elements = [
+        LayoutElement(
+            r.x1,
+            r.y1,
+            r.x2,
+            r.y2,
+            text=r.text,
+            type="UncategorizedText",
+        )
+        for r in mock_ocr_regions
+    ]
+
+    final_layout = supplement_layout_with_ocr_elements(mock_layout, mock_ocr_regions)
+
+    # Check if the final layout contains the original layout elements
+    for element in mock_layout:
+        assert element in final_layout
+
+    # Check if the final layout contains the OCR-derived elements
+    assert any(ocr_element in final_layout for ocr_element in ocr_elements)
+
+    # Check if the OCR-derived elements that are subregions of layout elements are removed
+    for element in mock_layout:
+        for ocr_element in ocr_elements:
+            if ocr_element.is_almost_subregion_of(element, SUBREGION_THRESHOLD_FOR_OCR):
+                assert ocr_element not in final_layout
