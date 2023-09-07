@@ -1,5 +1,7 @@
 paddle_ocr = None  # type: ignore
+import paddle
 
+paddle.disable_signal_handler()
 
 def load_agent():
     """Loads the PaddleOCR agent as a global variable to ensure that we only load it once."""
