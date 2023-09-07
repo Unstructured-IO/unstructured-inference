@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from unstructured_inference.inference.elements import EmbeddedTextRegion
+from unstructured_inference.inference.elements import EmbeddedTextRegion, Rectangle, TextRegion
 from unstructured_inference.inference.layoutelement import LayoutElement
 
 
@@ -16,7 +16,21 @@ def mock_numpy_image():
     return np.zeros((50, 50, 3), np.uint8)
 
 
-# TODO(alan): Make a better test layout
+@pytest.fixture()
+def mock_rectangle():
+    return Rectangle(100, 100, 300, 300)
+
+
+@pytest.fixture()
+def mock_text_region():
+    return TextRegion(100, 100, 300, 300, text="Sample text")
+
+
+@pytest.fixture()
+def mock_layout_element():
+    return LayoutElement(100, 100, 300, 300, text="Sample text", type="Text")
+
+
 @pytest.fixture()
 def mock_embedded_text_regions():
     return [
@@ -102,6 +116,7 @@ def mock_ocr_regions():
     ]
 
 
+# TODO(alan): Make a better test layout
 @pytest.fixture()
 def mock_layout(mock_embedded_text_regions):
     return [
