@@ -1,3 +1,7 @@
+## 0.5.24
+
+* use `tesseract` extracted block, line, and word order to assist table structure post processing
+
 ## 0.5.23
 
 * Add functionality to bring back embedded images in PDF

@@ -109,6 +109,10 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                         (idtx.top + idtx.height) / zoom,
                     ],
                     "text": idtx.text,
+                    # those information are used to align the rows and columns
+                    "span_num": idtx.word_num,
+                    "line_num": idtx.line_num,
+                    "block_num": idtx.block_num,
                 },
             )
         return tokens
@@ -121,11 +125,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
         tokens = self.get_tokens(x=x)
 
-        sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
-
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
-        # If no order is provided, use current order
+        # If no order is provided by OCR, use current order
         for idx, token in enumerate(tokens):
             if "span_num" not in token:
                 token["span_num"] = idx
