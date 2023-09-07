@@ -108,6 +108,7 @@ class Rectangle:
             return None
         return Rectangle(x1, y1, x2, y2)
 
+    @property
     def area(self) -> float:
         """Gives the area of the rectangle."""
         return self.width * self.height
@@ -117,8 +118,8 @@ class Rectangle:
         how similar the regions are. Returns 0 for disjoint rectangles, 1 for two identical
         rectangles -- area of intersection / area of union."""
         intersection = self.intersection(other)
-        intersection_area = 0.0 if intersection is None else intersection.area()
-        union_area = self.area() + other.area() - intersection_area
+        intersection_area = 0.0 if intersection is None else intersection.area
+        union_area = self.area + other.area - intersection_area
         return safe_division(intersection_area, union_area)
 
     def intersection_over_minimum(self, other: Rectangle) -> float:
@@ -126,8 +127,8 @@ class Rectangle:
         for identifying when one rectangle is almost-a-subset of the other. Returns 0 for disjoint
         rectangles, 1 when either is a subset of the other."""
         intersection = self.intersection(other)
-        intersection_area = 0.0 if intersection is None else intersection.area()
-        min_area = min(self.area(), other.area())
+        intersection_area = 0.0 if intersection is None else intersection.area
+        min_area = min(self.area, other.area)
         return safe_division(intersection_area, min_area)
 
     def is_almost_subregion_of(self, other: Rectangle, subregion_threshold: float = 0.75) -> bool:
@@ -135,9 +136,9 @@ class Rectangle:
         comparing the intersection area over self area to some threshold, and checking whether self
         is the smaller rectangle."""
         intersection = self.intersection(other)
-        intersection_area = 0.0 if intersection is None else intersection.area()
-        return (subregion_threshold < safe_division(intersection_area, self.area())) and (
-            self.area() <= other.area()
+        intersection_area = 0.0 if intersection is None else intersection.area
+        return (subregion_threshold < safe_division(intersection_area, self.area)) and (
+            self.area <= other.area
         )
 
 

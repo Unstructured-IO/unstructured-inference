@@ -55,6 +55,10 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         """Inference using function call interface."""
         return super().__call__(x)
 
+    @staticmethod
+    def deduplicate_detected_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
+        return elements
+
 
 class UnstructuredElementExtractionModel(UnstructuredModel):
     """Wrapper class for object extraction models used by unstructured."""

@@ -110,7 +110,7 @@ def test_rectangle_area(monkeypatch):
             rect = elements.Rectangle(0, 0, 0, 0)
             mockheight.return_value = height
             mockwidth.return_value = width
-            assert rect.area() == width * height
+            assert rect.area == width * height
 
 
 def test_rectangle_iou():
@@ -120,16 +120,16 @@ def test_rectangle_iou():
         rect2 = rand_rect(20)
         assert rect1.intersection_over_union(rect2) == rect2.intersection_over_union(rect1)
         if rect1.is_in(rect2):
-            assert rect1.intersection_over_union(rect2) == rect1.area() / rect2.area()
+            assert rect1.intersection_over_union(rect2) == rect1.area / rect2.area
         elif rect2.is_in(rect1):
-            assert rect1.intersection_over_union(rect2) == rect2.area() / rect1.area()
+            assert rect1.intersection_over_union(rect2) == rect2.area / rect1.area
         else:
             if rect1.intersection(rect2) is None:
                 assert rect1.intersection_over_union(rect2) == 0.0
             else:
-                intersection = rect1.intersection(rect2).area()
+                intersection = rect1.intersection(rect2).area
                 assert rect1.intersection_over_union(rect2) == intersection / (
-                    rect1.area() + rect2.area() - intersection
+                    rect1.area + rect2.area - intersection
                 )
 
 

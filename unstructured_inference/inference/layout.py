@@ -259,7 +259,9 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         inferred_layout: List[LayoutElement] = self.detection_model(self.image)
-
+        inferred_layout = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
+            inferred_layout,
+        )
         if self.ocr_mode == OCRMode.INDIVIDUAL_BLOCKS.value:
             ocr_layout = None
         elif self.ocr_mode == OCRMode.FULL_PAGE.value:
@@ -599,7 +601,7 @@ def load_pdf(
             )
             text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
 
-            if text_region.area() > 0:
+            if text_region.area > 0:
                 layout.append(text_region)
         layouts.append(layout)
 
