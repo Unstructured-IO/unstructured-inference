@@ -703,32 +703,30 @@ def test_image_text_region(text, ocr_strategy, expected, mock_image):
         )
 
 
-@pytest.fixture()
-def ordering_layout():
-    elements = [
-        layout.LayoutElement(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
-        layout.LayoutElement(x1=380.6, y1=473.4, x2=1334.8, y2=533.9, text="1"),
-        layout.LayoutElement(x1=578.6, y1=556.8, x2=1109.0, y2=874.4, text="2"),
-        layout.LayoutElement(x1=444.5, y1=942.3, x2=1261.1, y2=1584.1, text="3"),
-        layout.LayoutElement(x1=444.8, y1=1609.4, x2=1257.2, y2=1665.2, text="4"),
-        layout.LayoutElement(x1=414.0, y1=1718.8, x2=635.0, y2=1755.2, text="5"),
-        layout.LayoutElement(x1=372.6, y1=1786.9, x2=1333.6, y2=1848.7, text="6"),
-    ]
-    return elements
+class MockDetectionModel(layout.UnstructuredObjectDetectionModel):
+    def initialize(self, *args, **kwargs):
+        pass
+
+    def predict(self, x):
+        return [
+            layout.LayoutElement(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
+            layout.LayoutElement(x1=380.6, y1=473.4, x2=1334.8, y2=533.9, text="1"),
+            layout.LayoutElement(x1=578.6, y1=556.8, x2=1109.0, y2=874.4, text="2"),
+            layout.LayoutElement(x1=444.5, y1=942.3, x2=1261.1, y2=1584.1, text="3"),
+            layout.LayoutElement(x1=444.8, y1=1609.4, x2=1257.2, y2=1665.2, text="4"),
+            layout.LayoutElement(x1=414.0, y1=1718.8, x2=635.0, y2=1755.2, text="5"),
+            layout.LayoutElement(x1=372.6, y1=1786.9, x2=1333.6, y2=1848.7, text="6"),
+        ]
 
 
-def test_layout_order(mock_image, ordering_layout):
+def test_layout_order(mock_image):
     with tempfile.TemporaryDirectory() as tmpdir:
         mock_image_path = os.path.join(tmpdir, "mock.jpg")
         mock_image.save(mock_image_path)
-        with patch.object(layout, "get_model", lambda: lambda x: ordering_layout), patch.object(
+        with patch.object(layout, "get_model", lambda: MockDetectionModel()), patch.object(
             layout,
             "load_pdf",
             lambda *args, **kwargs: ([[]], [mock_image_path]),
-        ), patch.object(
-            layout,
-            "UnstructuredObjectDetectionModel",
-            object,
         ):
             doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
             page = doc.pages[0]
