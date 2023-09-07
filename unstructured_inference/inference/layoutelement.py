@@ -21,6 +21,7 @@ from unstructured_inference.models import tables
 @dataclass
 class LayoutElement(TextRegion):
     type: Optional[str] = None
+    prob: Optional[float] = None
 
     def extract_text(
         self,
@@ -48,6 +49,7 @@ class LayoutElement(TextRegion):
             "coordinates": self.coordinates,
             "text": self.text,
             "type": self.type,
+            "prob": self.prob,
         }
         return out_dict
 
@@ -65,7 +67,8 @@ class LayoutElement(TextRegion):
         x1, y1, x2, y2 = textblock.coordinates
         text = textblock.text
         type = textblock.type
-        return cls(x1, y1, x2, y2, text, type)
+        score = textblock.score
+        return cls(x1, y1, x2, y2, text, type, prob=score)
 
 
 def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:

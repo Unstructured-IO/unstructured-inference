@@ -15,6 +15,14 @@ def test_layout_yolox_local_parsing_image():
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 13 detections
     assert len(document_layout.pages[0].elements) == 13
+    assert hasattr(
+        document_layout.pages[0].elements[0],
+        "prob",
+    )  # NOTE(pravin) New Assertion to Make Sure LayoutElement has probabilities
+    assert isinstance(
+        document_layout.pages[0].elements[0].prob,
+        float,
+    )  # NOTE(pravin) New Assertion to Make Sure Populated Probability is Float
 
 
 @pytest.mark.slow()
@@ -26,6 +34,14 @@ def test_layout_yolox_local_parsing_pdf():
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 5 detections
     assert len(document_layout.pages[0].elements) == 5
+    assert hasattr(
+        document_layout.pages[0].elements[0],
+        "prob",
+    )  # NOTE(pravin) New Assertion to Make Sure LayoutElement has probabilities
+    assert isinstance(
+        document_layout.pages[0].elements[0].prob,
+        float,
+    )  # NOTE(pravin) New Assertion to Make Sure Populated Probability is Float
 
 
 @pytest.mark.slow()
@@ -51,6 +67,14 @@ def test_layout_yolox_local_parsing_image_soft():
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) Soft version of the test, run make test-long in order to run with full model
     assert len(document_layout.pages[0].elements) > 0
+    assert hasattr(
+        document_layout.pages[0].elements[0],
+        "prob",
+    )  # NOTE(pravin) New Assertion to Make Sure LayoutElement has probabilities
+    assert isinstance(
+        document_layout.pages[0].elements[0].prob,
+        float,
+    )  # NOTE(pravin) New Assertion to Make Sure Populated Probability is Float
 
 
 def test_layout_yolox_local_parsing_pdf_soft():
@@ -61,6 +85,13 @@ def test_layout_yolox_local_parsing_pdf_soft():
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) Soft version of the test, run make test-long in order to run with full model
     assert len(document_layout.pages[0].elements) > 0
+    assert hasattr(
+        document_layout.pages[0].elements[0],
+        "prob",
+    )  # NOTE(pravin) New Assertion to Make Sure LayoutElement has probabilities
+    assert (
+        document_layout.pages[0].elements[0].prob is None
+    )  # NOTE(pravin) New Assertion to Make Sure Uncategorized Text has None Probability
 
 
 def test_layout_yolox_local_parsing_empty_pdf_soft():
