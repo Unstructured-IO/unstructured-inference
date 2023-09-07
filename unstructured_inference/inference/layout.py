@@ -285,9 +285,10 @@ class PageLayout:
                 and "R_50" not in self.detection_model.model_path
             ):
                 threshold_kwargs = {"same_region_threshold": 0.5, "subregion_threshold": 0.5}
-            inferred_layout = merge_inferred_layout_with_extracted_layout(
+            merged_layout = merge_inferred_layout_with_extracted_layout(
                 inferred_layout=inferred_layout,
                 extracted_layout=self.layout,
+                page_image_size=self.image.size,
                 ocr_layout=ocr_layout,
                 supplement_with_ocr_elements=self.supplement_with_ocr_elements,
                 **threshold_kwargs,
@@ -301,14 +302,16 @@ class PageLayout:
                 and "R_50" not in self.detection_model.model_path
             ):
                 threshold_kwargs = {"subregion_threshold": 0.3}
-            inferred_layout = merge_inferred_layout_with_ocr_layout(
+            merged_layout = merge_inferred_layout_with_ocr_layout(
                 inferred_layout=inferred_layout,
                 ocr_layout=ocr_layout,
                 supplement_with_ocr_elements=self.supplement_with_ocr_elements,
                 **threshold_kwargs,
             )
+        else:
+            merged_layout = inferred_layout
 
-        elements = self.get_elements_from_layout(cast(List[TextRegion], inferred_layout))
+        elements = self.get_elements_from_layout(cast(List[TextRegion], merged_layout))
 
         if self.analysis:
             self.inferred_layout = inferred_layout

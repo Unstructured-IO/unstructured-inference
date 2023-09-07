@@ -6,7 +6,7 @@ from typing import Collection, List, Optional, cast
 from layoutparser.elements.layout import TextBlock
 from PIL import Image
 
-from unstructured_inference.constants import SUBREGION_THRESHOLD_FOR_OCR
+from unstructured_inference.constants import FULL_PAGE_REGION_THRESHOLD, SUBREGION_THRESHOLD_FOR_OCR
 from unstructured_inference.inference.elements import (
     ImageTextRegion,
     Rectangle,
@@ -84,6 +84,7 @@ def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
 def merge_inferred_layout_with_extracted_layout(
     inferred_layout: Collection[LayoutElement],
     extracted_layout: Collection[TextRegion],
+    page_image_size: tuple,
     ocr_layout: Optional[List[TextRegion]] = None,
     supplement_with_ocr_elements: bool = True,
     same_region_threshold: float = 0.75,
@@ -92,11 +93,21 @@ def merge_inferred_layout_with_extracted_layout(
     """Merge two layouts to produce a single layout."""
     extracted_elements_to_add: List[TextRegion] = []
     inferred_regions_to_remove = []
+    w, h = page_image_size
+    full_page_region = Rectangle(0, 0, w, h)
     for extracted_region in extracted_layout:
         if isinstance(extracted_region, ImageTextRegion):
             # Skip extracted images for this purpose, we don't have the text from them and they
             # don't provide good text bounding boxes.
-            continue
+
+            is_full_page_image = region_bounding_boxes_are_almost_the_same(
+                extracted_region,
+                full_page_region,
+                FULL_PAGE_REGION_THRESHOLD,
+            )
+
+            if is_full_page_image:
+                continue
         region_matched = False
         for inferred_region in inferred_layout:
             if inferred_region.intersects(extracted_region):

@@ -12,3 +12,4 @@ class AnnotationResult(Enum):
 
 
 SUBREGION_THRESHOLD_FOR_OCR = 0.5
+FULL_PAGE_REGION_THRESHOLD = 0.99
