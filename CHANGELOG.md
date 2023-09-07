@@ -1,6 +1,10 @@
-## 0.5.22-dev0
+## 0.5.23-dev0
 
 * Adjusted thresholds for detectron2_onnx 
+
+## 0.5.22
+
+* Add object-detection classification probabilities to LayoutElement for all currently implemented object detection models
 
 ## 0.5.21
 
