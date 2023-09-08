@@ -1,3 +1,7 @@
+## 0.5.24
+
+* fix a bug where `cells_to_html` doesn't handle cells spanning multiple rows properly
+
 ## 0.5.23
 
 * Add functionality to bring back embedded images in PDF

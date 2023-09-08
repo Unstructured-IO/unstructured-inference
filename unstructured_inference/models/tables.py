@@ -5,7 +5,7 @@ import platform
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import cv2
 import numpy as np
@@ -608,9 +608,25 @@ def structure_to_cells(table_structure, tokens):
     return cells, confidence_score
 
 
+def fill_cells(cells: List[dict]) -> List[dict]:
+    """add empty cells to pad cells that spans multiple rows for html conversion
+
+    For example if a cell takes row 0 and 1 and column 0, we add a new empty cell at row 1 and
+    column 0. This padding ensures the structure of the output table is intact
+    """
+    new_cells = cells.copy()
+    for cell in cells:
+        for extra_row in sorted(cell["row_nums"][1:]):
+            new_cell = cell.copy()
+            new_cell["row_nums"] = [extra_row]
+            new_cell["cell text"] = ""
+            new_cells.append(new_cell)
+    return new_cells
+
+
 def cells_to_html(cells):
     """Convert table structure to html format."""
-    cells = sorted(cells, key=lambda k: min(k["column_nums"]))
+    cells = sorted(fill_cells(cells), key=lambda k: min(k["column_nums"]))
     cells = sorted(cells, key=lambda k: min(k["row_nums"]))
 
     table = ET.Element("table")
