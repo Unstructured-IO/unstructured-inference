@@ -72,11 +72,14 @@ def sample_table_transcript(platform_type):
             "blood work) Specialist visit (anesthesia)</td></tr><tr><td>Total Example "
             "Cost</td><td>$12,700</td><td>Total Example Cost</td><td>$5,600</td><td>Total "
             "Example "
-            "Cost</td><td>$2,800</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td "
+            "Cost</td><td>$2,800</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td>"
+            "</td></tr><tr><td "
             'colspan="2">In this example, Peg would pay:</td><td>In this example, Joe '
             'would pay:</td><td colspan="3">In this example, Mia would '
             'pay:</td></tr><tr><td>Cost Sharing</td><td></td><td colspan="2">Cost '
-            "Sharin</td><td></td><td></td></tr><tr><td>Deductibles</td><td>$750</td><td>Deductibles</td><td></td><td>Deductibles</td><td></td></tr><tr><td>Copayments</td><td>$30</td><td></td><td>$700</td><td "
+            "Sharin</td><td></td><td></td></tr><tr><td>Deductibles</td><td>$750</td><td>"
+            "Deductibles</td><td></td><td>Deductibles</td><td></td></tr><tr><td>Copayments</td>"
+            "<td>$30</td><td></td><td>$700</td><td "
             'colspan="2" rowspan="2">Coinsurance</td></tr><tr><td colspan="2" '
             'rowspan="2">Coinsurance $1,200 What isn\'t '
             "covered</td><td>Coinsurance</td><td></td></tr><tr><td>What isn't "
@@ -126,11 +129,14 @@ def sample_table_transcript(platform_type):
             "blood work) Specialist visit (anesthesia)</td></tr><tr><td>Total Example "
             "Cost</td><td>$12,700</td><td>Total Example Cost</td><td>$5,600</td><td>Total "
             "Example "
-            "Cost</td><td>$2,800</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td "
+            "Cost</td><td>$2,800</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td>"
+            "</td></tr><tr><td "
             'colspan="2">In this example, Peg would pay:</td><td>In this example, Joe '
             'would pay:</td><td colspan="3">In this example, Mia would '
             'pay:</td></tr><tr><td>Cost Sharing</td><td></td><td colspan="2">Cost '
-            "Sharin</td><td></td><td></td></tr><tr><td>Deductibles</td><td>$750</td><td>Deductibles</td><td></td><td>Deductibles</td><td></td></tr><tr><td>Copayments</td><td>$30</td><td></td><td>$700</td><td "
+            "Sharin</td><td></td><td></td></tr><tr><td>Deductibles</td><td>$750</td><td>"
+            "Deductibles</td><td></td><td>Deductibles</td><td></td></tr><tr><td>Copayments</td>"
+            "<td>$30</td><td></td><td>$700</td><td "
             'colspan="2" rowspan="2">Coinsurance</td></tr><tr><td colspan="2" '
             'rowspan="2">Coinsurance $1,200 What isn\'t '
             "covered</td><td>Coinsurance</td><td></td></tr><tr><td>What isn't "
