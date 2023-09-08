@@ -615,9 +615,11 @@ def fill_cells(cells: List[dict]) -> List[dict]:
 
     A cell contains the following keys relevent to the html conversion:
     row_nums: List[int]
-        the row numbers this cell belongs to; for cells spanning multiple rows there are more than one numbers
+        the row numbers this cell belongs to; for cells spanning multiple rows there are more than
+        one numbers
     column_nums: List[int]
-        the columns numbers this cell belongs to; for cells spanning multiple columns there are more than one numbers
+        the columns numbers this cell belongs to; for cells spanning multiple columns there are more
+        than one numbers
     cell text: str
         the text in this cell
 
