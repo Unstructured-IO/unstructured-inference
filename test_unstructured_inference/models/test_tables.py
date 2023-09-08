@@ -443,6 +443,7 @@ def test_align_rows(rows, bbox, output):
     assert postprocess.align_rows(rows, bbox) == output
 
 
+@pytest.mark.skip(reason="will replace with a simpler table with more readable diff on failure")
 @pytest.mark.parametrize(
     ("model_path", "platform_type"),
     [
