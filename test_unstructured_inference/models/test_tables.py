@@ -39,7 +39,7 @@ def sample_table_transcript(platform_type):
     if platform_type == "x86_64":
         out = (
             '<table><thead><th colspan="6">About these Coverage '
-            "Examples:</th></thead><thead><th>aa This is not a cost depending on the "
+            "Examples:</th></thead><thead><th>A This is not a cost depending on the "
             '(deductibles, pay under different</th><th colspan="5">estimator. Treatments '
             "shown are just examples of how this plan might cover medical care. Your "
             "actual costs will be different actual care you receive, the prices your "
@@ -52,29 +52,28 @@ def sample_table_transcript(platform_type):
             "type 2 (a year of routine in-network care controlled "
             'condition)</th><th>Diabetes of a well-</th><th colspan="2">Mia\'s Simple '
             "Fracture (in-network emergency room visit and follow up   "
-            'care)</th></thead><tr><td colspan="2">u The plan\'s overall deductible $750 '
-            "= Specialist copayment $50 = Hospital (facility) coinsurance 10% m Other "
-            "coinsurance 10%</td><td>u The plan's overall deductible = Specialist "
-            "copayment = Hospital (facility) coinsurance mu Other "
-            "coinsurance</td><td>$750 $50 10% 10%</td><td>u The plan's overall deductible "
-            "= Specialist copayment = Hospital (facility) coinsurance a Other "
-            'coinsurance</td><td>$750 $50 10% 10%</td></tr><tr><td colspan="2" '
-            'rowspan="2">This EXAMPLE event includes services like: Specialist office '
-            "visits (orenatal care) Childbirth/Delivery Professional Services "
-            'Childbirth/Delivery Facility Services</td><td colspan="2" rowspan="2">This '
-            "EXAMPLE event includes services like: Primary care physician office visits "
-            "(incluaing disease education) Diagnostic tests (blood work) Prescription "
-            'drugs Durable medical equipment (g/ucose meter)</td><td colspan="2" '
-            'rowspan="2">This EXAMPLE event includes services like: Emergency room care '
-            "(including medical supplies) Diagnostic test (x-ray) Durable medical "
-            "equipment (crutches) Rehabilitation services (physical "
-            'therapy)</td></tr><tr><td colspan="2">Diagnostic tests (u/trasounds and '
-            "blood work) Specialist visit (anesthesia)</td></tr><tr><td>Total Example "
-            "Cost</td><td>$12,700</td><td>Total Example Cost</td><td>$5,600</td><td>Total "
-            "Example "
-            "Cost</td><td>$2,800</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td>"
-            "</td></tr><tr><td "
-            'colspan="2">In this example, Peg would pay:</td><td>In this example, Joe '
+            'care)</th></thead><tr><td colspan="2">u The plan’s overall deductible $750 m '
+            "Specialist copayment $50 m Hospital (facility) coinsurance 10% m Other "
+            "coinsurance 10%</td><td>m The plan's overall deductible m Specialist "
+            "copayment m Hospital (facility) coinsurance m Other coinsurance</td><td>$750 "
+            "$50 10% 10%</td><td>m The plan’s overall deductible m Specialist copayment m "
+            "Hospital (facility) coinsurance m Other coinsurance</td><td>$750 $50 10% "
+            '10%</td></tr><tr><td colspan="2" rowspan="2">This EXAMPLE event includes '
+            "services like: Specialist office visits (prenatal care) Childbirth/Delivery "
+            "Professional Services Childbirth/Delivery Facility Services</td><td "
+            'colspan="2" rowspan="2">This EXAMPLE event includes services like: Primary '
+            "care physician office visits (including disease eadlication) Diagnostic "
+            "tests (blood work) Prescription drugs Durable medical equipment (glucose "
+            'meter)</td><td colspan="2" rowspan="2">This EXAMPLE event includes services '
+            "like: Emergency room care (including medical supplies) Diagnostic test "
+            "(x-ray) Durable medical equipment (crutches) Rehabilitation services "
+            '(physical therapy)</td></tr><tr><td colspan="2">Diagnostic tests '
+            "(ultrasounds and blood work) Specialist visit "
+            "(anesthesia)</td></tr><tr><td>Total Example "
+            "Cost</td><td>$12,700</td><td>Total Example Cost "
+            "[</td><td>$5,600</td><td>Total Example Cost</td><td>I "
+            "$2,800</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr>"
+            '<td colspan="2">In this example, Peg would pay:</td><td>In this example, Joe '
             'would pay:</td><td colspan="3">In this example, Mia would '
             'pay:</td></tr><tr><td>Cost Sharing</td><td></td><td colspan="2">Cost '
             "Sharin</td><td></td><td></td></tr><tr><td>Deductibles</td><td>$750</td><td>"
@@ -96,7 +95,7 @@ def sample_table_transcript(platform_type):
     else:
         out = (
             '<table><thead><th colspan="6">About these Coverage '
-            "Examples:</th></thead><thead><th>aa This is not a cost depending on the "
+            "Examples:</th></thead><thead><th>A This is not a cost depending on the "
             '(deductibles, pay under different</th><th colspan="5">estimator. Treatments '
             "shown are just examples of how this plan might cover medical care. Your "
             "actual costs will be different actual care you receive, the prices your "
@@ -109,29 +108,28 @@ def sample_table_transcript(platform_type):
             "type 2 (a year of routine in-network care controlled "
             'condition)</th><th>Diabetes of a well-</th><th colspan="2">Mia\'s Simple '
             "Fracture (in-network emergency room visit and follow up   "
-            'care)</th></thead><tr><td colspan="2">u The plan\'s overall deductible $750 '
-            "= Specialist copayment $50 = Hospital (facility) coinsurance 10% m Other "
-            "coinsurance 10%</td><td>u The plan's overall deductible = Specialist "
-            "copayment = Hospital (facility) coinsurance mu Other "
-            "coinsurance</td><td>$750 $50 10% 10%</td><td>u The plan's overall deductible "
-            "= Specialist copayment = Hospital (facility) coinsurance a Other "
-            'coinsurance</td><td>$750 $50 10% 10%</td></tr><tr><td colspan="2" '
-            'rowspan="2">This EXAMPLE event includes services like: Specialist office '
-            "visits (orenatal care) Childbirth/Delivery Professional Services "
-            'Childbirth/Delivery Facility Services</td><td colspan="2" rowspan="2">This '
-            "EXAMPLE event includes services like: Primary care physician office visits "
-            "(incluaing disease education) Diagnostic tests (blood work) Prescription "
-            'drugs Durable medical equipment (g/ucose meter)</td><td colspan="2" '
-            'rowspan="2">This EXAMPLE event includes services like: Emergency room care '
-            "(including medical supplies) Diagnostic test (x-ray) Durable medical "
-            "equipment (crutches) Rehabilitation services (physical "
-            'therapy)</td></tr><tr><td colspan="2">Diagnostic tests (u/trasounds and '
-            "blood work) Specialist visit (anesthesia)</td></tr><tr><td>Total Example "
-            "Cost</td><td>$12,700</td><td>Total Example Cost</td><td>$5,600</td><td>Total "
-            "Example "
-            "Cost</td><td>$2,800</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td>"
-            "</td></tr><tr><td "
-            'colspan="2">In this example, Peg would pay:</td><td>In this example, Joe '
+            'care)</th></thead><tr><td colspan="2">u The plan’s overall deductible $750 m '
+            "Specialist copayment $50 m Hospital (facility) coinsurance 10% m Other "
+            "coinsurance 10%</td><td>m The plan's overall deductible m Specialist "
+            "copayment m Hospital (facility) coinsurance m Other coinsurance</td><td>$750 "
+            "$50 10% 10%</td><td>m The plan’s overall deductible m Specialist copayment m "
+            "Hospital (facility) coinsurance m Other coinsurance</td><td>$750 $50 10% "
+            '10%</td></tr><tr><td colspan="2" rowspan="2">This EXAMPLE event includes '
+            "services like: Specialist office visits (prenatal care) Childbirth/Delivery "
+            "Professional Services Childbirth/Delivery Facility Services</td><td "
+            'colspan="2" rowspan="2">This EXAMPLE event includes services like: Primary '
+            "care physician office visits (including disease eadlication) Diagnostic "
+            "tests (blood work) Prescription drugs Durable medical equipment (glucose "
+            'meter)</td><td colspan="2" rowspan="2">This EXAMPLE event includes services '
+            "like: Emergency room care (including medical supplies) Diagnostic test "
+            "(x-ray) Durable medical equipment (crutches) Rehabilitation services "
+            '(physical therapy)</td></tr><tr><td colspan="2">Diagnostic tests '
+            "(ultrasounds and blood work) Specialist visit "
+            "(anesthesia)</td></tr><tr><td>Total Example "
+            "Cost</td><td>$12,700</td><td>Total Example Cost "
+            "[</td><td>$5,600</td><td>Total Example Cost</td><td>I "
+            "$2,800</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr>"
+            '<td colspan="2">In this example, Peg would pay:</td><td>In this example, Joe '
             'would pay:</td><td colspan="3">In this example, Mia would '
             'pay:</td></tr><tr><td>Cost Sharing</td><td></td><td colspan="2">Cost '
             "Sharin</td><td></td><td></td></tr><tr><td>Deductibles</td><td>$750</td><td>"
