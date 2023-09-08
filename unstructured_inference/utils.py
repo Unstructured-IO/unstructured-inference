@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterator, Union
 
 import cv2
 import numpy as np
-from PIL.Image import Image
+from PIL import Image
 
 from unstructured_inference.constants import AnnotationResult
 from unstructured_inference.visualize import show_plot
@@ -52,12 +52,12 @@ class LazyDict(Mapping):
         return len(self._raw_dict)
 
 
-def write_image(image: Union[Image, np.ndarray], output_image_path: str):
+def write_image(image: Union[Image.Image, np.ndarray], output_image_path: str):
     """
     Write an image to a specified file path, supporting both PIL Image and numpy ndarray formats.
 
     Parameters:
-    - image (Union[Image, np.ndarray]): The image to be written, which can be in PIL Image format
+    - image (Union[Image.Image, np.ndarray]): The image to be written, which can be in PIL Image format
      or a numpy ndarray format.
     - output_image_path (str): The path to which the image will be written.
 
@@ -68,7 +68,7 @@ def write_image(image: Union[Image, np.ndarray], output_image_path: str):
     - None: The function writes the image to the specified path but does not return any value.
     """
 
-    if isinstance(image, Image):
+    if isinstance(image, Image.Image):
         image.save(output_image_path)
     elif isinstance(image, np.ndarray):
         cv2.imwrite(output_image_path, image)
@@ -123,3 +123,19 @@ def annotate_layout_elements(
                 print(f"wrote {output_f_path}")
             elif result == AnnotationResult.PLOT:
                 show_plot(img, desired_width=plot_desired_width)
+
+
+def pad_image_with_background_color(image: Image.Image, pad: int=10, background_color: str="white") -> Image.Image:
+    """pads an input image with the same background color around it by pad//2 on all 4 sides
+
+    The original image is kept inact and a new image is returned with padding added.
+    """
+    width, height = image.size
+    if pad < 0:
+        raise ValueError(
+            "Can not pad an image with negative space! Please use a positive value for `pad`."
+        )
+    new = Image.new(image.mode, (width+pad, height+pad), background_color)
+    new.paste(image, (pad//2, pad//2))
+    return new
+

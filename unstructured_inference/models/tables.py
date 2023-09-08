@@ -18,6 +18,7 @@ from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 from unstructured_inference.logger import logger
 from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.utils import pad_image_with_background_color
 
 from . import table_postprocess as postprocess
 
@@ -113,15 +114,18 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             )
         return tokens
 
-    def run_prediction(self, x: Image):
+    def run_prediction(self, x: Image, pad_for_structure_detection: int=50):
         """Predict table structure"""
         with torch.no_grad():
-            encoding = self.feature_extractor(x, return_tensors="pt").to(self.device)
+            logger.info(f"padding image by {pad_for_structure_detection} for structufre detection")
+            encoding = self.feature_extractor(
+                pad_image_with_background_color(x, pad_for_structure_detection),
+                return_tensors="pt"
+            ).to(self.device)
             outputs_structure = self.model(**encoding)
+            outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection
 
         tokens = self.get_tokens(x=x)
-
-        sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
 
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
@@ -211,7 +215,13 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
     pred_labels = list(m.indices.detach().cpu().numpy())[0]
     pred_scores = list(m.values.detach().cpu().numpy())[0]
     pred_bboxes = outputs["pred_boxes"].detach().cpu()[0]
-    pred_bboxes = [elem.tolist() for elem in rescale_bboxes(pred_bboxes, img_size)]
+
+    pad = outputs.get("pad_for_structure_detection", 0)
+    scale_size = (img_size[0] + pad, img_size[1] + pad)
+    pred_bboxes = [elem.tolist() for elem in rescale_bboxes(pred_bboxes, scale_size)]
+    # unshift the padding; padding effectively shifted the bounding boxes of structures in the
+    # original image with half of the total pad
+    shift_size = pad / 2
 
     objects = []
     for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes):
@@ -221,7 +231,7 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
                 {
                     "label": class_label,
                     "score": float(score),
-                    "bbox": [float(elem) for elem in bbox],
+                    "bbox": [float(elem) - shift_size for elem in bbox],
                 },
             )
 
