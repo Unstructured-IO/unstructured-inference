@@ -1,3 +1,7 @@
+## 0.5.24
+
+* table structure detection now pads the input image by 25 pixels in all 4 directions to improve its recall
+
 ## 0.5.23
 
 * Add functionality to bring back embedded images in PDF

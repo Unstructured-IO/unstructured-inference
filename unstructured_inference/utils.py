@@ -125,7 +125,9 @@ def annotate_layout_elements(
                 show_plot(img, desired_width=plot_desired_width)
 
 
-def pad_image_with_background_color(image: Image.Image, pad: int=10, background_color: str="white") -> Image.Image:
+def pad_image_with_background_color(
+    image: Image.Image, pad: int = 10, background_color: str = "white"
+) -> Image.Image:
     """pads an input image with the same background color around it by pad//2 on all 4 sides
 
     The original image is kept inact and a new image is returned with padding added.
@@ -133,9 +135,8 @@ def pad_image_with_background_color(image: Image.Image, pad: int=10, background_
     width, height = image.size
     if pad < 0:
         raise ValueError(
-            "Can not pad an image with negative space! Please use a positive value for `pad`."
+            "Can not pad an image with negative space! Please use a positive value for `pad`.",
         )
-    new = Image.new(image.mode, (width+pad, height+pad), background_color)
-    new.paste(image, (pad//2, pad//2))
+    new = Image.new(image.mode, (width + pad, height + pad), background_color)
+    new.paste(image, (pad // 2, pad // 2))
     return new
-

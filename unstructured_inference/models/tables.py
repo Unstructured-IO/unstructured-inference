@@ -114,13 +114,13 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             )
         return tokens
 
-    def run_prediction(self, x: Image, pad_for_structure_detection: int=50):
+    def run_prediction(self, x: Image, pad_for_structure_detection: int = 50):
         """Predict table structure"""
         with torch.no_grad():
             logger.info(f"padding image by {pad_for_structure_detection} for structufre detection")
             encoding = self.feature_extractor(
                 pad_image_with_background_color(x, pad_for_structure_detection),
-                return_tensors="pt"
+                return_tensors="pt",
             ).to(self.device)
             outputs_structure = self.model(**encoding)
             outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection

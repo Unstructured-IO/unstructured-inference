@@ -136,9 +136,9 @@ def test_pad_image_with_background_color(mock_pil_image):
     pad = 10
     height, width = mock_pil_image.size
     padded = pad_image_with_background_color(mock_pil_image, pad * 2, "black")
-    assert padded.size == (height + 2*pad, width + 2*pad)
+    assert padded.size == (height + 2 * pad, width + 2 * pad)
     np.testing.assert_array_almost_equal(
-        np.array(padded.crop((pad, pad, width+pad, height+pad))),
+        np.array(padded.crop((pad, pad, width + pad, height + pad))),
         np.array(mock_pil_image),
     )
     assert padded.getpixel((1, 1)) == (0, 0, 0)
