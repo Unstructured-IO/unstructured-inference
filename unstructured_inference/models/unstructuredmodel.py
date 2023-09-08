@@ -57,7 +57,28 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
     @staticmethod
     def deduplicate_detected_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
-        return elements
+        from unstructured_inference.inference.elements import partition_groups_from_regions, grow_region_to_match_region
+        
+        cleaned_elements: List[LayoutElement] = []
+
+        # TODO: Delete nested elements with low or None probability
+        # TODO: Keep most confident
+        # TODO: Better to grow horizontally than vertically?
+        groups = partition_groups_from_regions(elements)
+        for g in groups:
+            #border =minimal_containing_region(g)
+            if len(g)==1:
+                cleaned_elements.append(g[0])
+                continue
+            border = g[0]
+            remaining_elements = g[1:]
+            while remaining_elements:
+                other = remaining_elements.pop()
+                grow_region_to_match_region(border,other)
+
+            cleaned_elements.append(border)
+
+        return cleaned_elements
 
 
 class UnstructuredElementExtractionModel(UnstructuredModel):
