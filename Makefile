@@ -44,6 +44,18 @@ install-test: install-base
 install-dev: install-test
 	pip install -r requirements/dev.txt
 
+## install-project-local:   install unstructured-inference into your local python environment
+.PHONY: install-project-local
+install-project-local: install
+	# MAYBE TODO: fail if already exists?
+	pip install -e .
+
+
+## uninstall-project-local: uninstall unstructured-inference from your local python environment
+.PHONY: uninstall-project-local
+uninstall-project-local:
+	pip uninstall ${PACKAGE_NAME}
+
 ## pip-compile:             compiles all base/dev/test requirements
 .PHONY: pip-compile
 pip-compile:
