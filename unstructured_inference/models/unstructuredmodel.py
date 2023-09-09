@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, List
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, List, Union
 
 from PIL.Image import Image
+
+from unstructured_inference.inference.elements import Rectangle
 
 if TYPE_CHECKING:
     from unstructured_inference.inference.layoutelement import (
@@ -57,27 +60,75 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
     @staticmethod
     def deduplicate_detected_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
-        from unstructured_inference.inference.elements import partition_groups_from_regions, grow_region_to_match_region
-        
+        from unstructured_inference.inference.elements import partition_groups_from_regions
+
+        def get_best_class(elements: List[LayoutElement]):
+            import numpy as np
+
+            index = np.argmax([e.prob if e.prob else 0 for e in elements])
+            return elements[index].type, elements[index].prob
+
+        def get_bigger_class(elements: List[LayoutElement]):
+            import numpy as np
+
+            index = np.argmax([e.area for e in elements])
+            return elements[index].type, elements[index].prob
+
+        def probably_contained(
+            element: Union[LayoutElement, Rectangle],
+            inside: Union[LayoutElement, Rectangle],
+        ) -> bool:
+            if Rectangle.a_inside_b(element, inside):
+                return True
+
+            intersected_area = element.intersection(inside)
+            if intersected_area:
+                return intersected_area.area >= element.area * 0.2
+            return False
+
+        def clean_tables(elements: List[LayoutElement]) -> Iterable[LayoutElement]:
+            import numpy as np
+
+            tables = [e for e in elements if e.type == "Table"]
+            if len(tables) == 0:
+                return elements
+
+            nested = None
+            for table in tables:
+                nested_current = np.array([probably_contained(e, table) for e in elements])
+                if nested is None:
+                    nested = nested_current
+                    continue
+                nested = nested | nested_current
+
+            final_elements = []
+            for nested, elem in zip(nested, elements):  # type:ignore
+                if not nested and elem not in [tables]:
+                    final_elements.append(elem)
+                # if elem.x1==727 and elem.y1==913: #Weird element not detected as intersected
+                #     elem.type='GROUP'
+                #     elem.intersection(tables[0])
+                #     elem.intersection(tables[1])
+                #     print(elem)
+
+            final_elements.extend(tables)
+
+            return final_elements
+
         cleaned_elements: List[LayoutElement] = []
 
         # TODO: Delete nested elements with low or None probability
         # TODO: Keep most confident
         # TODO: Better to grow horizontally than vertically?
-        groups = partition_groups_from_regions(elements)
+        groups = partition_groups_from_regions(elements)  # type:ignore
         for g in groups:
-            #border =minimal_containing_region(g)
-            if len(g)==1:
-                cleaned_elements.append(g[0])
-                continue
-            border = g[0]
-            remaining_elements = g[1:]
-            while remaining_elements:
-                other = remaining_elements.pop()
-                grow_region_to_match_region(border,other)
+            # group_border = minimal_containing_region(*g)
+            # group_border.type="GROUP"              # JUST FOR DEBUGGING
+            # group_border.prob = 1.0                # JUST FOR DEBUGGING
+            # cleaned_elements.append(group_border)  # JUST FOR DEBUGGING
 
-            cleaned_elements.append(border)
-
+            g = clean_tables(g)  # type:ignore
+            cleaned_elements.extend(g)  # type:ignore
         return cleaned_elements
 
 

@@ -198,7 +198,7 @@ class PageLayout:
         ocr_mode: str = OCRMode.FULL_PAGE.value,
         extract_tables: bool = False,
         analysis: bool = False,
-        supplement_with_ocr_elements: bool = True,
+        supplement_with_ocr_elements: bool = False,
     ):
         if detection_model is not None and element_extraction_model is not None:
             raise ValueError("Only one of detection_model and extraction_model should be passed.")
@@ -259,9 +259,7 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         inferred_layout: List[LayoutElement] = self.detection_model(self.image)
-        inferred_layout = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
-            inferred_layout,
-        )
+
         if self.ocr_mode == OCRMode.INDIVIDUAL_BLOCKS.value:
             ocr_layout = None
         elif self.ocr_mode == OCRMode.FULL_PAGE.value:
@@ -317,8 +315,12 @@ class PageLayout:
             self.ocr_layout = ocr_layout
 
         if inplace:
+            elements = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
+                elements,
+            )
             self.elements = elements
             return None
+
         return elements
 
     def get_elements_from_layout(self, layout: List[TextRegion]) -> List[LayoutElement]:
