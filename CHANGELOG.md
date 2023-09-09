@@ -1,6 +1,10 @@
-## 0.5.24
+## 0.5.25
 
 * fix a bug where `cells_to_html` doesn't handle cells spanning multiple rows properly
+
+## 0.5.24
+
+* remove `cv2` preprocessing step before OCR step in table transformer
 
 ## 0.5.23
 
