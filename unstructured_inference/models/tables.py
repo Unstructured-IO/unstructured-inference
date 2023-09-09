@@ -155,13 +155,16 @@ def get_class_map(data_type: str):
     return class_map
 
 
+# TODO (yao): maybe this should be in a config?
 structure_class_thresholds = {
     "table": 0.5,
     "table column": 0.5,
     "table row": 0.5,
     "table column header": 0.5,
-    "table projected row header": 0.5,
-    "table spanning cell": 0.5,
+    # those two types of cells would wrap the table so we want them to be highly confident or we can
+    # end up with strange layouts
+    "table projected row header": 0.9,
+    "table spanning cell": 0.9,
     "no object": 10,
 }
 
