@@ -34,17 +34,6 @@ def test_load_donut_model(model_path):
     assert type(table_model.model.model.decoder) is TableTransformerDecoder
 
 
-@pytest.fixture()
-def sample_table_transcript(platform_type):
-    if platform_type == "x86_64":
-        out = (
-        )
-    else:
-        out = (
-        )
-    return out
-
-
 @pytest.mark.parametrize(
     ("input_test", "output_test"),
     [
@@ -345,7 +334,7 @@ def test_align_rows(rows, bbox, output):
         ("microsoft/table-transformer-structure-recognition", "x86_64"),
     ],
 )
-def test_table_prediction(model_path, sample_table_transcript, platform_type):
+def test_table_prediction(model_path, platform_type):
     with patch("platform.machine", return_value=platform_type):
         table_model = tables.UnstructuredTableTransformerModel()
         from PIL import Image
