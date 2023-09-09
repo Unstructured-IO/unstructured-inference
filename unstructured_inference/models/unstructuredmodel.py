@@ -60,6 +60,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
     @staticmethod
     def deduplicate_detected_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
+        """Deletes overlapping elements in a list of elements"""
         from unstructured_inference.inference.elements import partition_groups_from_regions
 
         def get_best_class(elements: List[LayoutElement]):
