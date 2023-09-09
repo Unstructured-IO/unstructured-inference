@@ -38,115 +38,9 @@ def test_load_donut_model(model_path):
 def sample_table_transcript(platform_type):
     if platform_type == "x86_64":
         out = (
-            '<table><thead><th colspan="6">About these Coverage '
-            "Examples:</th></thead><thead><th>A This is not a cost depending on the "
-            '(deductibles, pay under different</th><th colspan="5">estimator. Treatments '
-            "shown are just examples of how this plan might cover medical care. Your "
-            "actual costs will be different actual care you receive, the prices your "
-            "providers charge, and many other factors. Focus on the cost sharing amounts "
-            "copayments and coinsurance) and excluded services under the plan. Use this "
-            "information to compare the portion of costs you might   health plans. Please "
-            "note these coverage examples are based on self-only "
-            'coverage.</th></thead><thead><th colspan="2">Peg is Having a Baby (9 months '
-            "of in-network pre-natal care and a hospital delivery)</th><th>Managing Joe's "
-            "type 2 (a year of routine in-network care controlled "
-            'condition)</th><th>Diabetes of a well-</th><th colspan="2">Mia\'s Simple '
-            "Fracture (in-network emergency room visit and follow up   "
-            'care)</th></thead><tr><td colspan="2">u The plan’s overall deductible $750 m '
-            "Specialist copayment $50 m Hospital (facility) coinsurance 10% m Other "
-            "coinsurance 10%</td><td>m The plan's overall deductible m Specialist "
-            "copayment m Hospital (facility) coinsurance m Other coinsurance</td><td>$750 "
-            "$50 10% 10%</td><td>m The plan’s overall deductible m Specialist copayment m "
-            "Hospital (facility) coinsurance m Other coinsurance</td><td>$750 $50 10% "
-            '10%</td></tr><tr><td colspan="2" rowspan="2">This EXAMPLE event includes '
-            "services like: Specialist office visits (prenatal care) Childbirth/Delivery "
-            "Professional Services Childbirth/Delivery Facility Services</td><td "
-            'colspan="2" rowspan="2">This EXAMPLE event includes services like: Primary '
-            "care physician office visits (including disease eadlication) Diagnostic "
-            "tests (blood work) Prescription drugs Durable medical equipment (glucose "
-            'meter)</td><td colspan="2" rowspan="2">This EXAMPLE event includes services '
-            "like: Emergency room care (including medical supplies) Diagnostic test "
-            "(x-ray) Durable medical equipment (crutches) Rehabilitation services "
-            '(physical therapy)</td></tr><tr><td colspan="2">Diagnostic tests '
-            "(ultrasounds and blood work) Specialist visit "
-            "(anesthesia)</td></tr><tr><td>Total Example "
-            "Cost</td><td>$12,700</td><td>Total Example Cost "
-            "[</td><td>$5,600</td><td>Total Example Cost</td><td>I "
-            "$2,800</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr>"
-            '<td colspan="2">In this example, Peg would pay:</td><td>In this example, Joe '
-            'would pay:</td><td colspan="3">In this example, Mia would '
-            'pay:</td></tr><tr><td>Cost Sharing</td><td></td><td colspan="2">Cost '
-            "Sharin</td><td></td><td></td></tr><tr><td>Deductibles</td><td>$750</td><td>"
-            "Deductibles</td><td></td><td>Deductibles</td><td></td></tr><tr><td>Copayments</td>"
-            "<td>$30</td><td></td><td>$700</td><td "
-            'colspan="2" rowspan="2">Coinsurance</td></tr><tr><td colspan="2" '
-            'rowspan="2">Coinsurance $1,200 What isn\'t '
-            "covered</td><td>Coinsurance</td><td></td></tr><tr><td>What isn't "
-            "covered</td><td></td><td>What isn't covered</td><td></td></tr><tr><td>Limits "
-            "or exclusions</td><td>$20</td><td>Limits or "
-            "exclusions</td><td>$20</td><td>Limits or "
-            "exclusions</td><td>$0</td></tr><tr><td>The total Peg would pay "
-            "is</td><td>$2,000</td><td>The total Joe would pay is</td><td>$840</td><td "
-            'colspan="2">The total Mia would pay is $1,180</td></tr><tr><td>Plan Name: '
-            "NVIDIA PPO Plan</td><td>The plan would Plan ID: 14603022</td><td>be "
-            "responsible for the other costs of these</td><td>EXAMPLE</td><td>covered "
-            "services.</td><td>Page 8 of 8</td></tr></table>"
         )
     else:
         out = (
-            '<table><thead><th colspan="6">About these Coverage '
-            "Examples:</th></thead><thead><th>A This is not a cost depending on the "
-            '(deductibles, pay under different</th><th colspan="5">estimator. Treatments '
-            "shown are just examples of how this plan might cover medical care. Your "
-            "actual costs will be different actual care you receive, the prices your "
-            "providers charge, and many other factors. Focus on the cost sharing amounts "
-            "copayments and coinsurance) and excluded services under the plan. Use this "
-            "information to compare the portion of costs you might   health plans. Please "
-            "note these coverage examples are based on self-only "
-            'coverage.</th></thead><thead><th colspan="2">Peg is Having a Baby (9 months '
-            "of in-network pre-natal care and a hospital delivery)</th><th>Managing Joe's "
-            "type 2 (a year of routine in-network care controlled "
-            'condition)</th><th>Diabetes of a well-</th><th colspan="2">Mia\'s Simple '
-            "Fracture (in-network emergency room visit and follow up   "
-            'care)</th></thead><tr><td colspan="2">u The plan’s overall deductible $750 m '
-            "Specialist copayment $50 m Hospital (facility) coinsurance 10% m Other "
-            "coinsurance 10%</td><td>m The plan's overall deductible m Specialist "
-            "copayment m Hospital (facility) coinsurance m Other coinsurance</td><td>$750 "
-            "$50 10% 10%</td><td>m The plan’s overall deductible m Specialist copayment m "
-            "Hospital (facility) coinsurance m Other coinsurance</td><td>$750 $50 10% "
-            '10%</td></tr><tr><td colspan="2" rowspan="2">This EXAMPLE event includes '
-            "services like: Specialist office visits (prenatal care) Childbirth/Delivery "
-            "Professional Services Childbirth/Delivery Facility Services</td><td "
-            'colspan="2" rowspan="2">This EXAMPLE event includes services like: Primary '
-            "care physician office visits (including disease eadlication) Diagnostic "
-            "tests (blood work) Prescription drugs Durable medical equipment (glucose "
-            'meter)</td><td colspan="2" rowspan="2">This EXAMPLE event includes services '
-            "like: Emergency room care (including medical supplies) Diagnostic test "
-            "(x-ray) Durable medical equipment (crutches) Rehabilitation services "
-            '(physical therapy)</td></tr><tr><td colspan="2">Diagnostic tests '
-            "(ultrasounds and blood work) Specialist visit "
-            "(anesthesia)</td></tr><tr><td>Total Example "
-            "Cost</td><td>$12,700</td><td>Total Example Cost "
-            "[</td><td>$5,600</td><td>Total Example Cost</td><td>I "
-            "$2,800</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr>"
-            '<td colspan="2">In this example, Peg would pay:</td><td>In this example, Joe '
-            'would pay:</td><td colspan="3">In this example, Mia would '
-            'pay:</td></tr><tr><td>Cost Sharing</td><td></td><td colspan="2">Cost '
-            "Sharin</td><td></td><td></td></tr><tr><td>Deductibles</td><td>$750</td><td>"
-            "Deductibles</td><td></td><td>Deductibles</td><td></td></tr><tr><td>Copayments</td>"
-            "<td>$30</td><td></td><td>$700</td><td "
-            'colspan="2" rowspan="2">Coinsurance</td></tr><tr><td colspan="2" '
-            'rowspan="2">Coinsurance $1,200 What isn\'t '
-            "covered</td><td>Coinsurance</td><td></td></tr><tr><td>What isn't "
-            "covered</td><td></td><td>What isn't covered</td><td></td></tr><tr><td>Limits "
-            "or exclusions</td><td>$20</td><td>Limits or "
-            "exclusions</td><td>$20</td><td>Limits or "
-            "exclusions</td><td>$0</td></tr><tr><td>The total Peg would pay "
-            "is</td><td>$2,000</td><td>The total Joe would pay is</td><td>$840</td><td "
-            'colspan="2">The total Mia would pay is $1,180</td></tr><tr><td>Plan Name: '
-            "NVIDIA PPO Plan</td><td>The plan would Plan ID: 14603022</td><td>be "
-            "responsible for the other costs of these</td><td>EXAMPLE</td><td>covered "
-            "services.</td><td>Page 8 of 8</td></tr></table>"
         )
     return out
 
@@ -443,7 +337,7 @@ def test_align_rows(rows, bbox, output):
     assert postprocess.align_rows(rows, bbox) == output
 
 
-@pytest.mark.skip(reason="will replace with a simpler table with more readable diff on failure")
+# TODO: break this test down so it doesn't account for nearly 8% of test coverage
 @pytest.mark.parametrize(
     ("model_path", "platform_type"),
     [
@@ -457,9 +351,12 @@ def test_table_prediction(model_path, sample_table_transcript, platform_type):
         from PIL import Image
 
         table_model.initialize(model=model_path)
-        img = Image.open("./sample-docs/example_table.jpg").convert("RGB")
+        img = Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
         prediction = table_model.predict(img)
-        assert prediction.strip() == sample_table_transcript.strip()
+        # assert rows spans two rows are detected
+        assert '<table><thead><th rowspan="2">' in prediction
+        # one of the safest rows to detect should be present
+        assert '<tr><td>Blind</td><td>5</td><td>1</td><td>4</td><td>34.5%, n=1</td><td>1199 sec, n=1</td></tr>' in prediction
 
 
 def test_intersect():
