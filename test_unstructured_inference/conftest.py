@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from unstructured_inference.inference.elements import EmbeddedTextRegion
+from unstructured_inference.inference.elements import EmbeddedTextRegion, Rectangle, TextRegion
+from unstructured_inference.inference.layoutelement import LayoutElement
 
 
 @pytest.fixture()
@@ -15,9 +16,23 @@ def mock_numpy_image():
     return np.zeros((50, 50, 3), np.uint8)
 
 
-# TODO(alan): Make a better test layout
 @pytest.fixture()
-def sample_layout():
+def mock_rectangle():
+    return Rectangle(100, 100, 300, 300)
+
+
+@pytest.fixture()
+def mock_text_region():
+    return TextRegion(100, 100, 300, 300, text="Sample text")
+
+
+@pytest.fixture()
+def mock_layout_element():
+    return LayoutElement(100, 100, 300, 300, text="Sample text", type="Text")
+
+
+@pytest.fixture()
+def mock_embedded_text_regions():
     return [
         EmbeddedTextRegion(
             x1=453.00277777777774,
@@ -89,4 +104,44 @@ def sample_layout():
             y2=406.9837855555556,
             text="Image",
         ),
+    ]
+
+
+@pytest.fixture()
+def mock_ocr_regions():
+    return [
+        EmbeddedTextRegion(10, 10, 90, 90, "0"),
+        EmbeddedTextRegion(200, 200, 300, 300, "1"),
+        EmbeddedTextRegion(500, 320, 600, 350, "3"),
+    ]
+
+
+# TODO(alan): Make a better test layout
+@pytest.fixture()
+def mock_layout(mock_embedded_text_regions):
+    return [
+        LayoutElement(
+            r.x1,
+            r.y1,
+            r.x2,
+            r.y2,
+            text=r.text,
+            type="UncategorizedText",
+        )
+        for r in mock_embedded_text_regions
+    ]
+
+
+@pytest.fixture()
+def mock_inferred_layout(mock_embedded_text_regions):
+    return [
+        LayoutElement(
+            r.x1,
+            r.y1,
+            r.x2,
+            r.y2,
+            text=None,
+            type="Text",
+        )
+        for r in mock_embedded_text_regions
     ]
