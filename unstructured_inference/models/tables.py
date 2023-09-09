@@ -7,7 +7,6 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Optional, Union
 
-import cv2
 import numpy as np
 import pandas as pd
 import pytesseract
@@ -78,21 +77,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                     "No module named 'unstructured_paddleocr', falling back to tesseract",
                 )
                 pass
-        zoom = 6
-        img = cv2.resize(
-            cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
-            None,
-            fx=zoom,
-            fy=zoom,
-            interpolation=cv2.INTER_CUBIC,
-        )
-
-        kernel = np.ones((1, 1), np.uint8)
-        img = cv2.dilate(img, kernel, iterations=1)
-        img = cv2.erode(img, kernel, iterations=1)
 
         ocr_df: pd.DataFrame = pytesseract.image_to_data(
-            Image.fromarray(img),
+            x,
             output_type="data.frame",
         )
 
@@ -103,10 +90,10 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             tokens.append(
                 {
                     "bbox": [
-                        idtx.left / zoom,
-                        idtx.top / zoom,
-                        (idtx.left + idtx.width) / zoom,
-                        (idtx.top + idtx.height) / zoom,
+                        idtx.left,
+                        idtx.top,
+                        idtx.left + idtx.width,
+                        idtx.top + idtx.height,
                     ],
                     "text": idtx.text,
                 },
