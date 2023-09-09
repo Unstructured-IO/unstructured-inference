@@ -80,6 +80,23 @@ class Rectangle:
         """Checks whether this rectangle intersects another rectangle."""
         return intersections(self, other)[0, 1]
 
+    @staticmethod
+    def a_inside_b(
+        A: Rectangle,
+        B: Rectangle,
+        error_margin: Optional[Union[int, float]] = None,
+    ) -> bool:
+        """Checks whether this rectangle is contained within another rectangle."""
+        padded_other = B.pad(error_margin) if error_margin is not None else B
+        return all(
+            [
+                (A.x1 >= padded_other.x1),
+                (A.x2 <= padded_other.x2),
+                (A.y1 >= padded_other.y1),
+                (A.y2 <= padded_other.y2),
+            ],
+        )
+
     def is_in(self, other: Rectangle, error_margin: Optional[Union[int, float]] = None) -> bool:
         """Checks whether this rectangle is contained within another rectangle."""
         padded_other = other.pad(error_margin) if error_margin is not None else other
@@ -155,6 +172,8 @@ def minimal_containing_region(*regions: Rectangle) -> Rectangle:
 def partition_groups_from_regions(regions: Collection[Rectangle]) -> List[List[Rectangle]]:
     """Partitions regions into groups of regions based on proximity. Returns list of lists of
     regions, each list corresponding with a group"""
+    if len(regions) == 0:
+        return []
     padded_regions = [
         r.vpad(r.height * V_PADDING_COEF).hpad(r.height * H_PADDING_COEF) for r in regions
     ]
