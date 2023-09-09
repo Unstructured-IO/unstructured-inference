@@ -5,7 +5,7 @@ import platform
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -107,8 +107,6 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             outputs_structure = self.model(**encoding)
 
         tokens = self.get_tokens(x=x)
-
-        sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
 
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
@@ -595,10 +593,37 @@ def structure_to_cells(table_structure, tokens):
     return cells, confidence_score
 
 
+def fill_cells(cells: List[dict]) -> List[dict]:
+    """add empty cells to pad cells that spans multiple rows for html conversion
+
+    For example if a cell takes row 0 and 1 and column 0, we add a new empty cell at row 1 and
+    column 0. This padding ensures the structure of the output table is intact. In this example the
+    cell data is {"row_nums": [0, 1], "column_nums": [0], ...}
+
+    A cell contains the following keys relevent to the html conversion:
+    row_nums: List[int]
+        the row numbers this cell belongs to; for cells spanning multiple rows there are more than
+        one numbers
+    column_nums: List[int]
+        the columns numbers this cell belongs to; for cells spanning multiple columns there are more
+        than one numbers
+    cell text: str
+        the text in this cell
+
+    """
+    new_cells = cells.copy()
+    for cell in cells:
+        for extra_row in sorted(cell["row_nums"][1:]):
+            new_cell = cell.copy()
+            new_cell["row_nums"] = [extra_row]
+            new_cell["cell text"] = ""
+            new_cells.append(new_cell)
+    return new_cells
+
+
 def cells_to_html(cells):
     """Convert table structure to html format."""
-    cells = sorted(cells, key=lambda k: min(k["column_nums"]))
-    cells = sorted(cells, key=lambda k: min(k["row_nums"]))
+    cells = sorted(fill_cells(cells), key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
 
     table = ET.Element("table")
     current_row = -1

@@ -543,3 +543,23 @@ def test_extract_text_from_spans(spans, join_with_space, expected):
 def test_header_supercell_tree(supercells, expected_len):
     postprocess.header_supercell_tree(supercells)
     assert len(supercells) == expected_len
+
+
+def test_cells_to_html():
+    # example table
+    # +----------+---------------------+
+    # |    two   |   two columns       |
+    # |          |----------+----------|
+    # |    rows  |sub cell 1|sub cell 2|
+    # +----------+----------+----------+
+    cells = [
+        {"row_nums": [0, 1], "column_nums": [0], "cell text": "two row", "column header": False},
+        {"row_nums": [0], "column_nums": [1, 2], "cell text": "two cols", "column header": False},
+        {"row_nums": [1], "column_nums": [1], "cell text": "sub cell 1", "column header": False},
+        {"row_nums": [1], "column_nums": [2], "cell text": "sub cell 2", "column header": False},
+    ]
+    expected = (
+        '<table><tr><td rowspan="2">two row</td><td colspan="2">two '
+        "cols</td></tr><tr><td></td><td>sub cell 1</td><td>sub cell 2</td></tr></table>"
+    )
+    assert tables.cells_to_html(cells) == expected
