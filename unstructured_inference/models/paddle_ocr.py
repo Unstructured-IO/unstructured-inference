@@ -6,6 +6,9 @@ def load_agent():
 
     from unstructured_paddleocr import PaddleOCR
     import paddle
+    # Disable signal handlers at C++ level upon failing
+    # ref: https://www.paddlepaddle.org.cn/documentation/docs/en/api/paddle/disable_signal_handler_en.html#disable-signal-handler
+    paddle.disable_signal_handler()
     # Use paddlepaddle-gpu if there is gpu device available
     gpu_available  = (paddle.device.cuda.device_count() > 0)
 
