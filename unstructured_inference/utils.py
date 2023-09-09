@@ -57,8 +57,8 @@ def write_image(image: Union[Image.Image, np.ndarray], output_image_path: str):
     Write an image to a specified file path, supporting both PIL Image and numpy ndarray formats.
 
     Parameters:
-    - image (Union[Image.Image, np.ndarray]): The image to be written, which can be in PIL Image format
-     or a numpy ndarray format.
+    - image (Union[Image.Image, np.ndarray]): The image to be written, which can be in PIL Image
+      format or a numpy ndarray format.
     - output_image_path (str): The path to which the image will be written.
 
     Raises:
