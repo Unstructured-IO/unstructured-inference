@@ -126,7 +126,9 @@ def annotate_layout_elements(
 
 
 def pad_image_with_background_color(
-    image: Image.Image, pad: int = 10, background_color: str = "white"
+    image: Image.Image,
+    pad: int = 10,
+    background_color: str = "white",
 ) -> Image.Image:
     """pads an input image with the same background color around it by pad//2 on all 4 sides
 
