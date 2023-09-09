@@ -346,9 +346,15 @@ def test_table_prediction(model_path, platform_type):
         assert '<table><thead><th rowspan="2">' in prediction
         # one of the safest rows to detect should be present
         assert (
-            "<tr><td>Blind</td><td>5</td><td>1</td><td>4</td><td>34.5%, n=1</td><td>1199 sec, n=1</td></tr>"
-            in prediction
-        )
+            "<tr>"
+            "<td>Blind</td>"
+            "<td>5</td>"
+            "<td>1</td>"
+            "<td>4</td>"
+            "<td>34.5%, n=1</td>"
+            "<td>1199 sec, n=1</td>"
+            "</tr>"
+        ) in prediction
 
 
 def test_intersect():
