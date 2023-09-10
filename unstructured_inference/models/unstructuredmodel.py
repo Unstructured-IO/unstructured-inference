@@ -61,8 +61,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
     @staticmethod
     def deduplicate_detected_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
         """Deletes overlapping elements in a list of elements"""
-        from unstructured_inference.inference.elements import partition_groups_from_regions
-
+        from unstructured_inference.inference.elements import partition_groups_from_regions, grow_region_to_match_region
         def get_best_class(elements: List[LayoutElement]):
             import numpy as np
 
@@ -113,8 +112,111 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                 #     print(elem)
 
             final_elements.extend(tables)
-
+            final_elements.sort(key=lambda e: e.y1)
             return final_elements
+        
+        def tag(elements):
+            colors = ["red","blue","green","cyan","magenta","brown"]
+
+            max_x = 0
+            max_y = 0 
+            for i,e in enumerate(elements):
+                e.text=f"##{i}# -> {e.text}"
+                e.id = i
+                e.clrs = colors[i%6]
+                # e.x1=e.x1/10
+                # e.x2=e.x2/10
+                # e.y1=e.y1/10
+                # e.y2=e.y2/10
+                max_x=max(max_x,e.x1)
+                max_x=max(max_x,e.x2)
+                max_y=max(max_y,e.y1)
+                max_x=max(max_y,e.y2)
+
+            #print(f"X:{max_x}, Y:{max_y}")
+
+        def shrink_regions(elements: List[LayoutElement],jump:int = 0)->List[LayoutElement]:
+            final_elements = []
+            i=0
+            #tag(elements)
+
+            aux_elements = []
+
+            while len(elements)>=2+jump:
+                #window = elements[i:i+2]
+                first = elements.pop(0)
+                second = elements[jump]
+                if "##11" in first.text or "##11" in second.text or "##12" in first.text or "##12" in second.text:
+                    a=1+1
+                    pass
+
+                first_inside_second = first.is_in(second)
+                second_inside_first = second.is_in(first)
+                ######################################################
+                # HERE THE OVERLAPING IS COMPLETE, ONE IS INSIDE OTHER
+                ######################################################
+                    #print(":D")
+                if first_inside_second and not second_inside_first:
+                    # second fagocite first
+                    grow_region_to_match_region(second,first)
+                    elements.pop(0) # The element remains at top of the list, now is 
+                                    # a bigger region and the first element is discarded
+                    elements = [second] + elements
+                elif second_inside_first and not first_inside_second:
+                    # first fagocite second
+                    grow_region_to_match_region(first,second)
+                    elements.pop(0) # The element "second" remains at top of the list, we
+                                    # need to remove it
+                    elements = [first]+elements
+                else:
+                ######################################################
+                # HERE THE OVERLAPING IS PARCIAL
+                ######################################################
+                    intersection = first.intersection(second)
+                    if not intersection: 
+                        # Yeiii, nothing to do, add first element
+                        aux_elements.append(first)
+                        continue
+                    # If most the second element is inside first 
+                    if intersection.area >= second.area* 0.8:
+                        # First fagocite second as almost all area is inside first
+                        grow_region_to_match_region(first,second)
+                        elements.pop(0)
+                        elements = [first]+elements
+                    elif intersection.area >= first.area* 0.8:
+                        # Second fagocite first 
+                        grow_region_to_match_region(second,first)
+                        elements.pop(0) # The element remains at top of the list, now is 
+                                    # a bigger region and the first element is discarded
+                        elements = [second] + elements
+                    else:
+                        #split the elements
+                        # if the regions intersects: we shrink both regions to respect each 
+                        # other limit, and just store the first as definitive (second could
+                        # interact with further elements)
+                        if "##11" in first.text or "##11" in second.text or "##12" in first.text or "##12" in second.text:
+                            a=1+1
+                        tmp_y = first.y2
+                        first.y2 = second.y1-1
+                        second.y1 = tmp_y+1
+                        #second.y1=first.y2+1
+                        #elements = [first] + elements
+                        aux_elements.append(first)
+
+            aux_elements.extend(elements)
+            elements = aux_elements                    
+                # i+=1
+
+                # if final_elements == []:
+                #     final_elements = aux_elements.copy()
+                # elif len(aux_elements)<len(final_elements):
+                #     final_elements=aux_elements
+                #     print(f"{i} Len:{len(final_elements)}")
+                # else:
+                #     break
+
+        
+            return elements
 
         cleaned_elements: List[LayoutElement] = []
 
@@ -130,6 +232,12 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
             g = clean_tables(g)  # type:ignore
             cleaned_elements.extend(g)  # type:ignore
+        
+        tag(cleaned_elements)
+        cleaned_elements = shrink_regions(cleaned_elements)       
+        cleaned_elements = shrink_regions(cleaned_elements,jump=1)       
+        #cleaned_elements = shrink_regions(cleaned_elements,jump=2)       
+        #cleaned_elements = shrink_regions(cleaned_elements,jump=3)      
         return cleaned_elements
 
 
