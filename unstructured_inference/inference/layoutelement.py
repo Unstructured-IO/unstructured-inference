@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Collection, List, Optional, cast
 
+import numpy as np
+from pandas import DataFrame
 from layoutparser.elements.layout import TextBlock
 from PIL import Image
 
@@ -343,3 +346,20 @@ class LocationlessLayoutElement:
             "type": self.type,
         }
         return out_dict
+
+
+def table_cells_to_dataframe(cells: dict, nrows: int, ncols: int, header=None) -> DataFrame:
+    arr = np.empty((nrows, ncols), dtype=object)
+    for cell in cells:
+        rows = cell["row_nums"]
+        cols = cell["column_nums"]
+        if rows[0] >= nrows or cols[0] >= ncols:
+            new_arr = np.empty((max(rows[0]+1, nrows), max(cols[0]+1, ncols)), dtype=object)
+            new_arr[:nrows, :ncols] = arr
+            arr = new_arr
+            nrows, ncols = arr.shape
+        arr[rows[0], cols[0]] = cell["cell text"]
+
+    df = DataFrame(arr, columns=header)
+    return df
+
