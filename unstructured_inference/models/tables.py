@@ -10,12 +10,12 @@ from typing import List, Optional, Union
 import numpy as np
 import pandas as pd
 import pytesseract
-from unstructured_inference.models import paddle_ocr
 import torch
 from PIL import Image
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 
 from unstructured_inference.logger import logger
+from unstructured_inference.models import paddle_ocr
 from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 
@@ -59,8 +59,10 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         """Get OCR tokens from either paddleocr or tesseract"""
         table_ocr = os.getenv("TABLE_OCR", "tesseract").lower()
         if table_ocr not in ["paddle", "tesseract"]:
-            raise ValueError("Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'.")
-        if table_ocr == "paddle":    
+            raise ValueError(
+                "Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'."
+            )
+        if table_ocr == "paddle":
             paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
 
             tokens = []
