@@ -60,7 +60,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         """Get OCR tokens from either paddleocr or tesseract"""
         table_ocr = os.getenv("TABLE_OCR", "tesseract").lower()
         if table_ocr not in ["paddle", "tesseract"]:
-            raise ValueError("Environment variable TABLE_OCR must be set to  'tesseract' or 'paddle'.")
+            raise ValueError("Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'.")
         if table_ocr == "paddle":    
             paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
 

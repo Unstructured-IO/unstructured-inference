@@ -403,21 +403,38 @@ def test_align_rows(rows, bbox, output):
 
 
 @pytest.mark.parametrize(
-    ("model_path", "platform_type"),
+    ("model_path", "table_ocr"),
     [
-        ("microsoft/table-transformer-structure-recognition", "arm64"),
-        ("microsoft/table-transformer-structure-recognition", "x86_64"),
+        ("microsoft/table-transformer-structure-recognition", "paddle"),
+        ("microsoft/table-transformer-structure-recognition", "tesseract"),
     ],
 )
-def test_table_prediction(model_path, sample_table_transcript, platform_type):
-    with patch("platform.machine", return_value=platform_type):
+def test_table_prediction(model_path, sample_table_transcript, table_ocr, monkeypatch):
+    monkeypatch.setenv("TABLE_OCR", table_ocr)
+    table_model = tables.UnstructuredTableTransformerModel()
+    from PIL import Image
+
+    table_model.initialize(model=model_path)
+    img = Image.open("./sample-docs/example_table.jpg").convert("RGB")
+    prediction = table_model.predict(img)
+    assert prediction.strip() == sample_table_transcript.strip()
+    
+@pytest.mark.parametrize(
+    ("model_path", "table_ocr"),
+    [
+        ("microsoft/table-transformer-structure-recognition", "invalid_table_ocr"),
+    ],
+)
+def test_table_prediction_invalid_table_ocr_value(model_path, sample_table_transcript, table_ocr, monkeypatch):
+    expected_error_message = "Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'."
+    with pytest.raises(ValueError, match=expected_error_message):
+        monkeypatch.setenv("TABLE_OCR", table_ocr)
         table_model = tables.UnstructuredTableTransformerModel()
         from PIL import Image
 
         table_model.initialize(model=model_path)
         img = Image.open("./sample-docs/example_table.jpg").convert("RGB")
         prediction = table_model.predict(img)
-        assert prediction.strip() == sample_table_transcript.strip()
 
 
 def test_intersect():
