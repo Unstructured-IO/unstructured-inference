@@ -346,22 +346,22 @@ class PageLayout:
         of the page, identifies image regions, and extracts and saves them as separate image files.
         """
 
+        if not output_dir_path:
+            output_dir_path = os.path.join(os.getcwd(), "figures")
+        os.makedirs(output_dir_path, exist_ok=True)
+
         figure_number = 0
         for el in self.elements:
             if isinstance(el, LocationlessLayoutElement) or el.type not in ["Image"]:
                 continue
 
             figure_number += 1
-            cropped_image = self.image.crop((el.x1, el.y1, el.x2, el.y2))
             try:
-                if not output_dir_path:
-                    output_dir_path = os.path.join(os.getcwd(), "figures")
-                os.makedirs(output_dir_path, exist_ok=True)
-
                 output_f_path = os.path.join(
                     output_dir_path,
                     f"figure-{self.number}-{figure_number}.jpg",
                 )
+                cropped_image = self.image.crop((el.x1, el.y1, el.x2, el.y2))
                 write_image(cropped_image, output_f_path)
                 el.image_path = output_f_path
             except Exception:
