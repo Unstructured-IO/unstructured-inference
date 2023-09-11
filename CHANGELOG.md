@@ -1,3 +1,7 @@
+## 0.5.26
+
+* Add functionality to extract and save images from the page
+
 ## 0.5.25
 
 * fix a bug where `cells_to_html` doesn't handle cells spanning multiple rows properly
