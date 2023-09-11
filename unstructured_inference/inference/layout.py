@@ -455,6 +455,8 @@ class PageLayout:
         """Creates a PageLayout from an already-loaded PIL Image."""
         analysis = kwargs.get("analysis", False)
         supplement_with_ocr_elements = kwargs.get("supplement_with_ocr_elements", True)
+        extract_images_in_pdf = kwargs.get("extract_images_in_pdf", False)
+        image_output_dir_path = kwargs.get("image_output_dir_path", None)
 
         page = cls(
             number=number,
@@ -485,7 +487,8 @@ class PageLayout:
         page.image_path = os.path.abspath(image_path) if image_path else None
         page.document_filename = os.path.abspath(document_filename) if document_filename else None
 
-        page.extract_images()
+        if extract_images_in_pdf:
+            page.extract_images(image_output_dir_path)
 
         # Clear the image to save memory
         page.image = None
