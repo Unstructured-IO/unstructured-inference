@@ -37,6 +37,7 @@ from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
 from unstructured_inference.patches.pdfminer import parse_keyword
+from unstructured_inference.utils import write_image
 from unstructured_inference.visualize import draw_bbox
 
 # NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
@@ -339,6 +340,33 @@ class PageLayout:
         ]
         return elements
 
+    def extract_images(self, output_dir_path: Optional[str] = None):
+        """
+        Extract and save images from the page. This method iterates through the layout elements
+        of the page, identifies image regions, and extracts and saves them as separate image files.
+        """
+
+        figure_number = 0
+        for el in self.elements:
+            if isinstance(el, LocationlessLayoutElement) or el.type not in ["Image"]:
+                continue
+
+            figure_number += 1
+            cropped_image = self.image.crop((el.x1, el.y1, el.x2, el.y2))
+            try:
+                if not output_dir_path:
+                    output_dir_path = os.path.join(os.getcwd(), "figures")
+                os.makedirs(output_dir_path, exist_ok=True)
+
+                output_f_path = os.path.join(
+                    output_dir_path,
+                    f"figure-{self.number}-{figure_number}.jpg",
+                )
+                write_image(cropped_image, output_f_path)
+                el.image_path = output_f_path
+            except IOError:
+                logger.warning("IOError: Skip writing images", exc_info=True)
+
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
         if self.image_array is None:
@@ -456,6 +484,8 @@ class PageLayout:
         }
         page.image_path = os.path.abspath(image_path) if image_path else None
         page.document_filename = os.path.abspath(document_filename) if document_filename else None
+
+        page.extract_images()
 
         # Clear the image to save memory
         page.image = None
