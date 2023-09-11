@@ -59,11 +59,14 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         table_ocr = os.getenv("TABLE_OCR", "tesseract").lower()
         if table_ocr not in ["paddle", "tesseract"]:
             raise ValueError(
-                "Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'."
+                "Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'.",
             )
         if table_ocr == "paddle":
             from unstructured_inference.models import paddle_ocr
-            paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
+
+            if paddle_ocr is None:
+                paddle_ocr.load_agent()
+            paddle_result = paddle_ocr.ocr(np.array(x), cls=True)
 
             tokens = []
             for idx in range(len(paddle_result)):

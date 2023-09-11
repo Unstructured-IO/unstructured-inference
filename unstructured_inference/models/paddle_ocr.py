@@ -32,4 +32,3 @@ def load_agent(language: str = "en"):
             enable_mkldnn=False,
             show_log=False,
         )
-    return paddle_ocr
