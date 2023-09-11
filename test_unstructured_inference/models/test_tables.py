@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerDecoder,

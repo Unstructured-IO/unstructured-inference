@@ -64,9 +64,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         if table_ocr == "paddle":
             from unstructured_inference.models import paddle_ocr
 
-            if paddle_ocr is None:
-                paddle_ocr.load_agent()
-            paddle_result = paddle_ocr.ocr(np.array(x), cls=True)
+            paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
 
             tokens = []
             for idx in range(len(paddle_result)):
