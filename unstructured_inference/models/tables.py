@@ -15,7 +15,6 @@ from PIL import Image
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 
 from unstructured_inference.logger import logger
-from unstructured_inference.models import paddle_ocr
 from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 
@@ -63,6 +62,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 "Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'."
             )
         if table_ocr == "paddle":
+            from unstructured_inference.models import paddle_ocr
             paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
 
             tokens = []
