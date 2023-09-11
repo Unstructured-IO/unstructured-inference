@@ -94,32 +94,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                         "text": idtx.text,
                     },
                 )
-
-                kernel = np.ones((1, 1), np.uint8)
-                img = cv2.dilate(img, kernel, iterations=1)
-                img = cv2.erode(img, kernel, iterations=1)
-
-                ocr_df: pd.DataFrame = pytesseract.image_to_data(
-                    Image.fromarray(img),
-                    output_type="data.frame",
-                )
-
-                ocr_df = ocr_df.dropna()
-
-                tokens = []
-                for idtx in ocr_df.itertuples():
-                    tokens.append(
-                        {
-                            "bbox": [
-                                idtx.left / zoom,
-                                idtx.top / zoom,
-                                (idtx.left + idtx.width) / zoom,
-                                (idtx.top + idtx.height) / zoom,
-                            ],
-                            "text": idtx.text,
-                        },
-                    )
-                return tokens
+            return tokens
 
     def run_prediction(self, x: Image):
         """Predict table structure"""
