@@ -156,10 +156,10 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
                 indices_to_check = np.where(row)[0]  # We get only the elements which intersected
                 for j in indices_to_check:
-                    if i != j and elements[j] != None:
+                    if i != j and elements[j] is not None:
                         second = elements[j]
                         intersection = first.intersection(
-                            second
+                            second,
                         )  # we know it does, but need the region
                         first_inside_second = first.is_in(second)
                         second_inside_first = second.is_in(first)
@@ -198,10 +198,10 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                                 except:
                                     print("Rompiste un rectangulo!")
 
-                if elements[i] == None:  # the element have been deleted
+                if elements[i] is None:  # the element have been deleted
                     continue
 
-            elements = [e for e in elements if e != None]
+            elements = [e for e in elements if e is not None]
             return elements
 
         cleaned_elements: List[LayoutElement] = []
