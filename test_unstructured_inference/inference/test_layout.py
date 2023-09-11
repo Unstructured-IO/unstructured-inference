@@ -287,18 +287,21 @@ class MockEmbeddedTextRegion(layout.EmbeddedTextRegion):
 class MockPageLayout(layout.PageLayout):
     def __init__(
         self,
+        number=1,
+        image=None,
         layout=None,
         model=None,
         ocr_strategy="auto",
         ocr_languages="eng",
         extract_tables=False,
     ):
-        self.image = None
+        self.image = image
         self.layout = layout
         self.model = model
         self.ocr_strategy = ocr_strategy
         self.ocr_languages = ocr_languages
         self.extract_tables = extract_tables
+        self.number = number
 
     def ocr(self, text_block: MockEmbeddedTextRegion):
         return text_block.ocr_text
@@ -807,6 +810,22 @@ def test_from_image(
         )
         assert mock_image_extraction.called == element_extraction_model_called
         assert mock_detection.called == detection_model_called
+
+
+def test_extract_images(mock_pil_image):
+    page = MockPageLayout(image=mock_pil_image)
+    page.elements = [
+        layoutelement.LayoutElement(1, 1, 10, 10, text=None, type="Image"),
+        layoutelement.LayoutElement(11, 11, 20, 20, text=None, type="Image"),
+        layoutelement.LayoutElement(21, 21, 30, 30, text=None, type="Image"),
+    ]
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        page.extract_images(output_dir_path=str(tmpdir))
+
+        for i, el in enumerate(page.elements):
+            expected_image_path = os.path.join(str(tmpdir), f"figure-{page.number}-{i + 1}.jpg")
+            assert el.image_path == expected_image_path
 
 
 class MockUnstructuredElementExtractionModel(UnstructuredElementExtractionModel):
