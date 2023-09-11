@@ -96,16 +96,22 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         def probably_contained(
             element: Union[LayoutElement, Rectangle],
             inside: Union[LayoutElement, Rectangle],
+            area_threshold: float,
         ) -> bool:
+            """This function checks if one element is inside other.
+             If is definetly inside returns True, in other case check
+            if the intersection is big enough."""
             if Rectangle.a_inside_b(element, inside):
                 return True
 
             intersected_area = element.intersection(inside)
             if intersected_area:
-                return intersected_area.area >= element.area * 0.2
+                return intersected_area.area >= element.area * area_threshold
             return False
 
         def clean_tables(elements: List[LayoutElement]) -> Iterable[LayoutElement]:
+            """Takes all the tables in the elements list, then removes all elements inside them.
+            This function uses the areas in the intersection to check nesting."""
             import numpy as np
 
             tables = [e for e in elements if e.type == "Table"]
