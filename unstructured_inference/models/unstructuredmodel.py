@@ -4,15 +4,38 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, List, Union
 
+import numpy as np
 from PIL.Image import Image
 
-from unstructured_inference.inference.elements import Rectangle
+from unstructured_inference.inference.elements import Rectangle, intersections
 
 if TYPE_CHECKING:
     from unstructured_inference.inference.layoutelement import (
         LayoutElement,
         LocationlessLayoutElement,
     )
+
+
+def draw(e1: LayoutElement, e2: LayoutElement):
+    import PIL.Image
+    from PIL import ImageDraw, ImageFont
+
+    from unstructured_inference.inference.elements import minimal_containing_region
+
+    try:
+        kbd = ImageFont.truetype("Keyboard.ttf", 20)
+        mini_page = minimal_containing_region(e1, e2)
+        blank_page = PIL.Image.new("RGB", (int(mini_page.width) + 1, int(mini_page.height) + 1))
+        draw = ImageDraw.Draw(blank_page)
+
+        draw.text((e1.x1, e1.y1), text=f"{e1.text[:7]}", fill="white", font=kbd)
+        draw.rectangle((e1.x1, e1.y1, e1.x2, e1.y2), outline=(255, 0, 0))
+
+        draw.text((e2.x1, e2.y1), text=f"{e2.text[:7]}", fill="white", font=kbd)
+        draw.rectangle((e2.x1, e2.y1, e2.x2, e2.y2), outline=(0, 255, 0))
+        blank_page.show()
+    except:
+        print("Ooops")
 
 
 class UnstructuredModel(ABC):
@@ -61,18 +84,14 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
     @staticmethod
     def deduplicate_detected_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
         """Deletes overlapping elements in a list of elements"""
-        from unstructured_inference.inference.elements import partition_groups_from_regions, grow_region_to_match_region
-        def get_best_class(elements: List[LayoutElement]):
-            import numpy as np
+        from unstructured_inference.inference.elements import (
+            grow_region_to_match_region,
+            partition_groups_from_regions,
+        )
 
-            index = np.argmax([e.prob if e.prob else 0 for e in elements])
-            return elements[index].type, elements[index].prob
-
-        def get_bigger_class(elements: List[LayoutElement]):
-            import numpy as np
-
-            index = np.argmax([e.area for e in elements])
-            return elements[index].type, elements[index].prob
+        def check_rectangle(e: LayoutElement):
+            if not (e.x1 < e.x2 and e.y1 < e.y2):
+                print(f"Bad rectangle! {e.id}")
 
         def probably_contained(
             element: Union[LayoutElement, Rectangle],
@@ -105,121 +124,91 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             for nested, elem in zip(nested, elements):  # type:ignore
                 if not nested and elem not in [tables]:
                     final_elements.append(elem)
-                # if elem.x1==727 and elem.y1==913: #Weird element not detected as intersected
-                #     elem.type='GROUP'
-                #     elem.intersection(tables[0])
-                #     elem.intersection(tables[1])
-                #     print(elem)
 
             final_elements.extend(tables)
             final_elements.sort(key=lambda e: e.y1)
             return final_elements
-        
+
         def tag(elements):
-            colors = ["red","blue","green","cyan","magenta","brown"]
+            colors = ["red", "blue", "green", "cyan", "magenta", "brown"]
 
             max_x = 0
-            max_y = 0 
-            for i,e in enumerate(elements):
-                e.text=f"##{i}# -> {e.text}"
+            max_y = 0
+            for i, e in enumerate(elements):
+                e.text = f"##{i}# -> {e.text}"
                 e.id = i
-                e.clrs = colors[i%6]
-                # e.x1=e.x1/10
-                # e.x2=e.x2/10
-                # e.y1=e.y1/10
-                # e.y2=e.y2/10
-                max_x=max(max_x,e.x1)
-                max_x=max(max_x,e.x2)
-                max_y=max(max_y,e.y1)
-                max_x=max(max_y,e.y2)
+                e.clrs = colors[i % 6]
+                max_x = max(max_x, e.x1)
+                max_x = max(max_x, e.x2)
+                max_y = max(max_y, e.y1)
+                max_x = max(max_y, e.y2)
 
-            #print(f"X:{max_x}, Y:{max_y}")
+        def shrink_regions(elements: List[LayoutElement], jump: int = 0) -> List[LayoutElement]:
+            intersections_mtx = intersections(*elements)
 
-        def shrink_regions(elements: List[LayoutElement],jump:int = 0)->List[LayoutElement]:
-            final_elements = []
-            i=0
-            #tag(elements)
+            for e in elements:
+                check_rectangle(e)
 
-            aux_elements = []
+            for i, row in enumerate(intersections_mtx):
+                first = elements[i]
+                if not first:
+                    continue
 
-            while len(elements)>=2+jump:
-                #window = elements[i:i+2]
-                first = elements.pop(0)
-                second = elements[jump]
-                if "##11" in first.text or "##11" in second.text or "##12" in first.text or "##12" in second.text:
-                    a=1+1
-                    pass
+                indices_to_check = np.where(row)[0]  # We get only the elements which intersected
+                for j in indices_to_check:
+                    if i != j and elements[j] != None:
+                        second = elements[j]
+                        intersection = first.intersection(
+                            second
+                        )  # we know it does, but need the region
+                        first_inside_second = first.is_in(second)
+                        second_inside_first = second.is_in(first)
 
-                first_inside_second = first.is_in(second)
-                second_inside_first = second.is_in(first)
-                ######################################################
-                # HERE THE OVERLAPING IS COMPLETE, ONE IS INSIDE OTHER
-                ######################################################
-                    #print(":D")
-                if first_inside_second and not second_inside_first:
-                    # second fagocite first
-                    grow_region_to_match_region(second,first)
-                    elements.pop(0) # The element remains at top of the list, now is 
-                                    # a bigger region and the first element is discarded
-                    elements = [second] + elements
-                elif second_inside_first and not first_inside_second:
-                    # first fagocite second
-                    grow_region_to_match_region(first,second)
-                    elements.pop(0) # The element "second" remains at top of the list, we
-                                    # need to remove it
-                    elements = [first]+elements
-                else:
-                ######################################################
-                # HERE THE OVERLAPING IS PARCIAL
-                ######################################################
-                    intersection = first.intersection(second)
-                    if not intersection: 
-                        # Yeiii, nothing to do, add first element
-                        aux_elements.append(first)
-                        continue
-                    # If most the second element is inside first 
-                    if intersection.area >= second.area* 0.8:
-                        # First fagocite second as almost all area is inside first
-                        grow_region_to_match_region(first,second)
-                        elements.pop(0)
-                        elements = [first]+elements
-                    elif intersection.area >= first.area* 0.8:
-                        # Second fagocite first 
-                        grow_region_to_match_region(second,first)
-                        elements.pop(0) # The element remains at top of the list, now is 
-                                    # a bigger region and the first element is discarded
-                        elements = [second] + elements
-                    else:
-                        #split the elements
-                        # if the regions intersects: we shrink both regions to respect each 
-                        # other limit, and just store the first as definitive (second could
-                        # interact with further elements)
-                        if "##11" in first.text or "##11" in second.text or "##12" in first.text or "##12" in second.text:
-                            a=1+1
-                        tmp_y = first.y2
-                        first.y2 = second.y1-1
-                        second.y1 = tmp_y+1
-                        #second.y1=first.y2+1
-                        #elements = [first] + elements
-                        aux_elements.append(first)
+                        if first_inside_second and not second_inside_first:
+                            elements[i] = None
+                        elif second_inside_first and not first_inside_second:
+                            # delete second element
+                            elements[j] = None
+                        elif intersection:
+                            percentage_inside_first = intersection.area / first.area
+                            percentage_inside_second = intersection.area / second.area
 
-            aux_elements.extend(elements)
-            elements = aux_elements                    
-                # i+=1
+                            # If areas are similar enough
+                            if 0.8 < first.area / second.area <= 1:
+                                intersection_small = False
+                                intersection_big = True
+                                if intersection_small:
+                                    # split
+                                    pass
+                                    continue
 
-                # if final_elements == []:
-                #     final_elements = aux_elements.copy()
-                # elif len(aux_elements)<len(final_elements):
-                #     final_elements=aux_elements
-                #     print(f"{i} Len:{len(final_elements)}")
-                # else:
-                #     break
+                                if intersection_big:
+                                    # merge
+                                    grow_region_to_match_region(first, second)
+                                    elements[j] = None
 
-        
+                            if first.area > second.area:
+                                elements[j] = None
+                            if second.area > first.area:
+                                elements[i] = None
+
+                                try:
+                                    check_rectangle(first)
+                                    check_rectangle(second)
+                                except:
+                                    print("Rompiste un rectangulo!")
+
+                if elements[i] == None:  # the element have been deleted
+                    continue
+
+            elements = [e for e in elements if e != None]
             return elements
 
         cleaned_elements: List[LayoutElement] = []
-
+        print("Prechecking...")
+        for e in elements:
+            check_rectangle(e)
+        print("Precheck done.")
         # TODO: Delete nested elements with low or None probability
         # TODO: Keep most confident
         # TODO: Better to grow horizontally than vertically?
@@ -232,12 +221,9 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
             g = clean_tables(g)  # type:ignore
             cleaned_elements.extend(g)  # type:ignore
-        
+
         tag(cleaned_elements)
-        cleaned_elements = shrink_regions(cleaned_elements)       
-        cleaned_elements = shrink_regions(cleaned_elements,jump=1)       
-        #cleaned_elements = shrink_regions(cleaned_elements,jump=2)       
-        #cleaned_elements = shrink_regions(cleaned_elements,jump=3)      
+        cleaned_elements = shrink_regions(cleaned_elements)
         return cleaned_elements
 
 
