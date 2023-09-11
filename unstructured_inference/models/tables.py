@@ -5,9 +5,8 @@ import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 
-import cv2
 import numpy as np
 import pandas as pd
 import pytesseract
@@ -75,21 +74,8 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                     tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
             return tokens
         else:
-            zoom = 6
-            img = cv2.resize(
-                cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
-                None,
-                fx=zoom,
-                fy=zoom,
-                interpolation=cv2.INTER_CUBIC,
-            )
-
-            kernel = np.ones((1, 1), np.uint8)
-            img = cv2.dilate(img, kernel, iterations=1)
-            img = cv2.erode(img, kernel, iterations=1)
-
             ocr_df: pd.DataFrame = pytesseract.image_to_data(
-                Image.fromarray(img),
+                x,
                 output_type="data.frame",
             )
 
@@ -100,15 +86,40 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 tokens.append(
                     {
                         "bbox": [
-                            idtx.left / zoom,
-                            idtx.top / zoom,
-                            (idtx.left + idtx.width) / zoom,
-                            (idtx.top + idtx.height) / zoom,
+                            idtx.left,
+                            idtx.top,
+                            idtx.left + idtx.width,
+                            idtx.top + idtx.height,
                         ],
                         "text": idtx.text,
                     },
                 )
-            return tokens
+
+                kernel = np.ones((1, 1), np.uint8)
+                img = cv2.dilate(img, kernel, iterations=1)
+                img = cv2.erode(img, kernel, iterations=1)
+
+                ocr_df: pd.DataFrame = pytesseract.image_to_data(
+                    Image.fromarray(img),
+                    output_type="data.frame",
+                )
+
+                ocr_df = ocr_df.dropna()
+
+                tokens = []
+                for idtx in ocr_df.itertuples():
+                    tokens.append(
+                        {
+                            "bbox": [
+                                idtx.left / zoom,
+                                idtx.top / zoom,
+                                (idtx.left + idtx.width) / zoom,
+                                (idtx.top + idtx.height) / zoom,
+                            ],
+                            "text": idtx.text,
+                        },
+                    )
+                return tokens
 
     def run_prediction(self, x: Image):
         """Predict table structure"""
@@ -117,8 +128,6 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             outputs_structure = self.model(**encoding)
 
         tokens = self.get_tokens(x=x)
-
-        sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
 
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
@@ -605,10 +614,37 @@ def structure_to_cells(table_structure, tokens):
     return cells, confidence_score
 
 
+def fill_cells(cells: List[dict]) -> List[dict]:
+    """add empty cells to pad cells that spans multiple rows for html conversion
+
+    For example if a cell takes row 0 and 1 and column 0, we add a new empty cell at row 1 and
+    column 0. This padding ensures the structure of the output table is intact. In this example the
+    cell data is {"row_nums": [0, 1], "column_nums": [0], ...}
+
+    A cell contains the following keys relevent to the html conversion:
+    row_nums: List[int]
+        the row numbers this cell belongs to; for cells spanning multiple rows there are more than
+        one numbers
+    column_nums: List[int]
+        the columns numbers this cell belongs to; for cells spanning multiple columns there are more
+        than one numbers
+    cell text: str
+        the text in this cell
+
+    """
+    new_cells = cells.copy()
+    for cell in cells:
+        for extra_row in sorted(cell["row_nums"][1:]):
+            new_cell = cell.copy()
+            new_cell["row_nums"] = [extra_row]
+            new_cell["cell text"] = ""
+            new_cells.append(new_cell)
+    return new_cells
+
+
 def cells_to_html(cells):
     """Convert table structure to html format."""
-    cells = sorted(cells, key=lambda k: min(k["column_nums"]))
-    cells = sorted(cells, key=lambda k: min(k["row_nums"]))
+    cells = sorted(fill_cells(cells), key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
 
     table = ET.Element("table")
     current_row = -1
