@@ -364,8 +364,8 @@ class PageLayout:
                 )
                 write_image(cropped_image, output_f_path)
                 el.image_path = output_f_path
-            except IOError:
-                logger.warning("IOError: Skip writing images", exc_info=True)
+            except Exception:
+                logger.warning("Error in extracting images. Skip extracting images", exc_info=True)
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
