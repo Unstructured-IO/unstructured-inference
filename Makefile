@@ -1,7 +1,7 @@
 PACKAGE_NAME := unstructured_inference
 PIP_VERSION := 23.2.1
 CURRENT_DIR := $(shell pwd)
-
+ARCH := $(shell uname -m)
 
 .PHONY: help
 help: Makefile
@@ -34,7 +34,7 @@ install-detectron2:
 
 .PHONY: install-paddleocr
 install-paddleocr:
-	pip install "unstructured.PaddleOCR"
+	ARCH=${ARCH} ./scripts/install-paddleocr.sh
 
 .PHONY: install-test
 install-test: install-base
