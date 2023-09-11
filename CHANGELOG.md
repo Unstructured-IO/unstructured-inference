@@ -1,3 +1,7 @@
+## 0.5.26
+
+* support paddle with both cpu and gpu and assumed it is pre-installed
+
 ## 0.5.25
 
 * fix a bug where `cells_to_html` doesn't handle cells spanning multiple rows properly
