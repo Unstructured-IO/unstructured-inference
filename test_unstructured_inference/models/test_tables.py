@@ -355,8 +355,8 @@ def test_table_prediction_paddle(monkeypatch):
     img = Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
     prediction = table_model.predict(img)
     # Note(yuming): lossen paddle table prediction output test since performance issue
-    # assert rows spans two rows are detected
-    assert '<table><thead><th rowspan="2">' in prediction
+    # and output might change on different platforms
+    assert '<th rowspan="2">Disability Category</th>' in prediction
 
 
 def test_table_prediction_invalid_table_ocr(monkeypatch):
