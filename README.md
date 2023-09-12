@@ -36,17 +36,21 @@ tips on installing Detectron2 on Windows.
 
 ### PaddleOCR
 
-[PaddleOCR](https://github.com/Unstructured-IO/unstructured.PaddleOCR) is suggested for table processing for `x86_64` architectures.
-It **should not be installed under MacOS running Apple Silicon**.
+[PaddleOCR](https://github.com/Unstructured-IO/unstructured.PaddleOCR) is suggested for table processing. Please set
+environment variable `TABLE_OCR`
+to `paddle` if you wish to use paddle for table processing instead of default `tesseract`.
 
 PaddleOCR may be with installed with:
 
 ```shell
-# x86_64 only!
+pip install paddepaddle
 pip install "unstructured.PaddleOCR"
 ```
 
-If paddle is not available, OCR is handled by tesseract instead.
+We suggest that you install paddlepaddle-gpu with `pip install paddepaddle-gpu` if you have gpu devices available for better OCR performance.
+
+Please note that **paddlepaddle does not work on MacOS with Apple Silicon**. So if you want it running on Apple M1/M2 chip, we have a custom wheel of paddlepaddle for aarch64 architecture, you can install it with `pip install unstructured.paddlepaddle`, and run it inside a docker container.
+
 
 ### Repository
 
