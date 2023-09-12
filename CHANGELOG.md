@@ -1,6 +1,10 @@
-## 0.5.26
+## 0.5.27
 
 * table structure detection now pads the input image by 25 pixels in all 4 directions to improve its recall
+
+## 0.5.26
+
+* support paddle with both cpu and gpu and assumed it is pre-installed
 
 ## 0.5.25
 

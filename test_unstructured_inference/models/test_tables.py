@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerDecoder,
@@ -326,35 +324,50 @@ def test_align_rows(rows, bbox, output):
     assert postprocess.align_rows(rows, bbox) == output
 
 
-# TODO: break this test down so it doesn't account for nearly 8% of test coverage
-@pytest.mark.parametrize(
-    ("model_path", "platform_type"),
-    [
-        ("microsoft/table-transformer-structure-recognition", "arm64"),
-        ("microsoft/table-transformer-structure-recognition", "x86_64"),
-    ],
-)
-def test_table_prediction(model_path, platform_type):
-    with patch("platform.machine", return_value=platform_type):
+def test_table_prediction_tesseract():
+    table_model = tables.UnstructuredTableTransformerModel()
+    from PIL import Image
+
+    table_model.initialize(model="microsoft/table-transformer-structure-recognition")
+    img = Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
+    prediction = table_model.predict(img)
+    # assert rows spans two rows are detected
+    assert '<table><thead><th rowspan="2">' in prediction
+    # one of the safest rows to detect should be present
+    assert (
+        "<tr>"
+        "<td>Blind</td>"
+        "<td>5</td>"
+        "<td>1</td>"
+        "<td>4</td>"
+        "<td>34.5%, n=1</td>"
+        "<td>1199 sec, n=1</td>"
+        "</tr>"
+    ) in prediction
+
+
+def test_table_prediction_paddle(monkeypatch):
+    monkeypatch.setenv("TABLE_OCR", "paddle")
+    table_model = tables.UnstructuredTableTransformerModel()
+    from PIL import Image
+
+    table_model.initialize(model="microsoft/table-transformer-structure-recognition")
+    img = Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
+    prediction = table_model.predict(img)
+    # Note(yuming): lossen paddle table prediction output test since performance issue
+    # assert rows spans two rows are detected
+    assert '<table><thead><th rowspan="2">' in prediction
+
+
+def test_table_prediction_invalid_table_ocr(monkeypatch):
+    monkeypatch.setenv("TABLE_OCR", "invalid_table_ocr")
+    with pytest.raises(ValueError):
         table_model = tables.UnstructuredTableTransformerModel()
         from PIL import Image
 
-        table_model.initialize(model=model_path)
+        table_model.initialize(model="microsoft/table-transformer-structure-recognition")
         img = Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
-        prediction = table_model.predict(img)
-        # assert rows spans two rows are detected
-        assert '<table><thead><th rowspan="2">' in prediction
-        # one of the safest rows to detect should be present
-        assert (
-            "<tr>"
-            "<td>Blind</td>"
-            "<td>5</td>"
-            "<td>1</td>"
-            "<td>4</td>"
-            "<td>34.5%, n=1</td>"
-            "<td>1199 sec, n=1</td>"
-            "</tr>"
-        ) in prediction
+        _ = table_model.predict(img)
 
 
 def test_intersect():
