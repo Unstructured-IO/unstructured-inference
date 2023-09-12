@@ -1,3 +1,7 @@
+## 0.5.26
+
+* table structure detection now pads the input image by 25 pixels in all 4 directions to improve its recall
+
 ## 0.5.25
 
 * fix a bug where `cells_to_html` doesn't handle cells spanning multiple rows properly
