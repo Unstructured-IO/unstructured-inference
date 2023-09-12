@@ -6,7 +6,7 @@ from unstructured_paddleocr import PaddleOCR
 
 @functools.lru_cache(maxsize=None)
 def load_agent(language: str = "en"):
-    """Loads the PaddleOCR agent as a global variable to ensure that we only load it once."""
+    """Loads the PaddleOCR agent with caching to ensure that we only load it once."""
 
     # Disable signal handlers at C++ level upon failing
     # ref: https://www.paddlepaddle.org.cn/documentation/docs/en/api/paddle/
