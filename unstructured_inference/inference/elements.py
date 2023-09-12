@@ -158,8 +158,8 @@ class Rectangle:
             self.area <= other.area
         )
 
-def intersect_free_quadrilaterals(quad1: Rectangle,
-                                  quad2: Rectangle):
+
+def intersect_free_quadrilaterals(quad1: Rectangle, quad2: Rectangle):
     """
     Modifica los cuadriláteros `quad1` y `quad2` para que dejen de intersectarse.
 
@@ -170,10 +170,10 @@ def intersect_free_quadrilaterals(quad1: Rectangle,
     Returns:
     Un par de cuadriláteros modificados.
     """
-    quad1_coords = [list(quad1.coordinates[0]),list(quad1.coordinates[2])]
-    quad2_coords = [list(quad2.coordinates[0]),list(quad2.coordinates[2])]
+    quad1_coords = [list(quad1.coordinates[0]), list(quad1.coordinates[2])]
+    quad2_coords = [list(quad2.coordinates[0]), list(quad2.coordinates[2])]
     # Encontrar los puntos de intersección de los cuadrilateros.
-    points= []
+    points = []
     for point1 in quad1_coords:
         for point2 in quad2_coords:
             if point1 == point2:
@@ -197,20 +197,21 @@ def intersect_free_quadrilaterals(quad1: Rectangle,
         quad2_coords[0][1] += point[1]
         quad2_coords[1][1] += point[1]
 
-    quad1.x1= quad1_coords[0][0]
-    quad1.x2= quad1_coords[1][0]
+    quad1.x1 = quad1_coords[0][0]
+    quad1.x2 = quad1_coords[1][0]
 
-    quad1.y1= quad1_coords[0][1]
-    quad1.y2= quad1_coords[1][1]
+    quad1.y1 = quad1_coords[0][1]
+    quad1.y2 = quad1_coords[1][1]
 
     ####################
-    quad2.x1= quad2_coords[0][0]
-    quad2.x2= quad2_coords[1][0]
+    quad2.x1 = quad2_coords[0][0]
+    quad2.x2 = quad2_coords[1][0]
 
-    quad2.y1= quad2_coords[0][1]
-    quad2.y2= quad2_coords[1][1]
+    quad2.y1 = quad2_coords[0][1]
+    quad2.y2 = quad2_coords[1][1]
 
     return quad1, quad2
+
 
 def minimal_containing_region(*regions: Rectangle) -> Rectangle:
     """Returns the smallest rectangular region that contains all regions passed"""
