@@ -1,6 +1,8 @@
-import paddle
 import functools
+
+import paddle
 from unstructured_paddleocr import PaddleOCR
+
 
 @functools.lru_cache(maxsize=None)
 def load_agent(language: str = "en"):
