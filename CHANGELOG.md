@@ -1,4 +1,4 @@
-## 0.5.26
+## 0.5.26-dev0
 
 * support paddle with both cpu and gpu and assumed it is pre-installed
 
