@@ -6,6 +6,8 @@ from typing import Optional, Union
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import ImageFont
+from PIL import ImageFont
 from PIL.Image import Image
 from PIL.ImageDraw import ImageDraw
 
@@ -17,7 +19,25 @@ def draw_bbox(image: Image, rect: Rectangle, color: str = "red", width=1) -> Ima
     img = image.copy()
     draw = ImageDraw(img)
     topleft, _, bottomright, _ = rect.coordinates
-    draw.rectangle((topleft, bottomright), outline=color, width=width)
+    try:
+        kbd = ImageFont.truetype("Keyboard.ttf", 20)
+        if rect.type == "GROUP":
+            draw.rectangle((topleft, bottomright), outline="green", width=5)
+            # draw.text(topleft, text="G", fill="green", font=kbd)
+        else:
+            draw.rectangle((topleft, bottomright), outline=rect.clrs, width=width)
+            # draw.text(topleft, text=f"{rect.type[:5]}-{rect.prob}-\n {rect.text[:10]}", fill="blue", font=kbd)
+            if rect.id % 3 == 0:
+                tr = topleft[1] - 30
+            if rect.id % 3 == 1:
+                tr = topleft[1]
+            elif rect.id % 3 == 2:
+                tr = topleft[1] + 30
+
+            topleft_txt = topleft[0], tr
+            draw.text(topleft_txt, text=f"{rect.text[:10]}", fill=rect.clrs, font=kbd)
+    except Exception as e:
+        print(f"***{e}")
     return img
 
 

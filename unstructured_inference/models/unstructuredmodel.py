@@ -8,6 +8,7 @@ import numpy as np
 from PIL.Image import Image
 
 from unstructured_inference.inference.elements import Rectangle, intersections
+from unstructured_inference.inference.elements import intersect_free_quadrilaterals
 
 if TYPE_CHECKING:
     from unstructured_inference.inference.layoutelement import (
@@ -25,7 +26,7 @@ def draw(e1: LayoutElement, e2: LayoutElement):
     try:
         kbd = ImageFont.truetype("Keyboard.ttf", 20)
         mini_page = minimal_containing_region(e1, e2)
-        blank_page = PIL.Image.new("RGB", (int(mini_page.width) + 1, int(mini_page.height) + 1))
+        blank_page = PIL.Image.new("RGB", (2000,2000))
         draw = ImageDraw.Draw(blank_page)
 
         draw.text((e1.x1, e1.y1), text=f"{e1.text[:7]}", fill="white", font=kbd)
@@ -90,8 +91,12 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         )
 
         def check_rectangle(e: LayoutElement):
-            if not (e.x1 < e.x2 and e.y1 < e.y2):
+            well_formed= e.x1 < e.x2 and e.y1 < e.y2
+            if not well_formed:
                 print(f"Bad rectangle! {e.id}")
+
+            return well_formed
+            
 
         def probably_contained(
             element: Union[LayoutElement, Rectangle],
@@ -103,31 +108,31 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             if the intersection is big enough."""
             if Rectangle.a_inside_b(element, inside):
                 return True
+            
 
-            intersected_area = element.intersection(inside)
+            intersected_area = grown_table.intersection(element)
             if intersected_area:
                 return intersected_area.area >= element.area * area_threshold
             return False
 
         def clean_tables(elements: List[LayoutElement]) -> Iterable[LayoutElement]:
-            """Takes all the tables in the elements list, then removes all elements inside them.
-            This function uses the areas in the intersection to check nesting."""
             import numpy as np
 
             tables = [e for e in elements if e.type == "Table"]
+            not_tables = [e for e in elements if e.type!="Table"]
             if len(tables) == 0:
                 return elements
 
-            nested = None
+            nested_check = None
             for table in tables:
-                nested_current = np.array([probably_contained(e, table) for e in elements])
-                if nested is None:
-                    nested = nested_current
+                nested_current = np.array([probably_contained(e, table) for e in not_tables])
+                if nested_check is None:
+                    nested_check = nested_current
                     continue
-                nested = nested | nested_current
+                nested_check = nested_check | nested_current
 
             final_elements = []
-            for nested, elem in zip(nested, elements):  # type:ignore
+            for nested, elem in zip(nested_check, not_tables):  # type:ignore
                 if not nested and elem not in [tables]:
                     final_elements.append(elem)
 
@@ -141,7 +146,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             max_x = 0
             max_y = 0
             for i, e in enumerate(elements):
-                e.text = f"##{i}# -> {e.text}"
+                e.text = f"-{i}-:{e.text}"
                 e.id = i
                 e.clrs = colors[i % 6]
                 max_x = max(max_x, e.x1)
@@ -179,24 +184,23 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                             percentage_inside_first = intersection.area / first.area
                             percentage_inside_second = intersection.area / second.area
 
-                            # If areas are similar enough
-                            if 0.8 < first.area / second.area <= 1:
-                                intersection_small = False
-                                intersection_big = True
-                                if intersection_small:
-                                    # split
-                                    pass
-                                    continue
-
-                                if intersection_big:
-                                    # merge
-                                    grow_region_to_match_region(first, second)
-                                    elements[j] = None
-
-                            if first.area > second.area:
+                            iou = first.intersection_over_union(second) 
+                            if iou < 0.5: #small
+                                first,second= intersect_free_quadrilaterals(first,second)
+                                if not check_rectangle(first):
+                                    elements[i]=None # The rectangle is too small, delete
+                                if not check_rectangle(second):
+                                    elements[j]=None
+                                # elements[i]=first
+                                # elements[j]=second
+                                if first.height<15:
+                                    elements[i]=None
+                                if second.height<15:
+                                    elements[j]=None
+                            elif intersection.area: #big
+                                # merge
+                                grow_region_to_match_region(first, second)
                                 elements[j] = None
-                            if second.area > first.area:
-                                elements[i] = None
 
                                 try:
                                     check_rectangle(first)
@@ -204,12 +208,13 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                                 except:
                                     print("Rompiste un rectangulo!")
 
-                if elements[i] is None:  # the element have been deleted
+                if elements[i] is None:  # the element have been deleted, 
                     continue
 
             elements = [e for e in elements if e is not None]
             return elements
 
+        tag(elements)
         cleaned_elements: List[LayoutElement] = []
         print("Prechecking...")
         for e in elements:
@@ -218,6 +223,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         # TODO: Delete nested elements with low or None probability
         # TODO: Keep most confident
         # TODO: Better to grow horizontally than vertically?
+        return elements
         groups = partition_groups_from_regions(elements)  # type:ignore
         for g in groups:
             # group_border = minimal_containing_region(*g)
@@ -228,8 +234,8 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             g = clean_tables(g)  # type:ignore
             cleaned_elements.extend(g)  # type:ignore
 
-        tag(cleaned_elements)
         cleaned_elements = shrink_regions(cleaned_elements)
+        cleaned_elements = [e for e in cleaned_elements if e.height>15]
         return cleaned_elements
 
 
