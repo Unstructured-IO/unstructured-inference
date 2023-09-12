@@ -169,6 +169,8 @@ _data = {
         ("block.crop_image(image)", [9], [0]),
         ("Obtain the image segments in the block region", [9], [1]),
     ],
+    "google-multi-table-tab1.jpg": [
+    ],
 }
 
 # actual cell data in the same format as those returned by tables.py
