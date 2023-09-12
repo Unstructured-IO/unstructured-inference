@@ -1,6 +1,11 @@
-## 0.5.26
+## 0.5.27
 
 * Add functionality to extract and save images from the page
+* Update the layout `visualization script` to be able to show only image elements if needed
+
+## 0.5.26
+
+* support paddle with both cpu and gpu and assumed it is pre-installed
 
 ## 0.5.25
 
