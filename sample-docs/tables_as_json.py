@@ -147,6 +147,28 @@ _data = {
         ("", [8], [4]),
         ("", [8], [5]),
     ],
+    "easy_table.jpg": [
+        ("Operation Name", [0], [0]),
+        ("Description", [0], [1]),
+        ("block.pad(top, bottom, right, left)", [1], [0]),
+        ("Enlarge the current block according to the input", [1], [1]),
+        ("block.scale(fx, fy)", [2], [0]),
+        ("Scale the current block given the ratio\nin x and y direction", [2], [1]),
+        ("block.shift(dx, dy)", [3], [0]),
+        ("Move the current block with the shift\ndistances in x and y direction", [3], [1]),
+        ("block1.is_in(block2)", [4], [0]),
+        ("Whether block1 is inside of block2", [4], [1]),
+        ("block1.intersect(block2)", [5], [0]),
+        ("Return the intersection region of block1 and block2.\nCoordinate type to be determined based on the inputs.", [5], [1]),
+        ("block1.union(block2)", [6], [0]),
+        ("Return the union region of block1 and block2.\nCoordinate type to be determined based on the inputs.", [6], [1]),
+        ("block1.relative_to(block2)", [7], [0]),
+        ("Convert the absolute coordinates of block1 to\nrelative coordinates to block2", [7], [1]),
+        ("block1.condition_on(block2)", [8], [0]),
+        ("Calculate the absolute coordinates of block1 given\nthe canvas block2’s absolute coordinates", [8], [1]),
+        ("block.crop_image(image)", [9], [0]),
+        ("Obtain the image segments in the block region", [9], [1]),
+    ],
 }
 
 # actual cell data in the same format as those returned by tables.py
