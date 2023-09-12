@@ -7,8 +7,11 @@ from typing import TYPE_CHECKING, Any, List, Union
 import numpy as np
 from PIL.Image import Image
 
-from unstructured_inference.inference.elements import Rectangle, intersections
-from unstructured_inference.inference.elements import intersect_free_quadrilaterals
+from unstructured_inference.inference.elements import (
+    Rectangle,
+    intersect_free_quadrilaterals,
+    intersections,
+)
 
 if TYPE_CHECKING:
     from unstructured_inference.inference.layoutelement import (
@@ -26,7 +29,7 @@ def draw(e1: LayoutElement, e2: LayoutElement):
     try:
         kbd = ImageFont.truetype("Keyboard.ttf", 20)
         mini_page = minimal_containing_region(e1, e2)
-        blank_page = PIL.Image.new("RGB", (2000,2000))
+        blank_page = PIL.Image.new("RGB", (2000, 2000))
         draw = ImageDraw.Draw(blank_page)
 
         draw.text((e1.x1, e1.y1), text=f"{e1.text[:7]}", fill="white", font=kbd)
@@ -85,32 +88,31 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
     @staticmethod
     def deduplicate_detected_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
         """Deletes overlapping elements in a list of elements"""
+
         from unstructured_inference.inference.elements import (
             grow_region_to_match_region,
             partition_groups_from_regions,
         )
 
         def check_rectangle(e: LayoutElement):
-            well_formed= e.x1 < e.x2 and e.y1 < e.y2
+            well_formed = e.x1 < e.x2 and e.y1 < e.y2
             if not well_formed:
                 print(f"Bad rectangle! {e.id}")
 
             return well_formed
-            
 
         def probably_contained(
             element: Union[LayoutElement, Rectangle],
             inside: Union[LayoutElement, Rectangle],
-            area_threshold: float,
+            area_threshold: float = 0.2,
         ) -> bool:
             """This function checks if one element is inside other.
              If is definetly inside returns True, in other case check
             if the intersection is big enough."""
             if Rectangle.a_inside_b(element, inside):
                 return True
-            
 
-            intersected_area = grown_table.intersection(element)
+            intersected_area = element.intersection(inside)
             if intersected_area:
                 return intersected_area.area >= element.area * area_threshold
             return False
@@ -119,7 +121,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             import numpy as np
 
             tables = [e for e in elements if e.type == "Table"]
-            not_tables = [e for e in elements if e.type!="Table"]
+            not_tables = [e for e in elements if e.type != "Table"]
             if len(tables) == 0:
                 return elements
 
@@ -181,34 +183,20 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                             # delete second element
                             elements[j] = None
                         elif intersection:
-                            percentage_inside_first = intersection.area / first.area
-                            percentage_inside_second = intersection.area / second.area
+                            iou = first.intersection_over_union(second)
+                            if iou < 0.5:  # small
+                                first, second = intersect_free_quadrilaterals(first, second)
+                                if not check_rectangle(first) or first.height < 15:
+                                    elements[i] = None  # The rectangle is too small, delete
+                                if not check_rectangle(second) or second.height < 15:
+                                    elements[j] = None
 
-                            iou = first.intersection_over_union(second) 
-                            if iou < 0.5: #small
-                                first,second= intersect_free_quadrilaterals(first,second)
-                                if not check_rectangle(first):
-                                    elements[i]=None # The rectangle is too small, delete
-                                if not check_rectangle(second):
-                                    elements[j]=None
-                                # elements[i]=first
-                                # elements[j]=second
-                                if first.height<15:
-                                    elements[i]=None
-                                if second.height<15:
-                                    elements[j]=None
-                            elif intersection.area: #big
+                            else:  # big
                                 # merge
                                 grow_region_to_match_region(first, second)
                                 elements[j] = None
 
-                                try:
-                                    check_rectangle(first)
-                                    check_rectangle(second)
-                                except:
-                                    print("Rompiste un rectangulo!")
-
-                if elements[i] is None:  # the element have been deleted, 
+                if elements[i] is None:  # the element have been deleted,
                     continue
 
             elements = [e for e in elements if e is not None]
@@ -223,7 +211,6 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         # TODO: Delete nested elements with low or None probability
         # TODO: Keep most confident
         # TODO: Better to grow horizontally than vertically?
-        return elements
         groups = partition_groups_from_regions(elements)  # type:ignore
         for g in groups:
             # group_border = minimal_containing_region(*g)
@@ -235,7 +222,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             cleaned_elements.extend(g)  # type:ignore
 
         cleaned_elements = shrink_regions(cleaned_elements)
-        cleaned_elements = [e for e in cleaned_elements if e.height>15]
+        # cleaned_elements = [e for e in cleaned_elements if e.height>15]
         return cleaned_elements
 
 
