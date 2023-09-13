@@ -1,7 +1,6 @@
 ## 0.5.27
 
-* Add functionality to extract and save images from the page
-* Update the layout `visualization script` to be able to show only image elements if needed
+* table structure detection now pads the input image by 25 pixels in all 4 directions to improve its recall
 
 ## 0.5.26
 
