@@ -364,7 +364,7 @@ class PageLayout:
                 cropped_image = self.image.crop((el.x1, el.y1, el.x2, el.y2))
                 write_image(cropped_image, output_f_path)
                 el.image_path = output_f_path
-            except Exception:
+            except (ValueError, IOError):
                 logger.warning("Image Extraction Error: Skipping the failed image")
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
