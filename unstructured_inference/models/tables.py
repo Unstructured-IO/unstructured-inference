@@ -1,13 +1,12 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
 import logging
-import platform
+import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 
-import cv2
 import numpy as np
 import pandas as pd
 import pytesseract
@@ -18,6 +17,7 @@ from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 from unstructured_inference.logger import logger
 from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
+from unstructured_inference.utils import pad_image_with_background_color
 
 from . import table_postprocess as postprocess
 
@@ -57,71 +57,61 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def get_tokens(self, x: Image):
         """Get OCR tokens from either paddleocr or tesseract"""
-        if platform.machine() == "x86_64":
-            try:
-                from unstructured_inference.models import paddle_ocr
-
-                paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
-
-                tokens = []
-                for idx in range(len(paddle_result)):
-                    res = paddle_result[idx]
-                    for line in res:
-                        xmin = min([i[0] for i in line[0]])
-                        ymin = min([i[1] for i in line[0]])
-                        xmax = max([i[0] for i in line[0]])
-                        ymax = max([i[1] for i in line[0]])
-                        tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
-                return tokens
-            except ModuleNotFoundError:
-                logging.warning(
-                    "No module named 'unstructured_paddleocr', falling back to tesseract",
-                )
-                pass
-        zoom = 6
-        img = cv2.resize(
-            cv2.cvtColor(np.array(x), cv2.COLOR_RGB2BGR),
-            None,
-            fx=zoom,
-            fy=zoom,
-            interpolation=cv2.INTER_CUBIC,
-        )
-
-        kernel = np.ones((1, 1), np.uint8)
-        img = cv2.dilate(img, kernel, iterations=1)
-        img = cv2.erode(img, kernel, iterations=1)
-
-        ocr_df: pd.DataFrame = pytesseract.image_to_data(
-            Image.fromarray(img),
-            output_type="data.frame",
-        )
-
-        ocr_df = ocr_df.dropna()
-
-        tokens = []
-        for idtx in ocr_df.itertuples():
-            tokens.append(
-                {
-                    "bbox": [
-                        idtx.left / zoom,
-                        idtx.top / zoom,
-                        (idtx.left + idtx.width) / zoom,
-                        (idtx.top + idtx.height) / zoom,
-                    ],
-                    "text": idtx.text,
-                },
+        table_ocr = os.getenv("TABLE_OCR", "tesseract").lower()
+        if table_ocr not in ["paddle", "tesseract"]:
+            raise ValueError(
+                "Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'.",
             )
-        return tokens
+        if table_ocr == "paddle":
+            from unstructured_inference.models import paddle_ocr
 
-    def run_prediction(self, x: Image):
+            paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
+
+            tokens = []
+            for idx in range(len(paddle_result)):
+                res = paddle_result[idx]
+                for line in res:
+                    xmin = min([i[0] for i in line[0]])
+                    ymin = min([i[1] for i in line[0]])
+                    xmax = max([i[0] for i in line[0]])
+                    ymax = max([i[1] for i in line[0]])
+                    tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
+            return tokens
+        else:
+            ocr_df: pd.DataFrame = pytesseract.image_to_data(
+                x,
+                output_type="data.frame",
+            )
+
+            ocr_df = ocr_df.dropna()
+
+            tokens = []
+            for idtx in ocr_df.itertuples():
+                tokens.append(
+                    {
+                        "bbox": [
+                            idtx.left,
+                            idtx.top,
+                            idtx.left + idtx.width,
+                            idtx.top + idtx.height,
+                        ],
+                        "text": idtx.text,
+                    },
+                )
+            return tokens
+
+    def run_prediction(self, x: Image, pad_for_structure_detection: int = 50):
         """Predict table structure"""
         with torch.no_grad():
-            encoding = self.feature_extractor(x, return_tensors="pt").to(self.device)
+            logger.info(f"padding image by {pad_for_structure_detection} for structure detection")
+            encoding = self.feature_extractor(
+                pad_image_with_background_color(x, pad_for_structure_detection),
+                return_tensors="pt",
+            ).to(self.device)
             outputs_structure = self.model(**encoding)
+            outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection
 
         tokens = self.get_tokens(x=x)
-
-        sorted(tokens, key=lambda x: x["bbox"][1] * 10000 + x["bbox"][0])
 
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
@@ -211,7 +201,13 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
     pred_labels = list(m.indices.detach().cpu().numpy())[0]
     pred_scores = list(m.values.detach().cpu().numpy())[0]
     pred_bboxes = outputs["pred_boxes"].detach().cpu()[0]
-    pred_bboxes = [elem.tolist() for elem in rescale_bboxes(pred_bboxes, img_size)]
+
+    pad = outputs.get("pad_for_structure_detection", 0)
+    scale_size = (img_size[0] + pad, img_size[1] + pad)
+    pred_bboxes = [elem.tolist() for elem in rescale_bboxes(pred_bboxes, scale_size)]
+    # unshift the padding; padding effectively shifted the bounding boxes of structures in the
+    # original image with half of the total pad
+    shift_size = pad / 2
 
     objects = []
     for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes):
@@ -221,7 +217,7 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
                 {
                     "label": class_label,
                     "score": float(score),
-                    "bbox": [float(elem) for elem in bbox],
+                    "bbox": [float(elem) - shift_size for elem in bbox],
                 },
             )
 
@@ -608,10 +604,37 @@ def structure_to_cells(table_structure, tokens):
     return cells, confidence_score
 
 
+def fill_cells(cells: List[dict]) -> List[dict]:
+    """add empty cells to pad cells that spans multiple rows for html conversion
+
+    For example if a cell takes row 0 and 1 and column 0, we add a new empty cell at row 1 and
+    column 0. This padding ensures the structure of the output table is intact. In this example the
+    cell data is {"row_nums": [0, 1], "column_nums": [0], ...}
+
+    A cell contains the following keys relevent to the html conversion:
+    row_nums: List[int]
+        the row numbers this cell belongs to; for cells spanning multiple rows there are more than
+        one numbers
+    column_nums: List[int]
+        the columns numbers this cell belongs to; for cells spanning multiple columns there are more
+        than one numbers
+    cell text: str
+        the text in this cell
+
+    """
+    new_cells = cells.copy()
+    for cell in cells:
+        for extra_row in sorted(cell["row_nums"][1:]):
+            new_cell = cell.copy()
+            new_cell["row_nums"] = [extra_row]
+            new_cell["cell text"] = ""
+            new_cells.append(new_cell)
+    return new_cells
+
+
 def cells_to_html(cells):
     """Convert table structure to html format."""
-    cells = sorted(cells, key=lambda k: min(k["column_nums"]))
-    cells = sorted(cells, key=lambda k: min(k["row_nums"]))
+    cells = sorted(fill_cells(cells), key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
 
     table = ET.Element("table")
     current_row = -1

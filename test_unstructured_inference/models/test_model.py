@@ -13,8 +13,6 @@ from unstructured_inference.models.unstructuredmodel import (
 class MockModel(UnstructuredObjectDetectionModel):
     call_count = 0
 
-    initialize = mock.MagicMock()
-
     def __init__(self):
         self.initializer = mock.MagicMock()
         super().__init__()
@@ -65,6 +63,12 @@ def test_model_initializes_once():
         "models",
         {},
     ):
-        doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
-
+        doc = layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf")
         doc.pages[0].detection_model.initializer.assert_called_once()
+        assert hasattr(
+            doc.pages[0].elements[0],
+            "prob",
+        )  # NOTE(pravin) New Assertion to Make Sure Elements have probability attribute
+        assert (
+            doc.pages[0].elements[0].prob is None
+        )  # NOTE(pravin) New Assertion to Make Sure Uncategorized Text has None Probability

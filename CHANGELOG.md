@@ -1,3 +1,41 @@
+## 0.5.27
+
+* table structure detection now pads the input image by 25 pixels in all 4 directions to improve its recall
+
+## 0.5.26
+
+* support paddle with both cpu and gpu and assumed it is pre-installed
+
+## 0.5.25
+
+* fix a bug where `cells_to_html` doesn't handle cells spanning multiple rows properly
+
+## 0.5.24
+
+* remove `cv2` preprocessing step before OCR step in table transformer
+
+## 0.5.23
+
+* Add functionality to bring back embedded images in PDF
+
+## 0.5.22
+
+* Add object-detection classification probabilities to LayoutElement for all currently implemented object detection models
+
+## 0.5.21
+
+* adds `safe_division` to replae 0 with machine epsilon for `float` to avoid division by 0
+* apply `safe_division` to area overlap calculations in `unstructured_inference/inference/elements.py`
+
+## 0.5.20
+
+* Adds YoloX quantized model
+
+## 0.5.19
+
+* Add functionality to supplement detected layout with elements from the full page OCR
+* Add functionality to annotate any layout(extracted, inferred, OCR) on a page
+
 ## 0.5.18
 
 * Fix for incorrect type assignation at ingest test

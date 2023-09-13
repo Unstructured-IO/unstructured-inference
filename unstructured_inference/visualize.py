@@ -1,8 +1,10 @@
 # Copyright (c) Megvii Inc. All rights reserved.
 # Unstructured modified the original source code found at
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/visualize.py
+from typing import Optional, Union
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL.Image import Image
 from PIL.ImageDraw import ImageDraw
@@ -10,12 +12,12 @@ from PIL.ImageDraw import ImageDraw
 from unstructured_inference.inference.elements import Rectangle
 
 
-def draw_bbox(image: Image, rect: Rectangle, color: str = "red") -> Image:
+def draw_bbox(image: Image, rect: Rectangle, color: str = "red", width=1) -> Image:
     """Draws bounding box in image"""
     img = image.copy()
     draw = ImageDraw(img)
     topleft, _, bottomright, _ = rect.coordinates
-    draw.rectangle((topleft, bottomright), outline=color)
+    draw.rectangle((topleft, bottomright), outline=color, width=width)
     return img
 
 
@@ -62,6 +64,48 @@ def draw_yolox_bounding_boxes(img, boxes, scores, cls_ids, conf=0.5, class_names
         cv2.putText(img, text, (x0, y0 + txt_size[1]), font, 0.4, txt_color, thickness=1)
 
     return img
+
+
+def show_plot(
+    image: Union[Image, np.ndarray],
+    desired_width: Optional[int] = None,
+):
+    """
+    Display an image using matplotlib with an optional desired width while maintaining the aspect
+     ratio.
+
+    Parameters:
+    - image (Union[Image, np.ndarray]): An image in PIL Image format or a numpy ndarray format.
+    - desired_width (Optional[int]): Desired width for the display size of the image.
+        If provided, the height is calculated based on the original aspect ratio.
+        If not provided, the image will be displayed with its original dimensions.
+
+    Raises:
+    - ValueError: If the provided image type is neither PIL Image nor numpy ndarray.
+
+    Returns:
+    - None: The function displays the image using matplotlib but does not return any value.
+    """
+    if isinstance(image, Image):
+        image_width, image_height = image.size
+    elif isinstance(image, np.ndarray):
+        image_height, image_width, _ = image.shape
+    else:
+        raise ValueError("Unsupported Image Type")
+
+    if desired_width:
+        # Calculate the desired height based on the original aspect ratio
+        aspect_ratio = image_width / image_height
+        desired_height = desired_width / aspect_ratio
+
+        # Create a figure with the desired size and aspect ratio
+        fig, ax = plt.subplots(figsize=(desired_width, desired_height))
+    else:
+        # Create figure and axes
+        fig, ax = plt.subplots()
+    # Display the image
+    ax.imshow(image)
+    plt.show()
 
 
 _COLORS = np.array(

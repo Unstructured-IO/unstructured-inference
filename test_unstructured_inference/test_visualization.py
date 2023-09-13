@@ -1,9 +1,11 @@
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pytest
 from PIL import Image
 
 from unstructured_inference.inference.elements import Rectangle
-from unstructured_inference.visualize import draw_bbox, draw_yolox_bounding_boxes
+from unstructured_inference.visualize import draw_bbox, draw_yolox_bounding_boxes, show_plot
 
 
 @pytest.mark.parametrize(
@@ -48,3 +50,46 @@ def test_draw_bbox():
     assert ((annotated_array[:, :, 0] == 1).mean()) > 0.995
     assert ((annotated_array[:, :, 1] == 1).mean()) > 0.995
     assert ((annotated_array[:, :, 2] == 1).mean()) > 0.995
+
+
+def test_show_plot_with_pil_image(mock_pil_image):
+    mock_fig = MagicMock()
+    mock_ax = MagicMock()
+
+    with patch(
+        "matplotlib.pyplot.subplots",
+        return_value=(mock_fig, mock_ax),
+    ) as mock_subplots, patch("matplotlib.pyplot.show") as mock_show, patch.object(
+        mock_ax,
+        "imshow",
+    ) as mock_imshow:
+        show_plot(mock_pil_image, desired_width=100)
+
+    mock_subplots.assert_called()
+    mock_imshow.assert_called_with(mock_pil_image)
+    mock_show.assert_called()
+
+
+def test_show_plot_with_numpy_image(mock_numpy_image):
+    mock_fig = MagicMock()
+    mock_ax = MagicMock()
+
+    with patch(
+        "matplotlib.pyplot.subplots",
+        return_value=(mock_fig, mock_ax),
+    ) as mock_subplots, patch("matplotlib.pyplot.show") as mock_show, patch.object(
+        mock_ax,
+        "imshow",
+    ) as mock_imshow:
+        show_plot(mock_numpy_image)
+
+    mock_subplots.assert_called()
+    mock_imshow.assert_called_with(mock_numpy_image)
+    mock_show.assert_called()
+
+
+def test_show_plot_with_unsupported_image_type():
+    with pytest.raises(ValueError) as exec_info:
+        show_plot("unsupported_image_type")
+
+    assert "Unsupported Image Type" in str(exec_info.value)

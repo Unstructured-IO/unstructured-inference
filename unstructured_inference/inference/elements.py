@@ -11,6 +11,7 @@ from PIL import Image
 from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.logger import logger
+from unstructured_inference.math import safe_division
 from unstructured_inference.models import tesseract
 
 # When extending the boundaries of a PDF object for the purpose of determining which other elements
@@ -118,7 +119,7 @@ class Rectangle:
         intersection = self.intersection(other)
         intersection_area = 0.0 if intersection is None else intersection.area()
         union_area = self.area() + other.area() - intersection_area
-        return intersection_area / union_area
+        return safe_division(intersection_area, union_area)
 
     def intersection_over_minimum(self, other: Rectangle) -> float:
         """Gives the area-of-intersection over the minimum of the areas of the rectangles. Useful
@@ -127,7 +128,7 @@ class Rectangle:
         intersection = self.intersection(other)
         intersection_area = 0.0 if intersection is None else intersection.area()
         min_area = min(self.area(), other.area())
-        return intersection_area / min_area
+        return safe_division(intersection_area, min_area)
 
     def is_almost_subregion_of(self, other: Rectangle, subregion_threshold: float = 0.75) -> bool:
         """Returns whether this region is almost a subregion of other. This is determined by
@@ -135,7 +136,7 @@ class Rectangle:
         is the smaller rectangle."""
         intersection = self.intersection(other)
         intersection_area = 0.0 if intersection is None else intersection.area()
-        return (subregion_threshold < intersection_area / self.area()) and (
+        return (subregion_threshold < safe_division(intersection_area, self.area())) and (
             self.area() <= other.area()
         )
 

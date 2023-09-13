@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements/test.in
 #
-anyio==3.7.1
+anyio==4.0.0
     # via httpcore
 black==23.7.0
     # via -r requirements/test.in
@@ -18,23 +18,23 @@ charset-normalizer==3.2.0
     # via
     #   -c requirements/base.txt
     #   requests
-click==8.1.6
+click==8.1.7
     # via
     #   -r requirements/test.in
     #   black
-coverage[toml]==7.2.7
+coverage[toml]==7.3.0
     # via
     #   -r requirements/test.in
     #   pytest-cov
-exceptiongroup==1.1.2
+exceptiongroup==1.1.3
     # via
     #   anyio
     #   pytest
-filelock==3.12.2
+filelock==3.12.3
     # via
     #   -c requirements/base.txt
     #   huggingface-hub
-flake8==6.0.0
+flake8==6.1.0
     # via
     #   -r requirements/test.in
     #   flake8-docstrings
@@ -64,7 +64,7 @@ iniconfig==2.0.0
     # via pytest
 mccabe==0.7.0
     # via flake8
-mypy==1.4.1
+mypy==1.5.1
     # via -r requirements/test.in
 mypy-extensions==1.0.0
     # via
@@ -76,7 +76,7 @@ packaging==23.1
     #   black
     #   huggingface-hub
     #   pytest
-pathspec==0.11.1
+pathspec==0.11.2
     # via black
 pdf2image==1.16.3
     # via
@@ -86,15 +86,15 @@ pillow==10.0.0
     # via
     #   -c requirements/base.txt
     #   pdf2image
-platformdirs==3.9.1
+platformdirs==3.10.0
     # via black
-pluggy==1.2.0
+pluggy==1.3.0
     # via pytest
-pycodestyle==2.10.0
+pycodestyle==2.11.0
     # via flake8
 pydocstyle==6.3.0
     # via flake8-docstrings
-pyflakes==3.0.1
+pyflakes==3.1.0
     # via flake8
 pytest==7.4.0
     # via pytest-cov
@@ -108,7 +108,7 @@ requests==2.31.0
     # via
     #   -c requirements/base.txt
     #   huggingface-hub
-ruff==0.0.280
+ruff==0.0.286
     # via -r requirements/test.in
 sniffio==1.3.0
     # via
@@ -123,7 +123,7 @@ tomli==2.0.1
     #   coverage
     #   mypy
     #   pytest
-tqdm==4.65.0
+tqdm==4.66.1
     # via
     #   -c requirements/base.txt
     #   huggingface-hub
@@ -131,6 +131,7 @@ typing-extensions==4.7.1
     # via
     #   -c requirements/base.txt
     #   black
+    #   filelock
     #   huggingface-hub
     #   mypy
 urllib3==2.0.4
