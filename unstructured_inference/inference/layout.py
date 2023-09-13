@@ -450,13 +450,12 @@ class PageLayout:
         ocr_mode: str = OCRMode.FULL_PAGE.value,
         extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
-        **kwargs,
+        supplement_with_ocr_elements: bool = True,
+        extract_images_in_pdf: bool = False,
+        image_output_dir_path: Optional[str] = None,
+        analysis: bool = False,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
-        analysis = kwargs.get("analysis", False)
-        supplement_with_ocr_elements = kwargs.get("supplement_with_ocr_elements", True)
-        extract_images_in_pdf = kwargs.get("extract_images_in_pdf", False)
-        image_output_dir_path = kwargs.get("image_output_dir_path", None)
 
         page = cls(
             number=number,
