@@ -1,12 +1,13 @@
 import os
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterator, Union
+from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterable, Iterator, Union
 
 import cv2
 import numpy as np
 from PIL.Image import Image
 
 from unstructured_inference.constants import AnnotationResult
+from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.visualize import show_plot
 
 if TYPE_CHECKING:
@@ -123,3 +124,13 @@ def annotate_layout_elements(
                 print(f"wrote {output_f_path}")
             elif result == AnnotationResult.PLOT:
                 show_plot(img, desired_width=plot_desired_width)
+
+
+def tag(elements: Iterable[LayoutElement]):
+    """Asign an numeric id to the elements in the list.
+    Useful for debugging"""
+    colors = ["red", "blue", "green", "cyan", "magenta", "brown"]
+    for i, e in enumerate(elements):
+        e.text = f"-{i}-:{e.text}"
+        e.id = i
+        e.clrs = colors[i % 6]
