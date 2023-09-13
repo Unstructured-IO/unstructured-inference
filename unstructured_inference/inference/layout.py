@@ -264,17 +264,28 @@ class PageLayout:
             ocr_layout = None
         elif self.ocr_mode == OCRMode.FULL_PAGE.value:
             ocr_layout = None
-            try:
-                ocr_data = pytesseract.image_to_data(
-                    self.image,
-                    lang=self.ocr_languages,
-                    output_type=Output.DICT,
+            entrie_page_ocr = os.getenv("ENTIRE_PAGE_OCR", "tesseract").lower()
+            if entrie_page_ocr not in ["paddle", "tesseract"]:
+                raise ValueError(
+                    "Environment variable ENTIRE_PAGE_OCR must be set to 'tesseract' or 'paddle'.",
                 )
-                ocr_layout = parse_ocr_data(ocr_data)
-            except pytesseract.pytesseract.TesseractError:
-                logger.warning("TesseractError: Skipping page", exc_info=True)
-        else:
-            raise ValueError("Invalid OCR mode")
+            
+            if entrie_page_ocr == "paddle":
+                from unstructured_inference.models import paddle_ocr
+                # TODO(yuming): paddle only support one language at once,
+                # change ocr to tesseract if passed in multilanguages.
+                ocr_data = paddle_ocr.load_agent(language=self.ocr_languages).ocr(np.array(self.image), cls=True)
+                ocr_layout = parse_ocr_data_paddle(ocr_data)
+            else:
+                try:
+                    ocr_data = pytesseract.image_to_data(
+                        self.image,
+                        lang=self.ocr_languages,
+                        output_type=Output.DICT,
+                    )
+                    ocr_layout = parse_ocr_data_tesseract(ocr_data)
+                except pytesseract.pytesseract.TesseractError:
+                    logger.warning("TesseractError: Skipping page", exc_info=True)
 
         if self.layout is not None:
             threshold_kwargs = {}
@@ -626,9 +637,10 @@ def load_pdf(
     return layouts, images
 
 
-def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
+def parse_ocr_data_tesseract(ocr_data: dict) -> List[TextRegion]:
     """
-    Parse the OCR result data to extract a list of TextRegion objects.
+    Parse the OCR result data to extract a list of TextRegion objects from
+    tesseract.
 
     The function processes the OCR result dictionary, looking for bounding
     box information and associated text to create instances of the TextRegion
@@ -662,5 +674,43 @@ def parse_ocr_data(ocr_data: dict) -> List[TextRegion]:
         if text:
             text_region = TextRegion(x1, y1, x2, y2, text)
             text_regions.append(text_region)
+
+    return text_regions
+
+def parse_ocr_data_paddle(ocr_data: dict) -> List[TextRegion]:
+    """
+    Parse the OCR result data to extract a list of TextRegion objects from
+    padle.
+
+    The function processes the OCR result dictionary, looking for bounding
+    box information and associated text to create instances of the TextRegion
+    class, which are then appended to a list.
+
+    Parameters:
+    - ocr_data (dict): A dictionary containing the OCR result data, expected
+                      to have keys like "level", "left", "top", "width",
+                      "height", and "text".
+
+    Returns:
+    - List[TextRegion]: A list of TextRegion objects, each representing a
+                        detected text region within the OCR-ed image.
+
+    Note:
+    - An empty string or a None value for the 'text' key in the input
+      dictionary will result in its associated bounding box being ignored.
+    """
+
+    text_regions = []
+    for idx in range(len(ocr_data)):
+        res = ocr_data[idx]
+        for line in res:
+            x1 = min([i[0] for i in line[0]])
+            y1 = min([i[1] for i in line[0]])
+            x2 = max([i[0] for i in line[0]])
+            y2 = max([i[1] for i in line[0]])
+            text = line[1][0]
+            if text:
+                text_region = TextRegion(x1, y1, x2, y2, text)
+                text_regions.append(text_region)
 
     return text_regions
