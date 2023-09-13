@@ -157,6 +157,7 @@ class MockPool:
     def join(self):
         pass
 
+
 @pytest.mark.parametrize("entire_page_ocr", ["paddle", "tesseract"])
 def test_get_page_elements_with_ocr(monkeypatch, entire_page_ocr):
     monkeypatch.setenv("ENTIRE_PAGE_OCR", entire_page_ocr)
@@ -185,11 +186,12 @@ def test_get_page_elements_with_ocr(monkeypatch, entire_page_ocr):
         detection_model=MockLayoutModel(doc_final_layout),
         # Note(yuming): there are differnt language codes for same language
         # between paddle and tesseract
-        ocr_languages= "en" if entire_page_ocr=="paddle" else "eng"
+        ocr_languages="en" if entire_page_ocr == "paddle" else "eng",
     )
     page.get_elements_with_detection_model()
 
     assert str(page) == "\n\nAn Even Catchier Title"
+
 
 def test_get_page_elements_with_ocr_invalid_entrie_page_ocr(monkeypatch):
     monkeypatch.setenv("ENTIRE_PAGE_OCR", "invalid_entire_page_ocr")

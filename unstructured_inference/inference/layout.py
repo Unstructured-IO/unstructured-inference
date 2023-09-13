@@ -269,12 +269,16 @@ class PageLayout:
                 raise ValueError(
                     "Environment variable ENTIRE_PAGE_OCR must be set to 'tesseract' or 'paddle'.",
                 )
-            
+
             if entrie_page_ocr == "paddle":
                 from unstructured_inference.models import paddle_ocr
+
                 # TODO(yuming): paddle only support one language at once,
                 # change ocr to tesseract if passed in multilanguages.
-                ocr_data = paddle_ocr.load_agent(language=self.ocr_languages).ocr(np.array(self.image), cls=True)
+                ocr_data = paddle_ocr.load_agent(language=self.ocr_languages).ocr(
+                    np.array(self.image),
+                    cls=True,
+                )
                 ocr_layout = parse_ocr_data_paddle(ocr_data)
             else:
                 try:
@@ -676,6 +680,7 @@ def parse_ocr_data_tesseract(ocr_data: dict) -> List[TextRegion]:
             text_regions.append(text_region)
 
     return text_regions
+
 
 def parse_ocr_data_paddle(ocr_data: dict) -> List[TextRegion]:
     """
