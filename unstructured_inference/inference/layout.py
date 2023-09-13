@@ -265,6 +265,7 @@ class PageLayout:
         elif self.ocr_mode == OCRMode.FULL_PAGE.value:
             ocr_layout = None
             try:
+                from unstructured_inference.models import paddle_ocr
                 paddle_result = paddle_ocr.load_agent().ocr(np.array(self.image), cls=True)
                 ocr_layout = parse_ocr_data(paddle_result)
             except pytesseract.pytesseract.TesseractError:

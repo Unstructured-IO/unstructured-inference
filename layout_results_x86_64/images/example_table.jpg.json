@@ -1,0 +1,30 @@
+[
+    {
+        "text": "About these Coverage Examples: This is not a cost estimator. Treatments shown are just examples of how this plan might cover medical care. Your actual costs will be different",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "depending on the actual care you receive, the prices your providers charge, and many other factors. Focus on the cost sharing amounts (deductibles, copayments and coinsurance) and excluded services under the plan. Use this information to compare the portion of costs you might pay under different health plans. Please note these coverage examples are based on self-only coverage Peg is Having a Baby Managing Joe's type 2 Diabetes Mia's Simple Fracture (9 months of in-network pre-natal care and a (a year of routine in-network care of a well- (in-network emergency room visit and follow up hospital delivery) controlled condition) care)  The plan's overall deductible $750 The plan's overall deductible $750  The plan's overall deductible $750 Specialist copayment $50 Specialist copayment $50 Specialist copayment $50  Hospital (facility) coinsurance 10% Hospital (facility) coinsurance 10%  Hospital (facility) coinsurance 10%  Other coinsurance 10%  Other coinsurance 10%  Other coinsurance 10% This EXAMPLE event includes services like: This EXAMPLE event includes services like: This EXAMPLE event includes services like: Specialist office visits (prenatal care) Primary care physician office visits (including Emergency room care (including medical Childbirth/Delivery Professional Services disease education) Childbirth/Delivery Facility Services Diagnostic tests (blood work) Diagnostic test (x-ray) Diagnostic tests (ultrasounds and blood work) Prescription drugs Durable medical equipment (crutches) Specialist visit (anesthesia) Durable medical equipment (glucose meter) Rehabilitation services (physical therapy) Total Example Cost $12,700 Total Example Cost $5,600 Total Example Cost $2,800 In this example, Peg would pay: In this example, Joe would pay: In this example, Mia would pay: Cost Sharing Cost Sharing Cost Sharing Deductibles $750 Deductibles $120 Deductibles $750 Copayments $30 Copayments $700 Copayments $400 Coinsurance $1,200 Coinsurance $0 Coinsurance $30 What isn't covered What isn't covered What isn't covered Limits or exclusions $20 Limits or exclusions $20 Limits or exclusions $0 The total Peg would pay is $2,000 The total Joe would pay is $840 The total Mia would pay is $1,180",
+        "type": "Figure"
+    },
+    {
+        "text": "In this example, Joe would pay: Cost Sharing Deductibles $120 Copayments $700 Coinsurance $0 What isn't covered Limits or exclusions $20 The total Joe would pay is $840",
+        "type": "Figure"
+    },
+    {
+        "text": "In this example, Mia would pay: Cost Sharing Deductibles $750 Copayments $400 Coinsurance $30 What isn't covered Limits or exclusions $0 The total Mia would pay is $1,180",
+        "type": "Figure"
+    },
+    {
+        "text": "The plan would be responsible for the other costs of these EXAMPLE covered services",
+        "type": "Text"
+    },
+    {
+        "text": "Plan Name: NVIDIA PPO PlanPIan ID: 14603022",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Page 8 of 8",
+        "type": "UncategorizedText"
+    }
+]
