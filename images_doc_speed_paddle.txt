@@ -1,36 +1,84 @@
 Analyzing layout for RGBA_image.png...
-Layout analysis for RGBA_image.png completed in 14.28 seconds.
+Layout analysis for RGBA_image.png completed in 14.01 seconds.
 Layout analysis for RGBA_image.png completed. Results saved to layout_results_x86_64/images/RGBA_image.png.json
 Analyzing layout for example_table.jpg...
-Layout analysis for example_table.jpg completed in 11.75 seconds.
+Layout analysis for example_table.jpg completed in 11.22 seconds.
 Layout analysis for example_table.jpg completed. Results saved to layout_results_x86_64/images/example_table.jpg.json
 Analyzing layout for layout-parser-paper-fast.jpg...
-Layout analysis for layout-parser-paper-fast.jpg completed in 9.08 seconds.
+Layout analysis for layout-parser-paper-fast.jpg completed in 8.52 seconds.
 Layout analysis for layout-parser-paper-fast.jpg completed. Results saved to layout_results_x86_64/images/layout-parser-paper-fast.jpg.json
 Analyzing layout for loremipsum.jpg...
-Layout analysis for loremipsum.jpg completed in 9.59 seconds.
+Layout analysis for loremipsum.jpg completed in 9.84 seconds.
 Layout analysis for loremipsum.jpg completed. Results saved to layout_results_x86_64/images/loremipsum.jpg.json
 Analyzing layout for loremipsum.png...
-Layout analysis for loremipsum.png completed in 10.05 seconds.
+Layout analysis for loremipsum.png completed in 9.25 seconds.
 Layout analysis for loremipsum.png completed. Results saved to layout_results_x86_64/images/loremipsum.png.json
 Analyzing layout for receipt-sample.jpg...
-Layout analysis for receipt-sample.jpg completed in 6.65 seconds.
+Layout analysis for receipt-sample.jpg completed in 6.95 seconds.
 Layout analysis for receipt-sample.jpg completed. Results saved to layout_results_x86_64/images/receipt-sample.jpg.json
 Analyzing layout for test-image.jpg...
-Layout analysis for test-image.jpg completed in 10.85 seconds.
+Layout analysis for test-image.jpg completed in 10.99 seconds.
 Layout analysis for test-image.jpg completed. Results saved to layout_results_x86_64/images/test-image.jpg.json
 Analyzing layout for table-multi-row-column-cells.png...
-Layout analysis for table-multi-row-column-cells.png completed in 5.57 seconds.
+Layout analysis for table-multi-row-column-cells.png completed in 7.03 seconds.
 Layout analysis for table-multi-row-column-cells.png completed. Results saved to layout_results_x86_64/images/table-multi-row-column-cells.png.json
 Analyzing layout for gs-3-tab1.jpg...
-Layout analysis for gs-3-tab1.jpg completed in 8.83 seconds.
+Layout analysis for gs-3-tab1.jpg completed in 9.10 seconds.
 Layout analysis for gs-3-tab1.jpg completed. Results saved to layout_results_x86_64/images/gs-3-tab1.jpg.json
 Analyzing layout for gs-3.jpg...
-Layout analysis for gs-3.jpg completed in 13.68 seconds.
+Layout analysis for gs-3.jpg completed in 13.83 seconds.
 Layout analysis for gs-3.jpg completed. Results saved to layout_results_x86_64/images/gs-3.jpg.json
 Analyzing layout for layout-parser-paper-with-table.jpg...
-Layout analysis for layout-parser-paper-with-table.jpg completed in 10.74 seconds.
+Layout analysis for layout-parser-paper-with-table.jpg completed in 11.23 seconds.
 Layout analysis for layout-parser-paper-with-table.jpg completed. Results saved to layout_results_x86_64/images/layout-parser-paper-with-table.jpg.json
 Analyzing layout for ilpa-example-1.jpg...
-Layout analysis for ilpa-example-1.jpg completed in 5.71 seconds.
+Layout analysis for ilpa-example-1.jpg completed in 6.45 seconds.
 Layout analysis for ilpa-example-1.jpg completed. Results saved to layout_results_x86_64/images/ilpa-example-1.jpg.json
+Analyzing layout for complex-row-column-red-or-white-wine.jpg...
+Layout analysis for complex-row-column-red-or-white-wine.jpg completed in 6.61 seconds.
+Layout analysis for complex-row-column-red-or-white-wine.jpg completed. Results saved to layout_results_x86_64/images/complex-row-column-red-or-white-wine.jpg.json
+Analyzing layout for complex-structure-large-table.jpg...
+Layout analysis for complex-structure-large-table.jpg completed in 16.60 seconds.
+Layout analysis for complex-structure-large-table.jpg completed. Results saved to layout_results_x86_64/images/complex-structure-large-table.jpg.json
+Analyzing layout for easy_table.jpg...
+Layout analysis for easy_table.jpg completed in 8.13 seconds.
+Layout analysis for easy_table.jpg completed. Results saved to layout_results_x86_64/images/easy_table.jpg.json
+Analyzing layout for full-page-table-crop.jpg...
+Layout analysis for full-page-table-crop.jpg completed in 10.98 seconds.
+Layout analysis for full-page-table-crop.jpg completed. Results saved to layout_results_x86_64/images/full-page-table-crop.jpg.json
+Analyzing layout for full-page-table.png...
+Layout analysis for full-page-table.png completed in 11.34 seconds.
+Layout analysis for full-page-table.png completed. Results saved to layout_results_x86_64/images/full-page-table.png.json
+Analyzing layout for gs-1.jpg...
+Layout analysis for gs-1.jpg completed in 8.98 seconds.
+Layout analysis for gs-1.jpg completed. Results saved to layout_results_x86_64/images/gs-1.jpg.json
+Analyzing layout for gs-2.jpg...
+Layout analysis for gs-2.jpg completed in 6.89 seconds.
+Layout analysis for gs-2.jpg completed. Results saved to layout_results_x86_64/images/gs-2.jpg.json
+Analyzing layout for lots-of-numbers.jpg...
+Layout analysis for lots-of-numbers.jpg completed in 15.22 seconds.
+Layout analysis for lots-of-numbers.jpg completed. Results saved to layout_results_x86_64/images/lots-of-numbers.jpg.json
+Analyzing layout for multi-column-cell-not-in-header.jpg...
+Layout analysis for multi-column-cell-not-in-header.jpg completed in 8.18 seconds.
+Layout analysis for multi-column-cell-not-in-header.jpg completed. Results saved to layout_results_x86_64/images/multi-column-cell-not-in-header.jpg.json
+Analyzing layout for multi-media-table.jpg...
+Layout analysis for multi-media-table.jpg completed in 5.96 seconds.
+Layout analysis for multi-media-table.jpg completed. Results saved to layout_results_x86_64/images/multi-media-table.jpg.json
+Analyzing layout for table-with-footnote.jpg...
+Layout analysis for table-with-footnote.jpg completed in 9.20 seconds.
+Layout analysis for table-with-footnote.jpg completed. Results saved to layout_results_x86_64/images/table-with-footnote.jpg.json
+Analyzing layout for table-with-multi-line-header.jpg...
+Layout analysis for table-with-multi-line-header.jpg completed in 6.33 seconds.
+Layout analysis for table-with-multi-line-header.jpg completed. Results saved to layout_results_x86_64/images/table-with-multi-line-header.jpg.json
+Analyzing layout for tesla-page25.png...
+Layout analysis for tesla-page25.png completed in 17.51 seconds.
+Layout analysis for tesla-page25.png completed. Results saved to layout_results_x86_64/images/tesla-page25.png.json
+Analyzing layout for tesla-page4.png...
+Layout analysis for tesla-page4.png completed in 12.08 seconds.
+Layout analysis for tesla-page4.png completed. Results saved to layout_results_x86_64/images/tesla-page4.png.json
+Analyzing layout for tesla-page6.png...
+Layout analysis for tesla-page6.png completed in 12.78 seconds.
+Layout analysis for tesla-page6.png completed. Results saved to layout_results_x86_64/images/tesla-page6.png.json
+Analyzing layout for text-peak-out-of-cell-line.jpg...
+Layout analysis for text-peak-out-of-cell-line.jpg completed in 6.19 seconds.
+Layout analysis for text-peak-out-of-cell-line.jpg completed. Results saved to layout_results_x86_64/images/text-peak-out-of-cell-line.jpg.json

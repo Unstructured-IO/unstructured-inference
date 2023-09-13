@@ -1,0 +1,30 @@
+[
+    {
+        "text": "Web Services.ASPX",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Development Tools Eclipse 3.1,Ant,Maven. Frameworks Struts 1.2,JSF,Spring,Hibernate. Designing Tools Rational Rose, Together, Agile Methodology Web/App Servers Jboss,WebLogic 8.1/10.x,WebSphere 6,Tomcat. Databases Oracle 8i/9i/10g/11g,SQL Server,MySQL. Distributed Tech J2EE, Springs,Web Services. Configuration Tools GIT,SVN,CVS,",
+        "type": "Figure"
+    },
+    {
+        "text": "Development Tools Eclipse 3.1,Ant,Maven.",
+        "type": "Title"
+    },
+    {
+        "text": "Design Patterns",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Composite View,MVC,DAO,Singleton, Business Delegate Design",
+        "type": "Title"
+    },
+    {
+        "text": "Pattern.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Operating Systems Windows XP/NT/2000, Linux.",
+        "type": "Title"
+    }
+]

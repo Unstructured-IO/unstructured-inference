@@ -1,0 +1,114 @@
+[
+    {
+        "text": "Table 2: All operations supported by the layout elements. The same APIs are",
+        "type": "Title"
+    },
+    {
+        "text": "Table 2: All operations supported by the layout elements. The same APIs are supported across different layout element classes including Coordinate types,",
+        "type": "Title"
+    },
+    {
+        "text": "supported across different layout element classes including Coordinate types,",
+        "type": "Title"
+    },
+    {
+        "text": "TextBlock and Layout.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Description",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Operation Name",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Enlarge the current block according to the input",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "block.pad(top, bottom, right, left)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Scale the current block given the ratio in x and y direction",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "block.scale(fx, fy)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Move the current block with the shift",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "block.shift(dx, dy)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "distances in x and y direction",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Whether block1 is inside of block2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "block1.is_in(block2)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Return the intersection region of block1 and block2 Coordinate type to be determined based on the inputs.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "block1.intersect(block2)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Coordinate type to be determined based on the inputs",
+        "type": "Text"
+    },
+    {
+        "text": "Return the union region of blockl and block2. Coordinate type to be determined based on the inputs.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "block1.union(block2)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Coordinate type to be determined based on the inputs",
+        "type": "Text"
+    },
+    {
+        "text": "Convert the absolute coordinates of blockl to relative coordinates to block2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "block1.relative_to(block2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Calculate the absolute coordinates of blockl given",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "block1.condition_on(block2",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "the canvas block2's absolute coordinates",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Obtain the image segments in the block region",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "block.crop_image(image)",
+        "type": "UncategorizedText"
+    }
+]
