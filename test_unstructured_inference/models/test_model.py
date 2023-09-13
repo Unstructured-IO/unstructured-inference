@@ -72,3 +72,27 @@ def test_model_initializes_once():
         assert (
             doc.pages[0].elements[0].prob is None
         )  # NOTE(pravin) New Assertion to Make Sure Uncategorized Text has None Probability
+
+
+def test_deduplicate_detected_elements():
+    import numpy as np
+
+    from unstructured_inference.inference.elements import intersections
+    from unstructured_inference.inference.layout import DocumentLayout
+    from unstructured_inference.models.base import get_model
+
+    model = get_model("yolox_quantized")
+    file = "sample-docs/example_table.jpg"
+    doc = DocumentLayout.from_image_file(
+        file,
+        model,
+        ocr_strategy="never",
+        supplement_with_ocr_elements=False,
+    )
+    known_elements = [e for e in doc.pages[0].elements if e.type != "UncategorizedText"]
+    # Compute intersection matrix
+    intersections_mtx = intersections(*known_elements)
+    # Get rid off diagonal (cause an element will always intersect itself)
+    np.fill_diagonal(intersections_mtx, False)
+    # Now all the elements should be False, because any intersection remains
+    return intersections_mtx.all() == False
