@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Optional, cast
+from typing import Collection, List, Optional, Union, cast
 
 from layoutparser.elements.layout import TextBlock
 from PIL import Image
@@ -15,7 +15,6 @@ from unstructured_inference.inference.elements import (
     partition_groups_from_regions,
     region_bounding_boxes_are_almost_the_same,
 )
-from unstructured_inference.models import tables
 
 
 @dataclass
@@ -73,6 +72,8 @@ class LayoutElement(TextRegion):
 
 def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
     """Extract the contents of a table."""
+    from unstructured_inference.models import tables
+
     tables.load_agent()
     if tables.tables_agent is None:
         raise RuntimeError("Unable to load table extraction agent.")
@@ -326,6 +327,23 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
         )
         for r in merged_regions
     ]
+
+
+def probably_contained(
+    element: Union[LayoutElement, Rectangle],
+    inside: Union[LayoutElement, Rectangle],
+    area_threshold: float = 0.2,
+) -> bool:
+    """This function checks if one element is inside other.
+        If is definetly inside returns True, in other case check
+    if the intersection is big enough."""
+    if Rectangle.a_inside_b(element, inside):
+        return True
+
+    intersected_area = element.intersection(inside)
+    if intersected_area:
+        return intersected_area.area >= element.area * area_threshold
+    return False
 
 
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
