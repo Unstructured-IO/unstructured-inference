@@ -89,7 +89,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
     def deduplicate_detected_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
         """Deletes overlapping elements in a list of elements"""
 
-        if len(elements)<=1:
+        if len(elements) <= 1:
             return elements
 
         # DELETE, JUST FOR DEBUGGING

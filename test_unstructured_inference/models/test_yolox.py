@@ -14,8 +14,8 @@ def test_layout_yolox_local_parsing_image():
     # NOTE(benjamin) The example image should result in one page result
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 13 detections
-    types_known = ["Text","Section-header","Page-header"]
-    known_regions=[e for e in document_layout.pages[0].elements if e.type in types_known]
+    types_known = ["Text", "Section-header", "Page-header"]
+    known_regions = [e for e in document_layout.pages[0].elements if e.type in types_known]
     assert len(known_regions) == 13
     assert hasattr(
         document_layout.pages[0].elements[0],
@@ -35,7 +35,7 @@ def test_layout_yolox_local_parsing_pdf():
     assert "libero fringilla" in content
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 5 text detections
-    text_elements=[e for e in document_layout.pages[0].elements if e.type=='Text']
+    text_elements = [e for e in document_layout.pages[0].elements if e.type == "Text"]
     assert len(text_elements) == 5
     assert hasattr(
         document_layout.pages[0].elements[0],
