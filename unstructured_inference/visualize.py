@@ -7,7 +7,6 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import ImageFont
-from PIL import ImageFont
 from PIL.Image import Image
 from PIL.ImageDraw import ImageDraw
 
