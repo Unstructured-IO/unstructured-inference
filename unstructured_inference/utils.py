@@ -132,5 +132,6 @@ def tag(elements: Iterable[LayoutElement]):
     colors = ["red", "blue", "green", "magenta", "brown"]
     for i, e in enumerate(elements):
         e.text = f"-{i}-:{e.text}"
-        e.id = i
-        e.clrs = colors[i % len(colors)]
+        # currently not a property
+        e.id = i  # type:ignore
+        e.clrs = colors[i % len(colors)]  # type:ignore
