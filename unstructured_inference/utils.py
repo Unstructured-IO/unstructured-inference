@@ -129,8 +129,8 @@ def annotate_layout_elements(
 def tag(elements: Iterable[LayoutElement]):
     """Asign an numeric id to the elements in the list.
     Useful for debugging"""
-    colors = ["red", "blue", "green", "cyan", "magenta", "brown"]
+    colors = ["red", "blue", "green", "magenta", "brown"]
     for i, e in enumerate(elements):
         e.text = f"-{i}-:{e.text}"
         e.id = i
-        e.clrs = colors[i % 6]
+        e.clrs = colors[i % len(colors)]
