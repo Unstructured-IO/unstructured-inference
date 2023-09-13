@@ -25,23 +25,6 @@ if TYPE_CHECKING:
 import typing
 
 
-@typing.no_type_check
-def draw(e1: LayoutElement, e2: LayoutElement):  #
-    import PIL.Image
-    from PIL import ImageDraw, ImageFont
-
-    kbd = ImageFont.truetype("Keyboard.ttf", 20)
-    blank_page = PIL.Image.new("RGB", (2000, 2000))
-    draw = ImageDraw.Draw(blank_page)
-
-    draw.text((e1.x1, e1.y1), text=f"{e1.text[:7]}", fill="white", font=kbd)
-    draw.rectangle((e1.x1, e1.y1, e1.x2, e1.y2), outline=(255, 0, 0))
-
-    draw.text((e2.x1, e2.y1), text=f"{e2.text[:7]}", fill="white", font=kbd)
-    draw.rectangle((e2.x1, e2.y1, e2.x2, e2.y2), outline=(0, 255, 0))
-    blank_page.show()
-
-
 class UnstructuredModel(ABC):
     """Wrapper class for the various models used by unstructured."""
 
