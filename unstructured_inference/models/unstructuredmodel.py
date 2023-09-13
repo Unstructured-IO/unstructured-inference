@@ -14,7 +14,6 @@ from unstructured_inference.inference.elements import (
     partition_groups_from_regions,
 )
 from unstructured_inference.inference.layoutelement import probably_contained
-from unstructured_inference.utils import tag
 
 if TYPE_CHECKING:
     from unstructured_inference.inference.layoutelement import (
