@@ -136,6 +136,7 @@ def tag(elements: Iterable[LayoutElement]):
         e.id = i  # type:ignore
         e.clrs = colors[i % len(colors)]  # type:ignore
 
+
 def pad_image_with_background_color(
     image: Image.Image,
     pad: int = 10,

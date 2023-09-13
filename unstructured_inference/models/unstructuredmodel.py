@@ -86,8 +86,12 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         return super().__call__(x)
 
     @staticmethod
-    def deduplicate_detected_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
-        """Deletes overlapping elements in a list of elements"""
+    def deduplicate_detected_elements(
+        elements: List[LayoutElement],
+        min_text_size: int = 15,
+    ) -> List[LayoutElement]:
+        """Deletes overlapping elements in a list of elements. Also will delete elements
+        of less than min_text_size pixels height"""
 
         if len(elements) <= 1:
             return elements
@@ -126,21 +130,24 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             final_elements.sort(key=lambda e: e.y1)
             return final_elements
 
-        def shrink_regions(elements: List[LayoutElement], jump: int = 0) -> List[LayoutElement]:
+        def enhance_regions(
+            elements: List[LayoutElement],
+            min_text_size: int,
+            iou_to_merge: float = 0.5,
+        ) -> List[LayoutElement]:
+            """This function traverse all the elements deleting nested elements,
+            if are close enough could merge it or split them, depending or the
+            iou score for both regions"""
             intersections_mtx = intersections(*elements)
-
-            for e in elements:
-                check_rectangle(e)
 
             for i, row in enumerate(intersections_mtx):
                 first = elements[i]
-                if not first:
+                if first:
+                    # We get only the elements which intersected
+                    indices_to_check = np.where(row)[0]
                     continue
-
-                # We get only the elements which intersected
-                indices_to_check = np.where(row)[0]
                 for j in indices_to_check:
-                    if i != j and elements[j] is not None:
+                    if i != j and elements[j] is not None and elements[i] is not None:
                         second = elements[j]
                         intersection = first.intersection(
                             second,
@@ -155,21 +162,17 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                             elements[j] = None  # type:ignore
                         elif intersection:
                             iou = first.intersection_over_union(second)
-                            if iou < 0.5:  # small
+                            if iou < iou_to_merge:  # small
                                 first, second = intersect_free_quadrilaterals(first, second)
                                 # The rectangle is too small, delete
-                                if not check_rectangle(first) or first.height < 15:
+                                if not check_rectangle(first) or first.height < min_text_size:
                                     elements[i] = None  # type:ignore
-                                if not check_rectangle(second) or second.height < 15:
+                                if not check_rectangle(second) or second.height < min_text_size:
                                     elements[j] = None  # type:ignore
-
                             else:  # big
                                 # merge
                                 grow_region_to_match_region(first, second)
                                 elements[j] = None  # type:ignore
-
-                if elements[i] is None:  # the element have been deleted,
-                    continue
 
             elements = [e for e in elements if e is not None]
             return elements
@@ -181,16 +184,11 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         # TODO: Better to grow horizontally than vertically?
         groups = partition_groups_from_regions(elements)  # type:ignore
         for g in groups:
-            # group_border = minimal_containing_region(*g)
-            # group_border.type="GROUP"              # JUST FOR DEBUGGING
-            # group_border.prob = 1.0                # JUST FOR DEBUGGING
-            # cleaned_elements.append(group_border)  # JUST FOR DEBUGGING
-
             g = clean_tables(g)  # type:ignore
             cleaned_elements.extend(g)  # type:ignore
 
-        cleaned_elements = shrink_regions(cleaned_elements)
-        cleaned_elements = [e for e in cleaned_elements if e.height > 15]
+        cleaned_elements = enhance_regions(cleaned_elements, min_text_size)
+        cleaned_elements = [e for e in cleaned_elements if e.height > min_text_size]
         return cleaned_elements
 
 
