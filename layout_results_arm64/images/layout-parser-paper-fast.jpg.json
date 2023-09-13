@@ -1,0 +1,38 @@
+[
+    {
+        "text": "LayoutParser: A Unified Toolkit for Deep Learning Based Document Image Analysis",
+        "type": "Title"
+    },
+    {
+        "text": "“Zejiang Shen! (F!), Ruochen Zhang?, Melissa Dal¥, Benjamin Charles Germain Lee, Jacob Carlson*, and Welning LI",
+        "type": "Text"
+    },
+    {
+        "text": "\"Aten tte for AL nwa Unversity gehen shangthroun at pve Universi seeade) jacob cariaon)efar-harvard.eds   ",
+        "type": "List"
+    },
+    {
+        "text": "arXiv:2103.15348v2 [es.CV] 21 Jun 2021",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Abstract. lect advances in document nage anaes (DIA) have ben ‘pamurliy driven bythe appliation of eural networks Melly roach Gute coud be aly deployed in production and extended fo farther [vstigation. However, nto ecary Hes loely cpio codboees sed sophisticated model configurations compat the ey ree of ‘orient inert by wide bec, hgh hrs hare boos reg ‘Hors ta impene somabity and spi desp laren (DL) swede sree tlie Hy etre iguage Fever ‘aon, none of the ae optimized for challenge inthe domain af DIA, ‘Ths tepenets a sajor gp in the exiting fois DIA i eal to scademic reser acne wide range of dnpiny in the social soencee [rary for streamlining the waage of DL in DIA reward and appicn ‘Som. The core LayoutFareer brary comes with sac of mpl and Jnttive interface or applying and cutominng Dl. model for Iago de Tr promote extent, LayoutParser ln incorporates x commanity platform or saring both pretrined models and al document dist {tion pipeline We demonstrate that LayoutPareer hap fr bot Seltecht aml breve Spticsts Peles reamed tc es The leary pblely sable at tape: //layout-pareer-gsthsb so",
+        "type": "Text"
+    },
+    {
+        "text": "‘Keywords: Document Image Analy: Dop Leis (Character Reopition - Open Source library = Tool   Layout Analysis",
+        "type": "Text"
+    },
+    {
+        "text": "Introduction",
+        "type": "Title"
+    },
+    {
+        "text": "1",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Deep Learning(DL)-basd approaches are the state-of-the-art fora wide range of docinent image analysis (DIA) tasks including document image claeifcaion (I)",
+        "type": "Text"
+    }
+]

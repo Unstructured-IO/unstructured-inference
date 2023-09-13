@@ -1,0 +1,26 @@
+[
+    {
+        "text": "Table 2: All operations supported by the layout elements. The same APIs are",
+        "type": "Title"
+    },
+    {
+        "text": "Table 2: All operations supported by the layout elements. The same APIs are supported across different layout element classes including Coordinate types,",
+        "type": "Title"
+    },
+    {
+        "text": "supported across different layout element classes including Coordinate types,",
+        "type": "Title"
+    },
+    {
+        "text": "TextBlock and Layout.   Operation Name Description   block.pad(top, bottom, right, left) | Enlarge the current block according to the input   Scale the current block given the ratio block.scale(fx, fy) . : . in x and y direction   Move the current block with the shift block.shift(dx, dy) . . | . distances in x and y direction   block1.is_in(block2) Whether block! is inside of block2   . Return the intersection region of block1 and block2. block1. intersect (block2)   . Return the union region of block1 and block2. block1.union(block2)   . Convert the absolute coordinates of block1 to block1.relative_to(block2) . . relative coordinates to block2   oe Calculate the absolute coordinates of block1 given block1.condition_on(block2) . the canvas block2’s absolute coordinates     block. crop_image (image) Obtain the image segments in the block region",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Coordinate type to be determined based on the inputs.",
+        "type": "Text"
+    },
+    {
+        "text": ". . . Coordinate type to be determined based on the inputs.",
+        "type": "Text"
+    }
+]

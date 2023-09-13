@@ -1,0 +1,50 @@
+[
+    {
+        "text": "Table of Contents",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Alphabet Inc.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "PART I.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "FINANCIAL INFORMATION",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "ITEM 1.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "FINANCIAL STATEMENTS",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Alphabet Inc.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "CONSOLIDATED BALANCE SHEETS (in millions, except par value per share amounts)",
+        "type": "Title"
+    },
+    {
+        "text": "As of As of December 31, 2022 March 31, 2023     (unaudited) Assets Current assets: Cash and cash equivalents $ 21,879 $ 25,924 Marketable securities 91,883 89,178 Total cash, cash equivalents, and marketable securities 113,762 115,102 Accounts receivable, net 40,258 36,036 Inventory 2,670 2,315 Other current assets 8,105 8,532 Total current assets 164,795 161,985 Non-marketable securities 30,492 31,213 Deferred income taxes 5,261 6,885 Property and equipment, net 112,668 117,560 Operating lease assets 14,381 14,447 Intangible assets, net 2,084 1,968 Goodwill 28,960 28,994 Other non-current assets 6,623 6,439 Total assets $ 365,264 $ 369,491 Liabilities and Stockholders’ Equity Current liabilities: Accounts payable $ 5,128 $ 4,184 Accrued compensation and benefits 14,028 9,954 Accrued expenses and other current liabilities 37,866 43,185 Accrued revenue share 8,370 7,816 Deferred revenue 3,908 3,715 Total current liabilities 69,300 68,854 Long-term debt 14,701 13,697 Deferred revenue, non-current 599 610 Income taxes payable, non-current 9,258 9,722 Deferred income taxes 514 542 Operating lease liabilities 12,501 12,799 Other long-term liabilities 2,247 2,373 Total liabilities 109,120 108,597   Commitments and contingencies (Note 9) Stockholders’ equity: Preferred stock, $0.001 par value per share, 100 shares authorized; no 0 0 shares issued and outstanding Class A, Class B, and Class C stock and additional paid-in capital, $0.001 par value per share: 300,000 shares authorized (Class A 180,000, Class B 60,000, Class C 60,000); 12,849 (Class A 5,964, Class B 883, 68,184 70,269 Class C 6,002) and 12,722 (Class A 5,943, Class B 883, Class C 5,896)",
+        "type": "Figure"
+    },
+    {
+        "text": "shares issued and outstanding Accumulated other comprehensive income (loss) Retained earnings Total stockholders’ equity Total liabilities and stockholders’ equity",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "  (7,603) (6,000) 195,563 196,625 256,144 260,894 $ 365,264 $ 369,491",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "See accompanying notes.",
+        "type": "UncategorizedText"
+    }
+]

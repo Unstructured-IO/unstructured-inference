@@ -1,0 +1,30 @@
+[
+    {
+        "text": "OPERATIONAL (Unaudited)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "SUMMARY",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Model S/X production 16,411 19,935 20,613 19,437 19,489 19% Model 3/Y production 242,169 345,988 419,088 421,371 460,211 90% Total production 258,580 365,923 439,701 440,808 479,700 86% Model S/X deliveries 16,162 18,672 17,147 10,695 19,225 19% Model 3/Y deliveries 238,533 325,158 388,131 412,180 446,915 87% Total deliveries 254,695 343,830 405,278 422,875 466,140 83% of which subject to operating lease accounting 9,227 11,004 15,184 22,357 21,883 137% Total end of quarter operating lease vehicle count 131,756 135,054 140,667 153,988 168,058 28% Global vehicle inventory (days of supply)“ 4 8 13 15 16 300% Solar deployed (MW) 106 94 100 67 66 -38% Storage deployed (MWh) 1,133 2,100 2,462 3,889 3,653 222% Tesla locations 831 903 963 1,000 1,068 29% Mobile service fleet 1,453 1,532 1,584 1,692 1,769 22% Supercharger stations 3,971 4,283 4,678 4,947 5,265 33% Supercharger connectors 36,165 38,883 42,419 45,169 48,082 33%",
+        "type": "Table"
+    },
+    {
+        "text": "Total deliveries",
+        "type": "Title"
+    },
+    {
+        "text": "Total end of quarter operating lease vehicle count",
+        "type": "Text"
+    },
+    {
+        "text": "Storage deployed (MWh)",
+        "type": "Text"
+    },
+    {
+        "text": "®Days of supply is calculated by dividing new car ending inventory by the relevant quarter’s deliveries and using 75 trading days (aligned with Automotive News definition).\n6 Starting in Q1-2023, we revised our methodology for reporting Tesla’s physical footprint. This count now includes all sales, service, delivery and body shop locations globally\n",
+        "type": "Text"
+    }
+]

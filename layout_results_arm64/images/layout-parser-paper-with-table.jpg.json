@@ -1,0 +1,46 @@
+[
+    {
+        "text": "LayoutParser: A Unified Toolkit for DL-Based DIA  ",
+        "type": "Text"
+    },
+    {
+        "text": "5.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "‘Table 1: Current layout detection models in the LayoutParser model z00",
+        "type": "Text"
+    },
+    {
+        "text": "Dataset | Bare Model!) Large Mode! | Noter       Pablagiee [| P/M M_|Tayouts of moder acientie dacumests \"PRA (3) « =| tagout of scanned modern magains and cone reports Newspaper [IT]| {Layout of ranned US nemepapers fom the 2h century ‘Tbtebenk (i) | ‘able repo on modern scinte and busines document BuDeaoet St] | P/M =| tayout of itary Inpanere documents  ",
+        "type": "Table"
+    },
+    {
+        "text": "Ranch data we inn cer model of dierent ce for diferent awde (the edo obwoon soar computation! nt) For ase mode!” and large ode”; we rer to ung the Ret 50 or ase 101 Ibctbones (1, penta. One cn tenn model of eieestaritctres lie Par BONN (8! (P) sad Mase LCN (Fer ane a he Large Mel clude he ater RLCNN ded  ",
+        "type": "Text"
+    },
+    {
+        "text": "layout data structures, which are optimized for efficiency and versatility. 3) When necessary, users can employ existing or customized OCR models via the unified API provided in the OCR module. 4) LayoutParser comes with a set of utility fanctions for the visualization and storage of the layout data. 5) LayoutParser is also highly customizable, via its integration with functions for layout data annotation and model training. We now provide detailed descriptions for each component.",
+        "type": "Text"
+    },
+    {
+        "text": "Layout Detection Models",
+        "type": "Title"
+    },
+    {
+        "text": "3.1",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "In LayoutParser, a layout model takes a document image as an input and generates a list of rectangular boxes for the target content regions. Different from traditional methods, it relies on deep convolutional neural networks rather than manually curated rules to identify content regions. It is formulated as an object detection problem and state-of-the-art’ models like Faster R-CNNY [28] and. Mask R-CNN [12] are used. This yields prediction results of high accuracy and makes it possible to build a concise, generalized interface for layout detection. LayoutParser, built upon Detectron? [38], provides a minimal API that can perform layout detection with only four lines of code in Python:",
+        "type": "Text"
+    },
+    {
+        "text": "import layoutparser as 1p image = cv2.imread(\"inage_file\") # load images model = 1p.Detectron2LayoutModel ( \"1p://PubLayllet /faster_renn_t     |-50_FPI_3x/config\")   + layout = model. detect (image)",
+        "type": "List"
+    },
+    {
+        "text": "LayoutParser provides a wealth of pre-trained model weights using various datasets covering different languages, time periods, and document types. Due to domain shift [7], the prediction performance can notably drop when models are ap- plied to target samples that are significantly different from the training dataset. As document structures and layouts vary greatly in different domains, itis important, to select models trained on adataset similar to the test samples. A semantic syntax is used for initializing the model weights in LayoutParser, using both the dataset, name and model name 1p://<dataset-nane>/<nodel-archi tecture-nane>.",
+        "type": "Text"
+    }
+]

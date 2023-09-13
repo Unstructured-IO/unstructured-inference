@@ -1,0 +1,30 @@
+[
+    {
+        "text": "Table 1: Current layout detection models in the LayoutParser model zoo",
+        "type": "Title"
+    },
+    {
+        "text": "Dataset | Base Model’| Large Model | Notes     PubLayNet [38] F/M M Layouts of modern scientific documents PRImA [3] M 2 Layouts of scanned modern magazines and scientific reports Newspaper [17] F = Layouts of scanned US newspapers from the 20th century TableBank [18] F F Table region on modern scientific and business document HJDataset [31] F/M 2 Layouts of history Japanese documents",
+        "type": "Figure"
+    },
+    {
+        "text": " ",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1 For each dataset, we train several models of different sizes for different needs (the trade-off between accuracy",
+        "type": "Title"
+    },
+    {
+        "text": "vs. computational cost). For “base model” and “large model”, we refer to using the ResNet 50 or ResNet 101",
+        "type": "Title"
+    },
+    {
+        "text": "backbones [13], respectively. One can train models of different architectures, like Faster R-CNN [28] (F) and Mask R-CNN [12] (M). For example, an F in the Large Model column indicates it has a Faster R-CNN model trained using the ResNet 101 zoo in coming months.",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "backbone. The platform is maintained and a number of additions will be made to the model",
+        "type": "Text"
+    }
+]

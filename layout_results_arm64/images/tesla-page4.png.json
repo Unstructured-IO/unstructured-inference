@@ -1,0 +1,566 @@
+[
+    {
+        "text": "FINANCIAL (Unaudited)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "SUMMARY",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "($ in millions, except percentages and per share data)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Q2-2022",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Q3-2022",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Q4-2022",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Q1-2023",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Q2-2023",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Total automotive revenues",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "14,602",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "18,692",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "21,507",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "19,963",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "21,268",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "46%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Energy generation and storage revenue",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "866",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,117",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,310",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,529",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,509",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "74%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Services and other revenue",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,466",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,645",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,701",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,837",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2,150",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "47%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Total revenues",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "16,934",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "21,454",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "24,318",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "23,329",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "24,927",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "47%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Total gross profit",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "4,234",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "5,382",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "4,511",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "4,533",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "7%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "5,777",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Total GAAP gross margin",
+        "type": "Title"
+    },
+    {
+        "text": "-682 bp",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "25.0%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "25.1%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "23.8%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "19.5%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "18.2%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Operating expenses",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,770",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,694",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,876",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,847",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2,154",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "21%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Income from operations",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2,464",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3,688",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3,901",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2,664",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2,599",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "-3%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "-493 bp",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Operating margin",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "14.6%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "17.2%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "16.0%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "11.4%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "9.6%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Adjusted EBITDA",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3,791",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "4,968",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "5,404",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "4,267",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "4,653",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "23%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Adjusted EBITDA margin",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "-372 bp",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "22.4%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "23.2%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "22.2%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "18.3%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "18.7%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Net income attributable to common stockholders (GAAP)",
+        "type": "Title"
+    },
+    {
+        "text": "2,259",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3,292",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3,687",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2,513",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2,703",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "20%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Net income attributable to common stockholders (non-GAAP)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2,620",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3,654",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "4,106",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2,931",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3,148",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "20%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "EPS attributable to common stockholders, diluted (GAAP)? EPS attributable to common stockholders, diluted (non-GAAP)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "0.65",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "0.95",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1.07",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "0.73",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "0.78",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "20%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "0.76",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1.05",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1.19",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "0.85",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "0.91",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "20%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Net cash provided by operating activities",
+        "type": "Text"
+    },
+    {
+        "text": "2,351",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "5,100",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3,278",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "2,513",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3,065",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "30%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Capital expenditures",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(1,730)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(1,803)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(1,858)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(2,072)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "(2,060)",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "19%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Free cash flow",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "621",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "3,297",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,420",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "441",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "1,005",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "62%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "Cash, cash equivalents and investments",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "18,915",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "21,107",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "22,185",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "22,402",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "23,075",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "22%",
+        "type": "UncategorizedText"
+    },
+    {
+        "text": "MEPS = earnings per share. Prior period results have been retroactively adjusted to reflect the three-for-one stock split effected in the form of a stock dividend in August 2022.\n",
+        "type": "Text"
+    }
+]
