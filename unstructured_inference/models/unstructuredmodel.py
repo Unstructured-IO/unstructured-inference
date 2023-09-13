@@ -160,7 +160,6 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             elements = [e for e in elements if e is not None]
             return elements
 
-        tag(elements)
         cleaned_elements: List[LayoutElement] = []
         # TODO: Delete nested elements with low or None probability
         # TODO: Keep most confident
