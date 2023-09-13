@@ -11,7 +11,7 @@ input_directory = "sample-docs"
 system_info = platform.machine()
 
 # Create the output directory with system information
-output_directory = f"layout_results_{system_info}"
+output_directory = f"layout_results_{system_info}/pdfs/"
 
 # Create the output directory if it doesn't exist
 os.makedirs(output_directory, exist_ok=True)
@@ -42,7 +42,7 @@ for file_name in all_files:
         print(f"Layout analysis for {file_name} completed in {elapsed_time:.2f} seconds.")
         
         # Construct the output JSON file path for storing the layout results (using the original file name)
-        output_json_file = os.path.join(output_directory, f"{os.path.splitext(file_name)[0]}_layout.json")
+        output_json_file = os.path.join(output_directory, f"{file_name}.json")
         
         # Create a list to store the layout elements with only "text" and "type" fields
         elements_dict_list = []
