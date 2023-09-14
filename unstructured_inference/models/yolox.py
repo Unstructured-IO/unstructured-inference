@@ -153,21 +153,6 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
         return page_layout
 
-    def annotate_image(self, image_fn, dets, out_fn):
-        """Draw bounding boxes and prediction metadata."""
-        origin_img = np.array(Image.open(image_fn))
-        final_boxes, final_scores, final_cls_inds = dets[:, :4], dets[:, 4], dets[:, 5]
-
-        annotated_image = draw_yolox_bounding_boxes(
-            origin_img,
-            final_boxes,
-            final_scores,
-            final_cls_inds,
-            conf=0.3,
-            class_names=self.layout_classes,
-        )
-        cv2.imwrite(out_fn, annotated_image)
-
 
 # Note: preprocess function was named preproc on original source
 
