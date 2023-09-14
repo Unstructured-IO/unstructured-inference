@@ -5,6 +5,7 @@
   behavior. Now all the elements produced by detection models are disjoint and they don't produce overlapping regions, which helps 
   reduce duplicated content.
 * Add `source` property to our elements, so you can know where the information was generated (OCR or detection model)
+* add env variable `ENTIRE_PAGE_OCR` to specify using paddle or tesseract on entire page OCR
 
 ## 0.5.27
 

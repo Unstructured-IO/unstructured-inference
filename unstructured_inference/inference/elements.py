@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import unicodedata
 from copy import deepcopy
@@ -271,15 +272,27 @@ def ocr(text_block: TextRegion, image: Image.Image, languages: str = "eng") -> s
     tesseract.load_agent(languages=languages)
     padded_block = text_block.pad(12)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
-    agent = tesseract.ocr_agents.get(languages)
-    if agent is None:
-        raise RuntimeError("OCR agent is not loaded for {languages}.")
+    entrie_page_ocr = os.getenv("ENTIRE_PAGE_OCR", "tesseract").lower()
+    if entrie_page_ocr == "paddle":
+        from unstructured_inference.models import paddle_ocr
 
-    try:
-        return agent.detect(cropped_image)
-    except tesseract.TesseractError:
-        logger.warning("TesseractError: Skipping region", exc_info=True)
-        return ""
+        paddle_result = paddle_ocr.load_agent().ocr(np.array(cropped_image), cls=True)
+        recognized_text = ""
+        for idx in range(len(paddle_result)):
+            res = paddle_result[idx]
+            for line in res:
+                recognized_text += line[1][0]
+        return recognized_text
+    else:
+        agent = tesseract.ocr_agents.get(languages)
+        if agent is None:
+            raise RuntimeError("OCR agent is not loaded for {languages}.")
+
+        try:
+            return agent.detect(cropped_image)
+        except tesseract.TesseractError:
+            logger.warning("TesseractError: Skipping region", exc_info=True)
+            return ""
 
 
 def needs_ocr(
