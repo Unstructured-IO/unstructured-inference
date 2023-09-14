@@ -184,3 +184,11 @@ def test_intersection_over_min(
     assert (
         rect1.intersection_over_minimum(rect2) == rect2.intersection_over_minimum(rect1) == expected
     )
+
+
+def test_ocr_paddle(monkeypatch):
+    monkeypatch.setenv("ENTIRE_PAGE_OCR", "paddle")
+    image = Image.new("RGB", (100, 100), (255, 255, 255))
+    text_block = elements.TextRegion(0, 0, 50, 50)
+    result = elements.ocr(text_block, image, languages="en")
+    assert result == ""
