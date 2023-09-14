@@ -1,3 +1,7 @@
+## 0.5.28
+
+* add env variable `ENTIRE_PAGE_OCR` to specify using paddle or tesseract on entire page OCR
+
 ## 0.5.27
 
 * table structure detection now pads the input image by 25 pixels in all 4 directions to improve its recall
