@@ -18,7 +18,6 @@ from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
-from unstructured_inference.visualize import draw_yolox_bounding_boxes
 
 YOLOX_LABEL_MAP = {
     0: "Caption",

@@ -21,8 +21,6 @@ if TYPE_CHECKING:
         LocationlessLayoutElement,
     )
 
-import typing
-
 
 class UnstructuredModel(ABC):
     """Wrapper class for the various models used by unstructured."""
