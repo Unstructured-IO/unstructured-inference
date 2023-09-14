@@ -7,6 +7,7 @@ from unstructured_inference.inference import elements
 from unstructured_inference.inference.layoutelement import (
     LocationlessLayoutElement,
     probably_contained,
+    separate,
 )
 
 
@@ -216,3 +217,16 @@ def test_LocationlessLayoutElement():
 )
 def test_probably_contained(rect1, rect2, expected):
     assert expected == probably_contained(rect1, rect2)
+
+
+@pytest.mark.parametrize(
+    ("rect1", "rect2"),
+    [
+        (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(3, 3, 6, 6)),
+        (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(6, 6, 8, 8)),
+    ],
+)
+def test_separate(rect1, rect2):
+    separate(rect1, rect2)
+
+    assert not rect1.intersects(rect2)
