@@ -168,8 +168,8 @@ structure_class_thresholds = {
     "table column header": 0.5,
     # those two types of cells would wrap the table so we want them to be highly confident or we can
     # end up with strange layouts
-    "table projected row header": 0.9,
-    "table spanning cell": 0.9,
+    "table projected row header": os.environ.get("TABLE_PROJ_ROW_HEADER_CONF", 0.9),
+    "table spanning cell": os.environ.get("TABLE_SPANNING_CELL_CONF", 0.9),
     "no object": 10,
 }
 
