@@ -4,6 +4,10 @@ from unittest.mock import PropertyMock, patch
 import pytest
 
 from unstructured_inference.inference import elements
+from unstructured_inference.inference.layoutelement import (
+    LocationlessLayoutElement,
+    probably_contained,
+)
 
 
 def intersect_brute(rect1, rect2):
@@ -184,3 +188,43 @@ def test_intersection_over_min(
     assert (
         rect1.intersection_over_minimum(rect2) == rect2.intersection_over_minimum(rect1) == expected
     )
+
+
+def test_grow_region_to_match_region():
+    from unstructured_inference.inference.elements import Rectangle, grow_region_to_match_region
+
+    a = Rectangle(1, 1, 2, 2)
+    b = Rectangle(1, 1, 5, 5)
+    grow_region_to_match_region(a, b)
+    assert a == Rectangle(1, 1, 5, 5)
+
+
+def test_LocationlessLayoutElement():
+    text = "Testing text"
+    type = "Type"
+    e = LocationlessLayoutElement(text, type)
+    assert e.to_dict() == {"text": text, "type": type}
+
+
+@pytest.mark.parametrize(
+    ("rect1", "rect2", "expected"),
+    [
+        (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(3, 3, 5.1, 5.1), True),
+        (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(3, 3, 5.2, 5.2), True),
+        (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(7, 7, 10, 10), False),
+    ],
+)
+def test_probably_contained(rect1, rect2, expected):
+    assert expected == probably_contained(rect1, rect2)
+
+
+def test_intersect_free_quadrilaterals():
+    from unstructured_inference.inference.elements import Rectangle, intersect_free_quadrilaterals
+
+    a = Rectangle(1, 1, 5, 3)
+    b = Rectangle(2, 2, 6, 4)
+
+    new_a, new_b = intersect_free_quadrilaterals(a, b)
+    print(new_a)
+    print(new_b)
+    assert False == False

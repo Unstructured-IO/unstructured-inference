@@ -82,6 +82,7 @@ def test_deduplicate_detected_elements():
     from unstructured_inference.models.base import get_model
 
     model = get_model("yolox_quantized")
+    # model.confidence_threshold=0.5
     file = "sample-docs/example_table.jpg"
     doc = DocumentLayout.from_image_file(
         file,
