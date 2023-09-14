@@ -591,8 +591,7 @@ def test_auto_zoom(mocker):
         / ".."
         / ".."
         / "sample-docs"
-        / "layout-parser-paper-fast.jpg"
+        / "layout-parser-paper-fast.jpg",
     )
     model.get_tokens(image)
     assert spy.call_count == 1
-

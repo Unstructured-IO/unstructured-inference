@@ -14,15 +14,15 @@ import pytesseract
 import torch
 from PIL import Image
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
+
+from unstructured_inference.logger import logger
+from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.tesseract import (
     TESSERACT_MAX_TEXT_HEIGHT,
     TESSERACT_MIN_TEXT_HEIGHT,
     TESSERACT_OPTIMUM_TEXT_HEIGHT,
     TESSERACT_TEXT_HEIGHT,
 )
-
-from unstructured_inference.logger import logger
-from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.utils import pad_image_with_background_color
 
