@@ -347,6 +347,18 @@ def probably_contained(
     return False
 
 
+def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutElement, Rectangle]):
+    """Reduce leftmost rectangle to don't overlap with the other"""
+    if not region_a.intersects(region_b):
+        return
+    else:
+        leftmost = region_a if region_a.x1 <= region_b.x1 else region_b
+        other = region_b if region_a.x1 <= region_b.x1 else region_a
+
+        leftmost.x2 = other.x1 - 1
+        leftmost.y2 = other.y2 - 1
+
+
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
 # Region types to not subclass Rectangle, and instead have an optional bbox property that is a
 # Rectangle. I or someone else will have to get to that later.
