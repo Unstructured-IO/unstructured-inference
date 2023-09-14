@@ -80,23 +80,6 @@ class Rectangle:
         """Checks whether this rectangle intersects another rectangle."""
         return intersections(self, other)[0, 1]
 
-    @staticmethod
-    def a_inside_b(
-        A: Rectangle,
-        B: Rectangle,
-        error_margin: Optional[Union[int, float]] = None,
-    ) -> bool:
-        """Checks whether this rectangle is contained within another rectangle."""
-        padded_other = B.pad(error_margin) if error_margin is not None else B
-        return all(
-            [
-                (A.x1 >= padded_other.x1),
-                (A.x2 <= padded_other.x2),
-                (A.y1 >= padded_other.y1),
-                (A.y2 <= padded_other.y2),
-            ],
-        )
-
     def is_in(self, other: Rectangle, error_margin: Optional[Union[int, float]] = None) -> bool:
         """Checks whether this rectangle is contained within another rectangle."""
         padded_other = other.pad(error_margin) if error_margin is not None else other
