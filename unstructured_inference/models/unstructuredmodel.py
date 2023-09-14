@@ -78,15 +78,6 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         if len(elements) <= 1:
             return elements
 
-        # DELETE, JUST FOR DEBUGGING
-        @typing.no_type_check
-        def check_rectangle(e: LayoutElement):
-            well_formed = e.x1 < e.x2 and e.y1 < e.y2
-            if not well_formed:
-                print(f"Bad rectangle! {e.id}")
-
-            return well_formed
-
         def clean_tables(elements: List[LayoutElement]) -> Iterable[LayoutElement]:
             import numpy as np
 
@@ -127,7 +118,6 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                 if first:
                     # We get only the elements which intersected
                     indices_to_check = np.where(row)[0]
-                    continue
                 for j in indices_to_check:
                     if i != j and elements[j] is not None and elements[i] is not None:
                         second = elements[j]
@@ -147,9 +137,9 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                             if iou < iou_to_merge:  # small
                                 first, second = intersect_free_quadrilaterals(first, second)
                                 # The rectangle is too small, delete
-                                if not check_rectangle(first) or first.height < min_text_size:
+                                if not first or first.height < min_text_size:
                                     elements[i] = None  # type:ignore
-                                if not check_rectangle(second) or second.height < min_text_size:
+                                if not second or second.height < min_text_size:
                                     elements[j] = None  # type:ignore
                             else:  # big
                                 # merge
@@ -158,6 +148,10 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
             elements = [e for e in elements if e is not None]
             return elements
+
+        # from unstructured_inference.utils import tag
+
+        # tag(elements)
 
         cleaned_elements: List[LayoutElement] = []
         # TODO: Delete nested elements with low or None probability
