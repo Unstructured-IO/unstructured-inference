@@ -1,7 +1,6 @@
 ## 0.5.28
 
-* Add functionality to extract and save images from the page
-* Update the layout `visualization` script to be able to show only image elements if needed
+* add env variable `ENTIRE_PAGE_OCR` to specify using paddle or tesseract on entire page OCR
 
 ## 0.5.27
 

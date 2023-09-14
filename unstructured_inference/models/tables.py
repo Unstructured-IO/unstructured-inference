@@ -63,6 +63,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 "Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'.",
             )
         if table_ocr == "paddle":
+            logger.info("Processing table OCR with paddleocr...")
             from unstructured_inference.models import paddle_ocr
 
             paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
@@ -78,6 +79,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                     tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
             return tokens
         else:
+            logger.info("Processing table OCR with tesseract...")
             ocr_df: pd.DataFrame = pytesseract.image_to_data(
                 x,
                 output_type="data.frame",
