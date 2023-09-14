@@ -134,7 +134,7 @@ def tag(elements: Iterable[LayoutElement]):
         e.text = f"-{i}-:{e.text}"
         # currently not a property
         e.id = i  # type:ignore
-        e.clrs = colors[i % len(colors)]  # type:ignore
+        e.color = colors[i % len(colors)]  # type:ignore
 
 
 def pad_image_with_background_color(
