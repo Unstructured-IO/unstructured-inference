@@ -271,6 +271,7 @@ class PageLayout:
                 )
 
             if entrie_page_ocr == "paddle":
+                logger.info("Processing entrie page OCR with paddle...")
                 from unstructured_inference.models import paddle_ocr
 
                 # TODO(yuming): paddle only support one language at once,
@@ -281,6 +282,7 @@ class PageLayout:
                 )
                 ocr_layout = parse_ocr_data_paddle(ocr_data)
             else:
+                logger.info("Processing entrie page OCR with tesseract...")
                 try:
                     ocr_data = pytesseract.image_to_data(
                         self.image,

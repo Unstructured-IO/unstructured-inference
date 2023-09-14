@@ -3,6 +3,8 @@ import functools
 import paddle
 from unstructured_paddleocr import PaddleOCR
 
+from unstructured_inference.logger import logger
+
 
 @functools.lru_cache(maxsize=None)
 def load_agent(language: str = "en"):
@@ -14,7 +16,10 @@ def load_agent(language: str = "en"):
     paddle.disable_signal_handler()
     # Use paddlepaddle-gpu if there is gpu device available
     gpu_available = paddle.device.cuda.device_count() > 0
-
+    if gpu_available:
+        logger.info("Using paddle with GPU...")
+    else:
+        logger.info("Using paddle with CPU...")
     try:
         # Enable MKL-DNN for paddle to speed up OCR if OS supports it
         # ref: https://paddle-inference.readthedocs.io/en/master/
