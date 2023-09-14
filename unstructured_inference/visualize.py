@@ -1,45 +1,23 @@
 # Copyright (c) Megvii Inc. All rights reserved.
 # Unstructured modified the original source code found at
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/visualize.py
-import typing
 from typing import Optional, Union
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import ImageFont
 from PIL.Image import Image
 from PIL.ImageDraw import ImageDraw
 
 from unstructured_inference.inference.elements import Rectangle
 
 
-@typing.no_type_check
 def draw_bbox(image: Image, rect: Rectangle, color: str = "red", width=1) -> Image:
     """Draws bounding box in image"""
     img = image.copy()
     draw = ImageDraw(img)
     topleft, _, bottomright, _ = rect.coordinates
-    try:
-        kbd = ImageFont.truetype("Keyboard.ttf", 20)
-        if rect.type == "GROUP":
-            draw.rectangle((topleft, bottomright), outline="green", width=5)
-            # draw.text(topleft, text="G", fill="green", font=kbd)
-        else:
-            c = getattr(rect, "clrs", "red")
-            id = getattr(rect, "id", 0)
-            draw.rectangle((topleft, bottomright), outline=c, width=width)
-            if id % 3 == 0:
-                tr = topleft[1] - 30
-            if id % 3 == 1:
-                tr = topleft[1]
-            elif id % 3 == 2:
-                tr = topleft[1] + 30
-
-            topleft_txt = topleft[0], tr
-            draw.text(topleft_txt, text=f"{rect.type} - {rect.text[:10]}", fill=c, font=kbd)
-    except Exception as e:
-        print(f"***{e}")
+    draw.rectangle((topleft, bottomright), outline=color, width=width)
     return img
 
 
