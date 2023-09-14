@@ -16,6 +16,13 @@ if "OMP_THREAD_LIMIT" not in os.environ:
     os.environ["OMP_THREAD_LIMIT"] = "1"
 
 
+# constants for computng zoom, if needed to improve tesseract performance
+TESSERACT_MIN_TEXT_HEIGHT = 10
+TESSERACT_MAX_TEXT_HEIGHT = 30
+TESSERACT_OPTIMUM_TEXT_HEIGHT = 20
+TESSERACT_TEXT_HEIGHT = "height"
+
+
 def load_agent(languages: str = "eng"):
     """Loads the Tesseract OCR agent as a global variable to ensure that we only load it once.
 

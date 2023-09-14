@@ -7,12 +7,19 @@ from collections import defaultdict
 from pathlib import Path
 from typing import List, Optional, Union
 
+import cv2
 import numpy as np
 import pandas as pd
 import pytesseract
 import torch
 from PIL import Image
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
+from unstructured_inference.models.tesseract import (
+    TESSERACT_MAX_TEXT_HEIGHT,
+    TESSERACT_MIN_TEXT_HEIGHT,
+    TESSERACT_OPTIMUM_TEXT_HEIGHT,
+    TESSERACT_TEXT_HEIGHT,
+)
 
 from unstructured_inference.logger import logger
 from unstructured_inference.models.table_postprocess import Rect
@@ -78,22 +85,34 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                     tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
             return tokens
         else:
+            zoom = 1
+
             ocr_df: pd.DataFrame = pytesseract.image_to_data(
                 x,
                 output_type="data.frame",
             )
-
             ocr_df = ocr_df.dropna()
+
+            # tesseract performance degrades when the text height is out of the preferred zone so we
+            # zoom the image (in or out depending on estimated text height) for optimum OCR results
+            text_height = ocr_df[TESSERACT_TEXT_HEIGHT].quantile(0.5)
+            if text_height < TESSERACT_MIN_TEXT_HEIGHT or text_height > TESSERACT_MAX_TEXT_HEIGHT:
+                zoom = TESSERACT_OPTIMUM_TEXT_HEIGHT / text_height
+                ocr_df: pd.DataFrame = pytesseract.image_to_data(
+                    zoom_image(x, zoom),
+                    output_type="data.frame",
+                )
+                ocr_df = ocr_df.dropna()
 
             tokens = []
             for idtx in ocr_df.itertuples():
                 tokens.append(
                     {
                         "bbox": [
-                            idtx.left,
-                            idtx.top,
-                            idtx.left + idtx.width,
-                            idtx.top + idtx.height,
+                            idtx.left / zoom,
+                            idtx.top / zoom,
+                            (idtx.left + idtx.width) / zoom,
+                            (idtx.top + idtx.height) / zoom,
                         ],
                         "text": idtx.text,
                     },
@@ -661,3 +680,19 @@ def cells_to_html(cells):
         tcell.text = cell["cell text"]
 
     return str(ET.tostring(table, encoding="unicode", short_empty_elements=False))
+
+
+def zoom_image(image: Image, zoom: int) -> Image:
+    new_image = cv2.resize(
+        cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR),
+        None,
+        fx=zoom,
+        fy=zoom,
+        interpolation=cv2.INTER_CUBIC,
+    )
+
+    kernel = np.ones((1, 1), np.uint8)
+    new_image = cv2.dilate(new_image, kernel, iterations=1)
+    new_image = cv2.erode(new_image, kernel, iterations=1)
+
+    return Image.fromarray(new_image)

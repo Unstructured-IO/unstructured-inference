@@ -1,4 +1,8 @@
+import os
+from pathlib import Path
+
 import pytest
+from PIL import Image
 from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerDecoder,
 )
@@ -576,3 +580,19 @@ def test_cells_to_html():
         "cols</td></tr><tr><td></td><td>sub cell 1</td><td>sub cell 2</td></tr></table>"
     )
     assert tables.cells_to_html(cells) == expected
+
+
+def test_auto_zoom(mocker):
+    spy = mocker.spy(tables, "zoom_image")
+    model = tables.UnstructuredTableTransformerModel()
+    model.initialize("microsoft/table-transformer-structure-recognition")
+    image = Image.open(
+        Path(os.path.dirname(os.path.abspath(__file__)))
+        / ".."
+        / ".."
+        / "sample-docs"
+        / "layout-parser-paper-fast.jpg"
+    )
+    model.get_tokens(image)
+    assert spy.call_count == 1
+
