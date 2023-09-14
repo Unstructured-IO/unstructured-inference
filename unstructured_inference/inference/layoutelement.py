@@ -49,6 +49,7 @@ class LayoutElement(TextRegion):
             "text": self.text,
             "type": self.type,
             "prob": self.prob,
+            "source": self.source,
         }
         return out_dict
 
@@ -58,7 +59,9 @@ class LayoutElement(TextRegion):
         x1, y1, x2, y2 = region.x1, region.y1, region.x2, region.y2
         text = region.text if hasattr(region, "text") else None
         type = region.type if hasattr(region, "type") else None
-        return cls(x1, y1, x2, y2, text, type)
+        prob = region.prob if hasattr(region, "prob") else None
+        source = region.source if hasattr(region, "source") else None
+        return cls(x1, y1, x2, y2, source, text, type, prob)
 
     @classmethod
     def from_lp_textblock(cls, textblock: TextBlock):
@@ -67,7 +70,7 @@ class LayoutElement(TextRegion):
         text = textblock.text
         type = textblock.type
         score = textblock.score
-        return cls(x1, y1, x2, y2, text, type, prob=score)
+        return cls(x1, y1, x2, y2, "detectron2_lp", text, type, score)
 
 
 def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
@@ -156,6 +159,7 @@ def merge_inferred_layout_with_extracted_layout(
             el.y2,
             text=el.text,
             type="Image" if isinstance(el, ImageTextRegion) else "UncategorizedText",
+            source=el.source,
         )
         for el in extracted_elements_to_add
     ]
@@ -302,8 +306,9 @@ def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
     max_y2 = max([tr.y2 for tr in regions])
 
     merged_text = " ".join([tr.text for tr in regions if tr.text])
-
-    return TextRegion(min_x1, min_y1, max_x2, max_y2, merged_text)
+    sources = [*{tr.source for tr in regions}]
+    source = sources.pop() if len(sources) == 1 else "merged:".join(sources)  # type:ignore
+    return TextRegion(min_x1, min_y1, max_x2, max_y2, source, merged_text)
 
 
 def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
@@ -322,6 +327,7 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
             r.y1,
             r.x2,
             r.y2,
+            None,
             text=r.text,
             type="UncategorizedText",
         )

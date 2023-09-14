@@ -158,6 +158,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
                     text=None,
                     type=detected_class,
                     prob=conf,
+                    source="detectron2_onnx",
                 )
 
                 regions.append(region)

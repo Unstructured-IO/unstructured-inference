@@ -4,6 +4,7 @@
 * Since detection models tend to nest elements inside others(specifically in Tables), an algorithm has been added for reducing this 
   behavior. Now all the elements produced by detection models are disjoint and they don't produce overlapping regions, which helps 
   reduce duplicated content.
+* Add `source` property to our elements, so you can know where the information was generated (OCR or detection model)
 
 ## 0.5.27
 

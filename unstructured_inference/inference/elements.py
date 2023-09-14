@@ -29,6 +29,7 @@ class Rectangle:
     y1: Union[int, float]
     x2: Union[int, float]
     y2: Union[int, float]
+    source: Optional[str] = None
 
     def pad(self, padding: Union[int, float]):
         """Increases (or decreases, if padding is negative) the size of the rectangle by extending

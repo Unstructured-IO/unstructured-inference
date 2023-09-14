@@ -17,10 +17,10 @@ from unstructured_inference.inference.layoutelement import (
 def test_aggregate_ocr_text_by_block():
     expected = "A Unified Toolkit"
     ocr_layout = [
-        TextRegion(0, 0, 20, 20, "A"),
-        TextRegion(50, 50, 150, 150, "Unified"),
-        TextRegion(150, 150, 300, 250, "Toolkit"),
-        TextRegion(200, 250, 300, 350, "Deep"),
+        TextRegion(0, 0, 20, 20, "OCR", "A"),
+        TextRegion(50, 50, 150, 150, "OCR", "Unified"),
+        TextRegion(150, 150, 300, 250, "OCR", "Toolkit"),
+        TextRegion(200, 250, 300, 350, "OCR", "Deep"),
     ]
     region = TextRegion(0, 0, 250, 350, "")
 
@@ -93,6 +93,7 @@ def test_merge_inferred_layout_with_ocr_layout(mock_inferred_layout, mock_ocr_re
             r.y1,
             r.x2,
             r.y2,
+            None,
             text=r.text,
             type="UncategorizedText",
         )
@@ -138,6 +139,7 @@ def test_layout_element_do_dict(mock_layout_element):
         "text": "Sample text",
         "type": "Text",
         "prob": None,
+        "source": None,
     }
 
     assert mock_layout_element.to_dict() == expected
@@ -157,6 +159,15 @@ def test_layout_element_from_lp_textblock():
         score=0.99,
     )
 
-    expected = LayoutElement(100, 100, 300, 300, "Sample Text", "Text", 0.99)
+    expected = LayoutElement(
+        100,
+        100,
+        300,
+        300,
+        source="detectron2_lp",
+        text="Sample Text",
+        type="Text",
+        prob=0.99,
+    )
 
     assert LayoutElement.from_lp_textblock(mock_text_block) == expected

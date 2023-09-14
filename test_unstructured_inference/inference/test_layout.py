@@ -39,11 +39,20 @@ def mock_final_layout():
         4,
         6,
         8,
+        source="Mock",
         text="A very repetitive narrative. " * 10,
         type="NarrativeText",
     )
 
-    title_block = layoutelement.LayoutElement(1, 2, 3, 4, text="A Catchy Title", type="Title")
+    title_block = layoutelement.LayoutElement(
+        1,
+        2,
+        3,
+        4,
+        source="Mock",
+        text="A Catchy Title",
+        type="Title",
+    )
 
     return [text_block, title_block]
 

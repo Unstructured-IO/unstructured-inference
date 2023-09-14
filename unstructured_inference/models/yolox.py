@@ -110,7 +110,6 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         input_shape = (1024, 768)
         origin_img = np.array(image)
         img, ratio = preprocess(origin_img, input_shape)
-        # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
         session = self.model
 
         ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
@@ -142,7 +141,16 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
             # being (x1,y1) the top left and (x2,y2) the bottom right
             x1, y1, x2, y2, prob, class_id = det.tolist()
             detected_class = self.layout_classes[int(class_id)]
-            region = LayoutElement(x1, y1, x2, y2, text=None, type=detected_class, prob=prob)
+            region = LayoutElement(
+                x1,
+                y1,
+                x2,
+                y2,
+                text=None,
+                type=detected_class,
+                prob=prob,
+                source="yolox",
+            )
 
             regions.append(region)
 
