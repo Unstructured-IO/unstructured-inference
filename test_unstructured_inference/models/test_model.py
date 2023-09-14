@@ -96,4 +96,4 @@ def test_deduplicate_detected_elements():
     # Get rid off diagonal (cause an element will always intersect itself)
     np.fill_diagonal(intersections_mtx, False)
     # Now all the elements should be False, because any intersection remains
-    return intersections_mtx.all() == False
+    return not intersections_mtx.all()
