@@ -17,9 +17,9 @@ def load_agent(language: str = "en"):
     # Use paddlepaddle-gpu if there is gpu device available
     gpu_available = paddle.device.cuda.device_count() > 0
     if gpu_available:
-        logger.info("Using paddle with GPU...")
+        logger.info(f"Loading paddle with GPU on language={language}...")
     else:
-        logger.info("Using paddle with CPU...")
+        logger.info(f"Loading paddle with CPU on language={language}...")
     try:
         # Enable MKL-DNN for paddle to speed up OCR if OS supports it
         # ref: https://paddle-inference.readthedocs.io/en/master/
