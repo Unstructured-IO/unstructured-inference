@@ -1,3 +1,7 @@
+## 0.5.28
+
+* set a higher confidence threshold for projected row header and table spanning cells in table transformer; this improves output table structure accuracy
+
 ## 0.5.27
 
 * table structure detection now pads the input image by 25 pixels in all 4 directions to improve its recall
