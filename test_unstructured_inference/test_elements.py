@@ -216,15 +216,3 @@ def test_LocationlessLayoutElement():
 )
 def test_probably_contained(rect1, rect2, expected):
     assert expected == probably_contained(rect1, rect2)
-
-
-def test_intersect_free_quadrilaterals():
-    from unstructured_inference.inference.elements import Rectangle, intersect_free_quadrilaterals
-
-    a = Rectangle(1, 1, 5, 3)
-    b = Rectangle(2, 2, 6, 4)
-
-    new_a, new_b = intersect_free_quadrilaterals(a, b)
-    print(new_a)
-    print(new_b)
-    assert False == False
