@@ -2,6 +2,7 @@ from random import randint
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from PIL import Image
 
 from unstructured_inference.inference import elements
 
