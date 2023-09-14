@@ -1,68 +1,37 @@
 # Copyright (c) Megvii Inc. All rights reserved.
 # Unstructured modified the original source code found at
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/visualize.py
+import typing
 from typing import Optional, Union
 
-import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import ImageFont
 from PIL.Image import Image
 from PIL.ImageDraw import ImageDraw
 
 from unstructured_inference.inference.elements import Rectangle
 
 
-def draw_bbox(image: Image, rect: Rectangle, color: str = "red", width=1) -> Image:
+@typing.no_type_check
+def draw_bbox(
+    image: Image,
+    rect: Rectangle,
+    color: str = "red",
+    width=1,
+    details: bool = False,
+) -> Image:
     """Draws bounding box in image"""
     img = image.copy()
     draw = ImageDraw(img)
     topleft, _, bottomright, _ = rect.coordinates
-    draw.rectangle((topleft, bottomright), outline=color, width=width)
-    return img
-
-
-# NOTE: in original files from YoloX 'draw_yolox_bounding_boxes' function is named "vis"
-# TODO(alan): Need type hints here
-def draw_yolox_bounding_boxes(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
-    """
-    This function draws bounding boxes over the img argument, using
-    boxes from detections from YoloX.
-    img is a numpy array from cv2.imread()
-    Scores refers to the probability of each detection.
-    cls_ids are the class of each detection
-    conf is the confidence required to draw the bounding box
-    class_names is a list, where class_names[cls_ids[i]] should be the name
-        for the i-th bounding box.
-    """
-    for i in range(len(boxes)):
-        box = boxes[i]
-        cls_id = int(cls_ids[i])
-        score = scores[i]
-        if score < conf:
-            continue
-        x0 = int(box[0])
-        y0 = int(box[1])
-        x1 = int(box[2])
-        y1 = int(box[3])
-
-        color = (_COLORS[cls_id] * 255).astype(np.uint8).tolist()
-        text = f"{class_names[cls_id]}:{score * 100:.1f}%"
-        txt_color = (0, 0, 0) if np.mean(_COLORS[cls_id]) > 0.5 else (255, 255, 255)
-        font = cv2.FONT_HERSHEY_SIMPLEX
-
-        txt_size = cv2.getTextSize(text, font, 0.4, 1)[0]
-        cv2.rectangle(img, (x0, y0), (x1, y1), color, 2)
-
-        txt_bk_color = (_COLORS[cls_id] * 255 * 0.7).astype(np.uint8).tolist()
-        cv2.rectangle(
-            img,
-            (x0, y0 + 1),
-            (x0 + txt_size[0] + 1, y0 + int(1.5 * txt_size[1])),
-            txt_bk_color,
-            -1,
-        )
-        cv2.putText(img, text, (x0, y0 + txt_size[1]), font, 0.4, txt_color, thickness=1)
-
+    c = getattr(rect, "color", color)
+    if details:
+        source = rect.source if rect.source else "Unknown"
+        type = getattr(rect, "type", "")
+        kbd = ImageFont.truetype("Keyboard.ttf", 20)
+        draw.text(topleft, text=f"{type} {source}", fill=c, font=kbd)
+    draw.rectangle((topleft, bottomright), outline=c, width=width)
     return img
 
 
