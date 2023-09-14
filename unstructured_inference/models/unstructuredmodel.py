@@ -9,11 +9,10 @@ from PIL.Image import Image
 
 from unstructured_inference.inference.elements import (
     grow_region_to_match_region,
-    intersect_free_quadrilaterals,
     intersections,
     partition_groups_from_regions,
 )
-from unstructured_inference.inference.layoutelement import probably_contained
+from unstructured_inference.inference.layoutelement import probably_contained, separate
 
 if TYPE_CHECKING:
     from unstructured_inference.inference.layoutelement import (
@@ -133,7 +132,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                         elif intersection:
                             iou = first.intersection_over_union(second)
                             if iou < iou_to_merge:  # small
-                                first, second = intersect_free_quadrilaterals(first, second)
+                                separate(first, second)
                                 # The rectangle is too small, delete
                                 if not first or first.height < min_text_size:
                                     elements[i] = None  # type:ignore
