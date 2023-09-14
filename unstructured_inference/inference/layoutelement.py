@@ -332,17 +332,18 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
 def probably_contained(
     element: Union[LayoutElement, Rectangle],
     inside: Union[LayoutElement, Rectangle],
-    area_threshold: float = 0.2,
+    area_threshold: float = 0.8,
 ) -> bool:
     """This function checks if one element is inside other.
         If is definetly inside returns True, in other case check
     if the intersection is big enough."""
-    if Rectangle.a_inside_b(element, inside):
+    # Probably can be implemented usigng is_in, however this is based in area overlapping
+    if element.is_in(inside):
         return True
 
     intersected_area = element.intersection(inside)
     if intersected_area:
-        return intersected_area.area >= element.area * area_threshold
+        return intersected_area.area >= inside.area * area_threshold
     return False
 
 
