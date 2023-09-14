@@ -233,6 +233,7 @@ def test_separate(rect1, rect2):
 
     assert not rect1.intersects(rect2)
 
+
 def test_ocr_paddle(monkeypatch, caplog):
     monkeypatch.setenv("ENTIRE_PAGE_OCR", "paddle")
     image = Image.new("RGB", (100, 100), (255, 255, 255))
