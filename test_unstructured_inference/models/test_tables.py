@@ -354,9 +354,24 @@ def test_table_prediction_paddle(monkeypatch):
     table_model.initialize(model="microsoft/table-transformer-structure-recognition")
     img = Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
     prediction = table_model.predict(img)
-    # Note(yuming): lossen paddle table prediction output test since performance issue
-    # and results are different in different platforms (i.e., gpu vs cpu)
-    assert len(prediction)
+    assert prediction == (
+        '<table><thead><th rowspan="2">Disability Category</th><th '
+        'rowspan="2">Participant</th><th rowspan="2">Blots Complete</th><th '
+        'rowspan="2">Ballots 0mplete/ Terminated</th><th '
+        'colspan="2">Results</th></thead><thead><th>'
+        "</th><th></th><th></th><th></th><th>Accuracy</th><th>ime "
+        "to "
+        "complete</th></thead><tr><td>Blind</td><td>5</td>"
+        "<td>1</td><td>4</td><td>34.5%,=1</td><td>1199sec, "
+        "n=1</td></tr><tr><td>Low "
+        "Vision</td><td>5</td><td>2</td><td>3</td><td>98.3%n=2 "
+        "(9.7%,n=3)</td><td>1716 se, n=3 "
+        "(1934sec,n=2</td></tr><tr><td>eterit</td><td>5</td><td>"
+        "4</td><td>1</td><td>9.3%,=4</td><td>1672.1 "
+        "se,4</td></tr><tr><td>Mobility</td><td>3</td>"
+        "<td>3</td><td>0</td><td>5.4%,n=3</td><td>1416 "
+        "sec,n=3</td></tr></table>"
+    )
 
 
 def test_table_prediction_invalid_table_ocr(monkeypatch):
