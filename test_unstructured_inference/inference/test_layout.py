@@ -646,8 +646,11 @@ def test_load_pdf_with_multicolumn_layout_and_ocr(filename="sample-docs/design-t
         assert element.text.startswith(test_snippets[i])
 
 
-@pytest.mark.parametrize("colors", ["red", None])
-def test_annotate(colors):
+@pytest.mark.parametrize(
+    ("colors", "add_details", "threshold"),
+    [("red", False, 0.992), (None, False, 0.992), ("red", True, 0.8)],
+)
+def test_annotate(colors, add_details, threshold):
     def check_annotated_image():
         annotated_array = np.array(annotated_image)
         for coords in [coords1, coords2]:
@@ -659,9 +662,9 @@ def test_annotate(colors):
                 assert all(annotated_array[y1:y2, x1, i] == expected)
                 assert all(annotated_array[y1:y2, x2, i] == expected)
             # Make sure almost all the pixels are not changed
-            assert ((annotated_array[:, :, 0] == 1).mean()) > 0.992
-            assert ((annotated_array[:, :, 1] == 1).mean()) > 0.992
-            assert ((annotated_array[:, :, 2] == 1).mean()) > 0.992
+            assert ((annotated_array[:, :, 0] == 1).mean()) > threshold
+            assert ((annotated_array[:, :, 1] == 1).mean()) > threshold
+            assert ((annotated_array[:, :, 2] == 1).mean()) > threshold
 
     test_image_arr = np.ones((100, 100, 3), dtype="uint8")
     image = Image.fromarray(test_image_arr)
@@ -672,15 +675,18 @@ def test_annotate(colors):
     rect2 = elements.Rectangle(*coords2)
     page.elements = [rect1, rect2]
 
+    annotated_image = page.annotate(colors=colors, add_details=add_details, sources=["all"])
+    check_annotated_image()
+
     # Scenario 1: where self.image exists
-    annotated_image = page.annotate(colors=colors)
+    annotated_image = page.annotate(colors=colors, add_details=add_details)
     check_annotated_image()
 
     # Scenario 2: where self.image is None, but self.image_path exists
     with patch.object(Image, "open", return_value=image):
         page.image = None
         page.image_path = "mock_path_to_image"
-        annotated_image = page.annotate(colors=colors)
+        annotated_image = page.annotate(colors=colors, add_details=add_details)
         check_annotated_image()
 
 
