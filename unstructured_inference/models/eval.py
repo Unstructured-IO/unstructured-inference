@@ -1,8 +1,16 @@
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
 from rapidfuzz import fuzz
+
+
+EVAL_FUNCTIONS = {
+    "token_ratio": fuzz.token_ratio,
+    "ratio": fuzz.ratio,
+    "partial_token_ratio": fuzz.partial_token_ratio,
+    "partial_ratio": fuzz.partial_ratio,
+}
 
 
 def eval_cells(actual_df: pd.DataFrame, predicted_df: pd.DataFrame) -> Dict[str, float]:
@@ -45,7 +53,11 @@ def compare_contents_as_cells(actual_cells, pred_cells):
     return compare_contents_as_df(actual_df, pred_df)
 
 
-def compare_contents_as_df(actual_df, pred_df, joiner="\t"):
+def default_tokenizer(text: str) -> List[str]:
+    return text.split()
+
+
+def compare_contents_as_df(actual_df, pred_df, joiner="\t", eval_func="token_ratio", processor=None):
     """ravel the table as string then use text distance to compare the prediction against true
     table;
 
@@ -57,10 +69,10 @@ def compare_contents_as_df(actual_df, pred_df, joiner="\t"):
     one word but the order still matches true table so it won't reduce the score
     """
     return {
-        "by_col": fuzz.partial_ratio_alignment(
+        f"by_col_{eval_func}": EVAL_FUNCTIONS.get(eval_func, "token_ratio")(
             join_df_content(actual_df), join_df_content(pred_df)
         ),
-        "by_row": fuzz.partial_ratio_alignment(
+        f"by_row_{eval_func}": EVAL_FUNCTIONS.get(eval_func, "token_ratio")(
             join_df_content(actual_df.T), join_df_content(pred_df.T)
         )
     }
