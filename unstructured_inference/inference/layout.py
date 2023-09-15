@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import io
 import tempfile
 from pathlib import PurePath
 from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
@@ -379,9 +380,11 @@ class PageLayout:
                     output_dir_path,
                     f"figure-{self.number}-{figure_number}.jpg",
                 )
-                cropped_image = self.image.crop((el.x1, el.y1, el.x2, el.y2))
-                write_image(cropped_image, output_f_path)
-                el.image_path = output_f_path
+                image_bytes = el.image_raw_data
+                if image_bytes:
+                    image = Image.open(io.BytesIO(image_bytes))
+                    image.save(output_f_path)
+                    el.image_path = output_f_path
             except (ValueError, IOError):
                 logger.warning("Image Extraction Error: Skipping the failed image")
 
@@ -635,6 +638,7 @@ def load_pdf(
 ) -> Tuple[List[List[TextRegion]], Union[List[Image.Image], List[str]]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
+
     layouts = []
     for page in extract_pages(filename):
         layout = []
@@ -647,17 +651,29 @@ def load_pdf(
             coef = dpi / 72
 
             if hasattr(element, "get_text"):
-                _text, element_class = (element.get_text(), EmbeddedTextRegion)
-            elif get_images_from_pdf_element(element):
-                _text, element_class = (None, ImageTextRegion)
-                element_class = ImageTextRegion
+                _text = element.get_text()
+                regions = [EmbeddedTextRegion(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)]
             else:
-                continue
+                embedded_images = get_images_from_pdf_element(element)
+                if len(embedded_images) > 0:
+                    regions = []
+                    for embedded_image in embedded_images:
+                        image_bytes = embedded_image.stream.rawdata
+                        regions.append(
+                            ImageTextRegion(
+                                x1 * coef,
+                                y1 * coef,
+                                x2 * coef,
+                                y2 * coef,
+                                text=None,
+                                image_raw_data=image_bytes,
+                            )
+                        )
+                else:
+                    continue
 
-            text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
-
-            if text_region.area() > 0:
-                layout.append(text_region)
+            valid_regions = [r for r in regions if r.area() > 0]
+            layout.extend(valid_regions)
         layouts.append(layout)
 
     if path_only and not output_folder:
