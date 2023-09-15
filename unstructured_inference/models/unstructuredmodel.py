@@ -76,8 +76,6 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             return elements
 
         def clean_tables(elements: List[LayoutElement]) -> Iterable[LayoutElement]:
-            import numpy as np
-
             tables = [e for e in elements if e.type == "Table"]
             not_tables = [e for e in elements if e.type != "Table"]
             if len(tables) == 0:
