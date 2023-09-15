@@ -8,7 +8,6 @@ from PIL import Image
 from unstructured_inference.inference import elements
 from unstructured_inference.inference.layoutelement import (
     LocationlessLayoutElement,
-    probably_contained,
     separate,
 )
 
@@ -217,8 +216,8 @@ def test_LocationlessLayoutElement():
         (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(7, 7, 10, 10), False),
     ],
 )
-def test_probably_contained(rect1, rect2, expected):
-    assert expected == probably_contained(rect1, rect2)
+def test_is_almost_subregion_of(rect1, rect2, expected):
+    assert expected == rect2.is_almost_subregion_of(rect1)
 
 
 @pytest.mark.parametrize(

@@ -25,9 +25,16 @@ def mock_image():
 
 @pytest.fixture()
 def mock_initial_layout():
-    text_block = layout.EmbeddedTextRegion(2, 4, 6, 8, text="A very repetitive narrative. " * 10)
+    text_block = layout.EmbeddedTextRegion(
+        2,
+        4,
+        6,
+        8,
+        text="A very repetitive narrative. " * 10,
+        source="Mock",
+    )
 
-    title_block = layout.EmbeddedTextRegion(1, 2, 3, 4, text="A Catchy Title")
+    title_block = layout.EmbeddedTextRegion(1, 2, 3, 4, text="A Catchy Title", source="Mock")
 
     return [text_block, title_block]
 

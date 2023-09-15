@@ -27,7 +27,7 @@ def draw_bbox(
     topleft, _, bottomright, _ = rect.coordinates
     c = getattr(rect, "color", color)
     if details:
-        source = rect.source if rect.source else "Unknown"
+        source = getattr(rect, "source", "Unknown")
         type = getattr(rect, "type", "")
         kbd = ImageFont.truetype("Keyboard.ttf", 20)
         draw.text(topleft, text=f"{type} {source}", fill=c, font=kbd)

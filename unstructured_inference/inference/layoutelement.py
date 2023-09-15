@@ -61,7 +61,7 @@ class LayoutElement(TextRegion):
         type = region.type if hasattr(region, "type") else None
         prob = region.prob if hasattr(region, "prob") else None
         source = region.source if hasattr(region, "source") else None
-        return cls(x1, y1, x2, y2, source, text, type, prob)
+        return cls(x1, y1, x2, y2, text=text, source=source, type=type, prob=prob)
 
     @classmethod
     def from_lp_textblock(cls, textblock: TextBlock):
@@ -69,8 +69,8 @@ class LayoutElement(TextRegion):
         x1, y1, x2, y2 = textblock.coordinates
         text = textblock.text
         type = textblock.type
-        score = textblock.score
-        return cls(x1, y1, x2, y2, "detectron2_lp", text, type, score)
+        prob = textblock.score
+        return cls(x1, y1, x2, y2, text=text, source="detectron2_lp", type=type, prob=prob)
 
 
 def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
@@ -308,7 +308,7 @@ def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
     merged_text = " ".join([tr.text for tr in regions if tr.text])
     sources = [*{tr.source for tr in regions}]
     source = sources.pop() if len(sources) == 1 else "merged:".join(sources)  # type:ignore
-    return TextRegion(min_x1, min_y1, max_x2, max_y2, source, merged_text)
+    return TextRegion(min_x1, min_y1, max_x2, max_y2, source=source, text=merged_text)
 
 
 def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
@@ -327,30 +327,12 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
             r.y1,
             r.x2,
             r.y2,
-            None,
             text=r.text,
+            source=None,
             type="UncategorizedText",
         )
         for r in merged_regions
     ]
-
-
-def probably_contained(
-    element: Union[LayoutElement, Rectangle],
-    inside: Union[LayoutElement, Rectangle],
-    area_threshold: float = 0.9,
-) -> bool:
-    """This function checks if one element is inside other.
-        If is definetly inside returns True, in other case check
-    if the intersection is big enough."""
-    # Probably can be implemented using is_in, however this is based in area overlapping
-    if element.is_in(inside):
-        return True
-
-    intersected_area = element.intersection(inside)
-    if intersected_area:
-        return intersected_area.area >= inside.area * area_threshold
-    return False
 
 
 def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutElement, Rectangle]):
