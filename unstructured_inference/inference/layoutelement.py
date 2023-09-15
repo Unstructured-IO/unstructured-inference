@@ -370,8 +370,8 @@ def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutEl
     if not region_a.intersects(region_b):
         return
     else:
-        if region_a.area>region_b.area:
-            reduce(keep=region_a,reduce=region_b)
+        if region_a.area > region_b.area:
+            reduce(keep=region_a, reduce=region_b)
         else:
             reduce(keep=region_b, reduce=region_a)
 
