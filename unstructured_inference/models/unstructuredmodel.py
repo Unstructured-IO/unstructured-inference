@@ -12,7 +12,7 @@ from unstructured_inference.inference.elements import (
     intersections,
     partition_groups_from_regions,
 )
-from unstructured_inference.inference.layoutelement import probably_contained, separate
+from unstructured_inference.inference.layoutelement import separate
 
 if TYPE_CHECKING:
     from unstructured_inference.inference.layoutelement import (
@@ -83,7 +83,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
             nested_check = None
             for table in tables:
-                nested_current = np.array([probably_contained(e, table) for e in not_tables])
+                nested_current = np.array([e.is_almost_subregion_of(table) for e in not_tables])
                 if nested_check is None:
                     nested_check = nested_current
                     continue
