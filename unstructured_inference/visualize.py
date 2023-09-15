@@ -34,7 +34,7 @@ def draw_bbox(
             draw.text(topleft, text=f"{type} {source}", fill=c, font=kbd)
         draw.rectangle((topleft, bottomright), outline=c, width=width)
     except Exception as e:
-        print("Error drawing bounding box", e)
+        print(f"Error during draw_bbox: {e}")
     return img
 
 
