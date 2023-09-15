@@ -22,16 +22,22 @@ def draw_bbox(
     details: bool = False,
 ) -> Image:
     """Draws bounding box in image"""
-    img = image.copy()
-    draw = ImageDraw(img)
-    topleft, _, bottomright, _ = rect.coordinates
-    c = getattr(rect, "color", color)
-    if details:
-        source = getattr(rect, "source", "Unknown")
-        type = getattr(rect, "type", "")
-        kbd = ImageFont.truetype("Keyboard.ttf", 20)
-        draw.text(topleft, text=f"{type} {source}", fill=c, font=kbd)
-    draw.rectangle((topleft, bottomright), outline=c, width=width)
+    try:
+        img = image.copy()
+        draw = ImageDraw(img)
+        topleft, _, bottomright, _ = rect.coordinates
+        c = getattr(rect, "color", color)
+        if details:
+            source = getattr(rect, "source", "Unknown")
+            type = getattr(rect, "type", "")
+            kbd = ImageFont.truetype("Keysaboard.ttf", 20)
+            draw.text(topleft, text=f"{type} {source}", fill=c, font=kbd)
+        draw.rectangle((topleft, bottomright), outline=c, width=width)
+    except OSError:
+        print("Failed to find font file. Skipping details.")
+        img = draw_bbox(image, rect, color, width)
+    except Exception as e:
+        print(f"Failed to draw bounding box: {e}")
     return img
 
 
