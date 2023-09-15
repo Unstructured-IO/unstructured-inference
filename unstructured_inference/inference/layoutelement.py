@@ -111,9 +111,6 @@ def merge_inferred_layout_with_extracted_layout(
 
             if is_full_page_image:
                 continue
-            else:
-                extracted_elements_to_add.append(extracted_region)
-                continue
         region_matched = False
         for inferred_region in inferred_layout:
             if inferred_region.intersects(extracted_region):
@@ -141,12 +138,20 @@ def merge_inferred_layout_with_extracted_layout(
                 )
                 if same_bbox:
                     # Looks like these represent the same region
-                    grow_region_to_match_region(inferred_region, extracted_region)
-                    inferred_region.text = extracted_region.text
-                    region_matched = True
-                elif extracted_is_subregion_of_inferred and inferred_is_text and extracted_is_image:
-                    grow_region_to_match_region(inferred_region, extracted_region)
-                    region_matched = True
+                    if extracted_is_image:
+                        # keep extracted region, remove inferred region
+                        inferred_regions_to_remove.append(inferred_region)
+                    else:
+                        # keep inferred region, remove extracted region
+                        grow_region_to_match_region(inferred_region, extracted_region)
+                        inferred_region.text = extracted_region.text
+                        region_matched = True
+                elif extracted_is_subregion_of_inferred and inferred_is_text:
+                    if extracted_is_image:
+                        inferred_regions_to_remove.append(inferred_region)
+                    else:
+                        grow_region_to_match_region(inferred_region, extracted_region)
+                        region_matched = True
                 elif either_region_is_subregion_of_other and inferred_region.type != "Table":
                     inferred_regions_to_remove.append(inferred_region)
         if not region_matched:
