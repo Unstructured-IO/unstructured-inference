@@ -105,9 +105,8 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             min_text_size: int,
             iom_to_merge: float = 0.3,
         ) -> List[LayoutElement]:
-            """This function traverse all the elements deleting nested elements,
-            if are close enough could merge it or split them, depending or the
-            iou score for both regions"""
+            """This function traverses all the elements and either deletes nested elements,
+            or merges or splits them depending on the iou score for both regions"""
             intersections_mtx = intersections(*elements)
 
             for i, row in enumerate(intersections_mtx):
