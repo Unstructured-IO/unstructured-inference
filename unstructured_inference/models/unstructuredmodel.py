@@ -112,6 +112,20 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                 if first:
                     # We get only the elements which intersected
                     indices_to_check = np.where(row)[0]
+                    # Delete the first element, since it will always intersect with itself
+                    indices_to_check = indices_to_check[indices_to_check != i]
+                    if len(indices_to_check) == 0:
+                        continue
+                    if len(indices_to_check) > 1:  # sort by iom
+                        iom_to_check = [
+                            (j, first.intersection_over_minimum(elements[j]))
+                            for j in indices_to_check
+                        ]
+                        iom_to_check.sort(
+                            key=lambda x: x[1],
+                            reverse=True,
+                        )  # sort elements by iom, so we first check the greatest
+                        indices_to_check = [x[0] for x in iom_to_check]  # type:ignore
                 for j in indices_to_check:
                     if i != j and elements[j] is not None and elements[i] is not None:
                         second = elements[j]
