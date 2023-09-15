@@ -27,6 +27,7 @@ from unstructured_inference.inference.layoutelement import (
     merge_inferred_layout_with_ocr_layout,
 )
 from unstructured_inference.inference.ordering import order_layout
+from unstructured_inference.inference.pdf import get_images
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.detectron2onnx import (
@@ -644,11 +645,15 @@ def load_pdf(
             y2 = height - y2
             # Coefficient to rescale bounding box to be compatible with images
             coef = dpi / 72
-            _text, element_class = (
-                (element.get_text(), EmbeddedTextRegion)
-                if hasattr(element, "get_text")
-                else (None, ImageTextRegion)
-            )
+
+            if hasattr(element, "get_text"):
+                _text, element_class = (element.get_text(), EmbeddedTextRegion)
+            elif get_images(element):
+                _text, element_class = (None, ImageTextRegion)
+                element_class = ImageTextRegion
+            else:
+                continue
+
             text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
 
             if text_region.area() > 0:
