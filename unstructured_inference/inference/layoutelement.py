@@ -343,7 +343,7 @@ def probably_contained(
     """This function checks if one element is inside other.
         If is definetly inside returns True, in other case check
     if the intersection is big enough."""
-    # Probably can be implemented usigng is_in, however this is based in area overlapping
+    # Probably can be implemented using is_in, however this is based in area overlapping
     if element.is_in(inside):
         return True
 
