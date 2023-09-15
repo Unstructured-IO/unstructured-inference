@@ -168,7 +168,6 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             cleaned_elements.extend(g)  # type:ignore
 
         cleaned_elements = enhance_regions(cleaned_elements, min_text_size)
-        # cleaned_elements = [e for e in cleaned_elements]
         return cleaned_elements
 
 
