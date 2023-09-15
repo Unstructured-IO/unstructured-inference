@@ -212,7 +212,11 @@ def test_LocationlessLayoutElement():
     ("rect1", "rect2", "expected"),
     [
         (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(3, 3, 5.1, 5.1), True),
-        (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(3, 3, 5.2, 5.2), True),
+        (
+            elements.Rectangle(0, 0, 5, 5),
+            elements.Rectangle(4.5, 4.5, 5.2, 5.2),
+            True,
+        ),  # Should intersect!
         (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(7, 7, 10, 10), False),
     ],
 )
