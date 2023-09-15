@@ -227,6 +227,7 @@ class TextRegion(Rectangle):
         return text
 
 
+@dataclass
 class EmbeddedTextRegion(TextRegion):
     def extract_text(
         self,
@@ -243,7 +244,10 @@ class EmbeddedTextRegion(TextRegion):
             return self.text
 
 
+@dataclass
 class ImageTextRegion(TextRegion):
+    image_raw_data: Optional[bytes] = None
+
     def extract_text(
         self,
         objects: Optional[Collection[TextRegion]],

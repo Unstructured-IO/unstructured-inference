@@ -22,6 +22,7 @@ from unstructured_inference.models import tables
 class LayoutElement(TextRegion):
     type: Optional[str] = None
     prob: Optional[float] = None
+    image_raw_data: Optional[bytes] = None
     image_path: Optional[str] = None
 
     def extract_text(
@@ -109,6 +110,9 @@ def merge_inferred_layout_with_extracted_layout(
 
             if is_full_page_image:
                 continue
+            else:
+                extracted_elements_to_add.append(extracted_region)
+                continue
         region_matched = False
         for inferred_region in inferred_layout:
             if inferred_region.intersects(extracted_region):
@@ -155,6 +159,7 @@ def merge_inferred_layout_with_extracted_layout(
             el.x2,
             el.y2,
             text=el.text,
+            image_raw_data=getattr(el, "image_raw_data", None),
             type="Image" if isinstance(el, ImageTextRegion) else "UncategorizedText",
         )
         for el in extracted_elements_to_add
