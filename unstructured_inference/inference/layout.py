@@ -27,7 +27,7 @@ from unstructured_inference.inference.layoutelement import (
     merge_inferred_layout_with_ocr_layout,
 )
 from unstructured_inference.inference.ordering import order_layout
-from unstructured_inference.inference.pdf import get_images
+from unstructured_inference.inference.pdf import get_images_from_pdf_element
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.detectron2onnx import (
@@ -648,7 +648,7 @@ def load_pdf(
 
             if hasattr(element, "get_text"):
                 _text, element_class = (element.get_text(), EmbeddedTextRegion)
-            elif get_images(element):
+            elif get_images_from_pdf_element(element):
                 _text, element_class = (None, ImageTextRegion)
                 element_class = ImageTextRegion
             else:
