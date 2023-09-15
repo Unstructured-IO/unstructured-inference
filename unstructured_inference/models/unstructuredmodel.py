@@ -93,7 +93,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
             final_elements = []
             for nested, elem in zip(nested_check, not_tables):  # type:ignore
-                if not nested and elem not in [tables]:
+                if not nested:
                     final_elements.append(elem)
 
             final_elements.extend(tables)
@@ -103,7 +103,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         def enhance_regions(
             elements: List[LayoutElement],
             min_text_size: int,
-            iou_to_merge: float = 0.5,
+            iom_to_merge: float = 0.3,
         ) -> List[LayoutElement]:
             """This function traverse all the elements deleting nested elements,
             if are close enough could merge it or split them, depending or the
@@ -130,25 +130,26 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                             # delete second element
                             elements[j] = None  # type:ignore
                         elif intersection:
-                            iou = first.intersection_over_union(second)
-                            if iou < iou_to_merge:  # small
+                            iom = first.intersection_over_minimum(second)
+                            if iom < iom_to_merge:  # small
                                 separate(first, second)
-                                # The rectangle is too small, delete
-                                if not first or first.height < min_text_size:
-                                    elements[i] = None  # type:ignore
-                                if not second or second.height < min_text_size:
-                                    elements[j] = None  # type:ignore
+                                # The rectangle could become too small, which is a
+                                # good size to delete?
                             else:  # big
                                 # merge
-                                grow_region_to_match_region(first, second)
-                                elements[j] = None  # type:ignore
+                                if first.area > second.area:
+                                    grow_region_to_match_region(first, second)
+                                    elements[j] = None  # type:ignore
+                                else:
+                                    grow_region_to_match_region(second, first)
+                                    elements[i] = None  # type:ignore
 
             elements = [e for e in elements if e is not None]
             return elements
 
-        # from unstructured_inference.utils import tag
+        from unstructured_inference.utils import tag
 
-        # tag(elements)
+        tag(elements)
 
         cleaned_elements: List[LayoutElement] = []
         # TODO: Delete nested elements with low or None probability
@@ -160,7 +161,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             cleaned_elements.extend(g)  # type:ignore
 
         cleaned_elements = enhance_regions(cleaned_elements, min_text_size)
-        cleaned_elements = [e for e in cleaned_elements if e.height > min_text_size]
+        # cleaned_elements = [e for e in cleaned_elements]
         return cleaned_elements
 
 

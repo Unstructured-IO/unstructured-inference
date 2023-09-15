@@ -338,7 +338,7 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
 def probably_contained(
     element: Union[LayoutElement, Rectangle],
     inside: Union[LayoutElement, Rectangle],
-    area_threshold: float = 0.8,
+    area_threshold: float = 0.9,
 ) -> bool:
     """This function checks if one element is inside other.
         If is definetly inside returns True, in other case check
@@ -355,14 +355,42 @@ def probably_contained(
 
 def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutElement, Rectangle]):
     """Reduce leftmost rectangle to don't overlap with the other"""
+
+    def reduce(keep: Rectangle, reduce: Rectangle):
+        # Asume intersection
+
+        # Other is down
+        if reduce.y2 > keep.y2 and reduce.x1 < keep.x2:
+            # other is down-right
+            if reduce.x2 > keep.x2 and reduce.y2 > keep.y2:
+                reduce.x1 = keep.x2 * 1.01
+                reduce.y1 = keep.y2 * 1.01
+                return
+            # other is down-left
+            if reduce.x1 < keep.x1 and reduce.y1 < keep.y2:
+                reduce.x1 = keep.y2
+                return
+            # other is centered
+            reduce.y1 = keep.y2
+        else:  # other is up
+            # other is up-right
+            if reduce.x2 > keep.x2 and reduce.y1 < keep.y1:
+                reduce.y2 = keep.y1
+                return
+            # other is left
+            if reduce.x1 < keep.x1 and reduce.y1 < keep.y1:
+                reduce.y2 = keep.y1
+                return
+            # other is centered
+            reduce.y2 = keep.y1
+
     if not region_a.intersects(region_b):
         return
     else:
-        leftmost = region_a if region_a.x1 <= region_b.x1 else region_b
-        other = region_b if region_a.x1 <= region_b.x1 else region_a
-
-        leftmost.x2 = other.x1 - 1
-        leftmost.y2 = other.y2 - 1
+        if region_a.area > region_b.area:
+            reduce(keep=region_a, reduce=region_b)
+        else:
+            reduce(keep=region_b, reduce=region_a)
 
 
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
