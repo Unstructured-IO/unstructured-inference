@@ -120,6 +120,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                         iom_to_check = [
                             (j, first.intersection_over_minimum(elements[j]))
                             for j in indices_to_check
+                            if elements[j] is not None
                         ]
                         iom_to_check.sort(
                             key=lambda x: x[1],
