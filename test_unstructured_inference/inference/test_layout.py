@@ -927,3 +927,20 @@ def test_warning_if_chipper_and_low_dpi(caplog):
         mock_from_file.assert_called_once()
         assert caplog.records[0].levelname == "WARNING"
         assert "DPI >= 300" in caplog.records[0].msg
+
+
+@pytest.mark.parametrize(
+    ("filename", "img_num", "should_complete"),
+    [("sample-docs/empty-document.pdf", 0, True), ("sample-docs/empty-document.pdf", 10, False)],
+)
+def test_get_image(filename, img_num, should_complete):
+    doc = layout.DocumentLayout.from_file(filename)
+    page = doc.pages[0]
+    try:
+        img = page._get_image(filename, img_num)
+        # transform img to numpy array
+        img = np.array(img)
+        # is a blank image with all pixels white
+        assert img.mean() == 255.0
+    except ValueError:
+        assert not should_complete

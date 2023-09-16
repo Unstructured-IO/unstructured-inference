@@ -62,10 +62,10 @@ def test_layout_yolox_local_parsing_empty_pdf():
 
 
 def test_layout_yolox_local_parsing_image_soft():
-    filename = os.path.join("sample-docs", "test-image.jpg")
+    filename = os.path.join("sample-docs", "example_table.jpg")
     # NOTE(benjamin) keep_output = True create a file for each image in
     # localstorage for visualization of the result
-    document_layout = process_file_with_model(filename, model_name="yolox_tiny", is_image=True)
+    document_layout = process_file_with_model(filename, model_name="yolox_quantized", is_image=True)
     # NOTE(benjamin) The example image should result in one page result
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) Soft version of the test, run make test-long in order to run with full model
