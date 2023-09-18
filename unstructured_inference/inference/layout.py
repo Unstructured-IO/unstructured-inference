@@ -12,7 +12,7 @@ import pdf2image
 import pytesseract
 from pdfminer import psparser
 from pdfminer.high_level import extract_pages
-from PIL import Image, ImageOps, ImageSequence
+from PIL import Image, ImageSequence
 from pytesseract import Output
 
 from unstructured_inference.constants import OCRMode
@@ -384,7 +384,7 @@ class PageLayout:
                 if image_bytes:
                     image = Image.open(io.BytesIO(image_bytes))
                     cv_img = np.array(image)
-                    cv_img_inverted = (255 - cv_img)
+                    cv_img_inverted = 255 - cv_img
                     cv2.imwrite(output_f_path, cv_img_inverted)
                     el.image_path = output_f_path
             except (ValueError, IOError):
