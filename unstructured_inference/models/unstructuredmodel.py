@@ -67,11 +67,10 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
     @staticmethod
     def enhance_regions(
         elements: List[LayoutElement],
-        min_text_size: int,
         iom_to_merge: float = 0.3,
     ) -> List[LayoutElement]:
         """This function traverses all the elements and either deletes nested elements,
-        or merges or splits them depending on the iou score for both regions"""
+        or merges or splits them depending on the iom score for both regions"""
         intersections_mtx = intersections(*elements)
 
         for i, row in enumerate(intersections_mtx):
