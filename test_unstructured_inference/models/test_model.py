@@ -117,7 +117,7 @@ def test_enhance_regions():
         Rectangle(0.10, 0.10, 1.10, 1.10),
     ]
     model = get_model("yolox_tiny")
-    elements = model.enhance_regions(elements, 0.5, 0.3)
+    elements = model.enhance_regions(elements, 0.5)
     assert len(elements) == 1
     assert (elements[0].x1, elements[0].y1, elements[0].x2, elements[0].x2) == (0, 0, 1.10, 1.10)
 
@@ -135,6 +135,6 @@ def test_clean_tables():
         LayoutElement(0.05, 0.05, 1.05, 1.05),
     ]
     model = get_model("yolox_tiny")
-    elements = model.enhance_regions(elements, 0.5, 0.3)
+    elements = model.enhance_regions(elements, 0.5)
     assert len(elements) == 1
     assert (elements[0].x1, elements[0].y1, elements[0].x2, elements[0].x2) == (0, 0, 1.05, 1.05)
