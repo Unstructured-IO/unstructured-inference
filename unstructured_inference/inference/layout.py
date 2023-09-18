@@ -11,7 +11,7 @@ import pdf2image
 import pytesseract
 from pdfminer import psparser
 from pdfminer.high_level import extract_pages
-from PIL import Image, ImageSequence
+from PIL import Image, ImageSequence, ImageOps
 from pytesseract import Output
 
 from unstructured_inference.constants import OCRMode
@@ -383,7 +383,8 @@ class PageLayout:
                 image_bytes = el.image_raw_data
                 if image_bytes:
                     image = Image.open(io.BytesIO(image_bytes))
-                    image.save(output_f_path)
+                    inverted_image = ImageOps.invert(image)
+                    inverted_image.save(output_f_path)
                     el.image_path = output_f_path
             except (ValueError, IOError):
                 logger.warning("Image Extraction Error: Skipping the failed image")
