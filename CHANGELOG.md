@@ -1,3 +1,12 @@
+## 0.5.29
+
+* Add functionality to extract and save images from the page
+  * Add functionality to extract image objects (`LTImage`) from a `PDF layout element` parsed by `pdfminer.high_level.extract_pages`
+  * Update logic to determine `ImageTextRegion` in `load_pdf()` 
+  * Add the `image_raw_data` property to `ImageTextRegion` and `LayoutElement`
+  * Update `merge_inferred_layout_with_extracted_layout()` to always keep the embedded image elements
+* Update the layout `visualization` script to be able to show only image elements if needed
+
 ## 0.5.28
 
 * add env variable `ENTIRE_PAGE_OCR` to specify using paddle or tesseract on entire page OCR
