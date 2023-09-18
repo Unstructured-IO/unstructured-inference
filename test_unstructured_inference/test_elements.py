@@ -198,3 +198,5 @@ def test_ocr_paddle(monkeypatch, caplog):
     with caplog.at_level(logging.INFO):
         _ = elements.ocr(text_block, image, languages="en")
         assert "paddle" in caplog.text
+
+    monkeypatch.delenv("ENTIRE_PAGE_OCR")
