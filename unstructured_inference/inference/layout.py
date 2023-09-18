@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import os
 import io
+import os
 import tempfile
 from pathlib import PurePath
 from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
@@ -11,7 +11,7 @@ import pdf2image
 import pytesseract
 from pdfminer import psparser
 from pdfminer.high_level import extract_pages
-from PIL import Image, ImageSequence, ImageOps
+from PIL import Image, ImageOps, ImageSequence
 from pytesseract import Output
 
 from unstructured_inference.constants import OCRMode
@@ -39,7 +39,6 @@ from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
 from unstructured_inference.patches.pdfminer import parse_keyword
-from unstructured_inference.utils import write_image
 from unstructured_inference.visualize import draw_bbox
 
 # NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
@@ -190,7 +189,7 @@ class PageLayout:
         self,
         number: int,
         image: Image.Image,
-        layout: Optional[List[TextRegion]],
+        layout: Optional[List[Union[EmbeddedTextRegion, ImageTextRegion]]],
         image_metadata: Optional[dict] = None,
         image_path: Optional[Union[str, PurePath]] = None,  # TODO: Deprecate
         document_filename: Optional[Union[str, PurePath]] = None,
@@ -466,7 +465,7 @@ class PageLayout:
         number: int = 1,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
-        layout: Optional[List[TextRegion]] = None,
+        layout: Optional[List[Union[EmbeddedTextRegion, ImageTextRegion]]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
         ocr_mode: str = OCRMode.FULL_PAGE.value,
@@ -613,7 +612,7 @@ def process_file_with_model(
 def get_element_from_block(
     block: TextRegion,
     image: Optional[Image.Image] = None,
-    pdf_objects: Optional[List[TextRegion]] = None,
+    pdf_objects: Optional[List[Union[EmbeddedTextRegion, ImageTextRegion]]] = None,
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
     extract_tables: bool = False,
@@ -636,7 +635,10 @@ def load_pdf(
     dpi: int = 200,
     output_folder: Optional[Union[str, PurePath]] = None,
     path_only: bool = False,
-) -> Tuple[List[List[TextRegion]], Union[List[Image.Image], List[str]]]:
+) -> Tuple[
+    List[List[Union[EmbeddedTextRegion, ImageTextRegion]]],
+    Union[List[Image.Image], List[str]],
+]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
 
@@ -651,13 +653,15 @@ def load_pdf(
             # Coefficient to rescale bounding box to be compatible with images
             coef = dpi / 72
 
+            regions: List[Union[EmbeddedTextRegion, ImageTextRegion]] = []
             if hasattr(element, "get_text"):
                 _text = element.get_text()
-                regions = [EmbeddedTextRegion(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)]
+                regions.append(
+                    EmbeddedTextRegion(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text),
+                )
             else:
                 embedded_images = get_images_from_pdf_element(element)
                 if len(embedded_images) > 0:
-                    regions = []
                     for embedded_image in embedded_images:
                         image_bytes = embedded_image.stream.rawdata
                         regions.append(
@@ -668,7 +672,7 @@ def load_pdf(
                                 y2 * coef,
                                 text=None,
                                 image_raw_data=image_bytes,
-                            )
+                            ),
                         )
                 else:
                     continue
