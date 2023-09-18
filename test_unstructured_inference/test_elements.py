@@ -1,7 +1,9 @@
+import logging
 from random import randint
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from PIL import Image
 
 from unstructured_inference.inference import elements
 
@@ -184,3 +186,15 @@ def test_intersection_over_min(
     assert (
         rect1.intersection_over_minimum(rect2) == rect2.intersection_over_minimum(rect1) == expected
     )
+
+
+def test_ocr_paddle(monkeypatch, caplog):
+    monkeypatch.setenv("ENTIRE_PAGE_OCR", "paddle")
+    image = Image.new("RGB", (100, 100), (255, 255, 255))
+    text_block = elements.TextRegion(0, 0, 50, 50)
+    # Note(yuming): paddle result is currently non-deterministic on ci
+    # so don't check result like `assert result == ""`
+    # use logger info to confirm we are using paddle instead
+    with caplog.at_level(logging.INFO):
+        _ = elements.ocr(text_block, image, languages="en")
+        assert "paddle" in caplog.text

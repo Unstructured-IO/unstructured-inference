@@ -1,7 +1,7 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
 import logging
-import platform
+import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
@@ -57,48 +57,48 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def get_tokens(self, x: Image):
         """Get OCR tokens from either paddleocr or tesseract"""
-        if platform.machine() == "x86_64":
-            try:
-                from unstructured_inference.models import paddle_ocr
-
-                paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
-
-                tokens = []
-                for idx in range(len(paddle_result)):
-                    res = paddle_result[idx]
-                    for line in res:
-                        xmin = min([i[0] for i in line[0]])
-                        ymin = min([i[1] for i in line[0]])
-                        xmax = max([i[0] for i in line[0]])
-                        ymax = max([i[1] for i in line[0]])
-                        tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
-                return tokens
-            except ModuleNotFoundError:
-                logging.warning(
-                    "No module named 'unstructured_paddleocr', falling back to tesseract",
-                )
-                pass
-
-        ocr_df: pd.DataFrame = pytesseract.image_to_data(
-            x,
-            output_type="data.frame",
-        )
-
-        ocr_df = ocr_df.dropna()
-
-        tokens = []
-        for idtx in ocr_df.itertuples():
-            tokens.append(
-                {
-                    "bbox": [
-                        idtx.left,
-                        idtx.top,
-                        idtx.left + idtx.width,
-                        idtx.top + idtx.height,
-                    ],
-                    "text": idtx.text,
-                },
+        table_ocr = os.getenv("TABLE_OCR", "tesseract").lower()
+        if table_ocr not in ["paddle", "tesseract"]:
+            raise ValueError(
+                "Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'.",
             )
+        if table_ocr == "paddle":
+            logger.info("Processing table OCR with paddleocr...")
+            from unstructured_inference.models import paddle_ocr
+
+            paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
+
+            tokens = []
+            for idx in range(len(paddle_result)):
+                res = paddle_result[idx]
+                for line in res:
+                    xmin = min([i[0] for i in line[0]])
+                    ymin = min([i[1] for i in line[0]])
+                    xmax = max([i[0] for i in line[0]])
+                    ymax = max([i[1] for i in line[0]])
+                    tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
+        else:
+            logger.info("Processing table OCR with tesseract...")
+            ocr_df: pd.DataFrame = pytesseract.image_to_data(
+                x,
+                output_type="data.frame",
+            )
+
+            ocr_df = ocr_df.dropna()
+
+            tokens = []
+            for idtx in ocr_df.itertuples():
+                tokens.append(
+                    {
+                        "bbox": [
+                            idtx.left,
+                            idtx.top,
+                            idtx.left + idtx.width,
+                            idtx.top + idtx.height,
+                        ],
+                        "text": idtx.text,
+                    },
+                )
 
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
