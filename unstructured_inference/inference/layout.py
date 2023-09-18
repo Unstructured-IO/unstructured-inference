@@ -377,7 +377,11 @@ class PageLayout:
         add_details: bool = False,
         sources: List[str] = ["all"],
     ) -> Image.Image:
-        """Annotates the elements on the page image."""
+        """Annotates the elements on the page image.
+        if add_details is True, and the elements contain type and source attributes, then
+        the type and source will be added to the image.
+        sources is a list of sources to annotate. If sources is ["all"], then all sources will be
+        annotated. Current sources allowed are "yolox","detectron2_onnx" and "detectron2_lp" """
         if colors is None:
             colors = ["red" for _ in self.elements]
         if isinstance(colors, str):
