@@ -1,3 +1,4 @@
+import io
 import os.path
 import tempfile
 from functools import partial
@@ -849,10 +850,13 @@ def test_from_image(
 
 def test_extract_images(mock_pil_image):
     page = MockPageLayout(image=mock_pil_image)
+    mock_embedded_image = Image.new("1", (1, 1))
+    buf = io.BytesIO()
+    mock_embedded_image.save(buf, format='JPEG')
+    byte_im = buf.getvalue()
     page.elements = [
-        layoutelement.LayoutElement(1, 1, 10, 10, text=None, type="Image"),
-        layoutelement.LayoutElement(11, 11, 20, 20, text=None, type="Image"),
-        layoutelement.LayoutElement(21, 21, 30, 30, text=None, type="Image"),
+        layoutelement.LayoutElement(1, 1, 10, 10, text=None, type="Image", image_raw_data=byte_im),
+        layoutelement.LayoutElement(11, 11, 20, 20, text=None, type="Image", image_raw_data=byte_im),
     ]
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -860,6 +864,7 @@ def test_extract_images(mock_pil_image):
 
         for i, el in enumerate(page.elements):
             expected_image_path = os.path.join(str(tmpdir), f"figure-{page.number}-{i + 1}.jpg")
+            assert os.path.isfile(el.image_path)
             assert el.image_path == expected_image_path
 
 
