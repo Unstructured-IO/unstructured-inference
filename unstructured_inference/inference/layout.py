@@ -6,6 +6,7 @@ import tempfile
 from pathlib import PurePath
 from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
+import cv2
 import numpy as np
 import pdf2image
 import pytesseract
@@ -382,11 +383,12 @@ class PageLayout:
                 image_bytes = el.image_raw_data
                 if image_bytes:
                     image = Image.open(io.BytesIO(image_bytes))
-                    inverted_image = ImageOps.invert(image)
-                    inverted_image.save(output_f_path)
+                    cv_img = np.array(image)
+                    cv_img_inverted = (255 - cv_img)
+                    cv2.imwrite(output_f_path, cv_img_inverted)
                     el.image_path = output_f_path
             except (ValueError, IOError):
-                logger.warning("Image Extraction Error: Skipping the failed image")
+                logger.warning("Image Extraction Error: Skipping the failed image", exc_info=True)
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
