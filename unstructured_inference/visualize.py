@@ -30,7 +30,7 @@ def draw_bbox(
         if details:
             source = getattr(rect, "source", "Unknown")
             type = getattr(rect, "type", "")
-            kbd = ImageFont.truetype("Keysaboard.ttf", 20)
+            kbd = ImageFont.truetype("Keyboard.ttf", 20)
             draw.text(topleft, text=f"{type} {source}", fill=c, font=kbd)
         draw.rectangle((topleft, bottomright), outline=c, width=width)
     except OSError:
