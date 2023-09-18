@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, List
+from typing import TYPE_CHECKING, Any, List, cast
 
 import numpy as np
 from PIL.Image import Image
@@ -126,28 +125,28 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         return elements
 
     @staticmethod
-    def clean_tables(elements: List[LayoutElement]) -> Iterable[LayoutElement]:
-        """Remove overlapping elements from tables in a list of elements."""
-        # NOTE(benjamin): could be generalized to clean any type
-        tables = [e for e in elements if e.type == "Table"]
-        not_tables = [e for e in elements if e.type != "Table"]
-        if len(tables) == 0:
+    def clean_type(elements: List[LayoutElement], type="Table") -> List[LayoutElement]:
+        """After this function, the list of elements will not contain any element inside
+        of the type specified"""
+        target_elements = [e for e in elements if e.type == "Table"]
+        other_elements = [e for e in elements if e.type != "Table"]
+        if len(target_elements) == 0:
             return elements
 
         nested_check = None
-        for table in tables:
-            nested_current = np.array([e.is_almost_subregion_of(table) for e in not_tables])
+        for table in target_elements:
+            nested_current = np.array([e.is_almost_subregion_of(table) for e in other_elements])
             if nested_check is None:
                 nested_check = nested_current
                 continue
             nested_check = nested_check | nested_current
 
         final_elements = []
-        for nested, elem in zip(nested_check, not_tables):  # type:ignore
+        for nested, elem in zip(nested_check, other_elements):  # type:ignore
             if not nested:
                 final_elements.append(elem)
 
-        final_elements.extend(tables)
+        final_elements.extend(target_elements)
         final_elements.sort(key=lambda e: e.y1)
         return final_elements
 
@@ -156,8 +155,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         elements: List[LayoutElement],
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
-        """Deletes overlapping elements in a list of elements. Also will delete elements
-        of less than min_text_size pixels height"""
+        """Deletes overlapping elements in a list of elements."""
 
         if len(elements) <= 1:
             return elements
@@ -166,15 +164,13 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         # TODO: Delete nested elements with low or None probability
         # TODO: Keep most confident
         # TODO: Better to grow horizontally than vertically?
-        groups = partition_groups_from_regions(elements)  # type:ignore
+        groups_tmp = partition_groups_from_regions(elements)
+        groups = cast(List[List[LayoutElement]], groups_tmp)
         for g in groups:
-            g = UnstructuredObjectDetectionModel.clean_tables(g)  # type:ignore
-            cleaned_elements.extend(g)  # type:ignore
-
-        cleaned_elements = UnstructuredObjectDetectionModel.enhance_regions(
-            cleaned_elements,
-            min_text_size,
-        )
+            all_types = {e.type for e in g}
+            for type in all_types:
+                g = UnstructuredObjectDetectionModel.clean_type(g, type)
+            cleaned_elements.extend(g)
         return cleaned_elements
 
 
