@@ -165,7 +165,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         # TODO: Keep most confident
         # TODO: Better to grow horizontally than vertically?
         groups_tmp = partition_groups_from_regions(elements)
-        groups = cast(List[List[LayoutElement]], groups_tmp)
+        groups = cast(List[List["LayoutElement"]], groups_tmp)
         for g in groups:
             all_types = {e.type for e in g}
             for type in all_types:
