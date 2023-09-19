@@ -62,14 +62,16 @@ pip-compile:
 # Test and Lint #
 #################
 
+export CI ?= false
+
 ## test:                    runs all unittests
 .PHONY: test
 test:
-	PYTHONPATH=. pytest -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	PYTHONPATH=. CI=$(CI) pytest -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 .PHONY: test-slow
 test-slow:
-	PYTHONPATH=. pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	PYTHONPATH=. CI=$(CI) pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 ## check:                   runs linters (includes tests)
 .PHONY: check

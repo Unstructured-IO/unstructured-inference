@@ -1,3 +1,4 @@
+import os
 import os.path
 import tempfile
 from functools import partial
@@ -16,6 +17,8 @@ from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
 )
+
+skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
 
 @pytest.fixture()
@@ -158,9 +161,9 @@ class MockPool:
         pass
 
 
-@pytest.mark.parametrize("entire_page_ocr", ["paddle", "tesseract"])
-def test_get_page_elements_with_ocr(monkeypatch, entire_page_ocr):
-    monkeypatch.setenv("ENTIRE_PAGE_OCR", entire_page_ocr)
+@pytest.mark.skipif(skip_outside_ci, reason="Skipping paddle test run outside of CI")
+def test_get_page_elements_with_paddle_ocr(monkeypatch):
+    monkeypatch.setenv("ENTIRE_PAGE_OCR", "paddle")
     text_block = layout.TextRegion(2, 4, 6, 8, text=None)
     image_block = layout.ImageTextRegion(8, 14, 16, 18)
     doc_initial_layout = [text_block, image_block]
@@ -186,7 +189,38 @@ def test_get_page_elements_with_ocr(monkeypatch, entire_page_ocr):
         detection_model=MockLayoutModel(doc_final_layout),
         # Note(yuming): there are differnt language codes for same language
         # between paddle and tesseract
-        ocr_languages="en" if entire_page_ocr == "paddle" else "eng",
+        ocr_languages="en",
+    )
+    page.get_elements_with_detection_model()
+
+    assert str(page) == "\n\nAn Even Catchier Title"
+
+
+def test_get_page_elements_with_tesseract_ocr(monkeypatch):
+    monkeypatch.setenv("ENTIRE_PAGE_OCR", "tesseract")
+    text_block = layout.TextRegion(2, 4, 6, 8, text=None)
+    image_block = layout.ImageTextRegion(8, 14, 16, 18)
+    doc_initial_layout = [text_block, image_block]
+    text_layoutelement = layoutelement.LayoutElement(
+        2,
+        4,
+        6,
+        8,
+        text=None,
+        type="UncategorizedText",
+    )
+    image_layoutelement = layoutelement.LayoutElement(8, 14, 16, 18, text=None, type="Image")
+    doc_final_layout = [text_layoutelement, image_layoutelement]
+
+    monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
+    monkeypatch.setattr(elements, "ocr", lambda *args, **kwargs: "An Even Catchier Title")
+
+    image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
+    page = layout.PageLayout(
+        number=0,
+        image=image,
+        layout=doc_initial_layout,
+        detection_model=MockLayoutModel(doc_final_layout),
     )
     page.get_elements_with_detection_model()
 
