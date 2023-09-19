@@ -135,6 +135,6 @@ def test_clean_tables():
         LayoutElement(0.05, 0.05, 1.05, 1.05),
     ]
     model = get_model("yolox_tiny")
-    elements = model.enhance_regions(elements, 0.5)
+    elements = model.clean_type(elements, type_to_clean="Table")
     assert len(elements) == 1
-    assert (elements[0].x1, elements[0].y1, elements[0].x2, elements[0].x2) == (0, 0, 1.05, 1.05)
+    assert (elements[0].x1, elements[0].y1, elements[0].x2, elements[0].x2) == (0, 0, 1, 1)
