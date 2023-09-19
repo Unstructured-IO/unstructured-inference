@@ -128,8 +128,8 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
     def clean_type(elements: List[LayoutElement], type="Table") -> List[LayoutElement]:
         """After this function, the list of elements will not contain any element inside
         of the type specified"""
-        target_elements = [e for e in elements if e.type == "Table"]
-        other_elements = [e for e in elements if e.type != "Table"]
+        target_elements = [e for e in elements if e.type == type_to_clean]
+        other_elements = [e for e in elements if e.type != type_to_clean]
         if len(target_elements) == 0:
             return elements
 
