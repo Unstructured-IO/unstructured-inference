@@ -125,7 +125,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         return elements
 
     @staticmethod
-    def clean_type(elements: List[LayoutElement], type="Table") -> List[LayoutElement]:
+    def clean_type(elements: List[LayoutElement], type_to_clean="Table") -> List[LayoutElement]:
         """After this function, the list of elements will not contain any element inside
         of the type specified"""
         target_elements = [e for e in elements if e.type == type_to_clean]
@@ -134,8 +134,8 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             return elements
 
         nested_check = None
-        for table in target_elements:
-            nested_current = np.array([e.is_almost_subregion_of(table) for e in other_elements])
+        for element in target_elements:
+            nested_current = np.array([e.is_almost_subregion_of(element) for e in other_elements])
             if nested_check is None:
                 nested_check = nested_current
                 continue
