@@ -1,9 +1,8 @@
-from typing import Dict, List
+from typing import Callable, Dict, List
 
 import numpy as np
 import pandas as pd
 from rapidfuzz import fuzz
-
 
 EVAL_FUNCTIONS = {
     "token_ratio": fuzz.token_ratio,
@@ -13,66 +12,64 @@ EVAL_FUNCTIONS = {
 }
 
 
-def eval_cells(actual_df: pd.DataFrame, predicted_df: pd.DataFrame) -> Dict[str, float]:
-    """compare an actual table against a predicted table's content by mearning the corresponding
-    cell's strings' similarity (rapidfuzz.fuzz.ratio)
-
-    Returns
-    -------
-    np.ndarray
-        shape the same as `actual_df`, [i, j] is the rapidfuzz.fuzz.ratio(actual_df[i, j],
-        predicted_df[i, j]); if the predicted_df is smaller than actual_df's shape, the
-        corresponding missing cell's score is 0; extra cells in predicted_df is not punished in this
-        metric
-    """
-    scores = np.zeros(actual_df.shape)
-    filled_pred = predicted_df.fillna("")
-    pred_nrow, pred_ncol = predicted_df.shape
-    for irow, row in actual_df.fillna("").iterrows():
-        if irow >= pred_nrow:
-            scores[icol, :] = 0
-            continue
-
-        pred_row = filled_pred.iloc[irow].values
-        for icol, actual in enumerate(row.values):
-            if icol >= pred_ncol:
-                scores[irow, icol] = 0
-            else:
-                scores[irow, icol] = fuzz.ratio(actual, pred_row[icol])
-
-    return scores
-
-
-def join_df_content(df, joiner="\t"):
+def _join_df_content(df, joiner="\t"):
+    """joining dataframe's table content as one long string"""
     return joiner.join(df.values.ravel())
 
 
-def compare_contents_as_cells(actual_cells, pred_cells):
-    actual_df = table_cells_to_dataframe(actual_cells, 1, 1).fillna("")
-    pred_df = table_cells_to_dataframe(pred_cells, 1, 1).fillna("")
-    return compare_contents_as_df(actual_df, pred_df)
-
-
 def default_tokenizer(text: str) -> List[str]:
+    """a simple tokenizer that splits text by white space"""
     return text.split()
 
 
-def compare_contents_as_df(actual_df, pred_df, joiner="\t", eval_func="token_ratio", processor=None):
+def compare_contents_as_df(
+    actual_df: pd.DataFrame,
+    pred_df: pd.DataFrame,
+    joiner: str = "\t",
+    eval_func: str = "token_ratio",
+    processor: Callable = None,
+):
     """ravel the table as string then use text distance to compare the prediction against true
-    table;
+    table
 
-    When choosing joiner = "\t" (default) we evalute the structure as well as content (if a cell
-    with two words is split into two cells there is an extra "\t")
+    Parameters
+    ----------
+    actual_df: pd.DataFrame
+        actual table as pandas dataframe
 
-    If choose joiner = " " (white space) we do not evaluate the structure but purely evalute if the
-    text is in the right order. A cell with two words could have been split into two cells each with
-    one word but the order still matches true table so it won't reduce the score
+    pred_df: pd.DataFrame
+        predicted table as pandas dataframe
+
+    joiner: str, default to "\t"
+        the string to join cells together
+
+    eval_func: str, default tp "token_ratio"
+        the eval_func should be one of "token_ratio", "ratio", "partial_token_ratio",
+        "partial_ratio". Those are functions provided by rapidfuzz to evaluate text distances
+        using either tokens or characters. In general token is better than characters for evaluating
+        tables.
+
+    processor: Callable, default to None
+        processor to tokenize the text; by default None means no processing (using characters). For
+        tokens eval functions we recommend using the `default_tokenizer` or some other functions to
+        break down the text into words
+
     """
-    return {
-        f"by_col_{eval_func}": EVAL_FUNCTIONS.get(eval_func, "token_ratio")(
-            join_df_content(actual_df), join_df_content(pred_df)
-        ),
-        f"by_row_{eval_func}": EVAL_FUNCTIONS.get(eval_func, "token_ratio")(
-            join_df_content(actual_df.T), join_df_content(pred_df.T)
+    func = EVAL_FUNCTIONS.get(eval_func)
+    if func is None:
+        raise ValueError(
+            'eval_func must be one of "token_ratio", "ratio", "partial_token_ratio", '
+            f'"partial_ratio" but got {eval_func}'
         )
+    return {
+        f"by_col_{eval_func}": func(
+            _join_df_content(actual_df),
+            _join_df_content(pred_df),
+            processor=processor,
+        ),
+        f"by_row_{eval_func}": func(
+            _join_df_content(actual_df.T),
+            _join_df_content(pred_df.T),
+            processor=processor,
+        ),
     }

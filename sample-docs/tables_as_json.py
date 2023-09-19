@@ -2,7 +2,7 @@
 _schema = [
     "cell text",
     "row_nums",
-    "column_nums"
+    "column_nums",
 ]
 
 # cleaner, well, at least leaner, format of cell data; maybe we should also consider using this for
@@ -39,7 +39,7 @@ _data = {
 		("1199 sec, n=1", [2], [5]),
 		("1716 sec, n=3 (1934 sec, n=2)", [3], [5]),
 		("1672.1 sec, n=4", [4], [5]),
-		("1416 sec, n=3", [5], [5])
+		("1416 sec, n=3", [5], [5]),
 	],
     "ilpa-example-1.jpg": [
         ("Portfolio Summary\nexamples", [0], [0, 1, 2, 3]),
@@ -715,7 +715,7 @@ _data = {
 		('2', [20], [20]),
 		('0', [20], [21]),
 		('0', [20], [22]),
-		('0', [20], [23])
+		('0', [20], [23]),
     ],
 	"gs-2.jpg": [
 		("", (0,), (0,)),
@@ -1144,7 +1144,7 @@ _data = {
         ("Design Patterns", [8], [0]),
         ("Composite View, MVC, DAO, Singleton, Business Delegate Design Pattern.", [8], [1]),
         ("Operating Systems", [9], [0]),
-        ("Windows XP /NT /2000, Linux.", [9], [1])
+        ("Windows XP /NT /2000, Linux.", [9], [1]),
     ],
     "complex-structure-large-table.jpg": [
         ("", [0], [0]),

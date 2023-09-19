@@ -118,7 +118,6 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             logger.info(f"padding image by {pad_for_structure_detection} for structufre detection")
             encoding = self.feature_extractor(
                 pad_image_with_background_color(x, pad_for_structure_detection),
-                # x,
                 return_tensors="pt",
             ).to(self.device)
             outputs_structure = self.model(**encoding)
