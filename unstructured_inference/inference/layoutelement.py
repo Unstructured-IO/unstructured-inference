@@ -350,7 +350,7 @@ def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutEl
                 return
             # other is down-left
             if reduce.x1 < keep.x1 and reduce.y1 < keep.y2:
-                reduce.x1 = keep.y2
+                reduce.y1 = keep.y2
                 return
             # other is centered
             reduce.y1 = keep.y2
