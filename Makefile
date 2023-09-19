@@ -34,9 +34,9 @@ install-detectron2:
 
 .PHONY: install-paddleocr
 install-paddleocr:
-	pip install paddlepaddle
-	pip install paddlepaddle-gpu
-	pip install "unstructured.PaddleOCR"
+	pip install --no-cache-dir paddlepaddle
+	pip install --no-cache-dir paddlepaddle-gpu
+	pip install --no-cache-dir "unstructured.PaddleOCR"
 
 .PHONY: install-test
 install-test: install-base
