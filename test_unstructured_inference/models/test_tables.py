@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerDecoder,
@@ -5,6 +7,8 @@ from transformers.models.table_transformer.modeling_table_transformer import (
 
 import unstructured_inference.models.table_postprocess as postprocess
 from unstructured_inference.models import tables
+
+skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
 
 @pytest.mark.parametrize(
@@ -346,6 +350,7 @@ def test_table_prediction_tesseract():
     ) in prediction
 
 
+@pytest.mark.skipif(skip_outside_ci, reason="Skipping paddle test run outside of CI")
 def test_table_prediction_paddle(monkeypatch):
     monkeypatch.setenv("TABLE_OCR", "paddle")
     table_model = tables.UnstructuredTableTransformerModel()

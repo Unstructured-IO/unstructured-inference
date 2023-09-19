@@ -1,3 +1,7 @@
+## 0.5.29-dev0
+
+* fix paddle unit tests where `make test` fails since paddle doesn't work on M1/M2 chip locally
+
 ## 0.5.28
 
 * add env variable `ENTIRE_PAGE_OCR` to specify using paddle or tesseract on entire page OCR
