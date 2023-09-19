@@ -59,7 +59,7 @@ def compare_contents_as_df(
     if func is None:
         raise ValueError(
             'eval_func must be one of "token_ratio", "ratio", "partial_token_ratio", '
-            f'"partial_ratio" but got {eval_func}'
+            f'"partial_ratio" but got {eval_func}',
         )
     return {
         f"by_col_{eval_func}": func(
