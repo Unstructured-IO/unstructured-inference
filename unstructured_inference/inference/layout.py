@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import io
 import os
 import tempfile
 from pathlib import PurePath
 from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
-import cv2
 import numpy as np
 import pdf2image
 import pytesseract
@@ -40,6 +38,7 @@ from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
 from unstructured_inference.patches.pdfminer import parse_keyword
+from unstructured_inference.utils import write_image
 from unstructured_inference.visualize import draw_bbox
 
 # NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
@@ -380,13 +379,9 @@ class PageLayout:
                     output_dir_path,
                     f"figure-{self.number}-{figure_number}.jpg",
                 )
-                image_bytes = el.image_raw_data
-                if image_bytes:
-                    image = Image.open(io.BytesIO(image_bytes))
-                    cv_img = np.array(image)
-                    cv_img_inverted = 255 - cv_img
-                    cv2.imwrite(output_f_path, cv_img_inverted)
-                    el.image_path = output_f_path
+                cropped_image = self.image.crop((el.x1, el.y1, el.x2, el.y2))
+                write_image(cropped_image, output_f_path)
+                el.image_path = output_f_path
             except (ValueError, IOError):
                 logger.warning("Image Extraction Error: Skipping the failed image", exc_info=True)
 
@@ -646,7 +641,7 @@ def load_pdf(
 
     layouts = []
     for page in extract_pages(filename):
-        layout = []
+        layout: List[Union[EmbeddedTextRegion, ImageTextRegion]] = []
         height = page.height
         for element in page:
             x1, y2, x2, y1 = element.bbox
@@ -655,32 +650,21 @@ def load_pdf(
             # Coefficient to rescale bounding box to be compatible with images
             coef = dpi / 72
 
-            regions: List[Union[EmbeddedTextRegion, ImageTextRegion]] = []
             if hasattr(element, "get_text"):
                 _text = element.get_text()
-                regions.append(
-                    EmbeddedTextRegion(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text),
-                )
+                element_class = EmbeddedTextRegion  # type: ignore
             else:
                 embedded_images = get_images_from_pdf_element(element)
                 if len(embedded_images) > 0:
-                    for embedded_image in embedded_images:
-                        image_bytes = embedded_image.stream.rawdata
-                        regions.append(
-                            ImageTextRegion(
-                                x1 * coef,
-                                y1 * coef,
-                                x2 * coef,
-                                y2 * coef,
-                                text=None,
-                                image_raw_data=image_bytes,
-                            ),
-                        )
+                    _text = None
+                    element_class = ImageTextRegion  # type: ignore
                 else:
                     continue
 
-            valid_regions = [r for r in regions if r.area() > 0]
-            layout.extend(valid_regions)
+            text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
+
+            if text_region.area() > 0:
+                layout.append(text_region)
         layouts.append(layout)
 
     if path_only and not output_folder:
