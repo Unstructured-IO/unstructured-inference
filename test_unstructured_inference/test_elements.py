@@ -1,4 +1,5 @@
 import logging
+import os
 from random import randint
 from unittest.mock import PropertyMock, patch
 
@@ -10,6 +11,8 @@ from unstructured_inference.inference.layoutelement import (
     LocationlessLayoutElement,
     separate,
 )
+
+skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
 
 def intersect_brute(rect1, rect2):
@@ -233,6 +236,7 @@ def test_separate(rect1, rect2):
     assert not rect1.intersects(rect2)
 
 
+@pytest.mark.skipif(skip_outside_ci, reason="Skipping paddle test run outside of CI")
 def test_ocr_paddle(monkeypatch, caplog):
     monkeypatch.setenv("ENTIRE_PAGE_OCR", "paddle")
     image = Image.new("RGB", (100, 100), (255, 255, 255))

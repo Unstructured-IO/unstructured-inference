@@ -1,3 +1,7 @@
+## 0.5.29-dev0
+
+* fix paddle unit tests where `make test` fails since paddle doesn't work on M1/M2 chip locally
+
 ## 0.5.28
 
 * YoloX_quantized is now the default model. This models detects most diverse types and detect tables better than previous model.
