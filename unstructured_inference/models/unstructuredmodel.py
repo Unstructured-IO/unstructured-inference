@@ -130,7 +130,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         of the type specified"""
         target_elements = [e for e in elements if e.type == type_to_clean]
         other_elements = [e for e in elements if e.type != type_to_clean]
-        if len(target_elements) or len(other_elements) == 0:
+        if len(target_elements)==0 or len(other_elements) == 0:
             return elements
 
         nested_check = None
