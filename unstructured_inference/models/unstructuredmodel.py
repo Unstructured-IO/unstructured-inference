@@ -93,33 +93,34 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                     )  # sort elements by iom, so we first check the greatest
                     indices_to_check = [x[0] for x in iom_to_check if x[0] != i]  # type:ignore
             for j in indices_to_check:
-                if elements[j] is not None and elements[i] is not None:
-                    second = elements[j]
-                    intersection = first.intersection(
-                        second,
-                    )  # we know it does, but need the region
-                    first_inside_second = first.is_in(second)
-                    second_inside_first = second.is_in(first)
+                if elements[j] is None or elements[i] is None:
+                    continue
+                second = elements[j]
+                intersection = first.intersection(
+                    second,
+                )  # we know it does, but need the region
+                first_inside_second = first.is_in(second)
+                second_inside_first = second.is_in(first)
 
-                    if first_inside_second and not second_inside_first:
-                        elements[i] = None  # type:ignore
-                    elif second_inside_first and not first_inside_second:
-                        # delete second element
-                        elements[j] = None  # type:ignore
-                    elif intersection:
-                        iom = first.intersection_over_minimum(second)
-                        if iom < iom_to_merge:  # small
-                            separate(first, second)
-                            # The rectangle could become too small, which is a
-                            # good size to delete?
-                        else:  # big
-                            # merge
-                            if first.area > second.area:
-                                grow_region_to_match_region(first, second)
-                                elements[j] = None  # type:ignore
-                            else:
-                                grow_region_to_match_region(second, first)
-                                elements[i] = None  # type:ignore
+                if first_inside_second and not second_inside_first:
+                    elements[i] = None  # type:ignore
+                elif second_inside_first and not first_inside_second:
+                    # delete second element
+                    elements[j] = None  # type:ignore
+                elif intersection:
+                    iom = first.intersection_over_minimum(second)
+                    if iom < iom_to_merge:  # small
+                        separate(first, second)
+                        # The rectangle could become too small, which is a
+                        # good size to delete?
+                    else:  # big
+                        # merge
+                        if first.area > second.area:
+                            grow_region_to_match_region(first, second)
+                            elements[j] = None  # type:ignore
+                        else:
+                            grow_region_to_match_region(second, first)
+                            elements[i] = None  # type:ignore
 
         elements = [e for e in elements if e is not None]
         return elements
