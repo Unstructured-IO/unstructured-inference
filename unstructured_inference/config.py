@@ -7,18 +7,18 @@ from typing import Optional
 class InferenceConfig:
     """class for configuring inference parameters"""
 
-    def _get_string(self, var: str, default_value: Optional[str] = None) -> str:
+    def _get_string(self, var: str, default_value: str = "") -> str:
         """attempt to get the value of var from the os environment; if not present return the
         default_value"""
         return os.environ.get(var, default_value)
 
     def _get_int(self, var: str, default_value: int) -> int:
-        if (value := self._get_string(var)) is not None:
+        if value := self._get_string(var):
             return int(value)
         return default_value
 
     def _get_float(self, var: str, default_value: float) -> float:
-        if (value := self._get_string(var)) is not None:
+        if value := self._get_string(var):
             return float(value)
         return default_value
 
