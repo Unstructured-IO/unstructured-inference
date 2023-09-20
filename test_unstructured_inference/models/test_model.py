@@ -122,7 +122,7 @@ def test_enhance_regions():
     assert (elements[0].x1, elements[0].y1, elements[0].x2, elements[0].x2) == (0, 0, 1.10, 1.10)
 
 
-def test_clean_tables():
+def test_clean_type():
     from unstructured_inference.inference.layout import LayoutElement
     from unstructured_inference.models.base import get_model
 
