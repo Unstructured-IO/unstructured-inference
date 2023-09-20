@@ -1,8 +1,6 @@
-## 0.5.29
+## 0.5.29-dev0
 
-* Add functionality to extract and save images from the page
-* Update logic to determine `ImageTextRegion` in `load_pdf()` to remove incorrect image elements
-* Update the layout `visualization` script to be able to show only image elements if needed
+* fix paddle unit tests where `make test` fails since paddle doesn't work on M1/M2 chip locally
 
 ## 0.5.28
 

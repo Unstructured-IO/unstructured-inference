@@ -91,7 +91,7 @@ jobs:
     - name: Test
       run: |
         source .venv/bin/activate
-        make test
+        CI=true make test
         make check-coverage
 
   test_ingest:
