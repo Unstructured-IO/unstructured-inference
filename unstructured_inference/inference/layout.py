@@ -189,7 +189,7 @@ class PageLayout:
         self,
         number: int,
         image: Image.Image,
-        layout: Optional[List[Union[EmbeddedTextRegion, ImageTextRegion]]],
+        layout: Optional[List[TextRegion]],
         image_metadata: Optional[dict] = None,
         image_path: Optional[Union[str, PurePath]] = None,  # TODO: Deprecate
         document_filename: Optional[Union[str, PurePath]] = None,
@@ -462,7 +462,7 @@ class PageLayout:
         number: int = 1,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
-        layout: Optional[List[Union[EmbeddedTextRegion, ImageTextRegion]]] = None,
+        layout: Optional[List[TextRegion]] = None,
         ocr_strategy: str = "auto",
         ocr_languages: str = "eng",
         ocr_mode: str = OCRMode.FULL_PAGE.value,
@@ -609,7 +609,7 @@ def process_file_with_model(
 def get_element_from_block(
     block: TextRegion,
     image: Optional[Image.Image] = None,
-    pdf_objects: Optional[List[Union[EmbeddedTextRegion, ImageTextRegion]]] = None,
+    pdf_objects: Optional[List[TextRegion]] = None,
     ocr_strategy: str = "auto",
     ocr_languages: str = "eng",
     extract_tables: bool = False,
@@ -632,16 +632,13 @@ def load_pdf(
     dpi: int = 200,
     output_folder: Optional[Union[str, PurePath]] = None,
     path_only: bool = False,
-) -> Tuple[
-    List[List[Union[EmbeddedTextRegion, ImageTextRegion]]],
-    Union[List[Image.Image], List[str]],
-]:
+) -> Tuple[List[List[TextRegion]], Union[List[Image.Image], List[str]]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
 
     layouts = []
     for page in extract_pages(filename):
-        layout: List[Union[EmbeddedTextRegion, ImageTextRegion]] = []
+        layout: List[TextRegion] = []
         height = page.height
         for element in page:
             x1, y2, x2, y1 = element.bbox
