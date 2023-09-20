@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Callable, List, Dict
+from typing import Callable, Dict, List
 
 import pandas as pd
 from rapidfuzz import fuzz
