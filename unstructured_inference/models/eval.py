@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 import pandas as pd
 from rapidfuzz import fuzz
@@ -26,7 +26,7 @@ def compare_contents_as_df(
     actual_df: pd.DataFrame,
     pred_df: pd.DataFrame,
     eval_func: str = "token_ratio",
-    processor: Callable = None,
+    processor: Optional[Callable] = None,
     tab_token: str = "\t",
     row_break_token: str = "\n",
 ) -> Dict[str, float]:
