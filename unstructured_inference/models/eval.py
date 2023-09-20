@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Callable, List
+from typing import Callable, List, Dict
 
 import pandas as pd
 from rapidfuzz import fuzz
@@ -12,7 +12,7 @@ EVAL_FUNCTIONS = {
 }
 
 
-def _join_df_content(df, tab_token="\t", row_break_token="\n"):
+def _join_df_content(df, tab_token="\t", row_break_token="\n") -> str:
     """joining dataframe's table content as one long string"""
     return row_break_token.join([tab_token.join(row) for row in df.values])
 
@@ -29,7 +29,7 @@ def compare_contents_as_df(
     processor: Callable = None,
     tab_token: str = "\t",
     row_break_token: str = "\n",
-):
+) -> Dict[str, float]:
     r"""ravel the table as string then use text distance to compare the prediction against true
     table
 
@@ -57,6 +57,11 @@ def compare_contents_as_df(
 
     row_break_token: str, default to "\n"
         the string to join rows together
+
+    Returns
+    -------
+    Dict[str, int]
+        mapping of by column and by row scores to the scores as float numbers
     """
     func = EVAL_FUNCTIONS.get(eval_func)
     if func is None:
