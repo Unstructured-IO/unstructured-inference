@@ -64,7 +64,8 @@ def run_with_pypdf2(f_path, output_dir_path):
 
 
 def run(f_path, library):
-    output_dir_path = os.path.join(output_basedir_path, library)
+    f_basename = os.path.splitext(os.path.basename(f_path))[0]
+    output_dir_path = os.path.join(output_basedir_path, library, f_basename)
     os.makedirs(output_dir_path, exist_ok=True)
 
     if library == "unstructured":
