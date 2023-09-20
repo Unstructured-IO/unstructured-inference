@@ -63,6 +63,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 "Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'.",
             )
         if table_ocr == "paddle":
+            logger.info("Processing table OCR with paddleocr...")
             from unstructured_inference.models import paddle_ocr
 
             paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
@@ -76,8 +77,8 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                     xmax = max([i[0] for i in line[0]])
                     ymax = max([i[1] for i in line[0]])
                     tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
-            return tokens
         else:
+            logger.info("Processing table OCR with tesseract...")
             ocr_df: pd.DataFrame = pytesseract.image_to_data(
                 x,
                 output_type="data.frame",
@@ -98,20 +99,6 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                         "text": idtx.text,
                     },
                 )
-            return tokens
-
-    def run_prediction(self, x: Image, pad_for_structure_detection: int = 50):
-        """Predict table structure"""
-        with torch.no_grad():
-            logger.info(f"padding image by {pad_for_structure_detection} for structure detection")
-            encoding = self.feature_extractor(
-                pad_image_with_background_color(x, pad_for_structure_detection),
-                return_tensors="pt",
-            ).to(self.device)
-            outputs_structure = self.model(**encoding)
-            outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection
-
-        tokens = self.get_tokens(x=x)
 
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
@@ -123,6 +110,26 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 token["line_num"] = 0
             if "block_num" not in token:
                 token["block_num"] = 0
+
+        return tokens
+
+    def get_structure(self, x: Image, pad_for_structure_detection: int = 50) -> dict:
+        """get the table structure as a dictionary contaning different types of elements as
+        key-value pairs; check table-transformer documentation for more information"""
+        with torch.no_grad():
+            logger.info(f"padding image by {pad_for_structure_detection} for structufre detection")
+            encoding = self.feature_extractor(
+                pad_image_with_background_color(x, pad_for_structure_detection),
+                return_tensors="pt",
+            ).to(self.device)
+            outputs_structure = self.model(**encoding)
+            outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection
+            return outputs_structure
+
+    def run_prediction(self, x: Image, pad_for_structure_detection: int = 50):
+        """Predict table structure"""
+        outputs_structure = self.get_structure(x, pad_for_structure_detection)
+        tokens = self.get_tokens(x=x)
 
         html = recognize(outputs_structure, x, tokens=tokens, out_html=True)["html"]
         prediction = html[0] if html else ""

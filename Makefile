@@ -34,9 +34,9 @@ install-detectron2:
 
 .PHONY: install-paddleocr
 install-paddleocr:
-	pip install paddlepaddle
-	pip install paddlepaddle-gpu
-	pip install "unstructured.PaddleOCR"
+	pip install --no-cache-dir paddlepaddle
+	pip install --no-cache-dir paddlepaddle-gpu
+	pip install --no-cache-dir "unstructured.PaddleOCR"
 
 .PHONY: install-test
 install-test: install-base
@@ -62,14 +62,16 @@ pip-compile:
 # Test and Lint #
 #################
 
+export CI ?= false
+
 ## test:                    runs all unittests
 .PHONY: test
 test:
-	PYTHONPATH=. pytest -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	PYTHONPATH=. CI=$(CI) pytest -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 .PHONY: test-slow
 test-slow:
-	PYTHONPATH=. pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	PYTHONPATH=. CI=$(CI) pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 ## check:                   runs linters (includes tests)
 .PHONY: check

@@ -1,6 +1,18 @@
-## 0.5.28
+## 0.6.1-dev
 
 * set a higher confidence threshold for projected row header and table spanning cells in table transformer; this improves output table structure accuracy
+
+## 0.5.30
+
+* add an evaluation metric for table comparison based on token similarity
+
+## 0.5.29-dev0
+
+* fix paddle unit tests where `make test` fails since paddle doesn't work on M1/M2 chip locally
+
+## 0.5.28
+
+* add env variable `ENTIRE_PAGE_OCR` to specify using paddle or tesseract on entire page OCR
 
 ## 0.5.27
 
