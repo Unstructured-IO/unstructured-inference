@@ -130,7 +130,7 @@ def pad_image_with_background_color(
     pad: int = 10,
     background_color: str = "white",
 ) -> Image.Image:
-    """pads an input image with the same background color around it by pad//2 on all 4 sides
+    """pads an input image with the same background color around it by pad on all 4 sides
 
     The original image is kept intact and a new image is returned with padding added.
     """
