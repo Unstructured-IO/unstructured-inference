@@ -60,15 +60,16 @@ class InferenceConfig:
 
     @property
     def ELEMENTS_H_PADDING_COEF(self) -> float:
-        # When extending the boundaries of a PDF object for the purpose of determining which other elements
-        # should be considered in the same text region, we use a relative distance based on some fraction of
-        # the block height (typically character height). This is the fraction used for the horizontal
-        # extension applied to the left and right sides.
+        """When extending the boundaries of a PDF object for the purpose of determining which other 
+        elements should be considered in the same text region, we use a relative distance based on
+        some fraction of the block height (typically character height). This is the fraction used
+        for the horizontal extension applied to the left and right sides.
+        """
         return self._get_float("ELEMENTS_H_PADDING_COEF", 0.4)
 
     @property
     def ELEMENTS_V_PADDING_COEF(self) -> float:
-        # Same as ELEMENTS_H_PADDING_COEF but the vertical extension.
+        """Same as ELEMENTS_H_PADDING_COEF but the vertical extension."""
         return self._get_float("ELEMENTS_V_PADDING_COEF", 0.3)
 
 
