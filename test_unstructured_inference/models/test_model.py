@@ -127,7 +127,15 @@ def test_clean_type():
     from unstructured_inference.models.base import get_model
 
     elements = [
-        LayoutElement(0, 0, 1, 1, type="Table"),
+        LayoutElement(
+            0.6,
+            0.6,
+            0.65,
+            0.65,
+            type="Table",
+        ),  # One little table nested inside all the others
+        LayoutElement(0.5, 0.5, 0.7, 0.7, type="Table"),  # One nested table
+        LayoutElement(0, 0, 1, 1, type="Table"),  # Big table
         LayoutElement(0.01, 0.01, 1.01, 1.01),
         LayoutElement(0.02, 0.02, 1.02, 1.02),
         LayoutElement(0.03, 0.03, 1.03, 1.03),
