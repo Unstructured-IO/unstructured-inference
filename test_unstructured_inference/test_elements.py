@@ -228,6 +228,14 @@ def test_is_almost_subregion_of(rect1, rect2, expected):
     [
         (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(3, 3, 6, 6)),
         (elements.Rectangle(0, 0, 5, 5), elements.Rectangle(6, 6, 8, 8)),
+        (elements.Rectangle(3, 3, 7, 7), elements.Rectangle(2, 2, 4, 4)),
+        (elements.Rectangle(2, 2, 4, 11),elements.Rectangle(3, 3, 7, 10)),
+        (elements.Rectangle(2, 2, 4, 4),elements.Rectangle(3, 3, 7, 10)),
+        (elements.Rectangle(2, 2, 4, 4),elements.Rectangle(2.5, 2.5, 3.5, 4.5)),
+        (elements.Rectangle(2, 2, 4, 4),elements.Rectangle(3, 1, 4, 3.5)),
+        (elements.Rectangle(2, 2, 4, 4),elements.Rectangle(3, 1, 4.5, 3.5)),
+
+
     ],
 )
 def test_separate(rect1, rect2):
