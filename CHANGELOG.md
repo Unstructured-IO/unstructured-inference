@@ -1,6 +1,10 @@
-## 0.5.29
+## 0.5.30
 
-* table structure detection now pads the input image by 25 pixels in all 4 directions to improve its recall
+* add an evaluation metric for table comparison based on token similarity
+
+## 0.5.29-dev0
+
+* fix paddle unit tests where `make test` fails since paddle doesn't work on M1/M2 chip locally
 
 ## 0.5.28
 
