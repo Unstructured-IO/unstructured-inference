@@ -14,6 +14,7 @@ import torch
 from PIL import Image
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 
+from unstructured_inference.config import inference_config
 from unstructured_inference.logger import logger
 from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
@@ -113,7 +114,11 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
         return tokens
 
-    def get_structure(self, x: Image, pad_for_structure_detection: int = 50) -> dict:
+    def get_structure(
+        self,
+        x: Image,
+        pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUN_PAD,
+    ) -> dict:
         """get the table structure as a dictionary contaning different types of elements as
         key-value pairs; check table-transformer documentation for more information"""
         with torch.no_grad():
@@ -126,7 +131,11 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection
             return outputs_structure
 
-    def run_prediction(self, x: Image, pad_for_structure_detection: int = 50):
+    def run_prediction(
+        self,
+        x: Image,
+        pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUN_PAD,
+    ):
         """Predict table structure"""
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
         tokens = self.get_tokens(x=x)

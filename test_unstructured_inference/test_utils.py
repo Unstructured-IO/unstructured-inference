@@ -135,7 +135,7 @@ def test_annotate_layout_elements_with_plot_result():
 def test_pad_image_with_background_color(mock_pil_image):
     pad = 10
     height, width = mock_pil_image.size
-    padded = pad_image_with_background_color(mock_pil_image, pad * 2, "black")
+    padded = pad_image_with_background_color(mock_pil_image, pad, "black")
     assert padded.size == (height + 2 * pad, width + 2 * pad)
     np.testing.assert_array_almost_equal(
         np.array(padded.crop((pad, pad, width + pad, height + pad))),
