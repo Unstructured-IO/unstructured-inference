@@ -1,3 +1,7 @@
+## 0.6.0
+
+* add a config class to handle parameter configurations for inference tasks; parameters in the config class can be set via environement variables
+
 ## 0.5.29-dev0
 
 * fix paddle unit tests where `make test` fails since paddle doesn't work on M1/M2 chip locally
