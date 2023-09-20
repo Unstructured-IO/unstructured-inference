@@ -134,20 +134,28 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         if len(target_elements) == 0 or len(other_elements) == 0:
             return elements
 
-        nested_check = None
-        for element in target_elements:
-            nested_current = np.array([e.is_almost_subregion_of(element) for e in other_elements])
-            if nested_check is None:
-                nested_check = nested_current
-                continue
-            nested_check = nested_check | nested_current
+        # Sort elements from biggest to smallest
+        target_elements.sort(key=lambda e: e.area, reverse=True)
+        other_elements.sort(key=lambda e: e.area, reverse=True)
 
-        final_elements = []
-        for nested, elem in zip(nested_check, other_elements):  # type:ignore
-            if not nested:
-                final_elements.append(elem)
+        # First check if targets contains each other
+        for element in target_elements:  # Just handles containment or little overlap
+            contains = [
+                e for e in target_elements if e.is_almost_subregion_of(element) and e != element
+            ]
+            for contained in contains:
+                target_elements.remove(contained)
+        # Then check if remaining elements intersect with targets
+        other_elements = filter(
+            lambda e: not any(e.is_almost_subregion_of(target) for target in target_elements),
+            other_elements,
+        )  # type:ignore
 
+        final_elements = list(other_elements)
         final_elements.extend(target_elements)
+        # Note(benjamin): could use bisect.insort,
+        # but need to add < operator for
+        # LayoutElement in python <3.10
         final_elements.sort(key=lambda e: e.y1)
         return final_elements
 
