@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_default_config():
     from unstructured_inference.config import inference_config
 
