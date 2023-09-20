@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Collection, List, Optional, Union, cast
 
+import numpy as np
 from layoutparser.elements.layout import TextBlock
+from pandas import DataFrame
 from PIL import Image
 
 from unstructured_inference.constants import FULL_PAGE_REGION_THRESHOLD, SUBREGION_THRESHOLD_FOR_OCR
@@ -390,3 +392,19 @@ class LocationlessLayoutElement:
             "type": self.type,
         }
         return out_dict
+
+
+def table_cells_to_dataframe(cells: dict, nrows: int = 1, ncols: int = 1, header=None) -> DataFrame:
+    """convert table-transformer's cells data into a pandas dataframe"""
+    arr = np.empty((nrows, ncols), dtype=object)
+    for cell in cells:
+        rows = cell["row_nums"]
+        cols = cell["column_nums"]
+        if rows[0] >= nrows or cols[0] >= ncols:
+            new_arr = np.empty((max(rows[0] + 1, nrows), max(cols[0] + 1, ncols)), dtype=object)
+            new_arr[:nrows, :ncols] = arr
+            arr = new_arr
+            nrows, ncols = arr.shape
+        arr[rows[0], cols[0]] = cell["cell text"]
+
+    return DataFrame(arr, columns=header)

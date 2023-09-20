@@ -1,3 +1,7 @@
+## 0.5.30
+
+* add an evaluation metric for table comparison based on token similarity
+
 ## 0.5.29-dev0
 
 * fix paddle unit tests where `make test` fails since paddle doesn't work on M1/M2 chip locally
