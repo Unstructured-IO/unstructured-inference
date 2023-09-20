@@ -139,6 +139,6 @@ def pad_image_with_background_color(
         raise ValueError(
             "Can not pad an image with negative space! Please use a positive value for `pad`.",
         )
-    new = Image.new(image.mode, (width + pad, height + pad), background_color)
-    new.paste(image, (pad // 2, pad // 2))
+    new = Image.new(image.mode, (width + pad * 2, height + pad * 2), background_color)
+    new.paste(image, (pad, pad))
     return new

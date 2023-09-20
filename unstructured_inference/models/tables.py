@@ -14,6 +14,7 @@ import torch
 from PIL import Image
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 
+from unstructured_inference.config import inference_config
 from unstructured_inference.logger import logger
 from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
@@ -125,6 +126,34 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 token["line_num"] = 0
             if "block_num" not in token:
                 token["block_num"] = 0
+
+        return tokens
+
+    def get_structure(
+        self,
+        x: Image,
+        pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUN_PAD,
+    ) -> dict:
+        """get the table structure as a dictionary contaning different types of elements as
+        key-value pairs; check table-transformer documentation for more information"""
+        with torch.no_grad():
+            logger.info(f"padding image by {pad_for_structure_detection} for structufre detection")
+            encoding = self.feature_extractor(
+                pad_image_with_background_color(x, pad_for_structure_detection),
+                return_tensors="pt",
+            ).to(self.device)
+            outputs_structure = self.model(**encoding)
+            outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection
+            return outputs_structure
+
+    def run_prediction(
+        self,
+        x: Image,
+        pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUN_PAD,
+    ):
+        """Predict table structure"""
+        outputs_structure = self.get_structure(x, pad_for_structure_detection)
+        tokens = self.get_tokens(x=x)
 
         html = recognize(outputs_structure, x, tokens=tokens, out_html=True)["html"]
         prediction = html[0] if html else ""
