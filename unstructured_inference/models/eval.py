@@ -1,7 +1,6 @@
 from functools import partial
-from typing import Callable, Dict, List
+from typing import Callable, List
 
-import numpy as np
 import pandas as pd
 from rapidfuzz import fuzz
 
@@ -31,7 +30,7 @@ def compare_contents_as_df(
     tab_token: str = "\t",
     row_break_token: str = "\n",
 ):
-    """ravel the table as string then use text distance to compare the prediction against true
+    r"""ravel the table as string then use text distance to compare the prediction against true
     table
 
     Parameters

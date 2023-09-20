@@ -113,7 +113,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
         return tokens
 
-    def get_structure(self, x: Image, pad_for_structure_detection: int = 50):
+    def get_structure(self, x: Image, pad_for_structure_detection: int = 50) -> dict:
+        """get the table structure as a dictionary contaning different types of elements as
+        key-value pairs; check table-transformer documentation for more information"""
         with torch.no_grad():
             logger.info(f"padding image by {pad_for_structure_detection} for structufre detection")
             encoding = self.feature_extractor(
