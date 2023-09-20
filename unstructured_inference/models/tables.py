@@ -78,7 +78,6 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                     xmax = max([i[0] for i in line[0]])
                     ymax = max([i[1] for i in line[0]])
                     tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
-            return tokens
         else:
             logger.info("Processing table OCR with tesseract...")
             ocr_df: pd.DataFrame = pytesseract.image_to_data(
@@ -101,20 +100,6 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                         "text": idtx.text,
                     },
                 )
-            return tokens
-
-    def run_prediction(self, x: Image, pad_for_structure_detection: int = 50):
-        """Predict table structure"""
-        with torch.no_grad():
-            logger.info(f"padding image by {pad_for_structure_detection} for structure detection")
-            encoding = self.feature_extractor(
-                pad_image_with_background_color(x, pad_for_structure_detection),
-                return_tensors="pt",
-            ).to(self.device)
-            outputs_structure = self.model(**encoding)
-            outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection
-
-        tokens = self.get_tokens(x=x)
 
         # 'tokens' is a list of tokens
         # Need to be in a relative reading order
