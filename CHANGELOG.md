@@ -1,6 +1,6 @@
 ## 0.6.1-dev
 
-* set a higher confidence threshold for projected row header and table spanning cells in table transformer; this improves output table structure accuracy
+* move the confidence threshold for table transformer to config
 
 ## 0.6.0
 

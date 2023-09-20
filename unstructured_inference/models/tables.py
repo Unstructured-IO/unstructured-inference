@@ -176,16 +176,13 @@ def get_class_map(data_type: str):
     return class_map
 
 
-# TODO (yao): maybe this should be in a config?
 structure_class_thresholds = {
-    "table": 0.5,
-    "table column": 0.5,
-    "table row": 0.5,
-    "table column header": 0.5,
-    # those two types of cells would wrap the table so we want them to be highly confident or we can
-    # end up with strange layouts
-    "table projected row header": os.environ.get("TABLE_PROJ_ROW_HEADER_CONF", 0.9),
-    "table spanning cell": os.environ.get("TABLE_SPANNING_CELL_CONF", 0.9),
+    "table": inference_config.TT_TABLE_CONF,
+    "table column": inference_config.TABLE_COLUMN_CONF,
+    "table row": inference_config.TABLE_ROW_CONF,
+    "table column header": inference_config.TABLE_COLUMN_HEADER_CONF,
+    "table projected row header": inference_config.TABLE_PROJECTED_ROW_HEADER_CONF,
+    "table spanning cell": inference_config.TABLE_SPANNING_CELL_CONF,
     "no object": 10,
 }
 

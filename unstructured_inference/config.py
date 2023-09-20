@@ -40,6 +40,36 @@ class InferenceConfig:
         return self._get_int("TABLE_IMAGE_BACKGROUN_PAD", 0)
 
     @property
+    def TT_TABLE_CONF(self) -> float:
+        """confidence threshold for table identified by table transformer"""
+        return self._get_float("TT_TABLE_CONF", 0.5)
+
+    @property
+    def TABLE_COLUMN_CONF(self) -> float:
+        """confidence threshold for column identified by table transformer"""
+        return self._get_float("TABLE_COLUMN_CONF", 0.5)
+
+    @property
+    def TABLE_ROW_CONF(self) -> float:
+        """confidence threshold for column identified by table transformer"""
+        return self._get_float("TABLE_ROW_CONF", 0.5)
+
+    @property
+    def TABLE_COLUMN_HEADER_CONF(self) -> float:
+        """confidence threshold for column header identified by table transformer"""
+        return self._get_float("TABLE_COLUMN_HEADER_CONF", 0.5)
+
+    @property
+    def TABLE_PROJECTED_ROW_HEADER_CONF(self) -> float:
+        """confidence threshold for projected row header identified by table transformer"""
+        return self._get_float("TABLE_PROJECTED_ROW_HEADER_CONF", 0.5)
+
+    @property
+    def TABLE_SPANNING_CELL_CONF(self) -> float:
+        """confidence threshold for table spanning cells identified by table transformer"""
+        return self._get_float("TABLE_SPANNING_CELL_CONF", 0.5)
+
+    @property
     def LAYOUT_SAME_REGION_THRESHOLD(self) -> float:
         """threshold for two layouts' bounding boxes to be considered as the same region
 
