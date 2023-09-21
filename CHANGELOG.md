@@ -1,3 +1,8 @@
+## 0.6.1
+
+* add a function to automatically scale table crop images based on text height so the text height is optimum for `tesseract` OCR task
+* add the new image auto scaling parameters to `config.py`
+
 ## 0.6.0
 
 * add a config class to handle parameter configurations for inference tasks; parameters in the config class can be set via environement variables
