@@ -8,6 +8,7 @@ from layoutparser.elements.layout import TextBlock
 from pandas import DataFrame
 from PIL import Image
 
+from unstructured_inference.config import inference_config
 from unstructured_inference.constants import FULL_PAGE_REGION_THRESHOLD, SUBREGION_THRESHOLD_FOR_OCR
 from unstructured_inference.inference.elements import (
     ImageTextRegion,
@@ -24,6 +25,7 @@ from unstructured_inference.models import tables
 class LayoutElement(TextRegion):
     type: Optional[str] = None
     prob: Optional[float] = None
+    image_path: Optional[str] = None
 
     def extract_text(
         self,
@@ -78,7 +80,7 @@ def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
     tables.load_agent()
     if tables.tables_agent is None:
         raise RuntimeError("Unable to load table extraction agent.")
-    padded_block = text_block.pad(12)
+    padded_block = text_block.pad(inference_config.TABLE_IMAGE_CROP_PAD)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tables.tables_agent.predict(cropped_image)
 
@@ -89,8 +91,8 @@ def merge_inferred_layout_with_extracted_layout(
     page_image_size: tuple,
     ocr_layout: Optional[List[TextRegion]] = None,
     supplement_with_ocr_elements: bool = True,
-    same_region_threshold: float = 0.75,
-    subregion_threshold: float = 0.75,
+    same_region_threshold: float = inference_config.LAYOUT_SAME_REGION_THRESHOLD,
+    subregion_threshold: float = inference_config.LAYOUT_SUBREGION_THRESHOLD,
 ) -> List[LayoutElement]:
     """Merge two layouts to produce a single layout."""
     extracted_elements_to_add: List[TextRegion] = []
@@ -98,7 +100,8 @@ def merge_inferred_layout_with_extracted_layout(
     w, h = page_image_size
     full_page_region = Rectangle(0, 0, w, h)
     for extracted_region in extracted_layout:
-        if isinstance(extracted_region, ImageTextRegion):
+        extracted_is_image = isinstance(extracted_region, ImageTextRegion)
+        if extracted_is_image:
             # Skip extracted images for this purpose, we don't have the text from them and they
             # don't provide good text bounding boxes.
 
@@ -122,7 +125,6 @@ def merge_inferred_layout_with_extracted_layout(
                     extracted_region,
                     subregion_threshold=subregion_threshold,
                 )
-                extracted_is_image = isinstance(extracted_region, ImageTextRegion)
                 inferred_is_text = inferred_region.type not in (
                     "Figure",
                     "Image",
