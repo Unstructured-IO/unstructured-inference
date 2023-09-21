@@ -101,8 +101,8 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 text_height < inference_config.TESSERACT_MIN_TEXT_HEIGHT
                 or text_height > inference_config.TESSERACT_MAX_TEXT_HEIGHT
             ):
-                # rounding avoids unnecessary precision and potential numerical issues assocaited with
-                # numbers very close to 1 inside cv2 image processing
+                # rounding avoids unnecessary precision and potential numerical issues assocaited
+                # with numbers very close to 1 inside cv2 image processing
                 zoom = np.round(inference_config.TESSERACT_OPTIMUM_TEXT_HEIGHT / text_height, 1)
                 ocr_df = pytesseract.image_to_data(
                     zoom_image(x, zoom),
