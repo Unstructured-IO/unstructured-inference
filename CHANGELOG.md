@@ -3,6 +3,11 @@
 * Add functionality to automatically scale table images so that the text height is optimum for
   `tesseract` inference
 
+## 0.6.0
+
+* add a config class to handle parameter configurations for inference tasks; parameters in the config class can be set via environement variables
+* update behavior of `pad_image_with_background_color` so that input `pad` is applied to all sides
+
 ## 0.5.30
 
 * add an evaluation metric for table comparison based on token similarity
