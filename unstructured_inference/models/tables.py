@@ -94,7 +94,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
             # tesseract performance degrades when the text height is out of the preferred zone so we
             # zoom the image (in or out depending on estimated text height) for optimum OCR results
-            text_height = ocr_df[inference_config.TESSERACT_TEXT_HEIGHT].quantile(
+            text_height = ocr_df[TESSERACT_TEXT_HEIGHT].quantile(
                 inference_config.TESSERACT_TEXT_HEIGHT_QUANTILE,
             )
             if (
@@ -700,7 +700,9 @@ def cells_to_html(cells):
     return str(ET.tostring(table, encoding="unicode", short_empty_elements=False))
 
 
-def zoom_image(image: Image, zoom: int) -> Image:
+def zoom_image(image: Image, zoom: float) -> Image:
+    """scale an image based on the zoom factor using cv2; the scaled image is post processed by
+    dilation then erosion to improve edge sharpness for OCR tasks"""
     new_image = cv2.resize(
         cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR),
         None,
