@@ -1,15 +1,11 @@
+## 0.5.32-dev0
+
 ## 0.5.31
 
 * Add functionality to extract and save images from the page
 * Add functionality to get only "true" embedded images when extracting elements from PDF pages
 * Update the layout visualization script to be able to show only image elements if need
-
-## 0.5.30
-
 * add an evaluation metric for table comparison based on token similarity
-
-## 0.5.29-dev0
-
 * fix paddle unit tests where `make test` fails since paddle doesn't work on M1/M2 chip locally
 
 ## 0.5.28
