@@ -102,7 +102,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 or text_height > inference_config.TESSERACT_MAX_TEXT_HEIGHT
             ):
                 zoom = inference_config.TESSERACT_OPTIMUM_TEXT_HEIGHT / text_height
-                ocr_df: pd.DataFrame = pytesseract.image_to_data(
+                ocr_df = pytesseract.image_to_data(
                     zoom_image(x, zoom),
                     output_type="data.frame",
                 )
