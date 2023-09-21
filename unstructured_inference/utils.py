@@ -142,7 +142,7 @@ def pad_image_with_background_color(
     pad: int = 10,
     background_color: str = "white",
 ) -> Image.Image:
-    """pads an input image with the same background color around it by pad//2 on all 4 sides
+    """pads an input image with the same background color around it by pad on all 4 sides
 
     The original image is kept intact and a new image is returned with padding added.
     """
@@ -151,6 +151,6 @@ def pad_image_with_background_color(
         raise ValueError(
             "Can not pad an image with negative space! Please use a positive value for `pad`.",
         )
-    new = Image.new(image.mode, (width + pad, height + pad), background_color)
-    new.paste(image, (pad // 2, pad // 2))
+    new = Image.new(image.mode, (width + pad * 2, height + pad * 2), background_color)
+    new.paste(image, (pad, pad))
     return new
