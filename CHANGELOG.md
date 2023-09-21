@@ -1,19 +1,14 @@
-## 0.6.1-dev
-
-* Add functionality to automatically scale table images so that the text height is optimum for
-  `tesseract` inference
-
 ## 0.6.0
 
 * add a config class to handle parameter configurations for inference tasks; parameters in the config class can be set via environement variables
 * update behavior of `pad_image_with_background_color` so that input `pad` is applied to all sides
 
-## 0.5.30
+## 0.5.31
 
+* Add functionality to extract and save images from the page
+* Add functionality to get only "true" embedded images when extracting elements from PDF pages
+* Update the layout visualization script to be able to show only image elements if need
 * add an evaluation metric for table comparison based on token similarity
-
-## 0.5.29-dev0
-
 * fix paddle unit tests where `make test` fails since paddle doesn't work on M1/M2 chip locally
 
 ## 0.5.28

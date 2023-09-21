@@ -95,7 +95,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             # tesseract performance degrades when the text height is out of the preferred zone so we
             # zoom the image (in or out depending on estimated text height) for optimum OCR results
             text_height = ocr_df[inference_config.TESSERACT_TEXT_HEIGHT].quantile(
-                inference_config.TESSERACT_TEXT_HEIGHT_QUANTILE
+                inference_config.TESSERACT_TEXT_HEIGHT_QUANTILE,
             )
             if (
                 text_height < inference_config.TESSERACT_MIN_TEXT_HEIGHT

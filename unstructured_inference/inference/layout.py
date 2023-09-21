@@ -27,6 +27,7 @@ from unstructured_inference.inference.layoutelement import (
     merge_inferred_layout_with_ocr_layout,
 )
 from unstructured_inference.inference.ordering import order_layout
+from unstructured_inference.inference.pdf import get_images_from_pdf_element
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.detectron2onnx import (
@@ -37,6 +38,7 @@ from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
 from unstructured_inference.patches.pdfminer import parse_keyword
+from unstructured_inference.utils import write_image
 from unstructured_inference.visualize import draw_bbox
 
 # NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
@@ -356,6 +358,33 @@ class PageLayout:
         ]
         return elements
 
+    def extract_images(self, output_dir_path: Optional[str] = None):
+        """
+        Extract and save images from the page. This method iterates through the layout elements
+        of the page, identifies image regions, and extracts and saves them as separate image files.
+        """
+
+        if not output_dir_path:
+            output_dir_path = os.path.join(os.getcwd(), "figures")
+        os.makedirs(output_dir_path, exist_ok=True)
+
+        figure_number = 0
+        for el in self.elements:
+            if isinstance(el, LocationlessLayoutElement) or el.type not in ["Image"]:
+                continue
+
+            figure_number += 1
+            try:
+                output_f_path = os.path.join(
+                    output_dir_path,
+                    f"figure-{self.number}-{figure_number}.jpg",
+                )
+                cropped_image = self.image.crop((el.x1, el.y1, el.x2, el.y2))
+                write_image(cropped_image, output_f_path)
+                el.image_path = output_f_path
+            except (ValueError, IOError):
+                logger.warning("Image Extraction Error: Skipping the failed image", exc_info=True)
+
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
         if self.image_array is None:
@@ -439,11 +468,12 @@ class PageLayout:
         ocr_mode: str = OCRMode.FULL_PAGE.value,
         extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
-        **kwargs,
+        supplement_with_ocr_elements: bool = True,
+        extract_images_in_pdf: bool = False,
+        image_output_dir_path: Optional[str] = None,
+        analysis: bool = False,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
-        analysis = kwargs.get("analysis", False)
-        supplement_with_ocr_elements = kwargs.get("supplement_with_ocr_elements", True)
 
         page = cls(
             number=number,
@@ -473,6 +503,9 @@ class PageLayout:
         }
         page.image_path = os.path.abspath(image_path) if image_path else None
         page.document_filename = os.path.abspath(document_filename) if document_filename else None
+
+        if extract_images_in_pdf:
+            page.extract_images(image_output_dir_path)
 
         # Clear the image to save memory
         page.image = None
@@ -602,9 +635,10 @@ def load_pdf(
 ) -> Tuple[List[List[TextRegion]], Union[List[Image.Image], List[str]]]:
     """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
     pdf pages using pdf2image"""
+
     layouts = []
     for page in extract_pages(filename):
-        layout = []
+        layout: List[TextRegion] = []
         height = page.height
         for element in page:
             x1, y2, x2, y1 = element.bbox
@@ -612,11 +646,18 @@ def load_pdf(
             y2 = height - y2
             # Coefficient to rescale bounding box to be compatible with images
             coef = dpi / 72
-            _text, element_class = (
-                (element.get_text(), EmbeddedTextRegion)
-                if hasattr(element, "get_text")
-                else (None, ImageTextRegion)
-            )
+
+            if hasattr(element, "get_text"):
+                _text = element.get_text()
+                element_class = EmbeddedTextRegion  # type: ignore
+            else:
+                embedded_images = get_images_from_pdf_element(element)
+                if len(embedded_images) > 0:
+                    _text = None
+                    element_class = ImageTextRegion  # type: ignore
+                else:
+                    continue
+
             text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
 
             if text_region.area() > 0:
