@@ -1,3 +1,9 @@
+## 0.5.31
+
+* Add functionality to extract and save images from the page
+* Add functionality to get only "true" embedded images when extracting elements from PDF pages
+* Update the layout visualization script to be able to show only image elements if need
+
 ## 0.5.30
 
 * add an evaluation metric for table comparison based on token similarity
