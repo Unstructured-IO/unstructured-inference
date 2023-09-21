@@ -1,4 +1,7 @@
-## 0.5.32-dev0
+## 0.6.0
+
+* add a config class to handle parameter configurations for inference tasks; parameters in the config class can be set via environement variables
+* update behavior of `pad_image_with_background_color` so that input `pad` is applied to all sides
 
 ## 0.5.31
 
