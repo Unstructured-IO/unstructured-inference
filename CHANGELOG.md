@@ -1,3 +1,7 @@
+## 0.6.1
+
+* fix the default image background pad value to pass ingest tests
+
 ## 0.6.0
 
 * add a config class to handle parameter configurations for inference tasks; parameters in the config class can be set via environement variables

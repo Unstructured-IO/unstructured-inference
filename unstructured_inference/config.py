@@ -44,7 +44,7 @@ class InferenceConfig:
         The padding adds NO image data around an identified table bounding box; it simply adds white
         background around the image
         """
-        return self._get_int("TABLE_IMAGE_BACKGROUND_PAD", 0)
+        return self._get_int("TABLE_IMAGE_BACKGROUND_PAD", 25)
 
     @property
     def LAYOUT_SAME_REGION_THRESHOLD(self) -> float:
