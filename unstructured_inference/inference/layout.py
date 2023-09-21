@@ -261,7 +261,9 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         inferred_layout: List[LayoutElement] = self.detection_model(self.image)
-
+        inferred_layout = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
+            inferred_layout,
+        )
         if self.ocr_mode == OCRMode.INDIVIDUAL_BLOCKS.value:
             ocr_layout = None
         elif self.ocr_mode == OCRMode.FULL_PAGE.value:
@@ -339,6 +341,7 @@ class PageLayout:
         if inplace:
             self.elements = elements
             return None
+
         return elements
 
     def get_elements_from_layout(self, layout: List[TextRegion]) -> List[LayoutElement]:
@@ -400,8 +403,14 @@ class PageLayout:
         colors: Optional[Union[List[str], str]] = None,
         image_dpi: int = 200,
         annotation_data: Optional[dict[str, dict]] = None,
+        add_details: bool = False,
+        sources: List[str] = ["all"],
     ) -> Image.Image:
-        """Annotates the elements on the page image."""
+        """Annotates the elements on the page image.
+        if add_details is True, and the elements contain type and source attributes, then
+        the type and source will be added to the image.
+        sources is a list of sources to annotate. If sources is ["all"], then all sources will be
+        annotated. Current sources allowed are "yolox","detectron2_onnx" and "detectron2_lp" """
         if colors is None:
             colors = ["red" for _ in self.elements]
         if isinstance(colors, str):
@@ -422,7 +431,9 @@ class PageLayout:
         if annotation_data is None:
             for el, color in zip(self.elements, colors):
                 if isinstance(el, Rectangle):
-                    img = draw_bbox(img, el, color=color)
+                    required_source = getattr(el, "source", None)
+                    if "all" in sources or required_source in sources:
+                        img = draw_bbox(img, el, color=color, details=add_details)
         else:
             for attribute, style in annotation_data.items():
                 if hasattr(self, attribute) and getattr(self, attribute):
@@ -430,7 +441,15 @@ class PageLayout:
                     width = style["width"]
                     for region in getattr(self, attribute):
                         if isinstance(region, Rectangle):
-                            img = draw_bbox(img, region, color=color, width=width)
+                            required_source = getattr(el, "source", None)
+                            if "all" in sources or required_source in sources:
+                                img = draw_bbox(
+                                    img,
+                                    region,
+                                    color=color,
+                                    width=width,
+                                    details=add_details,
+                                )
 
         return img
 
@@ -660,7 +679,7 @@ def load_pdf(
 
             text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
 
-            if text_region.area() > 0:
+            if text_region.area > 0:
                 layout.append(text_region)
         layouts.append(layout)
 
@@ -719,7 +738,7 @@ def parse_ocr_data_tesseract(ocr_data: dict) -> List[TextRegion]:
         (x1, y1, x2, y2) = l, t, l + w, t + h
         text = ocr_data["text"][i]
         if text:
-            text_region = TextRegion(x1, y1, x2, y2, text)
+            text_region = TextRegion(x1, y1, x2, y2, text=text, source="OCR")
             text_regions.append(text_region)
 
     return text_regions

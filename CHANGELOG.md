@@ -1,3 +1,11 @@
+## 0.6.1
+
+* YoloX_quantized is now the default model. This models detects most diverse types and detect tables better than previous model.
+* Since detection models tend to nest elements inside others(specifically in Tables), an algorithm has been added for reducing this 
+  behavior. Now all the elements produced by detection models are disjoint and they don't produce overlapping regions, which helps 
+  reduce duplicated content.
+* Add `source` property to our elements, so you can know where the information was generated (OCR or detection model)
+
 ## 0.6.0
 
 * add a config class to handle parameter configurations for inference tasks; parameters in the config class can be set via environement variables
