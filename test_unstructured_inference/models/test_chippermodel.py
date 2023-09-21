@@ -8,23 +8,19 @@ from unstructured_inference.models import chipper
 
 def test_initialize():
     with mock.patch.object(
-        chipper.AutoTokenizer,
+        chipper.DonutProcessor,
         "from_pretrained",
-    ) as mock_tokenizer, mock.patch.object(
-        chipper,
-        "DonutProcessor",
     ) as mock_donut_processor, mock.patch.object(
         chipper,
-        "DonutImageProcessor",
-    ) as mock_donut_image_processor, mock.patch.object(
+        "NoRepeatNGramLogitsProcessor",
+    ) as mock_logits_processor, mock.patch.object(
         chipper.VisionEncoderDecoderModel,
         "from_pretrained",
     ) as mock_vision_encoder_decoder_model:
         model = chipper.UnstructuredChipperModel()
         model.initialize("", "", "")
-        mock_tokenizer.assert_called_once()
         mock_donut_processor.assert_called_once()
-        mock_donut_image_processor.assert_called_once()
+        mock_logits_processor.assert_called_once()
         mock_vision_encoder_decoder_model.assert_called_once()
 
 
@@ -41,6 +37,9 @@ class MockModel:
 def mock_initialize(self, *arg, **kwargs):
     self.model = MockModel()
     self.processor = mock.MagicMock()
+    self.logits_processor = mock.MagicMock()
+    self.input_ids = mock.MagicMock()
+    self.device = "cpu"
 
 
 def test_predict_tokens():
@@ -64,12 +63,9 @@ def test_predict_tokens():
     ],
 )
 def test_postprocess(decoded_str, expected_classes):
-    with mock.patch.object(chipper.UnstructuredChipperModel, "initialize", mock_initialize):
-        pass
     model = chipper.UnstructuredChipperModel()
-    tokenizer_model = "xlm-roberta-large"
-    pre_trained_model = "nielsr/donut-base"
-    model.initialize(tokenizer_model, pre_trained_model, None)
+    pre_trained_model = "unstructuredio/ved-fine-tuning"
+    model.initialize(pre_trained_model, prompt="<s>", swap_head=False)
 
     tokens = model.tokenizer.encode(decoded_str)
     out = model.postprocess(tokens)
