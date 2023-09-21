@@ -1,3 +1,10 @@
+"""
+This module contains variables that can permitted to be tweaked by the system environment. For
+example, model parameters that changes the output of an inference call. Constants do NOT belong in
+this module. Constants are values that are usually names for common options (e.g., color names) or
+settings that should not be altered without making a code change (e.g., definition of 1Gb of memory
+in bytes). Constants should go into `./constants.py`
+"""
 import os
 from dataclasses import dataclass
 
@@ -31,13 +38,13 @@ class InferenceConfig:
         return self._get_int("TABLE_IMAGE_CROP_PAD", 12)
 
     @property
-    def TABLE_IMAGE_BACKGROUN_PAD(self) -> int:
+    def TABLE_IMAGE_BACKGROUND_PAD(self) -> int:
         """number of pixels to pad around an table image with a white background color
 
         The padding adds NO image data around an identified table bounding box; it simply adds white
         background around the image
         """
-        return self._get_int("TABLE_IMAGE_BACKGROUN_PAD", 0)
+        return self._get_int("TABLE_IMAGE_BACKGROUND_PAD", 0)
 
     @property
     def TESSERACT_MIN_TEXT_HEIGHT(self) -> int:

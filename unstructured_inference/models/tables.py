@@ -138,7 +138,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def get_structure(
         self,
         x: Image,
-        pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUN_PAD,
+        pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
     ) -> dict:
         """get the table structure as a dictionary contaning different types of elements as
         key-value pairs; check table-transformer documentation for more information"""
@@ -155,7 +155,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def run_prediction(
         self,
         x: Image,
-        pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUN_PAD,
+        pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
     ):
         """Predict table structure"""
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
