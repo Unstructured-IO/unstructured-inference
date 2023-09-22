@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Optional, cast
+from typing import Collection, List, Optional, Union, cast
 
 import numpy as np
 from layoutparser.elements.layout import TextBlock
@@ -18,7 +18,6 @@ from unstructured_inference.inference.elements import (
     partition_groups_from_regions,
     region_bounding_boxes_are_almost_the_same,
 )
-from unstructured_inference.models import tables
 
 
 @dataclass
@@ -54,6 +53,7 @@ class LayoutElement(TextRegion):
             "text": self.text,
             "type": self.type,
             "prob": self.prob,
+            "source": self.source,
         }
         return out_dict
 
@@ -63,7 +63,9 @@ class LayoutElement(TextRegion):
         x1, y1, x2, y2 = region.x1, region.y1, region.x2, region.y2
         text = region.text if hasattr(region, "text") else None
         type = region.type if hasattr(region, "type") else None
-        return cls(x1, y1, x2, y2, text, type)
+        prob = region.prob if hasattr(region, "prob") else None
+        source = region.source if hasattr(region, "source") else None
+        return cls(x1, y1, x2, y2, text=text, source=source, type=type, prob=prob)
 
     @classmethod
     def from_lp_textblock(cls, textblock: TextBlock):
@@ -71,12 +73,14 @@ class LayoutElement(TextRegion):
         x1, y1, x2, y2 = textblock.coordinates
         text = textblock.text
         type = textblock.type
-        score = textblock.score
-        return cls(x1, y1, x2, y2, text, type, prob=score)
+        prob = textblock.score
+        return cls(x1, y1, x2, y2, text=text, source="detectron2_lp", type=type, prob=prob)
 
 
 def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
     """Extract the contents of a table."""
+    from unstructured_inference.models import tables
+
     tables.load_agent()
     if tables.tables_agent is None:
         raise RuntimeError("Unable to load table extraction agent.")
@@ -159,6 +163,7 @@ def merge_inferred_layout_with_extracted_layout(
             el.y2,
             text=el.text,
             type="Image" if isinstance(el, ImageTextRegion) else "UncategorizedText",
+            source=el.source,
         )
         for el in extracted_elements_to_add
     ]
@@ -305,8 +310,9 @@ def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
     max_y2 = max([tr.y2 for tr in regions])
 
     merged_text = " ".join([tr.text for tr in regions if tr.text])
-
-    return TextRegion(min_x1, min_y1, max_x2, max_y2, merged_text)
+    sources = [*{tr.source for tr in regions}]
+    source = sources.pop() if len(sources) == 1 else "merged:".join(sources)  # type:ignore
+    return TextRegion(min_x1, min_y1, max_x2, max_y2, source=source, text=merged_text)
 
 
 def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
@@ -326,10 +332,51 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
             r.x2,
             r.y2,
             text=r.text,
+            source=None,
             type="UncategorizedText",
         )
         for r in merged_regions
     ]
+
+
+def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutElement, Rectangle]):
+    """Reduce leftmost rectangle to don't overlap with the other"""
+
+    def reduce(keep: Rectangle, reduce: Rectangle):
+        # Asume intersection
+
+        # Other is down
+        if reduce.y2 > keep.y2 and reduce.x1 < keep.x2:
+            # other is down-right
+            if reduce.x2 > keep.x2 and reduce.y2 > keep.y2:
+                reduce.x1 = keep.x2 * 1.01
+                reduce.y1 = keep.y2 * 1.01
+                return
+            # other is down-left
+            if reduce.x1 < keep.x1 and reduce.y1 < keep.y2:
+                reduce.y1 = keep.y2
+                return
+            # other is centered
+            reduce.y1 = keep.y2
+        else:  # other is up
+            # other is up-right
+            if reduce.x2 > keep.x2 and reduce.y1 < keep.y1:
+                reduce.y2 = keep.y1
+                return
+            # other is left
+            if reduce.x1 < keep.x1 and reduce.y1 < keep.y1:
+                reduce.y2 = keep.y1
+                return
+            # other is centered
+            reduce.y2 = keep.y1
+
+    if not region_a.intersects(region_b):
+        return
+    else:
+        if region_a.area > region_b.area:
+            reduce(keep=region_a, reduce=region_b)
+        else:
+            reduce(keep=region_b, reduce=region_a)
 
 
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different

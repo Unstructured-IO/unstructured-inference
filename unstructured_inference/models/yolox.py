@@ -18,7 +18,6 @@ from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
-from unstructured_inference.visualize import draw_yolox_bounding_boxes
 
 YOLOX_LABEL_MAP = {
     0: "Caption",
@@ -111,7 +110,6 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         input_shape = (1024, 768)
         origin_img = np.array(image)
         img, ratio = preprocess(origin_img, input_shape)
-        # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
         session = self.model
 
         ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
@@ -143,7 +141,16 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
             # being (x1,y1) the top left and (x2,y2) the bottom right
             x1, y1, x2, y2, prob, class_id = det.tolist()
             detected_class = self.layout_classes[int(class_id)]
-            region = LayoutElement(x1, y1, x2, y2, text=None, type=detected_class, prob=prob)
+            region = LayoutElement(
+                x1,
+                y1,
+                x2,
+                y2,
+                text=None,
+                type=detected_class,
+                prob=prob,
+                source="yolox",
+            )
 
             regions.append(region)
 
@@ -152,21 +159,6 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         page_layout = regions  # TODO(benjamin): encode image as base64?
 
         return page_layout
-
-    def annotate_image(self, image_fn, dets, out_fn):
-        """Draw bounding boxes and prediction metadata."""
-        origin_img = np.array(Image.open(image_fn))
-        final_boxes, final_scores, final_cls_inds = dets[:, :4], dets[:, 4], dets[:, 5]
-
-        annotated_image = draw_yolox_bounding_boxes(
-            origin_img,
-            final_boxes,
-            final_scores,
-            final_cls_inds,
-            conf=0.3,
-            class_names=self.layout_classes,
-        )
-        cv2.imwrite(out_fn, annotated_image)
 
 
 # Note: preprocess function was named preproc on original source

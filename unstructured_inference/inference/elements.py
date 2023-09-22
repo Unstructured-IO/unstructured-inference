@@ -102,6 +102,7 @@ class Rectangle:
             return None
         return Rectangle(x1, y1, x2, y2)
 
+    @property
     def area(self) -> float:
         """Gives the area of the rectangle."""
         return self.width * self.height
@@ -111,8 +112,8 @@ class Rectangle:
         how similar the regions are. Returns 0 for disjoint rectangles, 1 for two identical
         rectangles -- area of intersection / area of union."""
         intersection = self.intersection(other)
-        intersection_area = 0.0 if intersection is None else intersection.area()
-        union_area = self.area() + other.area() - intersection_area
+        intersection_area = 0.0 if intersection is None else intersection.area
+        union_area = self.area + other.area - intersection_area
         return safe_division(intersection_area, union_area)
 
     def intersection_over_minimum(self, other: Rectangle) -> float:
@@ -120,8 +121,8 @@ class Rectangle:
         for identifying when one rectangle is almost-a-subset of the other. Returns 0 for disjoint
         rectangles, 1 when either is a subset of the other."""
         intersection = self.intersection(other)
-        intersection_area = 0.0 if intersection is None else intersection.area()
-        min_area = min(self.area(), other.area())
+        intersection_area = 0.0 if intersection is None else intersection.area
+        min_area = min(self.area, other.area)
         return safe_division(intersection_area, min_area)
 
     def is_almost_subregion_of(self, other: Rectangle, subregion_threshold: float = 0.75) -> bool:
@@ -129,9 +130,9 @@ class Rectangle:
         comparing the intersection area over self area to some threshold, and checking whether self
         is the smaller rectangle."""
         intersection = self.intersection(other)
-        intersection_area = 0.0 if intersection is None else intersection.area()
-        return (subregion_threshold < safe_division(intersection_area, self.area())) and (
-            self.area() <= other.area()
+        intersection_area = 0.0 if intersection is None else intersection.area
+        return (subregion_threshold < safe_division(intersection_area, self.area)) and (
+            self.area <= other.area
         )
 
 
@@ -148,6 +149,8 @@ def minimal_containing_region(*regions: Rectangle) -> Rectangle:
 def partition_groups_from_regions(regions: Collection[Rectangle]) -> List[List[Rectangle]]:
     """Partitions regions into groups of regions based on proximity. Returns list of lists of
     regions, each list corresponding with a group"""
+    if len(regions) == 0:
+        return []
     padded_regions = [
         r.vpad(r.height * inference_config.ELEMENTS_V_PADDING_COEF).hpad(
             r.height * inference_config.ELEMENTS_H_PADDING_COEF,
@@ -194,6 +197,7 @@ def intersections(*rects: Rectangle):
 @dataclass
 class TextRegion(Rectangle):
     text: Optional[str] = None
+    source: Optional[str] = None
 
     def __str__(self) -> str:
         return str(self.text)

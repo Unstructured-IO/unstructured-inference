@@ -23,7 +23,7 @@ from unstructured_inference.models.yolox import (
     UnstructuredYoloXModel,
 )
 
-DEFAULT_MODEL = "detectron2_onnx"
+DEFAULT_MODEL = "yolox_quantized"
 
 models: Dict[str, UnstructuredModel] = {}
 
