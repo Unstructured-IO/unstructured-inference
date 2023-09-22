@@ -177,12 +177,13 @@ def get_class_map(data_type: str):
 
 
 structure_class_thresholds = {
-    "table": 0.5,
-    "table column": 0.5,
-    "table row": 0.5,
-    "table column header": 0.5,
-    "table projected row header": 0.5,
-    "table spanning cell": 0.5,
+    "table": inference_config.TT_TABLE_CONF,
+    "table column": inference_config.TABLE_COLUMN_CONF,
+    "table row": inference_config.TABLE_ROW_CONF,
+    "table column header": inference_config.TABLE_COLUMN_HEADER_CONF,
+    "table projected row header": inference_config.TABLE_PROJECTED_ROW_HEADER_CONF,
+    "table spanning cell": inference_config.TABLE_SPANNING_CELL_CONF,
+    # FIXME (yao) this parameter doesn't seem to be used at all in inference? Can we remove it
     "no object": 10,
 }
 
@@ -282,8 +283,16 @@ def objects_to_structures(objects, tokens, class_thresholds):
     table_structures = []
 
     for table in tables:
-        table_objects = [obj for obj in objects if iob(obj["bbox"], table["bbox"]) >= 0.5]
-        table_tokens = [token for token in tokens if iob(token["bbox"], table["bbox"]) >= 0.5]
+        table_objects = [
+            obj
+            for obj in objects
+            if iob(obj["bbox"], table["bbox"]) >= inference_config.TABLE_IOB_THRESHOLD
+        ]
+        table_tokens = [
+            token
+            for token in tokens
+            if iob(token["bbox"], table["bbox"]) >= inference_config.TABLE_IOB_THRESHOLD
+        ]
 
         structure = {}
 
@@ -302,7 +311,7 @@ def objects_to_structures(objects, tokens, class_thresholds):
         for obj in rows:
             obj["column header"] = False
             for header_obj in column_headers:
-                if iob(obj["bbox"], header_obj["bbox"]) >= 0.5:
+                if iob(obj["bbox"], header_obj["bbox"]) >= inference_config.TABLE_IOB_THRESHOLD:
                     obj["column header"] = True
 
         # Refine table structures
@@ -478,7 +487,7 @@ def structure_to_cells(table_structure, tokens):
                 spanning_cell_rect = Rect(list(spanning_cell["bbox"]))
                 if (
                     spanning_cell_rect.intersect(cell_rect).get_area() / cell_rect.get_area()
-                ) > 0.5:
+                ) > inference_config.TABLE_IOB_THRESHOLD:
                     cell["subcell"] = True
                     break
 
@@ -499,7 +508,9 @@ def structure_to_cells(table_structure, tokens):
         for subcell in subcells:
             subcell_rect = Rect(list(subcell["bbox"]))
             subcell_rect_area = subcell_rect.get_area()
-            if (subcell_rect.intersect(spanning_cell_rect).get_area() / subcell_rect_area) > 0.5:
+            if (
+                subcell_rect.intersect(spanning_cell_rect).get_area() / subcell_rect_area
+            ) > inference_config.TABLE_IOB_THRESHOLD:
                 if cell_rect is None:
                     cell_rect = Rect(list(subcell["bbox"]))
                 else:

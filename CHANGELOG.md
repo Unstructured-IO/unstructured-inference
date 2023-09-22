@@ -1,3 +1,7 @@
+## 0.6.2
+
+* move the confidence threshold for table transformer to config
+
 ## 0.6.1
 
 * YoloX_quantized is now the default model. This models detects most diverse types and detect tables better than previous model.
