@@ -278,9 +278,8 @@ class PageLayout:
                 logger.info("Processing entrie page OCR with paddle...")
                 from unstructured_inference.models import paddle_ocr
 
-                # TODO(yuming): paddle only support one language at once,
-                # change ocr to tesseract if passed in multilanguages.
-                ocr_data = paddle_ocr.load_agent(language=self.ocr_languages).ocr(
+                # TODO(yuming): pass ocr language to paddle when we have laguage mapping for paddle
+                ocr_data = paddle_ocr.load_agent().ocr(
                     np.array(self.image),
                     cls=True,
                 )
