@@ -1,3 +1,9 @@
+## 0.6.2
+
+* Stop passing ocr_languages parameter into paddle to avoid invalid paddle language code error, this will be fixed until
+we have the mapping from standard language code to paddle language code.
+
+
 ## 0.6.1
 
 * YoloX_quantized is now the default model. This models detects most diverse types and detect tables better than previous model.
