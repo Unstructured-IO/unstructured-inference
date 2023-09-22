@@ -1,3 +1,7 @@
+## 0.6.2
+
+* Add functionality to keep extracted image elements while merging inferred layout with extracted layout
+
 ## 0.6.1
 
 * YoloX_quantized is now the default model. This models detects most diverse types and detect tables better than previous model.
