@@ -1,8 +1,11 @@
-## 0.6.2
+## 0.6.3
 
 * Stop passing ocr_languages parameter into paddle to avoid invalid paddle language code error, this will be fixed until
 we have the mapping from standard language code to paddle language code.
 
+## 0.6.2
+
+* move the confidence threshold for table transformer to config
 
 ## 0.6.1
 
