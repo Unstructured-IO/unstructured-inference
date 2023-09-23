@@ -677,7 +677,14 @@ def load_pdf(
                 else:
                     continue
 
-            text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
+            text_region = element_class(
+                x1 * coef,
+                y1 * coef,
+                x2 * coef,
+                y2 * coef,
+                text=_text,
+                source="pdfminer",
+            )
 
             if text_region.area > 0:
                 layout.append(text_region)
