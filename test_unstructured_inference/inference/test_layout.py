@@ -678,6 +678,7 @@ def test_ocr_image(region, objects, ocr_strategy, expected):
 @pytest.mark.parametrize("filename", ["loremipsum.pdf", "IRS-form-1987.pdf"])
 def test_load_pdf(filename):
     layouts, images = layout.load_pdf(f"sample-docs/{filename}")
+    assert "pdfminer" in {e.source for e in layouts[0]}
     assert len(layouts)
     for lo in layouts:
         assert len(lo)
