@@ -1,13 +1,17 @@
-## 0.6.2
+## 0.6.3
 
 * add a function to automatically scale table crop images based on text height so the text height is optimum for `tesseract` OCR task
 * add the new image auto scaling parameters to `config.py`
 
+## 0.6.2
+
+* move the confidence threshold for table transformer to config
+
 ## 0.6.1
 
 * YoloX_quantized is now the default model. This models detects most diverse types and detect tables better than previous model.
-* Since detection models tend to nest elements inside others(specifically in Tables), an algorithm has been added for reducing this 
-  behavior. Now all the elements produced by detection models are disjoint and they don't produce overlapping regions, which helps 
+* Since detection models tend to nest elements inside others(specifically in Tables), an algorithm has been added for reducing this
+  behavior. Now all the elements produced by detection models are disjoint and they don't produce overlapping regions, which helps
   reduce duplicated content.
 * Add `source` property to our elements, so you can know where the information was generated (OCR or detection model)
 
