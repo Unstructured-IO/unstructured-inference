@@ -203,9 +203,6 @@ def recognize(outputs: dict, img: Image, tokens: list, out_html: bool = False):
     tables_structure = objects_to_structures(objects, tokens, str_class_thresholds)
     # Enumerate all table cells: grid cells and spanning cells
     tables_cells = [structure_to_cells(structure, tokens)[0] for structure in tables_structure]
-    import pdb
-
-    pdb.set_trace()
 
     # Convert cells to HTML
     if out_html:
