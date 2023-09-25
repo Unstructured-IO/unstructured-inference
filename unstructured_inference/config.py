@@ -44,7 +44,7 @@ class InferenceConfig:
         The padding adds NO image data around an identified table bounding box; it simply adds white
         background around the image
         """
-        return self._get_int("TABLE_IMAGE_BACKGROUND_PAD", 0)
+        return self._get_int("TABLE_IMAGE_BACKGROUND_PAD", 20)
 
     @property
     def TESSERACT_MIN_TEXT_HEIGHT(self) -> int:
@@ -53,7 +53,7 @@ class InferenceConfig:
         if estimated text height from tesseract OCR results is lower than this value the image is
         scaled up to be processed again
         """
-        return self._get_int("TESSERACT_MIN_TEXT_HEIGHT", 8)
+        return self._get_int("TESSERACT_MIN_TEXT_HEIGHT", 18)
 
     @property
     def TESSERACT_MAX_TEXT_HEIGHT(self) -> int:
@@ -62,12 +62,12 @@ class InferenceConfig:
         if estimated text height from tesseract OCR results is higher than this value the image is
         scaled down to be processed again
         """
-        return self._get_int("TESSERACT_MAX_TEXT_HEIGHT", 100)
+        return self._get_int("TESSERACT_MAX_TEXT_HEIGHT", 50)
 
     @property
     def TESSERACT_OPTIMUM_TEXT_HEIGHT(self) -> int:
         """optimum text height for tesseract OCR"""
-        return self._get_int("TESSERACT_OPTIMUM_TEXT_HEIGHT", 30)
+        return self._get_int("TESSERACT_OPTIMUM_TEXT_HEIGHT", 20)
 
     @property
     def TESSERACT_TEXT_HEIGHT_QUANTILE(self) -> float:
