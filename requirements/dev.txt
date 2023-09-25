@@ -101,7 +101,7 @@ importlib-metadata==6.8.0
     #   jupyterlab
     #   jupyterlab-server
     #   nbconvert
-importlib-resources==6.0.1
+importlib-resources==6.1.0
     # via
     #   -c requirements/base.txt
     #   jsonschema
@@ -139,7 +139,7 @@ json5==0.9.14
     # via jupyterlab-server
 jsonpointer==2.4
     # via jsonschema
-jsonschema[format-nongpl]==4.19.0
+jsonschema[format-nongpl]==4.19.1
     # via
     #   jupyter-events
     #   jupyterlab-server
