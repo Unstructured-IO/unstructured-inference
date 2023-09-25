@@ -154,7 +154,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 return_tensors="pt",
             ).to(self.device)
             outputs_structure = self.model(**encoding)
-            outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection * 2
+            outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection
             return outputs_structure
 
     def run_prediction(
