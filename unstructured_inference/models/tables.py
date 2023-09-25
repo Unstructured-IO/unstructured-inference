@@ -246,11 +246,11 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
     pred_bboxes = outputs["pred_boxes"].detach().cpu()[0]
 
     pad = outputs.get("pad_for_structure_detection", 0)
-    scale_size = (img_size[0] + pad, img_size[1] + pad)
+    scale_size = (img_size[0] + pad * 2, img_size[1] + pad * 2)
     pred_bboxes = [elem.tolist() for elem in rescale_bboxes(pred_bboxes, scale_size)]
     # unshift the padding; padding effectively shifted the bounding boxes of structures in the
     # original image with half of the total pad
-    shift_size = pad / 2
+    shift_size = pad
 
     objects = []
     for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes):

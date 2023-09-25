@@ -1,7 +1,11 @@
-## 0.6.3
+## 0.6.4
 
 * add a function to automatically scale table crop images based on text height so the text height is optimum for `tesseract` OCR task
 * add the new image auto scaling parameters to `config.py`
+
+## 0.6.3
+
+* fix a bug where padded table structure bounding boxes are not shifted back into the original image coordinates correctly
 
 ## 0.6.2
 
