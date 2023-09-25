@@ -332,7 +332,7 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
             r.x2,
             r.y2,
             text=r.text,
-            source=None,
+            source=r.source,
             type="UncategorizedText",
         )
         for r in merged_regions
