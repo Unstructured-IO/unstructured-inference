@@ -1,6 +1,9 @@
 import os
 
+import numpy as np
 import pytest
+import torch
+from PIL import Image
 from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerDecoder,
 )
@@ -9,6 +12,18 @@ import unstructured_inference.models.table_postprocess as postprocess
 from unstructured_inference.models import tables
 
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
+
+
+@pytest.fixture()
+def table_transformer():
+    table_model = tables.UnstructuredTableTransformerModel()
+    table_model.initialize(model="microsoft/table-transformer-structure-recognition")
+    return table_model
+
+
+@pytest.fixture()
+def example_image():
+    return Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
 
 
 @pytest.mark.parametrize(
@@ -328,13 +343,8 @@ def test_align_rows(rows, bbox, output):
     assert postprocess.align_rows(rows, bbox) == output
 
 
-def test_table_prediction_tesseract():
-    table_model = tables.UnstructuredTableTransformerModel()
-    from PIL import Image
-
-    table_model.initialize(model="microsoft/table-transformer-structure-recognition")
-    img = Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
-    prediction = table_model.predict(img)
+def test_table_prediction_tesseract(table_transformer, example_image):
+    prediction = table_transformer.predict(example_image)
     # assert rows spans two rows are detected
     assert '<table><thead><th rowspan="2">' in prediction
     # one of the safest rows to detect should be present
@@ -351,28 +361,24 @@ def test_table_prediction_tesseract():
 
 
 @pytest.mark.skipif(skip_outside_ci, reason="Skipping paddle test run outside of CI")
-def test_table_prediction_paddle(monkeypatch):
+def test_table_prediction_paddle(monkeypatch, example_image):
     monkeypatch.setenv("TABLE_OCR", "paddle")
     table_model = tables.UnstructuredTableTransformerModel()
-    from PIL import Image
 
     table_model.initialize(model="microsoft/table-transformer-structure-recognition")
-    img = Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
-    prediction = table_model.predict(img)
+    prediction = table_model.predict(example_image)
     # Note(yuming): lossen paddle table prediction output test since performance issue
     # and results are different in different platforms (i.e., gpu vs cpu)
     assert len(prediction)
 
 
-def test_table_prediction_invalid_table_ocr(monkeypatch):
+def test_table_prediction_invalid_table_ocr(monkeypatch, example_image):
     monkeypatch.setenv("TABLE_OCR", "invalid_table_ocr")
     with pytest.raises(ValueError):
         table_model = tables.UnstructuredTableTransformerModel()
-        from PIL import Image
 
         table_model.initialize(model="microsoft/table-transformer-structure-recognition")
-        img = Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
-        _ = table_model.predict(img)
+        _ = table_model.predict(example_image)
 
 
 def test_intersect():
@@ -581,3 +587,40 @@ def test_cells_to_html():
         "cols</td></tr><tr><td></td><td>sub cell 1</td><td>sub cell 2</td></tr></table>"
     )
     assert tables.cells_to_html(cells) == expected
+
+
+def test_padded_results_has_right_dimensions(table_transformer, example_image):
+    str_class_name2idx = tables.get_class_map("structure")
+    # a simpler mapping so we keep all structure in the returned objs below for test
+    str_class_idx2name = {v: "table cell" for v in str_class_name2idx.values()}
+    # pad size is no more than 10% of the original image so we can setup test below easier
+    pad = int(min(example_image.size) / 10)
+
+    structure = table_transformer.get_structure(example_image, pad_for_structure_detection=pad)
+    # boxes deteced OUTSIDE of the original image; this shouldn't happen but we want to make sure
+    # the code handles it as expected
+    structure["pred_boxes"][0][0, :2] = 0.5
+    structure["pred_boxes"][0][0, 2:] = 1.0
+    # mock a box we know are safly inside the original image with known positions
+    width, height = example_image.size
+    padded_width = width + pad * 2
+    padded_height = height + pad * 2
+    original = [1, 3, 101, 53]
+    structure["pred_boxes"][0][1, :] = torch.tensor(
+        [
+            (51 + pad) / padded_width,
+            (28 + pad) / padded_height,
+            100 / padded_width,
+            50 / padded_height,
+        ],
+    )
+    objs = tables.outputs_to_objects(structure, example_image.size, str_class_idx2name)
+    np.testing.assert_almost_equal(objs[0]["bbox"], [-pad, -pad, width + pad, height + pad], 4)
+    np.testing.assert_almost_equal(objs[1]["bbox"], original, 4)
+    # a more strict test would be to constrain the actual detected boxes to be within the original
+    # image but that requires the table transformer to behave in certain ways and do not
+    # actually test the padding math; so here we use the relaxed condition
+    for obj in objs[2:]:
+        x1, y1, x2, y2 = obj["bbox"]
+        assert max(x1, x2) < width + pad
+        assert max(y1, y2) < height + pad
