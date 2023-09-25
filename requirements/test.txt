@@ -97,8 +97,12 @@ pydocstyle==6.3.0
 pyflakes==3.1.0
     # via flake8
 pytest==7.4.2
-    # via pytest-cov
+    # via
+    #   pytest-cov
+    #   pytest-mock
 pytest-cov==4.1.0
+    # via -r requirements/test.in
+pytest-mock==3.11.1
     # via -r requirements/test.in
 pyyaml==6.0.1
     # via
