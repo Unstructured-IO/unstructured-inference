@@ -13,6 +13,7 @@ import unstructured_inference.models.base as models
 from unstructured_inference.constants import OCRMode
 from unstructured_inference.inference import elements, layout, layoutelement
 from unstructured_inference.models import chipper, detectron2, tesseract
+from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -115,6 +116,19 @@ def test_ocr_with_error(monkeypatch):
     text_block = layout.TextRegion(1, 2, 3, 4, text=None)
 
     assert elements.ocr(text_block, image=image) == ""
+
+
+def test_ocr_source():
+    file = "sample-docs/loremipsum-flat.pdf"
+    model = get_model("yolox_tiny")
+    doc = layout.DocumentLayout.from_file(
+        file,
+        model,
+        ocr_mode=OCRMode.FULL_PAGE.value,
+        supplement_with_ocr_elements=True,
+        ocr_strategy="force",
+    )
+    assert "OCR-tesseract" in {e.source for e in doc.pages[0].elements}
 
 
 class MockLayoutModel:
