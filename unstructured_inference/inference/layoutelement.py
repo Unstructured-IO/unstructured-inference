@@ -9,7 +9,11 @@ from pandas import DataFrame
 from PIL import Image
 
 from unstructured_inference.config import inference_config
-from unstructured_inference.constants import FULL_PAGE_REGION_THRESHOLD, SUBREGION_THRESHOLD_FOR_OCR
+from unstructured_inference.constants import (
+    FULL_PAGE_REGION_THRESHOLD,
+    SUBREGION_THRESHOLD_FOR_OCR,
+    Source,
+)
 from unstructured_inference.inference.elements import (
     ImageTextRegion,
     Rectangle,
@@ -80,7 +84,7 @@ class LayoutElement(TextRegion):
             x2,
             y2,
             text=text,
-            source="detectron2_lp",
+            source=Source.DETECTRON2_LP,
             type=type,
             prob=prob,
         )
@@ -317,8 +321,10 @@ def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
 
     merged_text = " ".join([tr.text for tr in regions if tr.text])
     sources = [*{tr.source for tr in regions}]
-    source = sources.pop() if len(sources) == 1 else "merged:".join(sources)  # type:ignore
-    return TextRegion.from_coords(min_x1, min_y1, max_x2, max_y2, source=source, text=merged_text)
+    source = sources.pop() if len(sources) == 1 else Source.MERGED
+    element = TextRegion.from_coords(min_x1, min_y1, max_x2, max_y2, source=source, text=merged_text)
+    setattr(element, "merged_sources", sources)
+    return element
 
 
 def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
@@ -332,7 +338,7 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
     )
     merged_regions = [merge_text_regions(group) for group in grouped_regions]
     return [
-        LayoutElement(text=r.text, source=None, type="UncategorizedText", bbox=r.bbox)
+        LayoutElement(text=r.text, source=r.source, type="UncategorizedText", bbox=r.bbox)
         for r in merged_regions
     ]
 

@@ -13,7 +13,7 @@ from pdfminer.high_level import extract_pages
 from PIL import Image, ImageSequence
 from pytesseract import Output
 
-from unstructured_inference.constants import OCRMode
+from unstructured_inference.constants import OCRMode, Source
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
@@ -682,6 +682,7 @@ def load_pdf(
                 x2 * coef,
                 y2 * coef,
                 text=_text,
+                source=Source.PDFMINER,
             )
 
             if text_region.bbox is not None and text_region.bbox.area > 0:
@@ -743,7 +744,7 @@ def parse_ocr_data_tesseract(ocr_data: dict) -> List[TextRegion]:
         (x1, y1, x2, y2) = l, t, l + w, t + h
         text = ocr_data["text"][i]
         if text:
-            text_region = TextRegion.from_coords(x1, y1, x2, y2, text=text, source="OCR")
+            text_region = TextRegion.from_coords(x1, y1, x2, y2, text=text, source=Source.OCR_TESSERACT)
             text_regions.append(text_region)
 
     return text_regions
@@ -779,7 +780,7 @@ def parse_ocr_data_paddle(ocr_data: list) -> List[TextRegion]:
             y2 = max([i[1] for i in line[0]])
             text = line[1][0]
             if text:
-                text_region = TextRegion(x1, y1, x2, y2, text)
+                text_region = TextRegion(x1, y1, x2, y2, text, source=Source.OCR_PADDLE)
                 text_regions.append(text_region)
 
     return text_regions
