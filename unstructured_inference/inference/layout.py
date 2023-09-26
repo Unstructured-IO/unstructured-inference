@@ -440,7 +440,7 @@ class PageLayout:
                     width = style["width"]
                     for region in getattr(self, attribute):
                         if isinstance(region, Rectangle):
-                            required_source = getattr(el, "source", None)
+                            required_source = getattr(region, "source", None)
                             if "all" in sources or required_source in sources:
                                 img = draw_bbox(
                                     img,

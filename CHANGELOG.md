@@ -5,6 +5,7 @@
 
 ## 0.6.4
 
+* Add functionality to keep extracted image elements while merging inferred layout with extracted layout
 * add a function to automatically scale table crop images based on text height so the text height is optimum for `tesseract` OCR task
 * add the new image auto scaling parameters to `config.py`
 
