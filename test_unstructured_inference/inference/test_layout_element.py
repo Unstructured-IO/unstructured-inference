@@ -2,7 +2,7 @@ import pytest
 from layoutparser.elements import TextBlock
 from layoutparser.elements.layout_elements import Rectangle as LPRectangle
 
-from unstructured_inference.constants import SUBREGION_THRESHOLD_FOR_OCR
+from unstructured_inference.constants import SUBREGION_THRESHOLD_FOR_OCR, Source
 from unstructured_inference.inference.elements import TextRegion
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
@@ -166,7 +166,7 @@ def test_layout_element_from_lp_textblock():
         300,
         300,
         text="Sample Text",
-        source="detectron2_lp",
+        source=Source.DETECTRON2_LP,
         type="Text",
         prob=0.99,
     )
