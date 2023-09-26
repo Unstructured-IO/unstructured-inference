@@ -10,7 +10,7 @@ import pytest
 from PIL import Image
 
 import unstructured_inference.models.base as models
-from unstructured_inference.constants import OCRMode
+from unstructured_inference.constants import OCRMode, Source
 from unstructured_inference.inference import elements, layout, layoutelement
 from unstructured_inference.models import chipper, detectron2, tesseract
 from unstructured_inference.models.base import get_model
@@ -128,7 +128,7 @@ def test_ocr_source():
         supplement_with_ocr_elements=True,
         ocr_strategy="force",
     )
-    assert "OCR-tesseract" in {e.source for e in doc.pages[0].elements}
+    assert Source.OCR_TESSERACT in {e.source for e in doc.pages[0].elements}
 
 
 class MockLayoutModel:
@@ -692,7 +692,7 @@ def test_ocr_image(region, objects, ocr_strategy, expected):
 @pytest.mark.parametrize("filename", ["loremipsum.pdf", "IRS-form-1987.pdf"])
 def test_load_pdf(filename):
     layouts, images = layout.load_pdf(f"sample-docs/{filename}")
-    assert "pdfminer" in {e.source for e in layouts[0]}
+    assert Source.PDFMINER in {e.source for e in layouts[0]}
     assert len(layouts)
     for lo in layouts:
         assert len(lo)
