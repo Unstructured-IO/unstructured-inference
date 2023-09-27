@@ -384,12 +384,16 @@ def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutEl
 # Rectangle. I or someone else will have to get to that later.
 @dataclass
 class LocationlessLayoutElement:
+    id: Optional[int]
+    parent_id: Optional[int]
     text: Optional[str]
     type: Optional[str]
 
     def to_dict(self) -> dict:
         """Converts the class instance to dictionary form."""
         out_dict = {
+            "id": self.id,
+            "parent_id": self.parent_id,
             "text": self.text,
             "type": self.type,
         }

@@ -1,16 +1,17 @@
-from transformers.utils import add_start_docstrings
-from transformers.generation.logits_process import (
-    LogitsProcessor,
-    LOGITS_PROCESSOR_INPUTS_DOCSTRING,
-)
 import os
 from typing import List, Optional
 
 import numpy as np
 import torch
+from huggingface_hub import hf_hub_download
 from PIL.Image import Image
 from transformers import DonutProcessor, VisionEncoderDecoderModel
-from huggingface_hub import hf_hub_download
+from transformers.generation.logits_process import (
+    LOGITS_PROCESSOR_INPUTS_DOCSTRING,
+    LogitsProcessor,
+)
+from transformers.utils import add_start_docstrings
+
 from unstructured_inference.inference.layoutelement import LocationlessLayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredElementExtractionModel
 
@@ -45,7 +46,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.processor = DonutProcessor.from_pretrained(pre_trained_model_repo, token=auth_token)
         self.tokenizer = self.processor.tokenizer
         self.logits_processor = NoRepeatNGramLogitsProcessor(
-            no_repeat_ngram_size, get_table_token_ids(self.processor)
+            no_repeat_ngram_size,
+            get_table_token_ids(self.processor),
         )
 
         self.model = VisionEncoderDecoderModel.from_pretrained(
@@ -55,7 +57,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         )
         if swap_head:
             lm_head_file = hf_hub_download(
-                repo_id=pre_trained_model_repo, filename="lm_head.pth", token=auth_token
+                repo_id=pre_trained_model_repo,
+                filename="lm_head.pth",
+                token=auth_token,
             )
             rank = 128
             self.model.decoder.lm_head = torch.nn.Sequential(
@@ -66,8 +70,21 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             self.model.decoder.lm_head.load_state_dict(torch.load(lm_head_file))
 
         self.input_ids = self.processor.tokenizer(
-            prompt, add_special_tokens=False, return_tensors="pt"
+            prompt,
+            add_special_tokens=False,
+            return_tensors="pt",
         ).input_ids.to(self.device)
+
+        self.start_tokens = [
+            v
+            for k, v in self.processor.tokenizer.get_added_vocab().items()
+            if k.startswith("<s_") and v not in self.input_ids
+        ]
+        self.end_tokens = [
+            v for k, v in self.processor.tokenizer.get_added_vocab().items() if k.startswith("</s_")
+        ]
+        self.tokens_stop = [self.tokenizer.eos_token_id, self.tokenizer.pad_token_id]
+
         self.model.to(self.device)
         self.model.eval()
 
@@ -116,9 +133,61 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     ) -> List[LocationlessLayoutElement]:
         """Process tokens into layout elements."""
         elements = []
+        parents = []
+        start = end = -1
+
+        # Get bboxes - skip first token - bos
+        for i in range(1, len(output_ids)):
+            # Finish bounding box generation
+            if output_ids[i] in self.tokens_stop:
+                break
+            if output_ids[i] in self.start_tokens:
+                # Create the element
+                stype = self.tokenizer.decode(output_ids[i])
+                # Identify parent
+                parent_id = parents[-1].id if len(parents) > 0 else -1
+                # Add to parent list
+                element = LocationlessLayoutElement(
+                    id=len(elements),
+                    parent_id=parent_id,
+                    type=stype[3:-1],
+                    text="",
+                )
+                parents.append(element)
+                elements.append(element)
+                start = -1
+            elif output_ids[i] in self.end_tokens:
+                if start != -1 and start < end and len(parents) > 0:
+                    slicing_end = end + 1
+                    string = self.tokenizer.decode(output_ids[start:slicing_end])
+
+                    element = parents.pop(-1)
+                    element.text = string
+                start = -1
+            else:
+                if start == -1:
+                    start = i
+
+                end = i
+
+        # If exited before eos is achieved
+        if start != -1 and start < end and len(parents) > 0:
+            slicing_end = end + 1
+            string = self.tokenizer.decode(output_ids[start:slicing_end])
+
+            element = parents.pop(-1)
+            element.text = string
+
+        return elements
+
+    """
+    def postprocess(
+        self,
+        output_ids,
+    ) -> List[LocationlessLayoutElement]:
+        elements = []
 
         # Get special tokens
-        tokens_stop = [self.tokenizer.eos_token_id, self.tokenizer.pad_token_id]
         tokens_split = self.tokenizer.additional_special_tokens_ids + list(
             self.tokenizer.get_added_vocab().values(),
         )
@@ -129,7 +198,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         # Get bboxes - skip first token - bos
         for i in range(1, len(output_ids)):
             # Finish bounding box generation
-            if output_ids[i] in tokens_stop:
+            if output_ids[i] in self.tokens_stop:
                 break
             if output_ids[i] in tokens_split:
                 if start != -1 and start < end:
@@ -138,7 +207,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                     stype = self.tokenizer.decode(last_special_token)
 
-                    elements.append(LocationlessLayoutElement(type=stype[3:-1], text=string))
+                    elements.append(
+                        LocationlessLayoutElement(id=len(elements), type=stype[3:-1], text=string),
+                    )
 
                 start = -1
                 last_special_token = output_ids[i]
@@ -155,9 +226,12 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
             stype = self.tokenizer.decode(last_special_token)
 
-            elements.append(LocationlessLayoutElement(type=stype[3:-1], text=string))
+            elements.append(
+                LocationlessLayoutElement(d=len(elements), type=stype[3:-1], text=string),
+            )
 
         return elements
+    """
 
 
 # Inspired on https://github.com/huggingface/transformers/blob/8e3980a290acc6d2f8ea76dba111b9ef0ef00309/src/transformers/generation/logits_process.py#L706
@@ -165,7 +239,7 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
     def __init__(self, ngram_size: int, skip_tokens=None):
         if not isinstance(ngram_size, int) or ngram_size <= 0:
             raise ValueError(
-                f"`ngram_size` has to be a strictly positive integer, but is {ngram_size}"
+                f"`ngram_size` has to be a strictly positive integer, but is {ngram_size}",
             )
         self.ngram_size = ngram_size
         self.skip_tokens = skip_tokens
@@ -185,7 +259,12 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
 
 
 def _no_repeat_ngram_logits(
-    input_ids, cur_len, logits, batch_size=1, no_repeat_ngram_size=0, skip_tokens=None
+    input_ids,
+    cur_len,
+    logits,
+    batch_size=1,
+    no_repeat_ngram_size=0,
+    skip_tokens=None,
 ):
     if no_repeat_ngram_size > 0:
         # calculate a list of banned tokens to prevent repetitively generating the same ngrams
@@ -215,7 +294,7 @@ def _calc_banned_tokens(prev_input_ids, num_hypos, no_repeat_ngram_size, cur_len
         for ngram in zip(*[gen_tokens[i:] for i in range(no_repeat_ngram_size)]):
             prev_ngram_tuple = tuple(ngram[:-1])
             generated_ngram[prev_ngram_tuple] = generated_ngram.get(prev_ngram_tuple, []) + [
-                ngram[-1]
+                ngram[-1],
             ]
 
     def _get_generated_ngrams(hypo_idx):

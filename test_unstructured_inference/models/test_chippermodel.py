@@ -53,16 +53,29 @@ def test_predict_tokens():
 
 
 @pytest.mark.parametrize(
-    ("decoded_str", "expected_classes"),
+    ("decoded_str", "expected_classes", "expected_ids", "expected_parent_ids"),
     [
         (
             "<s_Title>Hi buddy!</s_Title><s_Text>There is some text here.</s_Text>",
             ["Title", "Text"],
+            [0, 1],
+            [-1, -1],
         ),
-        ("<s_Title>Hi buddy!</s_Title><s_Text>There is some text here.", ["Title", "Text"]),
+        (
+            "<s_Title>Hi buddy!</s_Title><s_Text>There is some text here.",
+            ["Title", "Text"],
+            [0, 1],
+            [-1, -1],
+        ),
+        (
+            "<s_List><s_List-item>Hi buddy!</s_List-item></s_List>",
+            ["List", "List-item"],
+            [0, 1],
+            [-1, 0],
+        ),
     ],
 )
-def test_postprocess(decoded_str, expected_classes):
+def test_postprocess(decoded_str, expected_classes, expected_ids, expected_parent_ids):
     model = chipper.UnstructuredChipperModel()
     pre_trained_model = "unstructuredio/ved-fine-tuning"
     model.initialize(pre_trained_model, prompt="<s>", swap_head=False)
@@ -73,6 +86,10 @@ def test_postprocess(decoded_str, expected_classes):
     element1, element2 = out
 
     assert [element1.type, element2.type] == expected_classes
+
+    assert [element1.id, element2.id] == expected_ids
+
+    assert [element1.parent_id, element2.parent_id] == expected_parent_ids
 
 
 def test_predict():
