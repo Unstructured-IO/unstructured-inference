@@ -237,56 +237,56 @@ def merge_inferred_layout_with_extracted_layout(
 
 #     return " ".join(extracted_texts) if extracted_texts else None
 
+# move to unst
+# def supplement_layout_with_ocr_elements(
+#     layout: List[LayoutElement],
+#     ocr_layout: List[TextRegion],
+# ) -> List[LayoutElement]:
+#     """
+#     Supplement the existing layout with additional OCR-derived elements.
 
-def supplement_layout_with_ocr_elements(
-    layout: List[LayoutElement],
-    ocr_layout: List[TextRegion],
-) -> List[LayoutElement]:
-    """
-    Supplement the existing layout with additional OCR-derived elements.
+#     This function takes two lists: one list of pre-existing layout elements (`layout`)
+#     and another list of OCR-detected text regions (`ocr_layout`). It identifies OCR regions
+#     that are subregions of the elements in the existing layout and removes them from the
+#     OCR-derived list. Then, it appends the remaining OCR-derived regions to the existing layout.
 
-    This function takes two lists: one list of pre-existing layout elements (`layout`)
-    and another list of OCR-detected text regions (`ocr_layout`). It identifies OCR regions
-    that are subregions of the elements in the existing layout and removes them from the
-    OCR-derived list. Then, it appends the remaining OCR-derived regions to the existing layout.
+#     Parameters:
+#     - layout (List[LayoutElement]): A list of existing layout elements, each of which is
+#                                     an instance of `LayoutElement`.
+#     - ocr_layout (List[TextRegion]): A list of OCR-derived text regions, each of which is
+#                                      an instance of `TextRegion`.
 
-    Parameters:
-    - layout (List[LayoutElement]): A list of existing layout elements, each of which is
-                                    an instance of `LayoutElement`.
-    - ocr_layout (List[TextRegion]): A list of OCR-derived text regions, each of which is
-                                     an instance of `TextRegion`.
+#     Returns:
+#     - List[LayoutElement]: The final combined layout consisting of both the original layout
+#                            elements and the new OCR-derived elements.
 
-    Returns:
-    - List[LayoutElement]: The final combined layout consisting of both the original layout
-                           elements and the new OCR-derived elements.
+#     Note:
+#     - The function relies on `is_almost_subregion_of()` method to determine if an OCR region
+#       is a subregion of an existing layout element.
+#     - It also relies on `get_elements_from_ocr_regions()` to convert OCR regions to layout elements.
+#     - The `SUBREGION_THRESHOLD_FOR_OCR` constant is used to specify the subregion matching
+#      threshold.
+#     """
 
-    Note:
-    - The function relies on `is_almost_subregion_of()` method to determine if an OCR region
-      is a subregion of an existing layout element.
-    - It also relies on `get_elements_from_ocr_regions()` to convert OCR regions to layout elements.
-    - The `SUBREGION_THRESHOLD_FOR_OCR` constant is used to specify the subregion matching
-     threshold.
-    """
+#     ocr_regions_to_remove = []
+#     for ocr_region in ocr_layout:
+#         for el in layout:
+#             ocr_region_is_subregion_of_out_el = ocr_region.is_almost_subregion_of(
+#                 cast(Rectangle, el),
+#                 SUBREGION_THRESHOLD_FOR_OCR,
+#             )
+#             if ocr_region_is_subregion_of_out_el:
+#                 ocr_regions_to_remove.append(ocr_region)
+#                 break
 
-    ocr_regions_to_remove = []
-    for ocr_region in ocr_layout:
-        for el in layout:
-            ocr_region_is_subregion_of_out_el = ocr_region.is_almost_subregion_of(
-                cast(Rectangle, el),
-                SUBREGION_THRESHOLD_FOR_OCR,
-            )
-            if ocr_region_is_subregion_of_out_el:
-                ocr_regions_to_remove.append(ocr_region)
-                break
+#     ocr_regions_to_add = [region for region in ocr_layout if region not in ocr_regions_to_remove]
+#     if ocr_regions_to_add:
+#         ocr_elements_to_add = get_elements_from_ocr_regions(ocr_regions_to_add)
+#         final_layout = layout + ocr_elements_to_add
+#     else:
+#         final_layout = layout
 
-    ocr_regions_to_add = [region for region in ocr_layout if region not in ocr_regions_to_remove]
-    if ocr_regions_to_add:
-        ocr_elements_to_add = get_elements_from_ocr_regions(ocr_regions_to_add)
-        final_layout = layout + ocr_elements_to_add
-    else:
-        final_layout = layout
-
-    return final_layout
+#     return final_layout
 
 
 def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
