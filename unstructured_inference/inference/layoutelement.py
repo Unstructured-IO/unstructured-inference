@@ -288,26 +288,26 @@ def merge_inferred_layout_with_extracted_layout(
 
 #     return final_layout
 
+# move to unst
+# def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
+#     """
+#     Merge a list of TextRegion objects into a single TextRegion.
 
-def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
-    """
-    Merge a list of TextRegion objects into a single TextRegion.
+#     Parameters:
+#     - group (List[TextRegion]): A list of TextRegion objects to be merged.
 
-    Parameters:
-    - group (List[TextRegion]): A list of TextRegion objects to be merged.
+#     Returns:
+#     - TextRegion: A single merged TextRegion object.
+#     """
 
-    Returns:
-    - TextRegion: A single merged TextRegion object.
-    """
+#     min_x1 = min([tr.x1 for tr in regions])
+#     min_y1 = min([tr.y1 for tr in regions])
+#     max_x2 = max([tr.x2 for tr in regions])
+#     max_y2 = max([tr.y2 for tr in regions])
 
-    min_x1 = min([tr.x1 for tr in regions])
-    min_y1 = min([tr.y1 for tr in regions])
-    max_x2 = max([tr.x2 for tr in regions])
-    max_y2 = max([tr.y2 for tr in regions])
+#     merged_text = " ".join([tr.text for tr in regions if tr.text])
 
-    merged_text = " ".join([tr.text for tr in regions if tr.text])
-
-    return TextRegion(min_x1, min_y1, max_x2, max_y2, merged_text)
+#     return TextRegion(min_x1, min_y1, max_x2, max_y2, merged_text)
 
 # move to unst
 # def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
