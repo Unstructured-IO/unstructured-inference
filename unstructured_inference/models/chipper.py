@@ -105,7 +105,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """Do inference using the wrapped model."""
         tokens, decoder_cross_attentions = self.predict_tokens(image)
         elements = self.postprocess(image, tokens, decoder_cross_attentions)
-        print(elements)
         return elements
 
     def predict_tokens(self, image: Image) -> List[int]:

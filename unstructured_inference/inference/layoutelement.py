@@ -21,7 +21,7 @@ from unstructured_inference.inference.elements import (
 
 
 @dataclass
-class LayoutElement(Rectangle):
+class LayoutElement(TextRegion):
     type: Optional[str] = None
     prob: Optional[float] = None
     image_path: Optional[str] = None
