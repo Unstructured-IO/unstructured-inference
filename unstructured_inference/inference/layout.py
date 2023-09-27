@@ -278,7 +278,7 @@ class PageLayout:
                 logger.info("Processing entrie page OCR with paddle...")
                 from unstructured_inference.models import paddle_ocr
 
-                # TODO(yuming): pass ocr language to paddle when we have laguage mapping for paddle
+                # TODO(yuming): pass ocr language to paddle when we have language mapping for paddle
                 ocr_data = paddle_ocr.load_agent().ocr(
                     np.array(self.image),
                     cls=True,
