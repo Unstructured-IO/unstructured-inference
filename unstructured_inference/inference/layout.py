@@ -275,7 +275,7 @@ class PageLayout:
                 )
 
             if entrie_page_ocr == "paddle":
-                logger.info("Processing entrie page OCR with paddle...")
+                logger.info("Processing entire page OCR with paddle...")
                 from unstructured_inference.models import paddle_ocr
 
                 # TODO(yuming): pass ocr language to paddle when we have language mapping for paddle
