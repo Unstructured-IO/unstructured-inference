@@ -14,6 +14,7 @@ from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
+from unstructured_inference.constants import Source
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
@@ -149,7 +150,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
                 text=None,
                 type=detected_class,
                 prob=prob,
-                source="yolox",
+                source=Source.YOLOX,
             )
 
             regions.append(region)

@@ -9,6 +9,7 @@ from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
+from unstructured_inference.constants import Source
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger, logger_onnx
 from unstructured_inference.models.unstructuredmodel import (
@@ -158,7 +159,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
                     text=None,
                     type=detected_class,
                     prob=conf,
-                    source="detectron2_onnx",
+                    source=Source.DETECTRON2_ONNX,
                 )
 
                 regions.append(region)

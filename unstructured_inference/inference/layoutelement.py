@@ -9,7 +9,11 @@ from pandas import DataFrame
 from PIL import Image
 
 from unstructured_inference.config import inference_config
-from unstructured_inference.constants import FULL_PAGE_REGION_THRESHOLD, SUBREGION_THRESHOLD_FOR_OCR
+from unstructured_inference.constants import (
+    FULL_PAGE_REGION_THRESHOLD,
+    SUBREGION_THRESHOLD_FOR_OCR,
+    Source,
+)
 from unstructured_inference.inference.elements import (
     ImageTextRegion,
     Rectangle,
@@ -74,7 +78,7 @@ class LayoutElement(TextRegion):
         text = textblock.text
         type = textblock.type
         prob = textblock.score
-        return cls(x1, y1, x2, y2, text=text, source="detectron2_lp", type=type, prob=prob)
+        return cls(x1, y1, x2, y2, text=text, source=Source.DETECTRON2_LP, type=type, prob=prob)
 
 
 def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
@@ -144,13 +148,24 @@ def merge_inferred_layout_with_extracted_layout(
                 )
                 if same_bbox:
                     # Looks like these represent the same region
-                    grow_region_to_match_region(inferred_region, extracted_region)
-                    inferred_region.text = extracted_region.text
-                    region_matched = True
-                elif extracted_is_subregion_of_inferred and inferred_is_text and extracted_is_image:
-                    grow_region_to_match_region(inferred_region, extracted_region)
-                    region_matched = True
+                    if extracted_is_image:
+                        # keep extracted region, remove inferred region
+                        inferred_regions_to_remove.append(inferred_region)
+                    else:
+                        # keep inferred region, remove extracted region
+                        grow_region_to_match_region(inferred_region, extracted_region)
+                        inferred_region.text = extracted_region.text
+                        region_matched = True
+                elif extracted_is_subregion_of_inferred and inferred_is_text:
+                    if extracted_is_image:
+                        # keep both extracted and inferred regions
+                        region_matched = False
+                    else:
+                        # keep inferred region, remove extracted region
+                        grow_region_to_match_region(inferred_region, extracted_region)
+                        region_matched = True
                 elif either_region_is_subregion_of_other and inferred_region.type != "Table":
+                    # keep extracted region, remove inferred region
                     inferred_regions_to_remove.append(inferred_region)
         if not region_matched:
             extracted_elements_to_add.append(extracted_region)
@@ -311,8 +326,10 @@ def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
 
     merged_text = " ".join([tr.text for tr in regions if tr.text])
     sources = [*{tr.source for tr in regions}]
-    source = sources.pop() if len(sources) == 1 else "merged:".join(sources)  # type:ignore
-    return TextRegion(min_x1, min_y1, max_x2, max_y2, source=source, text=merged_text)
+    source = sources.pop() if len(sources) == 1 else Source.MERGED
+    element = TextRegion(min_x1, min_y1, max_x2, max_y2, source=source, text=merged_text)
+    setattr(element, "merged_sources", sources)
+    return element
 
 
 def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
@@ -332,7 +349,7 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
             r.x2,
             r.y2,
             text=r.text,
-            source=None,
+            source=r.source,
             type="UncategorizedText",
         )
         for r in merged_regions
