@@ -21,7 +21,7 @@ from unstructured_inference.inference.elements import (
 
 
 @dataclass
-class LayoutElement(TextRegion):
+class LayoutElement(Rectangle):
     type: Optional[str] = None
     prob: Optional[float] = None
     image_path: Optional[str] = None
@@ -383,11 +383,12 @@ def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutEl
 # Region types to not subclass Rectangle, and instead have an optional bbox property that is a
 # Rectangle. I or someone else will have to get to that later.
 @dataclass
-class LocationlessLayoutElement:
+class LocationlessLayoutElement(Rectangle):
     id: Optional[int]
     parent_id: Optional[int]
     text: Optional[str]
     type: Optional[str]
+    # bbox: Optional[list]
 
     def to_dict(self) -> dict:
         """Converts the class instance to dictionary form."""
@@ -396,6 +397,7 @@ class LocationlessLayoutElement:
             "parent_id": self.parent_id,
             "text": self.text,
             "type": self.type,
+            "bbox": [self.x1, self.y1, self.x2, self.y2],
         }
         return out_dict
 

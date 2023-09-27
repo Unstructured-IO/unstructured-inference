@@ -1,6 +1,7 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Tuple, Union
 
+import cv2
 import numpy as np
 import torch
 from huggingface_hub import hf_hub_download
@@ -20,11 +21,17 @@ MODEL_TYPES = {
         "pre_trained_model_repo": "unstructuredio/ved-fine-tuning",
         "swap_head": False,
         "prompt": "<s>",
+        "max_length": 1200,
+        "heatmap_h": 52,
+        "heatmap_w": 39,
     },
     "chipperv2": {
         "pre_trained_model_repo": "unstructuredio/chipper-fast-fine-tuning",
         "swap_head": True,
         "prompt": "<s><s_hierarchical>",
+        "max_length": 1536,
+        "heatmap_h": 40,
+        "heatmap_w": 30,
     },
 }
 
@@ -35,6 +42,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         pre_trained_model_repo: str,
         swap_head: bool,
         prompt: str,
+        max_length: int,
+        heatmap_h: int,
+        heatmap_w: int,
         no_repeat_ngram_size: int = 10,
         auth_token: Optional[str] = os.environ.get("UNSTRUCTURED_HF_TOKEN"),
     ):
@@ -43,6 +53,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             self.device = "cuda"
         else:
             self.device = "cpu"
+        self.max_length = max_length
+        self.heatmap_h = heatmap_h
+        self.heatmap_w = heatmap_w
         self.processor = DonutProcessor.from_pretrained(pre_trained_model_repo, token=auth_token)
         self.tokenizer = self.processor.tokenizer
         self.logits_processor = NoRepeatNGramLogitsProcessor(
@@ -90,14 +103,15 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
     def predict(self, image) -> List[LocationlessLayoutElement]:
         """Do inference using the wrapped model."""
-        tokens = self.predict_tokens(image)
-        elements = self.postprocess(tokens)
+        tokens, decoder_cross_attentions = self.predict_tokens(image)
+        elements = self.postprocess(image, tokens, decoder_cross_attentions)
+        print(elements)
         return elements
 
     def predict_tokens(self, image: Image) -> List[int]:
         """Predict tokens from image."""
         with torch.no_grad():
-            annotation = self.model.generate(
+            outputs = self.model.generate(
                 self.processor(
                     np.array(
                         image,
@@ -107,34 +121,59 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 ).pixel_values.to(self.device),
                 decoder_input_ids=self.input_ids,
                 logits_processor=[self.logits_processor],
+                max_length=self.max_length,
                 do_sample=True,
                 top_p=0.92,
                 top_k=5,
                 no_repeat_ngram_size=0,
                 num_beams=3,
-            ).tolist()[0]
+                return_dict_in_generate=True,
+                output_attentions=True,
+                output_scores=False,
+                output_hidden_states=False,
+            )
 
-        tokens = (
-            [self.processor.tokenizer.bos_token_id]
-            + [
-                e
-                for e in annotation
-                if e != self.processor.tokenizer.bos_token_id
-                and e != self.processor.tokenizer.eos_token_id
-            ]
-            + [self.processor.tokenizer.eos_token_id]
-        )
+        if "beam_indices" in outputs:
+            offset = len(outputs["beam_indices"][0]) - len(outputs["cross_attentions"])
 
-        return tokens
+            decoder_cross_attentions = [""] * offset
+
+            for token_id in range(0, len(outputs["beam_indices"][0])):
+                token_attentions = []
+
+                for decoder_layer_id in range(len(outputs["cross_attentions"][token_id - offset])):
+                    token_attentions.append(
+                        outputs["cross_attentions"][token_id - offset][decoder_layer_id][
+                            outputs["beam_indices"][0][token_id]
+                        ].unsqueeze(0),
+                    )
+
+                decoder_cross_attentions.append(token_attentions)
+        else:
+            decoder_cross_attentions = outputs["cross_attentions"]
+
+        tokens = outputs["sequences"][0]
+
+        return tokens, decoder_cross_attentions
 
     def postprocess(
         self,
+        image,
         output_ids,
+        decoder_cross_attentions,
     ) -> List[LocationlessLayoutElement]:
         """Process tokens into layout elements."""
         elements = []
         parents = []
         start = end = -1
+
+        x_offset, y_offset, ratio = self.image_padding(
+            image.size[::-1],
+            (
+                self.processor.image_processor.size["width"],
+                self.processor.image_processor.size["height"],
+            ),
+        )
 
         # Get bboxes - skip first token - bos
         for i in range(1, len(output_ids)):
@@ -145,13 +184,21 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 # Create the element
                 stype = self.tokenizer.decode(output_ids[i])
                 # Identify parent
-                parent_id = parents[-1].id if len(parents) > 0 else -1
+                parent_id = parents[-1].id if len(parents) > 0 else None
                 # Add to parent list
                 element = LocationlessLayoutElement(
                     id=len(elements),
                     parent_id=parent_id,
                     type=stype[3:-1],
                     text="",
+                    x1=None,
+                    y1=None,
+                    x2=None,
+                    y2=None,
+                    # source="chipper",
+                    # type=None,
+                    # prob=None,
+                    # image_path=None,
                 )
                 parents.append(element)
                 elements.append(element)
@@ -163,6 +210,28 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                     element = parents.pop(-1)
                     element.text = string
+                    element.x1, element.y1, element.x2, element.y2 = self.get_bounding_box(
+                        decoder_cross_attentions=decoder_cross_attentions,
+                        tkn_indexes=range(start - 1, end),
+                        final_w=self.processor.image_processor.size["height"],
+                        final_h=self.processor.image_processor.size["width"],
+                        heatmap_w=self.heatmap_w,
+                        heatmap_h=self.heatmap_h,
+                    )
+
+                    element.x1, element.y1, element.x2, element.y2 = self.adjust_bbox(
+                        self.get_bounding_box(
+                            decoder_cross_attentions=decoder_cross_attentions,
+                            tkn_indexes=range(start - 1, end),
+                            final_w=self.processor.image_processor.size["height"],
+                            final_h=self.processor.image_processor.size["width"],
+                            heatmap_w=self.heatmap_w,
+                            heatmap_h=self.heatmap_h,
+                        ),
+                        x_offset,
+                        y_offset,
+                        ratio,
+                    )
                 start = -1
             else:
                 if start == -1:
@@ -179,6 +248,166 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             element.text = string
 
         return elements
+
+    def adjust_bbox(self, bbox, x_offset, y_offset, ratio):
+        return [
+            (bbox[0] - x_offset) / ratio,
+            (bbox[1] - y_offset) / ratio,
+            (bbox[2] - x_offset) / ratio,
+            (bbox[3] - y_offset) / ratio,
+        ]
+
+    def refined_height_box(self, area, bbox, percentage_coverage=0.015):
+        vertical_projection = np.sum(area[bbox[1] : bbox[3], bbox[0] : bbox[2]], axis=0)
+        total_sum = np.sum(vertical_projection)
+
+        lower_boundary = bbox[1]
+        upper_boundary = bbox[3] - 1
+
+        cumulative_sum = 0
+        for i, value in enumerate(vertical_projection):
+            cumulative_sum += value
+            if cumulative_sum >= total_sum * percentage_coverage:
+                lower_boundary = bbox[1] + i
+                break
+
+        cumulative_sum = 0
+        for i, value in enumerate(vertical_projection[::-1]):
+            cumulative_sum += value
+            if cumulative_sum >= total_sum * percentage_coverage:
+                upper_boundary = bbox[3] - 1 - i
+                break
+
+        if lower_boundary >= upper_boundary:
+            return bbox
+
+        return [bbox[0], lower_boundary, bbox[2], upper_boundary]
+
+    def refined_width_box(self, area, bbox, percentage_coverage=0.03):
+        horizontal_projection = np.sum(area[bbox[1] : bbox[3], bbox[0] : bbox[2]], axis=1)
+        total_sum = np.sum(horizontal_projection)
+
+        lower_boundary = bbox[1]
+        upper_boundary = bbox[3] - 1
+
+        cumulative_sum = 0
+        for i, value in enumerate(horizontal_projection):
+            cumulative_sum += value
+            if cumulative_sum >= total_sum * percentage_coverage:
+                lower_boundary = bbox[0] + i
+                break
+
+        cumulative_sum = 0
+        for i, value in enumerate(horizontal_projection[::-1]):
+            cumulative_sum += value
+            if cumulative_sum >= total_sum * percentage_coverage:
+                upper_boundary = bbox[2] - 1 - i
+                break
+
+        if lower_boundary >= upper_boundary:
+            return bbox
+
+        return [lower_boundary, bbox[1], upper_boundary, bbox[3]]
+
+    def get_bounding_box(
+        self,
+        decoder_cross_attentions: torch.Tensor,
+        tkn_indexes: List[int],
+        final_h: int = 1280,
+        final_w: int = 960,
+        heatmap_h: int = 40,
+        heatmap_w: int = 30,
+        discard_ratio: float = 0.99,
+        return_thres_agg_heatmap: bool = False,
+    ) -> Union[Tuple[int, int, int, int], Tuple[Tuple[int, int, int, int], np.ndarray]]:
+        """
+        decoder_cross_attention: tuple(tuple(torch.FloatTensor))
+        Tuple (one element for each generated token) of tuples (one element for each layer of the decoder) of
+        `torch.FloatTensor` of shape `(batch_size, num_heads, generated_length, sequence_length)`
+        """
+        agg_heatmap = np.zeros([final_h, final_w], dtype=np.uint8)
+
+        for tidx in tkn_indexes:
+            hmaps = torch.stack(decoder_cross_attentions[tidx], dim=0)
+            # shape [4, 1, 16, 1, 1200]->[4, 16, 1200]
+            hmaps = hmaps.permute(1, 3, 0, 2, 4).squeeze(0)
+            hmaps = hmaps[-1]
+            # change shape [4, 16, 1200]->[4, 16, 40, 30] assuming (heatmap_h, heatmap_w) = (40, 30)
+            hmaps = hmaps.view(4, 16, heatmap_h, heatmap_w)
+            # fusing 16 decoder attention heads i.e. [4, 16, 40, 30]-> [16, 40, 30]
+            hmaps = torch.max(hmaps, dim=1)[0]
+            # fusing 4 decoder layers from BART i.e. [16, 40, 30]-> [40, 30]
+            hmap = torch.max(hmaps, dim=0)[0]
+
+            # dropping discard ratio activations
+            flat = hmap.view(heatmap_h * heatmap_w)
+            _, indices = flat.topk(int(flat.size(-1) * discard_ratio), largest=False)
+            flat[indices] = 0
+
+            hmap = flat.view(heatmap_h, heatmap_w)
+
+            hmap = hmap.unsqueeze(dim=-1).cpu().numpy()
+            hmap = (hmap * 255.0).astype(np.uint8)  # (40, 30, 1) uint8
+            # fuse heatmaps for different tokens by taking the max
+            agg_heatmap = np.max(
+                np.asarray([agg_heatmap, cv2.resize(hmap, (final_w, final_h))]),
+                axis=0,
+            ).astype(np.uint8)
+
+        # threshold to remove small attention pockets
+        thres_heatmap = cv2.threshold(agg_heatmap, 200, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+
+        kernel = np.ones((1, 10), np.uint8)
+        thres_heatmap = cv2.dilate(thres_heatmap, kernel, iterations=1)
+        kernel = np.ones((5, 1), np.uint8)
+        thres_heatmap = cv2.erode(thres_heatmap, kernel, iterations=1)
+
+        # Find contours
+        contours = cv2.findContours(thres_heatmap, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = contours[0] if len(contours) == 2 else contours[1]
+        bboxes = [cv2.boundingRect(ctr) for ctr in contours]
+        # return box with max area
+        x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])
+        max_area_box = [x, y, x + w, y + h]
+
+        max_area_box = self.refined_width_box(
+            agg_heatmap,
+            self.refined_height_box(agg_heatmap, [x, y, x + w, y + h], percentage_coverage=0.02),
+            percentage_coverage=0.05,
+        )
+
+        if return_thres_agg_heatmap:
+            return max_area_box, thres_heatmap, agg_heatmap, hmap
+        return max_area_box
+
+    def image_padding(self, input_size, target_size):
+        """
+        Resize an image to a defined size, preserving the aspect ratio, and pad with a background color to maintain aspect ratio.
+
+        Args:
+            input_path (str): Path to the input image file.
+            output_path (str): Path to save the output resized and padded image.
+            target_size (tuple): Desired target size in the format (width, height).
+        """
+        # Calculate the aspect ratio of the input and target sizes
+        aspect_ratio_input = input_size[0] / input_size[1]
+        aspect_ratio_target = target_size[0] / target_size[1]
+
+        # Determine the size of the image when resized to fit within the target size while preserving the aspect ratio
+        if aspect_ratio_input > aspect_ratio_target:
+            # Resize the image to fit the target width and calculate the new height
+            new_width = target_size[0]
+            new_height = int(new_width / aspect_ratio_input)
+        else:
+            # Resize the image to fit the target height and calculate the new width
+            new_height = target_size[1]
+            new_width = int(new_height * aspect_ratio_input)
+
+        # Calculate the position to paste the resized image to center it within the target size
+        x_offset = (target_size[0] - new_width) // 2
+        y_offset = (target_size[1] - new_height) // 2
+
+        return x_offset, y_offset, new_width / input_size[0]
 
 
 # Inspired on https://github.com/huggingface/transformers/blob/8e3980a290acc6d2f8ea76dba111b9ef0ef00309/src/transformers/generation/logits_process.py#L706
