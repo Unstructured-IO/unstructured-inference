@@ -164,24 +164,26 @@ def merge_inferred_layout_with_extracted_layout(
     inferred_regions_to_add = [
         region for region in inferred_layout if region not in inferred_regions_to_remove
     ]
-    inferred_regions_to_add_without_text = [
-        region for region in inferred_regions_to_add if not region.text
-    ]
-    if ocr_layout is not None:
-        for inferred_region in inferred_regions_to_add_without_text:
-            inferred_region.text = aggregate_ocr_text_by_block(
-                ocr_layout,
-                inferred_region,
-                SUBREGION_THRESHOLD_FOR_OCR,
-            )
-        out_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
-        final_layout = (
-            supplement_layout_with_ocr_elements(out_layout, ocr_layout)
-            if supplement_with_ocr_elements
-            else out_layout
-        )
-    else:
-        final_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
+    # inferred_regions_to_add_without_text = [
+    #     region for region in inferred_regions_to_add if not region.text
+    # ]
+    # moved to unst
+    # if ocr_layout is not None:
+    #     for inferred_region in inferred_regions_to_add_without_text:
+    #         inferred_region.text = aggregate_ocr_text_by_block(
+    #             ocr_layout,
+    #             inferred_region,
+    #             SUBREGION_THRESHOLD_FOR_OCR,
+    #         )
+    #     out_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
+    #     final_layout = (
+    #         supplement_layout_with_ocr_elements(out_layout, ocr_layout)
+    #         if supplement_with_ocr_elements
+    #         else out_layout
+    #     )
+    # else:
+        # final_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
+    final_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
 
     return final_layout
 
@@ -214,26 +216,26 @@ def merge_inferred_layout_with_extracted_layout(
 
 #     return final_layout
 
+# move to unst
+# def aggregate_ocr_text_by_block(
+#     ocr_layout: List[TextRegion],
+#     region: TextRegion,
+#     subregion_threshold: float,
+# ) -> Optional[str]:
+#     """Extracts the text aggregated from the regions of the ocr layout that lie within the given
+#     block."""
 
-def aggregate_ocr_text_by_block(
-    ocr_layout: List[TextRegion],
-    region: TextRegion,
-    subregion_threshold: float,
-) -> Optional[str]:
-    """Extracts the text aggregated from the regions of the ocr layout that lie within the given
-    block."""
+#     extracted_texts = []
 
-    extracted_texts = []
+#     for ocr_region in ocr_layout:
+#         ocr_region_is_subregion_of_given_region = ocr_region.is_almost_subregion_of(
+#             region,
+#             subregion_threshold=subregion_threshold,
+#         )
+#         if ocr_region_is_subregion_of_given_region and ocr_region.text:
+#             extracted_texts.append(ocr_region.text)
 
-    for ocr_region in ocr_layout:
-        ocr_region_is_subregion_of_given_region = ocr_region.is_almost_subregion_of(
-            region,
-            subregion_threshold=subregion_threshold,
-        )
-        if ocr_region_is_subregion_of_given_region and ocr_region.text:
-            extracted_texts.append(ocr_region.text)
-
-    return " ".join(extracted_texts) if extracted_texts else None
+#     return " ".join(extracted_texts) if extracted_texts else None
 
 
 def supplement_layout_with_ocr_elements(

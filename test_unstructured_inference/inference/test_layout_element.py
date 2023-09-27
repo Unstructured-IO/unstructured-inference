@@ -6,7 +6,8 @@ from unstructured_inference.constants import SUBREGION_THRESHOLD_FOR_OCR
 from unstructured_inference.inference.elements import TextRegion
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
-    aggregate_ocr_text_by_block,
+    # move to unst
+    # aggregate_ocr_text_by_block,
     get_elements_from_ocr_regions,
     # move to unst
     # merge_inferred_layout_with_ocr_layout,
@@ -14,19 +15,19 @@ from unstructured_inference.inference.layoutelement import (
     supplement_layout_with_ocr_elements,
 )
 
+# move to unst
+# def test_aggregate_ocr_text_by_block():
+#     expected = "A Unified Toolkit"
+#     ocr_layout = [
+#         TextRegion(0, 0, 20, 20, "A"),
+#         TextRegion(50, 50, 150, 150, "Unified"),
+#         TextRegion(150, 150, 300, 250, "Toolkit"),
+#         TextRegion(200, 250, 300, 350, "Deep"),
+#     ]
+#     region = TextRegion(0, 0, 250, 350, "")
 
-def test_aggregate_ocr_text_by_block():
-    expected = "A Unified Toolkit"
-    ocr_layout = [
-        TextRegion(0, 0, 20, 20, "A"),
-        TextRegion(50, 50, 150, 150, "Unified"),
-        TextRegion(150, 150, 300, 250, "Toolkit"),
-        TextRegion(200, 250, 300, 350, "Deep"),
-    ]
-    region = TextRegion(0, 0, 250, 350, "")
-
-    text = aggregate_ocr_text_by_block(ocr_layout, region, 0.5)
-    assert text == expected
+#     text = aggregate_ocr_text_by_block(ocr_layout, region, 0.5)
+#     assert text == expected
 
 
 def test_merge_text_regions(mock_embedded_text_regions):
