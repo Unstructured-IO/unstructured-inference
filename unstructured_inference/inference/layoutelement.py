@@ -309,28 +309,28 @@ def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
 
     return TextRegion(min_x1, min_y1, max_x2, max_y2, merged_text)
 
+# move to unst
+# def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
+#     """
+#     Get layout elements from OCR regions
+#     """
 
-def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
-    """
-    Get layout elements from OCR regions
-    """
-
-    grouped_regions = cast(
-        List[List[TextRegion]],
-        partition_groups_from_regions(ocr_regions),
-    )
-    merged_regions = [merge_text_regions(group) for group in grouped_regions]
-    return [
-        LayoutElement(
-            r.x1,
-            r.y1,
-            r.x2,
-            r.y2,
-            text=r.text,
-            type="UncategorizedText",
-        )
-        for r in merged_regions
-    ]
+#     grouped_regions = cast(
+#         List[List[TextRegion]],
+#         partition_groups_from_regions(ocr_regions),
+#     )
+#     merged_regions = [merge_text_regions(group) for group in grouped_regions]
+#     return [
+#         LayoutElement(
+#             r.x1,
+#             r.y1,
+#             r.x2,
+#             r.y2,
+#             text=r.text,
+#             type="UncategorizedText",
+#         )
+#         for r in merged_regions
+#     ]
 
 
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
