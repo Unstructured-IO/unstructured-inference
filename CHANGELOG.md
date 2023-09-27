@@ -1,3 +1,7 @@
+## 0.6.6
+
+* Stop passing ocr_languages parameter into paddle to avoid invalid paddle language code error, this will be fixed until
+we have the mapping from standard language code to paddle language code.
 ## 0.6.5
 
 * Add functionality to keep extracted image elements while merging inferred layout with extracted layout
