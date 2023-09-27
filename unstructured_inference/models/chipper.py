@@ -180,59 +180,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         return elements
 
-    """
-    def postprocess(
-        self,
-        output_ids,
-    ) -> List[LocationlessLayoutElement]:
-        elements = []
-
-        # Get special tokens
-        tokens_split = self.tokenizer.additional_special_tokens_ids + list(
-            self.tokenizer.get_added_vocab().values(),
-        )
-
-        start = end = -1
-        last_special_token = None
-
-        # Get bboxes - skip first token - bos
-        for i in range(1, len(output_ids)):
-            # Finish bounding box generation
-            if output_ids[i] in self.tokens_stop:
-                break
-            if output_ids[i] in tokens_split:
-                if start != -1 and start < end:
-                    slicing_end = end + 1
-                    string = self.tokenizer.decode(output_ids[start:slicing_end])
-
-                    stype = self.tokenizer.decode(last_special_token)
-
-                    elements.append(
-                        LocationlessLayoutElement(id=len(elements), type=stype[3:-1], text=string),
-                    )
-
-                start = -1
-                last_special_token = output_ids[i]
-            else:
-                if start == -1:
-                    start = i
-
-                end = i
-
-        # If exited before eos is achieved
-        if start != -1 and start < end:
-            slicing_end = end + 1
-            string = self.tokenizer.decode(output_ids[start:slicing_end])
-
-            stype = self.tokenizer.decode(last_special_token)
-
-            elements.append(
-                LocationlessLayoutElement(d=len(elements), type=stype[3:-1], text=string),
-            )
-
-        return elements
-    """
-
 
 # Inspired on https://github.com/huggingface/transformers/blob/8e3980a290acc6d2f8ea76dba111b9ef0ef00309/src/transformers/generation/logits_process.py#L706
 class NoRepeatNGramLogitsProcessor(LogitsProcessor):
