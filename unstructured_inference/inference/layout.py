@@ -24,7 +24,8 @@ from unstructured_inference.inference.layoutelement import (
     LayoutElement,
     LocationlessLayoutElement,
     merge_inferred_layout_with_extracted_layout,
-    merge_inferred_layout_with_ocr_layout,
+    # move to unst
+    # merge_inferred_layout_with_ocr_layout,
 )
 from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.inference.pdf import get_images_from_pdf_element
@@ -312,21 +313,22 @@ class PageLayout:
                 supplement_with_ocr_elements=self.supplement_with_ocr_elements,
                 **threshold_kwargs,
             )
-        elif ocr_layout is not None:
-            threshold_kwargs = {}
-            # NOTE(Benjamin): With this the thresholds are only changed for detextron2_mask_rcnn
-            # In other case the default values for the functions are used
-            if (
-                isinstance(self.detection_model, UnstructuredDetectronONNXModel)
-                and "R_50" not in self.detection_model.model_path
-            ):
-                threshold_kwargs = {"subregion_threshold": 0.3}
-            merged_layout = merge_inferred_layout_with_ocr_layout(
-                inferred_layout=inferred_layout,
-                ocr_layout=ocr_layout,
-                supplement_with_ocr_elements=self.supplement_with_ocr_elements,
-                **threshold_kwargs,
-            )
+        # move to unst
+        # elif ocr_layout is not None:
+        #     threshold_kwargs = {}
+        #     # NOTE(Benjamin): With this the thresholds are only changed for detextron2_mask_rcnn
+        #     # In other case the default values for the functions are used
+        #     if (
+        #         isinstance(self.detection_model, UnstructuredDetectronONNXModel)
+        #         and "R_50" not in self.detection_model.model_path
+        #     ):
+        #         threshold_kwargs = {"subregion_threshold": 0.3}
+        #     merged_layout = merge_inferred_layout_with_ocr_layout(
+        #         inferred_layout=inferred_layout,
+        #         ocr_layout=ocr_layout,
+        #         supplement_with_ocr_elements=self.supplement_with_ocr_elements,
+        #         **threshold_kwargs,
+        #     )
         else:
             merged_layout = inferred_layout
 

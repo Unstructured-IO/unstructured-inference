@@ -8,7 +8,8 @@ from unstructured_inference.inference.layoutelement import (
     LayoutElement,
     aggregate_ocr_text_by_block,
     get_elements_from_ocr_regions,
-    merge_inferred_layout_with_ocr_layout,
+    # move to unst
+    # merge_inferred_layout_with_ocr_layout,
     merge_text_regions,
     supplement_layout_with_ocr_elements,
 )
@@ -85,28 +86,28 @@ def test_supplement_layout_with_ocr_elements(mock_layout, mock_ocr_regions):
             if ocr_element.is_almost_subregion_of(element, SUBREGION_THRESHOLD_FOR_OCR):
                 assert ocr_element not in final_layout
 
+# move to unst
+# def test_merge_inferred_layout_with_ocr_layout(mock_inferred_layout, mock_ocr_regions):
+#     ocr_elements = [
+#         LayoutElement(
+#             r.x1,
+#             r.y1,
+#             r.x2,
+#             r.y2,
+#             text=r.text,
+#             type="UncategorizedText",
+#         )
+#         for r in mock_ocr_regions
+#     ]
 
-def test_merge_inferred_layout_with_ocr_layout(mock_inferred_layout, mock_ocr_regions):
-    ocr_elements = [
-        LayoutElement(
-            r.x1,
-            r.y1,
-            r.x2,
-            r.y2,
-            text=r.text,
-            type="UncategorizedText",
-        )
-        for r in mock_ocr_regions
-    ]
+#     final_layout = merge_inferred_layout_with_ocr_layout(mock_inferred_layout, mock_ocr_regions)
 
-    final_layout = merge_inferred_layout_with_ocr_layout(mock_inferred_layout, mock_ocr_regions)
+#     # Check if the inferred layout's text attribute is updated with aggregated OCR text
+#     assert final_layout[0].text == mock_ocr_regions[2].text
 
-    # Check if the inferred layout's text attribute is updated with aggregated OCR text
-    assert final_layout[0].text == mock_ocr_regions[2].text
-
-    # Check if the final layout contains both original elements and OCR-derived elements
-    assert all(element in final_layout for element in mock_inferred_layout)
-    assert any(element in final_layout for element in ocr_elements)
+#     # Check if the final layout contains both original elements and OCR-derived elements
+#     assert all(element in final_layout for element in mock_inferred_layout)
+#     assert any(element in final_layout for element in ocr_elements)
 
 
 @pytest.mark.parametrize("is_table", [False, True])

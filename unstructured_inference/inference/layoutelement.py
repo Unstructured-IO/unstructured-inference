@@ -185,34 +185,34 @@ def merge_inferred_layout_with_extracted_layout(
 
     return final_layout
 
+# move to unst
+# def merge_inferred_layout_with_ocr_layout(
+#     inferred_layout: List[LayoutElement],
+#     ocr_layout: List[TextRegion],
+#     supplement_with_ocr_elements: bool = True,
+# ) -> List[LayoutElement]:
+#     """
+#     Merge the inferred layout with the OCR-detected text regions.
 
-def merge_inferred_layout_with_ocr_layout(
-    inferred_layout: List[LayoutElement],
-    ocr_layout: List[TextRegion],
-    supplement_with_ocr_elements: bool = True,
-) -> List[LayoutElement]:
-    """
-    Merge the inferred layout with the OCR-detected text regions.
+#     This function iterates over each inferred layout element and aggregates the
+#     associated text from the OCR layout using the specified threshold. The inferred
+#     layout's text attribute is then updated with this aggregated text.
+#     """
 
-    This function iterates over each inferred layout element and aggregates the
-    associated text from the OCR layout using the specified threshold. The inferred
-    layout's text attribute is then updated with this aggregated text.
-    """
+#     for inferred_region in inferred_layout:
+#         inferred_region.text = aggregate_ocr_text_by_block(
+#             ocr_layout,
+#             inferred_region,
+#             SUBREGION_THRESHOLD_FOR_OCR,
+#         )
 
-    for inferred_region in inferred_layout:
-        inferred_region.text = aggregate_ocr_text_by_block(
-            ocr_layout,
-            inferred_region,
-            SUBREGION_THRESHOLD_FOR_OCR,
-        )
+#     final_layout = (
+#         supplement_layout_with_ocr_elements(inferred_layout, ocr_layout)
+#         if supplement_with_ocr_elements
+#         else inferred_layout
+#     )
 
-    final_layout = (
-        supplement_layout_with_ocr_elements(inferred_layout, ocr_layout)
-        if supplement_with_ocr_elements
-        else inferred_layout
-    )
-
-    return final_layout
+#     return final_layout
 
 
 def aggregate_ocr_text_by_block(
