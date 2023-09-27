@@ -225,7 +225,7 @@ class PageLayout:
         self.extract_tables = extract_tables
         self.analysis = analysis
         self.inferred_layout: Optional[List[LayoutElement]] = None
-        self.ocr_layout: Optional[List[TextRegion]] = None
+        # self.ocr_layout: Optional[List[TextRegion]] = None
         self.supplement_with_ocr_elements = supplement_with_ocr_elements
 
     def __str__(self) -> str:
@@ -263,38 +263,39 @@ class PageLayout:
         # remote call in the future.
         inferred_layout: List[LayoutElement] = self.detection_model(self.image)
 
-        if self.ocr_mode == OCRMode.INDIVIDUAL_BLOCKS.value:
-            ocr_layout = None
-        elif self.ocr_mode == OCRMode.FULL_PAGE.value:
-            ocr_layout = None
-            entrie_page_ocr = os.getenv("ENTIRE_PAGE_OCR", "tesseract").lower()
-            if entrie_page_ocr not in ["paddle", "tesseract"]:
-                raise ValueError(
-                    "Environment variable ENTIRE_PAGE_OCR must be set to 'tesseract' or 'paddle'.",
-                )
+        # move to unst
+        # if self.ocr_mode == OCRMode.INDIVIDUAL_BLOCKS.value:
+        #     ocr_layout = None
+        # elif self.ocr_mode == OCRMode.FULL_PAGE.value:
+        #     ocr_layout = None
+        #     entrie_page_ocr = os.getenv("ENTIRE_PAGE_OCR", "tesseract").lower()
+        #     if entrie_page_ocr not in ["paddle", "tesseract"]:
+        #         raise ValueError(
+        #             "Environment variable ENTIRE_PAGE_OCR must be set to 'tesseract' or 'paddle'.",
+        #         )
 
-            if entrie_page_ocr == "paddle":
-                logger.info("Processing entrie page OCR with paddle...")
-                from unstructured_inference.models import paddle_ocr
+        #     if entrie_page_ocr == "paddle":
+        #         logger.info("Processing entrie page OCR with paddle...")
+        #         from unstructured_inference.models import paddle_ocr
 
-                # TODO(yuming): paddle only support one language at once,
-                # change ocr to tesseract if passed in multilanguages.
-                ocr_data = paddle_ocr.load_agent(language=self.ocr_languages).ocr(
-                    np.array(self.image),
-                    cls=True,
-                )
-                ocr_layout = parse_ocr_data_paddle(ocr_data)
-            else:
-                logger.info("Processing entrie page OCR with tesseract...")
-                try:
-                    ocr_data = pytesseract.image_to_data(
-                        self.image,
-                        lang=self.ocr_languages,
-                        output_type=Output.DICT,
-                    )
-                    ocr_layout = parse_ocr_data_tesseract(ocr_data)
-                except pytesseract.pytesseract.TesseractError:
-                    logger.warning("TesseractError: Skipping page", exc_info=True)
+        #         # TODO(yuming): paddle only support one language at once,
+        #         # change ocr to tesseract if passed in multilanguages.
+        #         ocr_data = paddle_ocr.load_agent(language=self.ocr_languages).ocr(
+        #             np.array(self.image),
+        #             cls=True,
+        #         )
+        #         ocr_layout = parse_ocr_data_paddle(ocr_data)
+        #     else:
+        #         logger.info("Processing entrie page OCR with tesseract...")
+        #         try:
+        #             ocr_data = pytesseract.image_to_data(
+        #                 self.image,
+        #                 lang=self.ocr_languages,
+        #                 output_type=Output.DICT,
+        #             )
+        #             ocr_layout = parse_ocr_data_tesseract(ocr_data)
+        #         except pytesseract.pytesseract.TesseractError:
+        #             logger.warning("TesseractError: Skipping page", exc_info=True)
 
         if self.layout is not None:
             threshold_kwargs = {}
@@ -309,8 +310,8 @@ class PageLayout:
                 inferred_layout=inferred_layout,
                 extracted_layout=self.layout,
                 page_image_size=self.image.size,
-                ocr_layout=ocr_layout,
-                supplement_with_ocr_elements=self.supplement_with_ocr_elements,
+                # ocr_layout=ocr_layout,
+                # supplement_with_ocr_elements=self.supplement_with_ocr_elements,
                 **threshold_kwargs,
             )
         # move to unst
@@ -336,7 +337,7 @@ class PageLayout:
 
         if self.analysis:
             self.inferred_layout = inferred_layout
-            self.ocr_layout = ocr_layout
+            # self.ocr_layout = ocr_layout
 
         if inplace:
             self.elements = elements
