@@ -31,16 +31,16 @@ class LayoutElement(TextRegion):
         objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
-        ocr_strategy: str = "auto",
-        ocr_languages: str = "eng",
+        # ocr_strategy: str = "auto",
+        # ocr_languages: str = "eng",
     ):
         """Extracts text contained in region"""
         text = super().extract_text(
             objects=objects,
             image=image,
             extract_tables=extract_tables,
-            ocr_strategy=ocr_strategy,
-            ocr_languages=ocr_languages,
+            # ocr_strategy=ocr_strategy,
+            # ocr_languages=ocr_languages,
         )
         if extract_tables and self.type == "Table":
             self.text_as_html = interpret_table_block(self, image)
@@ -88,8 +88,8 @@ def merge_inferred_layout_with_extracted_layout(
     inferred_layout: Collection[LayoutElement],
     extracted_layout: Collection[TextRegion],
     page_image_size: tuple,
-    ocr_layout: Optional[List[TextRegion]] = None,
-    supplement_with_ocr_elements: bool = True,
+    # ocr_layout: Optional[List[TextRegion]] = None,
+    # supplement_with_ocr_elements: bool = True,
     same_region_threshold: float = 0.75,
     subregion_threshold: float = 0.75,
 ) -> List[LayoutElement]:
@@ -182,10 +182,11 @@ def merge_inferred_layout_with_extracted_layout(
     #         else out_layout
     #     )
     # else:
-        # final_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
+    # final_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
     final_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
 
     return final_layout
+
 
 # move to unst
 # def merge_inferred_layout_with_ocr_layout(

@@ -207,15 +207,16 @@ class TextRegion(Rectangle):
         objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
-        ocr_strategy: str = "auto",
-        ocr_languages: str = "eng",
+        # ocr_strategy: str = "auto",
+        # ocr_languages: str = "eng",
     ) -> str:
         """Extracts text contained in region."""
         if self.text is not None:
             # If block text is already populated, we'll assume it's correct
             text = self.text
         elif objects is not None:
-            text = aggregate_by_block(self, image, objects, ocr_strategy)
+            # text = aggregate_by_block(self, image, objects, ocr_strategy)
+            text = aggregate_by_block(self, image, objects)
         elif image is not None:
             # We don't have anything to go on but the image itself, so we use OCR
             # text = ocr(self, image, languages=ocr_languages) if ocr_strategy != "never" else ""
@@ -234,8 +235,8 @@ class EmbeddedTextRegion(TextRegion):
         objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
-        ocr_strategy: str = "auto",
-        ocr_languages: str = "eng",
+        # ocr_strategy: str = "auto",
+        # ocr_languages: str = "eng",
     ) -> str:
         """Extracts text contained in region."""
         if self.text is None:
@@ -250,18 +251,20 @@ class ImageTextRegion(TextRegion):
         objects: Optional[Collection[TextRegion]],
         image: Optional[Image.Image] = None,
         extract_tables: bool = False,
-        ocr_strategy: str = "auto",
-        ocr_languages: str = "eng",
+        # ocr_strategy: str = "auto",
+        # ocr_languages: str = "eng",
     ) -> str:
         """Extracts text contained in region."""
         if self.text is None:
-            if ocr_strategy == "never" or image is None:
-                return ""
-            else:
-                # return ocr(self, image, languages=ocr_languages)
-                return ""
+            # if ocr_strategy == "never" or image is None:
+            #     return ""
+            # else:
+            # return ocr(self, image, languages=ocr_languages)
+            return ""
         else:
-            return super().extract_text(objects, image, extract_tables, ocr_strategy)
+            # return super().extract_text(objects, image, extract_tables, ocr_strategy)
+            return super().extract_text(objects, image, extract_table)
+
 
 # move to unst for individual_blocks mode
 # def ocr(text_block: TextRegion, image: Image.Image, languages: str = "eng") -> str:
@@ -292,51 +295,51 @@ class ImageTextRegion(TextRegion):
 #             logger.warning("TesseractError: Skipping region", exc_info=True)
 #             return ""
 
-
-def needs_ocr(
-    region: TextRegion,
-    pdf_objects: Collection[TextRegion],
-    ocr_strategy: str,
-) -> bool:
-    """Logic to determine whether ocr is needed to extract text from given region."""
-    if ocr_strategy == "force":
-        return True
-    elif ocr_strategy == "auto":
-        image_objects = [obj for obj in pdf_objects if isinstance(obj, ImageTextRegion)]
-        word_objects = [obj for obj in pdf_objects if isinstance(obj, EmbeddedTextRegion)]
-        # If any image object overlaps with the region of interest, we have hope of getting some
-        # text from OCR. Otherwise, there's nothing there to find, no need to waste our time with
-        # OCR.
-        image_intersects = any(region.intersects(img_obj) for img_obj in image_objects)
-        if region.text is None:
-            # If the region has no text check if any images overlap with the region that might
-            # contain text.
-            if any(obj.is_in(region) and obj.text is not None for obj in word_objects):
-                # If there are word objects in the region, we defer to that rather than OCR
-                return False
-            else:
-                return image_intersects
-        else:
-            # If the region has text, we should only have to OCR if too much of the text is
-            # uninterpretable.
-            return cid_ratio(region.text) > 0.5
-    else:
-        return False
+# move to unst for individual_blocks mode
+# def needs_ocr(
+#     region: TextRegion,
+#     pdf_objects: Collection[TextRegion],
+#     ocr_strategy: str,
+# ) -> bool:
+#     """Logic to determine whether ocr is needed to extract text from given region."""
+#     if ocr_strategy == "force":
+#         return True
+#     elif ocr_strategy == "auto":
+#         image_objects = [obj for obj in pdf_objects if isinstance(obj, ImageTextRegion)]
+#         word_objects = [obj for obj in pdf_objects if isinstance(obj, EmbeddedTextRegion)]
+#         # If any image object overlaps with the region of interest, we have hope of getting some
+#         # text from OCR. Otherwise, there's nothing there to find, no need to waste our time with
+#         # OCR.
+#         image_intersects = any(region.intersects(img_obj) for img_obj in image_objects)
+#         if region.text is None:
+#             # If the region has no text check if any images overlap with the region that might
+#             # contain text.
+#             if any(obj.is_in(region) and obj.text is not None for obj in word_objects):
+#                 # If there are word objects in the region, we defer to that rather than OCR
+#                 return False
+#             else:
+#                 return image_intersects
+#         else:
+#             # If the region has text, we should only have to OCR if too much of the text is
+#             # uninterpretable.
+#             return cid_ratio(region.text) > 0.5
+#     else:
+#         return False
 
 
 def aggregate_by_block(
     text_region: TextRegion,
     image: Optional[Image.Image],
     pdf_objects: Collection[TextRegion],
-    ocr_strategy: str = "auto",
-    ocr_languages: str = "eng",
+    # ocr_strategy: str = "auto",
+    # ocr_languages: str = "eng",
 ) -> str:
     """Extracts the text aggregated from the elements of the given layout that lie within the given
     block."""
     filtered_blocks = [obj for obj in pdf_objects if obj.is_in(text_region, error_margin=5)]
     text = " ".join([x.text for x in filtered_blocks if x.text])
     return text
-        
+
     # if image is not None and needs_ocr(text_region, pdf_objects, ocr_strategy):
     #     text = ocr(text_region, image, languages=ocr_languages)
     # else:
