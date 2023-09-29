@@ -152,8 +152,8 @@ def partition_groups_from_regions(regions: Collection[Rectangle]) -> List[List[R
     if len(regions) == 0:
         return []
     padded_regions = [
-        r.vpad(r.height * inference_config.ELEMENTS_V_PADDING_COEF).hpad(
-            r.height * inference_config.ELEMENTS_H_PADDING_COEF,
+        r.bbox.vpad(r.bbox.height * inference_config.ELEMENTS_V_PADDING_COEF).hpad(
+            r.bbox.height * inference_config.ELEMENTS_H_PADDING_COEF,
         )
         for r in regions
     ]
@@ -195,9 +195,10 @@ def intersections(*rects: Rectangle):
 
 
 @dataclass
-class TextRegion(Rectangle):
+class TextRegion:
     text: Optional[str] = None
     source: Optional[str] = None
+    bbox: Optional[Rectangle] = None
 
     def __str__(self) -> str:
         return str(self.text)
@@ -225,6 +226,20 @@ class TextRegion(Rectangle):
                 "text extraction.",
             )
         return text
+
+    @classmethod
+    def from_coords(
+        cls,
+        x1: Union[int, float],
+        y1: Union[int, float],
+        x2: Union[int, float],
+        y2: Union[int, float],
+        **kwargs,
+    ) -> TextRegion:
+        """Constructs a region from coordinates."""
+        bbox = Rectangle(x1, y1, x2, y2)
+
+        return cls(**kwargs, bbox=bbox)
 
 
 class EmbeddedTextRegion(TextRegion):
@@ -266,7 +281,7 @@ def ocr(text_block: TextRegion, image: Image.Image, languages: str = "eng") -> s
     """Runs a cropped text block image through and OCR agent."""
     logger.debug("Running OCR on text block ...")
     tesseract.load_agent(languages=languages)
-    padded_block = text_block.pad(12)
+    padded_block = text_block.bbox.pad(12)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     entrie_page_ocr = os.getenv("ENTIRE_PAGE_OCR", "tesseract").lower()
     if entrie_page_ocr == "paddle":
@@ -305,11 +320,11 @@ def needs_ocr(
         # If any image object overlaps with the region of interest, we have hope of getting some
         # text from OCR. Otherwise, there's nothing there to find, no need to waste our time with
         # OCR.
-        image_intersects = any(region.intersects(img_obj) for img_obj in image_objects)
+        image_intersects = any(region.bbox.intersects(img_obj.bbox) for img_obj in image_objects)
         if region.text is None:
             # If the region has no text check if any images overlap with the region that might
             # contain text.
-            if any(obj.is_in(region) and obj.text is not None for obj in word_objects):
+            if any(obj.bbox.is_in(region.bbox) and obj.text is not None for obj in word_objects):
                 # If there are word objects in the region, we defer to that rather than OCR
                 return False
             else:
@@ -334,7 +349,9 @@ def aggregate_by_block(
     if image is not None and needs_ocr(text_region, pdf_objects, ocr_strategy):
         text = ocr(text_region, image, languages=ocr_languages)
     else:
-        filtered_blocks = [obj for obj in pdf_objects if obj.is_in(text_region, error_margin=5)]
+        filtered_blocks = [
+            obj for obj in pdf_objects if obj.bbox.is_in(text_region.bbox, error_margin=5)
+        ]
         for little_block in filtered_blocks:
             if image is not None and needs_ocr(little_block, pdf_objects, ocr_strategy):
                 little_block.text = ocr(little_block, image, languages=ocr_languages)
