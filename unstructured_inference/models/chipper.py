@@ -184,7 +184,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 # Create the element
                 stype = self.tokenizer.decode(output_ids[i])
                 # Identify parent
-                parent_id = parents[-1].id if len(parents) > 0 else None
+                parent = parents[-1] if len(parents) > 0 else None
                 # Add to parent list
                 element = LayoutElement(
                     parent=parent,
