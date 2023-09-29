@@ -3,17 +3,9 @@ from layoutparser.elements import TextBlock
 from layoutparser.elements.layout_elements import Rectangle as LPRectangle
 
 # from unstructured_inference.constants import SUBREGION_THRESHOLD_FOR_OCR
-from unstructured_inference.inference.elements import TextRegion
+# from unstructured_inference.inference.elements import TextRegion
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
-    # move to unst
-    # aggregate_ocr_text_by_block,
-    # get_elements_from_ocr_regions,
-    # move to unst
-    # merge_inferred_layout_with_ocr_layout,
-    # merge_text_regions,
-    # move to unst
-    # supplement_layout_with_ocr_elements,
 )
 
 # move to unst

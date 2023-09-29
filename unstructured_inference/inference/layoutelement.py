@@ -1,20 +1,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Optional, cast
+from typing import Collection, List, Optional
 
 import numpy as np
 from layoutparser.elements.layout import TextBlock
 from pandas import DataFrame
 from PIL import Image
 
-from unstructured_inference.constants import FULL_PAGE_REGION_THRESHOLD, SUBREGION_THRESHOLD_FOR_OCR
+from unstructured_inference.constants import FULL_PAGE_REGION_THRESHOLD
 from unstructured_inference.inference.elements import (
     ImageTextRegion,
     Rectangle,
     TextRegion,
     grow_region_to_match_region,
-    partition_groups_from_regions,
+    # partition_groups_from_regions,
     region_bounding_boxes_are_almost_the_same,
 )
 from unstructured_inference.models import tables
@@ -264,7 +264,8 @@ def merge_inferred_layout_with_extracted_layout(
 #     Note:
 #     - The function relies on `is_almost_subregion_of()` method to determine if an OCR region
 #       is a subregion of an existing layout element.
-#     - It also relies on `get_elements_from_ocr_regions()` to convert OCR regions to layout elements.
+#     - It also relies on `get_elements_from_ocr_regions()` to convert OCR
+# regions to layout elements.
 #     - The `SUBREGION_THRESHOLD_FOR_OCR` constant is used to specify the subregion matching
 #      threshold.
 #     """

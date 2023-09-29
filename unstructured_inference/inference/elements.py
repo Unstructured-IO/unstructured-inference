@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+# import os
 import re
 import unicodedata
 from copy import deepcopy
@@ -11,9 +11,10 @@ import numpy as np
 from PIL import Image
 from scipy.sparse.csgraph import connected_components
 
-from unstructured_inference.logger import logger
+# from unstructured_inference.logger import logger
 from unstructured_inference.math import safe_division
-from unstructured_inference.models import tesseract
+
+# from unstructured_inference.models import tesseract
 
 # When extending the boundaries of a PDF object for the purpose of determining which other elements
 # should be considered in the same text region, we use a relative distance based on some fraction of
@@ -263,7 +264,7 @@ class ImageTextRegion(TextRegion):
             return ""
         else:
             # return super().extract_text(objects, image, extract_tables, ocr_strategy)
-            return super().extract_text(objects, image, extract_table)
+            return super().extract_text(objects, image, extract_tables)
 
 
 # move to unst for individual_blocks mode
@@ -272,7 +273,8 @@ class ImageTextRegion(TextRegion):
 #     logger.debug("Running OCR on text block ...")
 #     tesseract.load_agent(languages=languages)
 #     padded_block = text_block.pad(12)
-#     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
+#     cropped_image = image.crop(
+# (padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
 #     entrie_page_ocr = os.getenv("ENTIRE_PAGE_OCR", "tesseract").lower()
 #     if entrie_page_ocr == "paddle":
 #         from unstructured_inference.models import paddle_ocr

@@ -7,13 +7,14 @@ from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pdf2image
-import pytesseract
+
+# import pytesseract
 from pdfminer import psparser
 from pdfminer.high_level import extract_pages
 from PIL import Image, ImageSequence
-from pytesseract import Output
 
-from unstructured_inference.constants import OCRMode
+# from pytesseract import Output
+# from unstructured_inference.constants import OCRMode
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
@@ -24,9 +25,10 @@ from unstructured_inference.inference.layoutelement import (
     LayoutElement,
     LocationlessLayoutElement,
     merge_inferred_layout_with_extracted_layout,
-    # move to unst
-    # merge_inferred_layout_with_ocr_layout,
 )
+
+# move to unst
+# merge_inferred_layout_with_ocr_layout,
 from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.inference.pdf import get_images_from_pdf_element
 from unstructured_inference.logger import logger
@@ -271,7 +273,8 @@ class PageLayout:
         #     entrie_page_ocr = os.getenv("ENTIRE_PAGE_OCR", "tesseract").lower()
         #     if entrie_page_ocr not in ["paddle", "tesseract"]:
         #         raise ValueError(
-        #             "Environment variable ENTIRE_PAGE_OCR must be set to 'tesseract' or 'paddle'.",
+        #             "Environment variable ENTIRE_PAGE_OCR
+        # must be set to 'tesseract' or 'paddle'.",
         #         )
 
         #     if entrie_page_ocr == "paddle":
@@ -525,7 +528,7 @@ def process_data_with_model(
     # ocr_mode: str = OCRMode.FULL_PAGE.value,
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
-    pdf_image_dpi: Optional[int] = None,
+    pdf_image_dpi: int = 200,
     **kwargs,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
@@ -558,7 +561,7 @@ def process_file_with_model(
     # ocr_mode: str = OCRMode.FULL_PAGE.value,
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
-    pdf_image_dpi: Optional[int] = None,
+    pdf_image_dpi: int = 200,
     **kwargs,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
