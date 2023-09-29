@@ -376,29 +376,6 @@ def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutEl
             reduce(keep=region_b, reduce=region_a)
 
 
-# NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
-# Region types to not subclass Rectangle, and instead have an optional bbox property that is a
-# Rectangle. I or someone else will have to get to that later.
-@dataclass
-class LocationlessLayoutElement(Rectangle):
-    id: Optional[int]
-    parent_id: Optional[int]
-    text: Optional[str]
-    type: Optional[str]
-    # bbox: Optional[list]
-
-    def to_dict(self) -> dict:
-        """Converts the class instance to dictionary form."""
-        out_dict = {
-            "id": self.id,
-            "parent_id": self.parent_id,
-            "text": self.text,
-            "type": self.type,
-            "bbox": [self.x1, self.y1, self.x2, self.y2],
-        }
-        return out_dict
-
-
 def table_cells_to_dataframe(cells: dict, nrows: int = 1, ncols: int = 1, header=None) -> DataFrame:
     """convert table-transformer's cells data into a pandas dataframe"""
     arr = np.empty((nrows, ncols), dtype=object)
