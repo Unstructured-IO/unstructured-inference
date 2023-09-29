@@ -22,7 +22,6 @@ from unstructured_inference.inference.elements import (
 )
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
-    LocationlessLayoutElement,
     merge_inferred_layout_with_extracted_layout,
     merge_inferred_layout_with_ocr_layout,
 )
@@ -215,7 +214,7 @@ class PageLayout:
         self.number = number
         self.detection_model = detection_model
         self.element_extraction_model = element_extraction_model
-        self.elements: Collection[Union[LayoutElement, LocationlessLayoutElement]] = []
+        self.elements: Collection[LayoutElement] = []
         if ocr_strategy not in VALID_OCR_STRATEGIES:
             raise ValueError(f"ocr_strategy must be one of {VALID_OCR_STRATEGIES}.")
         self.ocr_strategy = ocr_strategy
@@ -233,7 +232,7 @@ class PageLayout:
     def get_elements_using_image_extraction(
         self,
         inplace=True,
-    ) -> Optional[List[LocationlessLayoutElement]]:
+    ) -> Optional[List[LayoutElement]]:
         """Uses end-to-end text element extraction model to extract the elements on the page."""
         if self.element_extraction_model is None:
             raise ValueError(
@@ -373,7 +372,7 @@ class PageLayout:
 
         figure_number = 0
         for el in self.elements:
-            if isinstance(el, LocationlessLayoutElement) or el.type not in ["Image"]:
+            if (el.bbox is None) or (el.type not in ["Image"]):
                 continue
 
             figure_number += 1

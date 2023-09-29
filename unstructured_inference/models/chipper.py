@@ -13,7 +13,8 @@ from transformers.generation.logits_process import (
 )
 from transformers.utils import add_start_docstrings
 
-from unstructured_inference.inference.layoutelement import LocationlessLayoutElement
+from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.models.unstructuredmodel import UnstructuredElementExtractionModel
 
 MODEL_TYPES = {
@@ -101,7 +102,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.model.to(self.device)
         self.model.eval()
 
-    def predict(self, image) -> List[LocationlessLayoutElement]:
+    def predict(self, image) -> List[LayoutElement]:
         """Do inference using the wrapped model."""
         tokens, decoder_cross_attentions = self.predict_tokens(image)
         elements = self.postprocess(image, tokens, decoder_cross_attentions)
@@ -160,10 +161,10 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         image: Image,
         output_ids: torch.Tensor,
         decoder_cross_attentions: Sequence[Sequence[torch.Tensor]],
-    ) -> List[LocationlessLayoutElement]:
+    ) -> List[LayoutElement]:
         """Process tokens into layout elements."""
-        elements = []
-        parents = []
+        elements: List[LayoutElement] = []
+        parents: List[LayoutElement] = []
         start = end = -1
 
         x_offset, y_offset, ratio = self.image_padding(
@@ -185,15 +186,11 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 # Identify parent
                 parent_id = parents[-1].id if len(parents) > 0 else None
                 # Add to parent list
-                element = LocationlessLayoutElement(
-                    id=len(elements),
-                    parent_id=parent_id,
+                element = LayoutElement(
+                    parent=parent,
                     type=stype[3:-1],
                     text="",
-                    x1=None,
-                    y1=None,
-                    x2=None,
-                    y2=None,
+                    bbox=None
                     # source="chipper",
                     # type=None,
                     # prob=None,
@@ -209,7 +206,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                     element = parents.pop(-1)
                     element.text = string
-                    element.x1, element.y1, element.x2, element.y2 = self.get_bounding_box(
+                    bbox_coords = self.get_bounding_box(
                         decoder_cross_attentions=decoder_cross_attentions,
                         tkn_indexes=range(start - 1, end),
                         final_w=self.processor.image_processor.size["height"],
@@ -218,19 +215,13 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         heatmap_h=self.heatmap_h,
                     )
 
-                    element.x1, element.y1, element.x2, element.y2 = self.adjust_bbox(
-                        self.get_bounding_box(
-                            decoder_cross_attentions=decoder_cross_attentions,
-                            tkn_indexes=range(start - 1, end),
-                            final_w=self.processor.image_processor.size["height"],
-                            final_h=self.processor.image_processor.size["width"],
-                            heatmap_w=self.heatmap_w,
-                            heatmap_h=self.heatmap_h,
-                        ),
+                    bbox_coords = self.adjust_bbox(
+                        bbox_coords,
                         x_offset,
                         y_offset,
                         ratio,
                     )
+                    element.bbox = Rectangle(*bbox_coords)
                 start = -1
             else:
                 if start == -1:

@@ -14,10 +14,7 @@ from unstructured_inference.inference.elements import (
 from unstructured_inference.inference.layoutelement import separate
 
 if TYPE_CHECKING:
-    from unstructured_inference.inference.layoutelement import (
-        LayoutElement,
-        LocationlessLayoutElement,
-    )
+    from unstructured_inference.inference.layoutelement import LayoutElement
 
 
 class UnstructuredModel(ABC):
@@ -191,12 +188,12 @@ class UnstructuredElementExtractionModel(UnstructuredModel):
     """Wrapper class for object extraction models used by unstructured."""
 
     @abstractmethod
-    def predict(self, x: Image) -> List[LocationlessLayoutElement]:
+    def predict(self, x: Image) -> List[LayoutElement]:
         """Do inference using the wrapped model."""
         super().predict(x)
         return []  # pragma: no cover
 
-    def __call__(self, x: Image) -> List[LocationlessLayoutElement]:
+    def __call__(self, x: Image) -> List[LayoutElement]:
         """Inference using function call interface."""
         return super().__call__(x)
 
