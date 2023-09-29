@@ -11,10 +11,11 @@ import pytest
 from PIL import Image
 
 import unstructured_inference.models.base as models
-
-# from unstructured_inference.constants import OCRMode
+from unstructured_inference.constants import Source
 from unstructured_inference.inference import elements, layout, layoutelement
 from unstructured_inference.models import detectron2
+
+# from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -30,9 +31,16 @@ def mock_image():
 
 @pytest.fixture()
 def mock_initial_layout():
-    text_block = layout.EmbeddedTextRegion(2, 4, 6, 8, text="A very repetitive narrative. " * 10)
+    text_block = layout.EmbeddedTextRegion(
+        2,
+        4,
+        6,
+        8,
+        text="A very repetitive narrative. " * 10,
+        source="Mock",
+    )
 
-    title_block = layout.EmbeddedTextRegion(1, 2, 3, 4, text="A Catchy Title")
+    title_block = layout.EmbeddedTextRegion(1, 2, 3, 4, text="A Catchy Title", source="Mock")
 
     return [text_block, title_block]
 
@@ -44,11 +52,20 @@ def mock_final_layout():
         4,
         6,
         8,
+        source="Mock",
         text="A very repetitive narrative. " * 10,
         type="NarrativeText",
     )
 
-    title_block = layoutelement.LayoutElement(1, 2, 3, 4, text="A Catchy Title", type="Title")
+    title_block = layoutelement.LayoutElement(
+        1,
+        2,
+        3,
+        4,
+        source="Mock",
+        text="A Catchy Title",
+        type="Title",
+    )
 
     return [text_block, title_block]
 
@@ -101,6 +118,19 @@ def test_pdf_page_converts_images_to_array(mock_image):
 #     text_block = layout.TextRegion(1, 2, 3, 4, text=None)
 
 #     assert elements.ocr(text_block, image=image) == ""
+
+# TODO(yuming): move source test
+# def test_ocr_source():
+#     file = "sample-docs/loremipsum-flat.pdf"
+#     model = get_model("yolox_tiny")
+#     doc = layout.DocumentLayout.from_file(
+#         file,
+#         model,
+#         ocr_mode=OCRMode.FULL_PAGE.value,
+#         supplement_with_ocr_elements=True,
+#         ocr_strategy="force",
+#     )
+#     assert Source.OCR_TESSERACT in {e.source for e in doc.pages[0].elements}
 
 
 class MockLayoutModel:
@@ -665,6 +695,7 @@ unpopulated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text=None)
 @pytest.mark.parametrize("filename", ["loremipsum.pdf", "IRS-form-1987.pdf"])
 def test_load_pdf(filename):
     layouts, images = layout.load_pdf(f"sample-docs/{filename}")
+    assert Source.PDFMINER in {e.source for e in layouts[0]}
     assert len(layouts)
     for lo in layouts:
         assert len(lo)
@@ -712,8 +743,11 @@ def test_load_pdf_with_multicolumn_layout_and_ocr(filename="sample-docs/design-t
         assert element.text.startswith(test_snippets[i])
 
 
-@pytest.mark.parametrize("colors", ["red", None])
-def test_annotate(colors):
+@pytest.mark.parametrize(
+    ("colors", "add_details", "threshold"),
+    [("red", False, 0.992), (None, False, 0.992), ("red", True, 0.8)],
+)
+def test_annotate(colors, add_details, threshold):
     def check_annotated_image():
         annotated_array = np.array(annotated_image)
         for coords in [coords1, coords2]:
@@ -725,9 +759,9 @@ def test_annotate(colors):
                 assert all(annotated_array[y1:y2, x1, i] == expected)
                 assert all(annotated_array[y1:y2, x2, i] == expected)
             # Make sure almost all the pixels are not changed
-            assert ((annotated_array[:, :, 0] == 1).mean()) > 0.992
-            assert ((annotated_array[:, :, 1] == 1).mean()) > 0.992
-            assert ((annotated_array[:, :, 2] == 1).mean()) > 0.992
+            assert ((annotated_array[:, :, 0] == 1).mean()) > threshold
+            assert ((annotated_array[:, :, 1] == 1).mean()) > threshold
+            assert ((annotated_array[:, :, 2] == 1).mean()) > threshold
 
     test_image_arr = np.ones((100, 100, 3), dtype="uint8")
     image = Image.fromarray(test_image_arr)
@@ -738,15 +772,18 @@ def test_annotate(colors):
     rect2 = elements.Rectangle(*coords2)
     page.elements = [rect1, rect2]
 
+    annotated_image = page.annotate(colors=colors, add_details=add_details, sources=["all"])
+    check_annotated_image()
+
     # Scenario 1: where self.image exists
-    annotated_image = page.annotate(colors=colors)
+    annotated_image = page.annotate(colors=colors, add_details=add_details)
     check_annotated_image()
 
     # Scenario 2: where self.image is None, but self.image_path exists
     with patch.object(Image, "open", return_value=image):
         page.image = None
         page.image_path = "mock_path_to_image"
-        annotated_image = page.annotate(colors=colors)
+        annotated_image = page.annotate(colors=colors, add_details=add_details)
         check_annotated_image()
 
 
@@ -779,32 +816,30 @@ def test_embedded_text_region(text, expected):
 #         )
 
 
-@pytest.fixture()
-def ordering_layout():
-    elements = [
-        layout.LayoutElement(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
-        layout.LayoutElement(x1=380.6, y1=473.4, x2=1334.8, y2=533.9, text="1"),
-        layout.LayoutElement(x1=578.6, y1=556.8, x2=1109.0, y2=874.4, text="2"),
-        layout.LayoutElement(x1=444.5, y1=942.3, x2=1261.1, y2=1584.1, text="3"),
-        layout.LayoutElement(x1=444.8, y1=1609.4, x2=1257.2, y2=1665.2, text="4"),
-        layout.LayoutElement(x1=414.0, y1=1718.8, x2=635.0, y2=1755.2, text="5"),
-        layout.LayoutElement(x1=372.6, y1=1786.9, x2=1333.6, y2=1848.7, text="6"),
-    ]
-    return elements
+class MockDetectionModel(layout.UnstructuredObjectDetectionModel):
+    def initialize(self, *args, **kwargs):
+        pass
+
+    def predict(self, x):
+        return [
+            layout.LayoutElement(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
+            layout.LayoutElement(x1=380.6, y1=473.4, x2=1334.8, y2=533.9, text="1"),
+            layout.LayoutElement(x1=578.6, y1=556.8, x2=1109.0, y2=874.4, text="2"),
+            layout.LayoutElement(x1=444.5, y1=942.3, x2=1261.1, y2=1584.1, text="3"),
+            layout.LayoutElement(x1=444.8, y1=1609.4, x2=1257.2, y2=1665.2, text="4"),
+            layout.LayoutElement(x1=414.0, y1=1718.8, x2=635.0, y2=1755.2, text="5"),
+            layout.LayoutElement(x1=372.6, y1=1786.9, x2=1333.6, y2=1848.7, text="6"),
+        ]
 
 
-def test_layout_order(mock_image, ordering_layout):
+def test_layout_order(mock_image):
     with tempfile.TemporaryDirectory() as tmpdir:
         mock_image_path = os.path.join(tmpdir, "mock.jpg")
         mock_image.save(mock_image_path)
-        with patch.object(layout, "get_model", lambda: lambda x: ordering_layout), patch.object(
+        with patch.object(layout, "get_model", lambda: MockDetectionModel()), patch.object(
             layout,
             "load_pdf",
             lambda *args, **kwargs: ([[]], [mock_image_path]),
-        ), patch.object(
-            layout,
-            "UnstructuredObjectDetectionModel",
-            object,
         ):
             doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
             page = doc.pages[0]
@@ -965,3 +1000,20 @@ def test_exposed_pdf_image_dpi(pdf_image_dpi, expected, monkeypatch):
 #         mock_from_file.assert_called_once()
 #         assert caplog.records[0].levelname == "WARNING"
 #         assert "DPI >= 300" in caplog.records[0].msg
+
+
+@pytest.mark.parametrize(
+    ("filename", "img_num", "should_complete"),
+    [("sample-docs/empty-document.pdf", 0, True), ("sample-docs/empty-document.pdf", 10, False)],
+)
+def test_get_image(filename, img_num, should_complete):
+    doc = layout.DocumentLayout.from_file(filename)
+    page = doc.pages[0]
+    try:
+        img = page._get_image(filename, img_num)
+        # transform img to numpy array
+        img = np.array(img)
+        # is a blank image with all pixels white
+        assert img.mean() == 255.0
+    except ValueError:
+        assert not should_complete

@@ -14,7 +14,9 @@ def test_layout_yolox_local_parsing_image():
     # NOTE(benjamin) The example image should result in one page result
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 13 detections
-    assert len(document_layout.pages[0].elements) == 13
+    types_known = ["Text", "Section-header", "Page-header"]
+    known_regions = [e for e in document_layout.pages[0].elements if e.type in types_known]
+    assert len(known_regions) == 13
     assert hasattr(
         document_layout.pages[0].elements[0],
         "prob",
@@ -32,8 +34,9 @@ def test_layout_yolox_local_parsing_pdf():
     content = str(document_layout)
     assert "libero fringilla" in content
     assert len(document_layout.pages) == 1
-    # NOTE(benjamin) The example sent to the test contains 5 detections
-    assert len(document_layout.pages[0].elements) == 5
+    # NOTE(benjamin) The example sent to the test contains 5 text detections
+    text_elements = [e for e in document_layout.pages[0].elements if e.type == "Text"]
+    assert len(text_elements) == 5
     assert hasattr(
         document_layout.pages[0].elements[0],
         "prob",
@@ -59,10 +62,10 @@ def test_layout_yolox_local_parsing_empty_pdf():
 
 
 def test_layout_yolox_local_parsing_image_soft():
-    filename = os.path.join("sample-docs", "test-image.jpg")
+    filename = os.path.join("sample-docs", "example_table.jpg")
     # NOTE(benjamin) keep_output = True create a file for each image in
     # localstorage for visualization of the result
-    document_layout = process_file_with_model(filename, model_name="yolox_tiny", is_image=True)
+    document_layout = process_file_with_model(filename, model_name="yolox_quantized", is_image=True)
     # NOTE(benjamin) The example image should result in one page result
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) Soft version of the test, run make test-long in order to run with full model

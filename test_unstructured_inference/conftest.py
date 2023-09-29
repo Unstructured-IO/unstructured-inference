@@ -28,7 +28,7 @@ def mock_text_region():
 
 @pytest.fixture()
 def mock_layout_element():
-    return LayoutElement(100, 100, 300, 300, text="Sample text", type="Text")
+    return LayoutElement(100, 100, 300, 300, text="Sample text", source=None, type="Text")
 
 
 @pytest.fixture()
@@ -110,9 +110,9 @@ def mock_embedded_text_regions():
 # @pytest.fixture()
 # def mock_ocr_regions():
 #     return [
-#         EmbeddedTextRegion(10, 10, 90, 90, "0"),
-#         EmbeddedTextRegion(200, 200, 300, 300, "1"),
-#         EmbeddedTextRegion(500, 320, 600, 350, "3"),
+#         EmbeddedTextRegion(10, 10, 90, 90, text="0", source=None),
+#         EmbeddedTextRegion(200, 200, 300, 300, text="1", source=None),
+#         EmbeddedTextRegion(500, 320, 600, 350, text="3", source=None),
 #     ]
 
 
@@ -141,6 +141,7 @@ def mock_layout(mock_embedded_text_regions):
 #             r.x2,
 #             r.y2,
 #             text=None,
+#             source=None,
 #             type="Text",
 #         )
 #         for r in mock_embedded_text_regions

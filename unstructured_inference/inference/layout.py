@@ -13,8 +13,7 @@ from pdfminer import psparser
 from pdfminer.high_level import extract_pages
 from PIL import Image, ImageSequence
 
-# from pytesseract import Output
-# from unstructured_inference.constants import OCRMode
+from unstructured_inference.constants import Source
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
@@ -345,6 +344,7 @@ class PageLayout:
         if inplace:
             self.elements = elements
             return None
+
         return elements
 
     def get_elements_from_layout(self, layout: List[TextRegion]) -> List[LayoutElement]:
@@ -406,8 +406,14 @@ class PageLayout:
         colors: Optional[Union[List[str], str]] = None,
         image_dpi: int = 200,
         annotation_data: Optional[dict[str, dict]] = None,
+        add_details: bool = False,
+        sources: List[str] = ["all"],
     ) -> Image.Image:
-        """Annotates the elements on the page image."""
+        """Annotates the elements on the page image.
+        if add_details is True, and the elements contain type and source attributes, then
+        the type and source will be added to the image.
+        sources is a list of sources to annotate. If sources is ["all"], then all sources will be
+        annotated. Current sources allowed are "yolox","detectron2_onnx" and "detectron2_lp" """
         if colors is None:
             colors = ["red" for _ in self.elements]
         if isinstance(colors, str):
@@ -428,7 +434,9 @@ class PageLayout:
         if annotation_data is None:
             for el, color in zip(self.elements, colors):
                 if isinstance(el, Rectangle):
-                    img = draw_bbox(img, el, color=color)
+                    required_source = getattr(el, "source", None)
+                    if "all" in sources or required_source in sources:
+                        img = draw_bbox(img, el, color=color, details=add_details)
         else:
             for attribute, style in annotation_data.items():
                 if hasattr(self, attribute) and getattr(self, attribute):
@@ -436,7 +444,15 @@ class PageLayout:
                     width = style["width"]
                     for region in getattr(self, attribute):
                         if isinstance(region, Rectangle):
-                            img = draw_bbox(img, region, color=color, width=width)
+                            required_source = getattr(region, "source", None)
+                            if "all" in sources or required_source in sources:
+                                img = draw_bbox(
+                                    img,
+                                    region,
+                                    color=color,
+                                    width=width,
+                                    details=add_details,
+                                )
 
         return img
 
@@ -664,9 +680,16 @@ def load_pdf(
                 else:
                     continue
 
-            text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
+            text_region = element_class(
+                x1 * coef,
+                y1 * coef,
+                x2 * coef,
+                y2 * coef,
+                text=_text,
+                source=Source.PDFMINER,
+            )
 
-            if text_region.area() > 0:
+            if text_region.area > 0:
                 layout.append(text_region)
         layouts.append(layout)
 

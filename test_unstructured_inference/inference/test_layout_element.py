@@ -2,27 +2,27 @@ import pytest
 from layoutparser.elements import TextBlock
 from layoutparser.elements.layout_elements import Rectangle as LPRectangle
 
-# from unstructured_inference.constants import SUBREGION_THRESHOLD_FOR_OCR
+from unstructured_inference.constants import Source
+
 # from unstructured_inference.inference.elements import TextRegion
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
 )
 
-# move to unst
 # def test_aggregate_ocr_text_by_block():
 #     expected = "A Unified Toolkit"
 #     ocr_layout = [
-#         TextRegion(0, 0, 20, 20, "A"),
-#         TextRegion(50, 50, 150, 150, "Unified"),
-#         TextRegion(150, 150, 300, 250, "Toolkit"),
-#         TextRegion(200, 250, 300, 350, "Deep"),
+#         TextRegion(0, 0, 20, 20, source="OCR", text="A"),
+#         TextRegion(50, 50, 150, 150, source="OCR", text="Unified"),
+#         TextRegion(150, 150, 300, 250, source="OCR", text="Toolkit"),
+#         TextRegion(200, 250, 300, 350, source="OCR", text="Deep"),
 #     ]
-#     region = TextRegion(0, 0, 250, 350, "")
+#     region = TextRegion(0, 0, 250, 350, text="")
 
 #     text = aggregate_ocr_text_by_block(ocr_layout, region, 0.5)
 #     assert text == expected
 
-# move to unst
+
 # def test_merge_text_regions(mock_embedded_text_regions):
 #     expected = TextRegion(
 #         x1=437.83888888888885,
@@ -35,7 +35,7 @@ from unstructured_inference.inference.layoutelement import (
 #     merged_text_region = merge_text_regions(mock_embedded_text_regions)
 #     assert merged_text_region == expected
 
-# move to unst
+
 # def test_get_elements_from_ocr_regions(mock_embedded_text_regions):
 #     expected = [
 #         LayoutElement(
@@ -51,7 +51,7 @@ from unstructured_inference.inference.layoutelement import (
 #     elements = get_elements_from_ocr_regions(mock_embedded_text_regions)
 #     assert elements == expected
 
-# move to unst
+
 # def test_supplement_layout_with_ocr_elements(mock_layout, mock_ocr_regions):
 #     ocr_elements = [
 #         LayoutElement(
@@ -60,6 +60,7 @@ from unstructured_inference.inference.layoutelement import (
 #             r.x2,
 #             r.y2,
 #             text=r.text,
+#             source=None,
 #             type="UncategorizedText",
 #         )
 #         for r in mock_ocr_regions
@@ -80,7 +81,7 @@ from unstructured_inference.inference.layoutelement import (
 #             if ocr_element.is_almost_subregion_of(element, SUBREGION_THRESHOLD_FOR_OCR):
 #                 assert ocr_element not in final_layout
 
-# move to unst
+
 # def test_merge_inferred_layout_with_ocr_layout(mock_inferred_layout, mock_ocr_regions):
 #     ocr_elements = [
 #         LayoutElement(
@@ -89,6 +90,7 @@ from unstructured_inference.inference.layoutelement import (
 #             r.x2,
 #             r.y2,
 #             text=r.text,
+#             source=None,
 #             type="UncategorizedText",
 #         )
 #         for r in mock_ocr_regions
@@ -133,6 +135,7 @@ def test_layout_element_do_dict(mock_layout_element):
         "text": "Sample text",
         "type": "Text",
         "prob": None,
+        "source": None,
     }
 
     assert mock_layout_element.to_dict() == expected
@@ -152,6 +155,14 @@ def test_layout_element_from_lp_textblock():
         score=0.99,
     )
 
-    expected = LayoutElement(100, 100, 300, 300, "Sample Text", "Text", 0.99)
-
+    expected = LayoutElement(
+        100,
+        100,
+        300,
+        300,
+        text="Sample Text",
+        source=Source.DETECTRON2_LP,
+        type="Text",
+        prob=0.99,
+    )
     assert LayoutElement.from_lp_textblock(mock_text_block) == expected

@@ -1,12 +1,13 @@
 import os
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterator, Union
+from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterable, Iterator, Union
 
 import cv2
 import numpy as np
 from PIL import Image
 
 from unstructured_inference.constants import AnnotationResult
+from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.visualize import show_plot
 
 if TYPE_CHECKING:
@@ -125,12 +126,23 @@ def annotate_layout_elements(
                 show_plot(img, desired_width=plot_desired_width)
 
 
+def tag(elements: Iterable[LayoutElement]):
+    """Asign an numeric id to the elements in the list.
+    Useful for debugging"""
+    colors = ["red", "blue", "green", "magenta", "brown"]
+    for i, e in enumerate(elements):
+        e.text = f"-{i}-:{e.text}"
+        # currently not a property
+        e.id = i  # type:ignore
+        e.color = colors[i % len(colors)]  # type:ignore
+
+
 def pad_image_with_background_color(
     image: Image.Image,
     pad: int = 10,
     background_color: str = "white",
 ) -> Image.Image:
-    """pads an input image with the same background color around it by pad//2 on all 4 sides
+    """pads an input image with the same background color around it by pad on all 4 sides
 
     The original image is kept intact and a new image is returned with padding added.
     """
@@ -139,6 +151,6 @@ def pad_image_with_background_color(
         raise ValueError(
             "Can not pad an image with negative space! Please use a positive value for `pad`.",
         )
-    new = Image.new(image.mode, (width + pad, height + pad), background_color)
-    new.paste(image, (pad // 2, pad // 2))
+    new = Image.new(image.mode, (width + pad * 2, height + pad * 2), background_color)
+    new.paste(image, (pad, pad))
     return new

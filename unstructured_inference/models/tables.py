@@ -7,6 +7,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import List, Optional, Union
 
+import cv2
 import numpy as np
 import pandas as pd
 import pytesseract
@@ -14,8 +15,12 @@ import torch
 from PIL import Image
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 
+from unstructured_inference.config import inference_config
 from unstructured_inference.logger import logger
 from unstructured_inference.models.table_postprocess import Rect
+from unstructured_inference.models.tesseract import (
+    TESSERACT_TEXT_HEIGHT,
+)
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.utils import pad_image_with_background_color
 
@@ -78,23 +83,45 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                     ymax = max([i[1] for i in line[0]])
                     tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
         else:
+            zoom = 1
+
             logger.info("Processing table OCR with tesseract...")
             ocr_df: pd.DataFrame = pytesseract.image_to_data(
                 x,
                 output_type="data.frame",
             )
-
             ocr_df = ocr_df.dropna()
+
+            # tesseract performance degrades when the text height is out of the preferred zone so we
+            # zoom the image (in or out depending on estimated text height) for optimum OCR results
+            # but this needs to be evaluated based on actual use case as the optimum scaling also
+            # depend on type of characters (font, language, etc); be careful about this
+            # functionality
+            text_height = ocr_df[TESSERACT_TEXT_HEIGHT].quantile(
+                inference_config.TESSERACT_TEXT_HEIGHT_QUANTILE,
+            )
+            if (
+                text_height < inference_config.TESSERACT_MIN_TEXT_HEIGHT
+                or text_height > inference_config.TESSERACT_MAX_TEXT_HEIGHT
+            ):
+                # rounding avoids unnecessary precision and potential numerical issues assocaited
+                # with numbers very close to 1 inside cv2 image processing
+                zoom = np.round(inference_config.TESSERACT_OPTIMUM_TEXT_HEIGHT / text_height, 1)
+                ocr_df = pytesseract.image_to_data(
+                    zoom_image(x, zoom),
+                    output_type="data.frame",
+                )
+                ocr_df = ocr_df.dropna()
 
             tokens = []
             for idtx in ocr_df.itertuples():
                 tokens.append(
                     {
                         "bbox": [
-                            idtx.left,
-                            idtx.top,
-                            idtx.left + idtx.width,
-                            idtx.top + idtx.height,
+                            idtx.left / zoom,
+                            idtx.top / zoom,
+                            (idtx.left + idtx.width) / zoom,
+                            (idtx.top + idtx.height) / zoom,
                         ],
                         "text": idtx.text,
                     },
@@ -113,7 +140,11 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
         return tokens
 
-    def get_structure(self, x: Image, pad_for_structure_detection: int = 50) -> dict:
+    def get_structure(
+        self,
+        x: Image,
+        pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
+    ) -> dict:
         """get the table structure as a dictionary contaning different types of elements as
         key-value pairs; check table-transformer documentation for more information"""
         with torch.no_grad():
@@ -126,7 +157,11 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             outputs_structure["pad_for_structure_detection"] = pad_for_structure_detection
             return outputs_structure
 
-    def run_prediction(self, x: Image, pad_for_structure_detection: int = 50):
+    def run_prediction(
+        self,
+        x: Image,
+        pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
+    ):
         """Predict table structure"""
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
         tokens = self.get_tokens(x=x)
@@ -168,12 +203,13 @@ def get_class_map(data_type: str):
 
 
 structure_class_thresholds = {
-    "table": 0.5,
-    "table column": 0.5,
-    "table row": 0.5,
-    "table column header": 0.5,
-    "table projected row header": 0.5,
-    "table spanning cell": 0.5,
+    "table": inference_config.TT_TABLE_CONF,
+    "table column": inference_config.TABLE_COLUMN_CONF,
+    "table row": inference_config.TABLE_ROW_CONF,
+    "table column header": inference_config.TABLE_COLUMN_HEADER_CONF,
+    "table projected row header": inference_config.TABLE_PROJECTED_ROW_HEADER_CONF,
+    "table spanning cell": inference_config.TABLE_SPANNING_CELL_CONF,
+    # FIXME (yao) this parameter doesn't seem to be used at all in inference? Can we remove it
     "no object": 10,
 }
 
@@ -210,11 +246,11 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
     pred_bboxes = outputs["pred_boxes"].detach().cpu()[0]
 
     pad = outputs.get("pad_for_structure_detection", 0)
-    scale_size = (img_size[0] + pad, img_size[1] + pad)
+    scale_size = (img_size[0] + pad * 2, img_size[1] + pad * 2)
     pred_bboxes = [elem.tolist() for elem in rescale_bboxes(pred_bboxes, scale_size)]
     # unshift the padding; padding effectively shifted the bounding boxes of structures in the
     # original image with half of the total pad
-    shift_size = pad / 2
+    shift_size = pad
 
     objects = []
     for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes):
@@ -273,8 +309,16 @@ def objects_to_structures(objects, tokens, class_thresholds):
     table_structures = []
 
     for table in tables:
-        table_objects = [obj for obj in objects if iob(obj["bbox"], table["bbox"]) >= 0.5]
-        table_tokens = [token for token in tokens if iob(token["bbox"], table["bbox"]) >= 0.5]
+        table_objects = [
+            obj
+            for obj in objects
+            if iob(obj["bbox"], table["bbox"]) >= inference_config.TABLE_IOB_THRESHOLD
+        ]
+        table_tokens = [
+            token
+            for token in tokens
+            if iob(token["bbox"], table["bbox"]) >= inference_config.TABLE_IOB_THRESHOLD
+        ]
 
         structure = {}
 
@@ -293,7 +337,7 @@ def objects_to_structures(objects, tokens, class_thresholds):
         for obj in rows:
             obj["column header"] = False
             for header_obj in column_headers:
-                if iob(obj["bbox"], header_obj["bbox"]) >= 0.5:
+                if iob(obj["bbox"], header_obj["bbox"]) >= inference_config.TABLE_IOB_THRESHOLD:
                     obj["column header"] = True
 
         # Refine table structures
@@ -469,7 +513,7 @@ def structure_to_cells(table_structure, tokens):
                 spanning_cell_rect = Rect(list(spanning_cell["bbox"]))
                 if (
                     spanning_cell_rect.intersect(cell_rect).get_area() / cell_rect.get_area()
-                ) > 0.5:
+                ) > inference_config.TABLE_IOB_THRESHOLD:
                     cell["subcell"] = True
                     break
 
@@ -490,7 +534,9 @@ def structure_to_cells(table_structure, tokens):
         for subcell in subcells:
             subcell_rect = Rect(list(subcell["bbox"]))
             subcell_rect_area = subcell_rect.get_area()
-            if (subcell_rect.intersect(spanning_cell_rect).get_area() / subcell_rect_area) > 0.5:
+            if (
+                subcell_rect.intersect(spanning_cell_rect).get_area() / subcell_rect_area
+            ) > inference_config.TABLE_IOB_THRESHOLD:
                 if cell_rect is None:
                     cell_rect = Rect(list(subcell["bbox"]))
                 else:
@@ -668,3 +714,21 @@ def cells_to_html(cells):
         tcell.text = cell["cell text"]
 
     return str(ET.tostring(table, encoding="unicode", short_empty_elements=False))
+
+
+def zoom_image(image: Image, zoom: float) -> Image:
+    """scale an image based on the zoom factor using cv2; the scaled image is post processed by
+    dilation then erosion to improve edge sharpness for OCR tasks"""
+    new_image = cv2.resize(
+        cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR),
+        None,
+        fx=zoom,
+        fy=zoom,
+        interpolation=cv2.INTER_CUBIC,
+    )
+
+    kernel = np.ones((1, 1), np.uint8)
+    new_image = cv2.dilate(new_image, kernel, iterations=1)
+    new_image = cv2.erode(new_image, kernel, iterations=1)
+
+    return Image.fromarray(new_image)

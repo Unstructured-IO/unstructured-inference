@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Optional
+from typing import Collection, List, Optional, Union
 
 import numpy as np
 from layoutparser.elements.layout import TextBlock
 from pandas import DataFrame
 from PIL import Image
 
-from unstructured_inference.constants import FULL_PAGE_REGION_THRESHOLD
+from unstructured_inference.config import inference_config
+from unstructured_inference.constants import (
+    FULL_PAGE_REGION_THRESHOLD,
+    # SUBREGION_THRESHOLD_FOR_OCR,
+    Source,
+)
 from unstructured_inference.inference.elements import (
     ImageTextRegion,
     Rectangle,
@@ -17,7 +22,6 @@ from unstructured_inference.inference.elements import (
     # partition_groups_from_regions,
     region_bounding_boxes_are_almost_the_same,
 )
-from unstructured_inference.models import tables
 
 
 @dataclass
@@ -53,6 +57,7 @@ class LayoutElement(TextRegion):
             "text": self.text,
             "type": self.type,
             "prob": self.prob,
+            "source": self.source,
         }
         return out_dict
 
@@ -62,7 +67,9 @@ class LayoutElement(TextRegion):
         x1, y1, x2, y2 = region.x1, region.y1, region.x2, region.y2
         text = region.text if hasattr(region, "text") else None
         type = region.type if hasattr(region, "type") else None
-        return cls(x1, y1, x2, y2, text, type)
+        prob = region.prob if hasattr(region, "prob") else None
+        source = region.source if hasattr(region, "source") else None
+        return cls(x1, y1, x2, y2, text=text, source=source, type=type, prob=prob)
 
     @classmethod
     def from_lp_textblock(cls, textblock: TextBlock):
@@ -70,16 +77,18 @@ class LayoutElement(TextRegion):
         x1, y1, x2, y2 = textblock.coordinates
         text = textblock.text
         type = textblock.type
-        score = textblock.score
-        return cls(x1, y1, x2, y2, text, type, prob=score)
+        prob = textblock.score
+        return cls(x1, y1, x2, y2, text=text, source=Source.DETECTRON2_LP, type=type, prob=prob)
 
 
 def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
     """Extract the contents of a table."""
+    from unstructured_inference.models import tables
+
     tables.load_agent()
     if tables.tables_agent is None:
         raise RuntimeError("Unable to load table extraction agent.")
-    padded_block = text_block.pad(12)
+    padded_block = text_block.pad(inference_config.TABLE_IMAGE_CROP_PAD)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tables.tables_agent.predict(cropped_image)
 
@@ -90,8 +99,8 @@ def merge_inferred_layout_with_extracted_layout(
     page_image_size: tuple,
     # ocr_layout: Optional[List[TextRegion]] = None,
     # supplement_with_ocr_elements: bool = True,
-    same_region_threshold: float = 0.75,
-    subregion_threshold: float = 0.75,
+    same_region_threshold: float = inference_config.LAYOUT_SAME_REGION_THRESHOLD,
+    subregion_threshold: float = inference_config.LAYOUT_SUBREGION_THRESHOLD,
 ) -> List[LayoutElement]:
     """Merge two layouts to produce a single layout."""
     extracted_elements_to_add: List[TextRegion] = []
@@ -139,13 +148,24 @@ def merge_inferred_layout_with_extracted_layout(
                 )
                 if same_bbox:
                     # Looks like these represent the same region
-                    grow_region_to_match_region(inferred_region, extracted_region)
-                    inferred_region.text = extracted_region.text
-                    region_matched = True
-                elif extracted_is_subregion_of_inferred and inferred_is_text and extracted_is_image:
-                    grow_region_to_match_region(inferred_region, extracted_region)
-                    region_matched = True
+                    if extracted_is_image:
+                        # keep extracted region, remove inferred region
+                        inferred_regions_to_remove.append(inferred_region)
+                    else:
+                        # keep inferred region, remove extracted region
+                        grow_region_to_match_region(inferred_region, extracted_region)
+                        inferred_region.text = extracted_region.text
+                        region_matched = True
+                elif extracted_is_subregion_of_inferred and inferred_is_text:
+                    if extracted_is_image:
+                        # keep both extracted and inferred regions
+                        region_matched = False
+                    else:
+                        # keep inferred region, remove extracted region
+                        grow_region_to_match_region(inferred_region, extracted_region)
+                        region_matched = True
                 elif either_region_is_subregion_of_other and inferred_region.type != "Table":
+                    # keep extracted region, remove inferred region
                     inferred_regions_to_remove.append(inferred_region)
         if not region_matched:
             extracted_elements_to_add.append(extracted_region)
@@ -158,6 +178,7 @@ def merge_inferred_layout_with_extracted_layout(
             el.y2,
             text=el.text,
             type="Image" if isinstance(el, ImageTextRegion) else "UncategorizedText",
+            source=el.source,
         )
         for el in extracted_elements_to_add
     ]
@@ -333,6 +354,46 @@ def merge_inferred_layout_with_extracted_layout(
 #         )
 #         for r in merged_regions
 #     ]
+
+
+def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutElement, Rectangle]):
+    """Reduce leftmost rectangle to don't overlap with the other"""
+
+    def reduce(keep: Rectangle, reduce: Rectangle):
+        # Asume intersection
+
+        # Other is down
+        if reduce.y2 > keep.y2 and reduce.x1 < keep.x2:
+            # other is down-right
+            if reduce.x2 > keep.x2 and reduce.y2 > keep.y2:
+                reduce.x1 = keep.x2 * 1.01
+                reduce.y1 = keep.y2 * 1.01
+                return
+            # other is down-left
+            if reduce.x1 < keep.x1 and reduce.y1 < keep.y2:
+                reduce.y1 = keep.y2
+                return
+            # other is centered
+            reduce.y1 = keep.y2
+        else:  # other is up
+            # other is up-right
+            if reduce.x2 > keep.x2 and reduce.y1 < keep.y1:
+                reduce.y2 = keep.y1
+                return
+            # other is left
+            if reduce.x1 < keep.x1 and reduce.y1 < keep.y1:
+                reduce.y2 = keep.y1
+                return
+            # other is centered
+            reduce.y2 = keep.y1
+
+    if not region_a.intersects(region_b):
+        return
+    else:
+        if region_a.area > region_b.area:
+            reduce(keep=region_a, reduce=region_b)
+        else:
+            reduce(keep=region_b, reduce=region_a)
 
 
 # NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
