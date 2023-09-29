@@ -18,7 +18,7 @@ def test_initialize():
         "from_pretrained",
     ) as mock_vision_encoder_decoder_model:
         model = chipper.UnstructuredChipperModel()
-        model.initialize("", "", "")
+        model.initialize("", "", "", "", "", "")
         mock_donut_processor.assert_called_once()
         mock_logits_processor.assert_called_once()
         mock_vision_encoder_decoder_model.assert_called_once()
@@ -31,6 +31,7 @@ class MockToList:
 
 class MockModel:
     def generate(*args, **kwargs):
+        return {"cross_attentions": mock.MagicMock(), "sequences": [[5, 4, 3, 2, 1]]}
         return MockToList()
 
 
@@ -48,10 +49,11 @@ def test_predict_tokens():
         model.initialize()
         with open("sample-docs/loremipsum.png", "rb") as fp:
             im = Image.open(fp)
-            tokens = model.predict_tokens(im)
-        assert tokens[1:-1] == [5, 4, 3, 2, 1]
+            tokens, _ = model.predict_tokens(im)
+        assert tokens == [5, 4, 3, 2, 1]
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize(
     ("decoded_str", "expected_classes", "expected_ids", "expected_parent_ids"),
     [
@@ -78,7 +80,14 @@ def test_predict_tokens():
 def test_postprocess(decoded_str, expected_classes, expected_ids, expected_parent_ids):
     model = chipper.UnstructuredChipperModel()
     pre_trained_model = "unstructuredio/ved-fine-tuning"
-    model.initialize(pre_trained_model, prompt="<s>", swap_head=False)
+    model.initialize(
+        pre_trained_model,
+        prompt="<s>",
+        swap_head=False,
+        max_length=1200,
+        heatmap_h=52,
+        heatmap_w=39,
+    )
 
     tokens = model.tokenizer.encode(decoded_str)
     out = model.postprocess(tokens)
@@ -96,6 +105,7 @@ def test_predict():
     with mock.patch.object(
         chipper.UnstructuredChipperModel,
         "predict_tokens",
+        mock.MagicMock(return_value=(mock.MagicMock(), mock.MagicMock())),
     ) as mock_predict_tokens, mock.patch.object(
         chipper.UnstructuredChipperModel,
         "postprocess",

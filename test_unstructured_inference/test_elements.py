@@ -7,10 +7,7 @@ import pytest
 from PIL import Image
 
 from unstructured_inference.inference import elements
-from unstructured_inference.inference.layoutelement import (
-    LocationlessLayoutElement,
-    separate,
-)
+from unstructured_inference.inference.layoutelement import separate
 
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
@@ -100,7 +97,7 @@ def test_partition_groups_from_regions(mock_embedded_text_regions):
     words = mock_embedded_text_regions
     groups = elements.partition_groups_from_regions(words)
     assert len(groups) == 1
-    sorted_groups = sorted(groups, key=lambda group: group[0].y1)
+    sorted_groups = sorted(groups, key=lambda group: group[0].bbox.y1)
     text = "".join([el.text for el in sorted_groups[-1]])
     assert text.startswith("Layout")
 
@@ -202,13 +199,6 @@ def test_grow_region_to_match_region():
     b = Rectangle(1, 1, 5, 5)
     grow_region_to_match_region(a, b)
     assert a == Rectangle(1, 1, 5, 5)
-
-
-def test_LocationlessLayoutElement():
-    text = "Testing text"
-    type = "Type"
-    e = LocationlessLayoutElement(text, type)
-    assert e.to_dict() == {"text": text, "type": type}
 
 
 @pytest.mark.parametrize(

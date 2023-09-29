@@ -28,7 +28,7 @@ def mock_image():
 
 @pytest.fixture()
 def mock_initial_layout():
-    text_block = layout.EmbeddedTextRegion(
+    text_block = layout.EmbeddedTextRegion.from_coords(
         2,
         4,
         6,
@@ -37,14 +37,16 @@ def mock_initial_layout():
         source="Mock",
     )
 
-    title_block = layout.EmbeddedTextRegion(1, 2, 3, 4, text="A Catchy Title", source="Mock")
+    title_block = layout.EmbeddedTextRegion.from_coords(
+        1, 2, 3, 4, text="A Catchy Title", source="Mock"
+    )
 
     return [text_block, title_block]
 
 
 @pytest.fixture()
 def mock_final_layout():
-    text_block = layoutelement.LayoutElement(
+    text_block = layoutelement.LayoutElement.from_coords(
         2,
         4,
         6,
@@ -54,7 +56,7 @@ def mock_final_layout():
         type="NarrativeText",
     )
 
-    title_block = layoutelement.LayoutElement(
+    title_block = layoutelement.LayoutElement.from_coords(
         1,
         2,
         3,
@@ -97,7 +99,7 @@ def test_ocr(monkeypatch):
     monkeypatch.setattr(tesseract, "is_pytesseract_available", lambda *args: True)
 
     image = Image.fromarray(np.random.randint(12, 24, (40, 40)), mode="RGB")
-    text_block = layout.TextRegion(1, 2, 3, 4, text=None)
+    text_block = layout.TextRegion.from_coords(1, 2, 3, 4, text=None)
 
     assert elements.ocr(text_block, image=image) == mock_text
 
@@ -112,7 +114,7 @@ def test_ocr_with_error(monkeypatch):
     monkeypatch.setattr(tesseract, "is_pytesseract_available", lambda *args: True)
 
     image = Image.fromarray(np.random.randint(12, 24, (40, 40)), mode="RGB")
-    text_block = layout.TextRegion(1, 2, 3, 4, text=None)
+    text_block = layout.TextRegion.from_coords(1, 2, 3, 4, text=None)
 
     assert elements.ocr(text_block, image=image) == ""
 
@@ -214,10 +216,10 @@ def test_get_page_elements_with_paddle_ocr(monkeypatch):
 
 def test_get_page_elements_with_tesseract_ocr(monkeypatch):
     monkeypatch.setenv("ENTIRE_PAGE_OCR", "tesseract")
-    text_block = layout.TextRegion(2, 4, 6, 8, text=None)
-    image_block = layout.ImageTextRegion(8, 14, 16, 18)
+    text_block = layout.TextRegion.from_coords(2, 4, 6, 8, text=None)
+    image_block = layout.ImageTextRegion.from_coords(8, 14, 16, 18)
     doc_initial_layout = [text_block, image_block]
-    text_layoutelement = layoutelement.LayoutElement(
+    text_layoutelement = layoutelement.LayoutElement.from_coords(
         2,
         4,
         6,
@@ -225,7 +227,9 @@ def test_get_page_elements_with_tesseract_ocr(monkeypatch):
         text=None,
         type="UncategorizedText",
     )
-    image_layoutelement = layoutelement.LayoutElement(8, 14, 16, 18, text=None, type="Image")
+    image_layoutelement = layoutelement.LayoutElement.from_coords(
+        8, 14, 16, 18, text=None, type="Image"
+    )
     doc_final_layout = [text_layoutelement, image_layoutelement]
 
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
@@ -245,10 +249,10 @@ def test_get_page_elements_with_tesseract_ocr(monkeypatch):
 
 def test_get_page_elements_with_ocr_invalid_entrie_page_ocr(monkeypatch):
     monkeypatch.setenv("ENTIRE_PAGE_OCR", "invalid_entire_page_ocr")
-    text_block = layout.TextRegion(2, 4, 6, 8, text=None)
-    image_block = layout.ImageTextRegion(8, 14, 16, 18)
+    text_block = layout.TextRegion.from_coords(2, 4, 6, 8, text=None)
+    image_block = layout.ImageTextRegion.from_coords(8, 14, 16, 18)
     doc_initial_layout = [text_block, image_block]
-    text_layoutelement = layoutelement.LayoutElement(
+    text_layoutelement = layoutelement.LayoutElement.from_coords(
         2,
         4,
         6,
@@ -256,7 +260,9 @@ def test_get_page_elements_with_ocr_invalid_entrie_page_ocr(monkeypatch):
         text=None,
         type="UncategorizedText",
     )
-    image_layoutelement = layoutelement.LayoutElement(8, 14, 16, 18, text=None, type="Image")
+    image_layoutelement = layoutelement.LayoutElement.from_coords(
+        8, 14, 16, 18, text=None, type="Image"
+    )
     doc_final_layout = [text_layoutelement, image_layoutelement]
 
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
@@ -437,9 +443,9 @@ class MockLayout:
 )
 def test_get_element_from_block(block_text, layout_texts, mock_image, expected_text):
     with patch("unstructured_inference.inference.elements.ocr", return_value="ocr"):
-        block = layout.TextRegion(0, 0, 10, 10, text=block_text)
+        block = layout.TextRegion.from_coords(0, 0, 10, 10, text=block_text)
         captured_layout = [
-            layout.TextRegion(i + 1, i + 1, i + 2, i + 2, text=text)
+            layout.TextRegion.from_coords(i + 1, i + 1, i + 2, i + 2, text=text)
             for i, text in enumerate(layout_texts)
         ]
         assert (
@@ -449,7 +455,7 @@ def test_get_element_from_block(block_text, layout_texts, mock_image, expected_t
 
 def test_get_elements_from_block_raises():
     with pytest.raises(ValueError):
-        block = layout.TextRegion(0, 0, 10, 10, text=None)
+        block = layout.TextRegion.from_coords(0, 0, 10, 10, text=None)
         layout.get_element_from_block(block, None, None)
 
 
@@ -523,7 +529,8 @@ def test_from_file_raises_on_length_mismatch(monkeypatch):
 @pytest.mark.parametrize("idx", range(2))
 def test_get_elements_from_layout(mock_initial_layout, idx):
     page = MockPageLayout(layout=mock_initial_layout)
-    block = mock_initial_layout[idx].pad(3)
+    block = mock_initial_layout[idx]
+    block.bbox.pad(3)
     fixed_layout = [block]
     elements = page.get_elements_from_layout(fixed_layout)
     assert elements[0].text == block.text
@@ -573,19 +580,19 @@ def test_remove_control_characters(text, expected):
     assert elements.remove_control_characters(text) == expected
 
 
-no_text_region = layout.EmbeddedTextRegion(0, 0, 100, 100)
-text_region = layout.EmbeddedTextRegion(0, 0, 100, 100, text="test")
-cid_text_region = layout.EmbeddedTextRegion(
+no_text_region = layout.EmbeddedTextRegion.from_coords(0, 0, 100, 100)
+text_region = layout.EmbeddedTextRegion.from_coords(0, 0, 100, 100, text="test")
+cid_text_region = layout.EmbeddedTextRegion.from_coords(
     0,
     0,
     100,
     100,
     text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)",
 )
-overlapping_rect = layout.ImageTextRegion(50, 50, 150, 150)
-nonoverlapping_rect = layout.ImageTextRegion(150, 150, 200, 200)
-populated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text="test")
-unpopulated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text=None)
+overlapping_rect = layout.ImageTextRegion.from_coords(50, 50, 150, 150)
+nonoverlapping_rect = layout.ImageTextRegion.from_coords(150, 150, 200, 200)
+populated_text_region = layout.EmbeddedTextRegion.from_coords(50, 50, 60, 60, text="test")
+unpopulated_text_region = layout.EmbeddedTextRegion.from_coords(50, 50, 60, 60, text=None)
 
 
 @pytest.mark.parametrize(
@@ -697,8 +704,8 @@ def test_load_pdf_image_placement():
     image_regions = [region for region in page_layout if isinstance(region, layout.ImageTextRegion)]
     image_region = image_regions[0]
     # Image is in top half of the page, so that should be reflected in the pixel coordinates
-    assert image_region.y1 < images[5].height / 2
-    assert image_region.y2 < images[5].height / 2
+    assert image_region.bbox.y1 < images[5].height / 2
+    assert image_region.bbox.y2 < images[5].height / 2
 
 
 def test_load_pdf_raises_with_path_only_no_output_folder():
@@ -770,13 +777,13 @@ def test_annotate(colors, add_details, threshold):
 
 
 def test_textregion_returns_empty_ocr_never(mock_image):
-    tr = elements.TextRegion(0, 0, 24, 24)
+    tr = elements.TextRegion.from_coords(0, 0, 24, 24)
     assert tr.extract_text(objects=None, image=mock_image, ocr_strategy="never") == ""
 
 
 @pytest.mark.parametrize(("text", "expected"), [("asdf", "asdf"), (None, "")])
 def test_embedded_text_region(text, expected):
-    etr = elements.EmbeddedTextRegion(0, 0, 24, 24, text=text)
+    etr = elements.EmbeddedTextRegion.from_coords(0, 0, 24, 24, text=text)
     assert etr.extract_text(objects=None) == expected
 
 
@@ -790,7 +797,7 @@ def test_embedded_text_region(text, expected):
     ],
 )
 def test_image_text_region(text, ocr_strategy, expected, mock_image):
-    itr = elements.ImageTextRegion(0, 0, 24, 24, text=text)
+    itr = elements.ImageTextRegion.from_coords(0, 0, 24, 24, text=text)
     with patch.object(elements, "ocr", return_value="asdf"):
         assert (
             itr.extract_text(objects=None, image=mock_image, ocr_strategy=ocr_strategy) == expected
@@ -803,13 +810,13 @@ class MockDetectionModel(layout.UnstructuredObjectDetectionModel):
 
     def predict(self, x):
         return [
-            layout.LayoutElement(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
-            layout.LayoutElement(x1=380.6, y1=473.4, x2=1334.8, y2=533.9, text="1"),
-            layout.LayoutElement(x1=578.6, y1=556.8, x2=1109.0, y2=874.4, text="2"),
-            layout.LayoutElement(x1=444.5, y1=942.3, x2=1261.1, y2=1584.1, text="3"),
-            layout.LayoutElement(x1=444.8, y1=1609.4, x2=1257.2, y2=1665.2, text="4"),
-            layout.LayoutElement(x1=414.0, y1=1718.8, x2=635.0, y2=1755.2, text="5"),
-            layout.LayoutElement(x1=372.6, y1=1786.9, x2=1333.6, y2=1848.7, text="6"),
+            layout.LayoutElement.from_coords(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
+            layout.LayoutElement.from_coords(x1=380.6, y1=473.4, x2=1334.8, y2=533.9, text="1"),
+            layout.LayoutElement.from_coords(x1=578.6, y1=556.8, x2=1109.0, y2=874.4, text="2"),
+            layout.LayoutElement.from_coords(x1=444.5, y1=942.3, x2=1261.1, y2=1584.1, text="3"),
+            layout.LayoutElement.from_coords(x1=444.8, y1=1609.4, x2=1257.2, y2=1665.2, text="4"),
+            layout.LayoutElement.from_coords(x1=414.0, y1=1718.8, x2=635.0, y2=1755.2, text="5"),
+            layout.LayoutElement.from_coords(x1=372.6, y1=1786.9, x2=1333.6, y2=1848.7, text="6"),
         ]
 
 
@@ -904,8 +911,8 @@ def test_from_image(
 def test_extract_images(mock_pil_image):
     page = MockPageLayout(image=mock_pil_image)
     page.elements = [
-        layoutelement.LayoutElement(1, 1, 10, 10, text=None, type="Image"),
-        layoutelement.LayoutElement(11, 11, 20, 20, text=None, type="Image"),
+        layoutelement.LayoutElement.from_coords(1, 1, 10, 10, text=None, type="Image"),
+        layoutelement.LayoutElement.from_coords(11, 11, 20, 20, text=None, type="Image"),
     ]
 
     with tempfile.TemporaryDirectory() as tmpdir:

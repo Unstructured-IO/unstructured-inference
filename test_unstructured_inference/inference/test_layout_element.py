@@ -17,19 +17,19 @@ from unstructured_inference.inference.layoutelement import (
 def test_aggregate_ocr_text_by_block():
     expected = "A Unified Toolkit"
     ocr_layout = [
-        TextRegion(0, 0, 20, 20, source="OCR", text="A"),
-        TextRegion(50, 50, 150, 150, source="OCR", text="Unified"),
-        TextRegion(150, 150, 300, 250, source="OCR", text="Toolkit"),
-        TextRegion(200, 250, 300, 350, source="OCR", text="Deep"),
+        TextRegion.from_coords(0, 0, 20, 20, source="OCR", text="A"),
+        TextRegion.from_coords(50, 50, 150, 150, source="OCR", text="Unified"),
+        TextRegion.from_coords(150, 150, 300, 250, source="OCR", text="Toolkit"),
+        TextRegion.from_coords(200, 250, 300, 350, source="OCR", text="Deep"),
     ]
-    region = TextRegion(0, 0, 250, 350, text="")
+    region = TextRegion.from_coords(0, 0, 250, 350, text="")
 
     text = aggregate_ocr_text_by_block(ocr_layout, region, 0.5)
     assert text == expected
 
 
 def test_merge_text_regions(mock_embedded_text_regions):
-    expected = TextRegion(
+    expected = TextRegion.from_coords(
         x1=437.83888888888885,
         y1=317.319341111111,
         x2=1256.334784222222,
@@ -43,7 +43,7 @@ def test_merge_text_regions(mock_embedded_text_regions):
 
 def test_get_elements_from_ocr_regions(mock_embedded_text_regions):
     expected = [
-        LayoutElement(
+        LayoutElement.from_coords(
             x1=437.83888888888885,
             y1=317.319341111111,
             x2=1256.334784222222,
@@ -59,15 +59,7 @@ def test_get_elements_from_ocr_regions(mock_embedded_text_regions):
 
 def test_supplement_layout_with_ocr_elements(mock_layout, mock_ocr_regions):
     ocr_elements = [
-        LayoutElement(
-            r.x1,
-            r.y1,
-            r.x2,
-            r.y2,
-            text=r.text,
-            source=None,
-            type="UncategorizedText",
-        )
+        LayoutElement(text=r.text, source=None, type="UncategorizedText", bbox=r.bbox)
         for r in mock_ocr_regions
     ]
 
@@ -83,21 +75,13 @@ def test_supplement_layout_with_ocr_elements(mock_layout, mock_ocr_regions):
     # Check if the OCR-derived elements that are subregions of layout elements are removed
     for element in mock_layout:
         for ocr_element in ocr_elements:
-            if ocr_element.is_almost_subregion_of(element, SUBREGION_THRESHOLD_FOR_OCR):
+            if ocr_element.bbox.is_almost_subregion_of(element.bbox, SUBREGION_THRESHOLD_FOR_OCR):
                 assert ocr_element not in final_layout
 
 
 def test_merge_inferred_layout_with_ocr_layout(mock_inferred_layout, mock_ocr_regions):
     ocr_elements = [
-        LayoutElement(
-            r.x1,
-            r.y1,
-            r.x2,
-            r.y2,
-            text=r.text,
-            source=None,
-            type="UncategorizedText",
-        )
+        LayoutElement(text=r.text, source=None, type="UncategorizedText", bbox=r.bbox)
         for r in mock_ocr_regions
     ]
 
@@ -147,9 +131,10 @@ def test_layout_element_do_dict(mock_layout_element):
 
 
 def test_layout_element_from_region(mock_rectangle):
-    expected = LayoutElement(100, 100, 300, 300, None, None)
+    expected = LayoutElement.from_coords(100, 100, 300, 300)
+    region = TextRegion(bbox=mock_rectangle)
 
-    assert LayoutElement.from_region(mock_rectangle) == expected
+    assert LayoutElement.from_region(region) == expected
 
 
 def test_layout_element_from_lp_textblock():
@@ -160,7 +145,7 @@ def test_layout_element_from_lp_textblock():
         score=0.99,
     )
 
-    expected = LayoutElement(
+    expected = LayoutElement.from_coords(
         100,
         100,
         300,
