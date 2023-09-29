@@ -87,8 +87,8 @@ def test_deduplicate_detected_elements():
     doc = DocumentLayout.from_image_file(
         file,
         model,
-        ocr_strategy="never",
-        supplement_with_ocr_elements=False,
+        # ocr_strategy="never",
+        # supplement_with_ocr_elements=False,
     )
     known_elements = [e for e in doc.pages[0].elements if e.type != "UncategorizedText"]
     # Compute intersection matrix
