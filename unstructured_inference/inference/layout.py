@@ -678,7 +678,11 @@ def load_pdf(
                     continue
 
             text_region = element_class.from_coords(
-                x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text
+                x1 * coef,
+                y1 * coef,
+                x2 * coef,
+                y2 * coef,
+                text=_text,
             )
 
             if text_region.bbox is not None and text_region.bbox.area > 0:

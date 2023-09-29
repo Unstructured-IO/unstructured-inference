@@ -53,7 +53,7 @@ def test_predict_tokens():
         assert tokens == [5, 4, 3, 2, 1]
 
 
-@pytest.mark.skip
+@pytest.mark.skip()
 @pytest.mark.parametrize(
     ("decoded_str", "expected_classes", "expected_ids", "expected_parent_ids"),
     [

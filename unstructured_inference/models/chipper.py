@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Tuple, Union, Sequence
+from typing import List, Optional, Sequence, Tuple, Union
 
 import cv2
 import numpy as np

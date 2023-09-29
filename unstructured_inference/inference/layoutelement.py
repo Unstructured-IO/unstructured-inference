@@ -74,7 +74,14 @@ class LayoutElement(TextRegion):
         type = textblock.type
         prob = textblock.score
         return cls.from_coords(
-            x1, y1, x2, y2, text=text, source="detectron2_lp", type=type, prob=prob
+            x1,
+            y1,
+            x2,
+            y2,
+            text=text,
+            source="detectron2_lp",
+            type=type,
+            prob=prob,
         )
 
 

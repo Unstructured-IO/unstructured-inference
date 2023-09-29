@@ -28,7 +28,7 @@ def order_layout(
         return []
 
     layout.sort(
-        key=lambda element: (element.bbox.y1, element.bbox.x1, element.bbox.y2, element.bbox.x2)
+        key=lambda element: (element.bbox.y1, element.bbox.x1, element.bbox.y2, element.bbox.x2),
     )
     # NOTE(alan): Temporarily revert to orginal logic pending fixing the new logic
     # See code prior to this commit for new logic.

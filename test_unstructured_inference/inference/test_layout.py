@@ -38,7 +38,12 @@ def mock_initial_layout():
     )
 
     title_block = layout.EmbeddedTextRegion.from_coords(
-        1, 2, 3, 4, text="A Catchy Title", source="Mock"
+        1,
+        2,
+        3,
+        4,
+        text="A Catchy Title",
+        source="Mock",
     )
 
     return [text_block, title_block]
@@ -228,7 +233,12 @@ def test_get_page_elements_with_tesseract_ocr(monkeypatch):
         type="UncategorizedText",
     )
     image_layoutelement = layoutelement.LayoutElement.from_coords(
-        8, 14, 16, 18, text=None, type="Image"
+        8,
+        14,
+        16,
+        18,
+        text=None,
+        type="Image",
     )
     doc_final_layout = [text_layoutelement, image_layoutelement]
 
@@ -261,7 +271,12 @@ def test_get_page_elements_with_ocr_invalid_entrie_page_ocr(monkeypatch):
         type="UncategorizedText",
     )
     image_layoutelement = layoutelement.LayoutElement.from_coords(
-        8, 14, 16, 18, text=None, type="Image"
+        8,
+        14,
+        16,
+        18,
+        text=None,
+        type="Image",
     )
     doc_final_layout = [text_layoutelement, image_layoutelement]
 

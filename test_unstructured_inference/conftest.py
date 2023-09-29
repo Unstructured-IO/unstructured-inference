@@ -29,7 +29,13 @@ def mock_text_region():
 @pytest.fixture()
 def mock_layout_element():
     return LayoutElement.from_coords(
-        100, 100, 300, 300, text="Sample text", source=None, type="Text"
+        100,
+        100,
+        300,
+        300,
+        text="Sample text",
+        source=None,
+        type="Text",
     )
 
 
