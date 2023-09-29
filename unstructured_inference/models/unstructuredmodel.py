@@ -135,19 +135,23 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
             return elements
 
         # Sort elements from biggest to smallest
-        target_elements.sort(key=lambda e: e.area, reverse=True)
-        other_elements.sort(key=lambda e: e.area, reverse=True)
+        target_elements.sort(key=lambda e: e.bbox.area, reverse=True)
+        other_elements.sort(key=lambda e: e.bbox.area, reverse=True)
 
         # First check if targets contains each other
         for element in target_elements:  # Just handles containment or little overlap
             contains = [
-                e for e in target_elements if e.is_almost_subregion_of(element) and e != element
+                e
+                for e in target_elements
+                if e.bbox.is_almost_subregion_of(element.bbox) and e != element
             ]
             for contained in contains:
                 target_elements.remove(contained)
         # Then check if remaining elements intersect with targets
         other_elements = filter(
-            lambda e: not any(e.is_almost_subregion_of(target) for target in target_elements),
+            lambda e: not any(
+                e.bbox.is_almost_subregion_of(target.bbox) for target in target_elements
+            ),
             other_elements,
         )  # type:ignore
 
@@ -156,7 +160,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         # Note(benjamin): could use bisect.insort,
         # but need to add < operator for
         # LayoutElement in python <3.10
-        final_elements.sort(key=lambda e: e.y1)
+        final_elements.sort(key=lambda e: e.bbox.y1)
         return final_elements
 
     @staticmethod

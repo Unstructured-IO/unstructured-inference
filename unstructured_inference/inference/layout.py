@@ -382,7 +382,7 @@ class PageLayout:
                     output_dir_path,
                     f"figure-{self.number}-{figure_number}.jpg",
                 )
-                cropped_image = self.image.crop((el.x1, el.y1, el.x2, el.y2))
+                cropped_image = self.image.crop((el.bbox.x1, el.bbox.y1, el.bbox.x2, el.bbox.y2))
                 write_image(cropped_image, output_f_path)
                 el.image_path = output_f_path
             except (ValueError, IOError):
@@ -677,9 +677,11 @@ def load_pdf(
                 else:
                     continue
 
-            text_region = element_class(x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text)
+            text_region = element_class.from_coords(
+                x1 * coef, y1 * coef, x2 * coef, y2 * coef, text=_text
+            )
 
-            if text_region.area > 0:
+            if text_region.bbox is not None and text_region.bbox.area > 0:
                 layout.append(text_region)
         layouts.append(layout)
 
@@ -738,7 +740,7 @@ def parse_ocr_data_tesseract(ocr_data: dict) -> List[TextRegion]:
         (x1, y1, x2, y2) = l, t, l + w, t + h
         text = ocr_data["text"][i]
         if text:
-            text_region = TextRegion(x1, y1, x2, y2, text=text, source="OCR")
+            text_region = TextRegion.from_coords(x1, y1, x2, y2, text=text, source="OCR")
             text_regions.append(text_region)
 
     return text_regions

@@ -49,7 +49,7 @@ class LayoutElement(TextRegion):
     def to_dict(self) -> dict:
         """Converts the class instance to dictionary form."""
         out_dict = {
-            "coordinates": self.coordinates,
+            "coordinates": None if self.bbox is None else self.bbox.coordinates,
             "text": self.text,
             "type": self.type,
             "prob": self.prob,
@@ -58,14 +58,13 @@ class LayoutElement(TextRegion):
         return out_dict
 
     @classmethod
-    def from_region(cls, region: Rectangle):
+    def from_region(cls, region: TextRegion):
         """Create LayoutElement from superclass."""
-        x1, y1, x2, y2 = region.x1, region.y1, region.x2, region.y2
         text = region.text if hasattr(region, "text") else None
         type = region.type if hasattr(region, "type") else None
         prob = region.prob if hasattr(region, "prob") else None
         source = region.source if hasattr(region, "source") else None
-        return cls(x1, y1, x2, y2, text=text, source=source, type=type, prob=prob)
+        return cls(text=text, source=source, type=type, prob=prob, bbox=region.bbox)
 
     @classmethod
     def from_lp_textblock(cls, textblock: TextBlock):
@@ -74,7 +73,9 @@ class LayoutElement(TextRegion):
         text = textblock.text
         type = textblock.type
         prob = textblock.score
-        return cls(x1, y1, x2, y2, text=text, source="detectron2_lp", type=type, prob=prob)
+        return cls.from_coords(
+            x1, y1, x2, y2, text=text, source="detectron2_lp", type=type, prob=prob
+        )
 
 
 def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
@@ -84,7 +85,7 @@ def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
     tables.load_agent()
     if tables.tables_agent is None:
         raise RuntimeError("Unable to load table extraction agent.")
-    padded_block = text_block.pad(inference_config.TABLE_IMAGE_CROP_PAD)
+    padded_block = text_block.bbox.pad(inference_config.TABLE_IMAGE_CROP_PAD)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tables.tables_agent.predict(cropped_image)
 
@@ -110,7 +111,7 @@ def merge_inferred_layout_with_extracted_layout(
             # don't provide good text bounding boxes.
 
             is_full_page_image = region_bounding_boxes_are_almost_the_same(
-                extracted_region,
+                extracted_region.bbox,
                 full_page_region,
                 FULL_PAGE_REGION_THRESHOLD,
             )
@@ -119,14 +120,14 @@ def merge_inferred_layout_with_extracted_layout(
                 continue
         region_matched = False
         for inferred_region in inferred_layout:
-            if inferred_region.intersects(extracted_region):
+            if inferred_region.bbox.intersects(extracted_region.bbox):
                 same_bbox = region_bounding_boxes_are_almost_the_same(
-                    inferred_region,
-                    extracted_region,
+                    inferred_region.bbox,
+                    extracted_region.bbox,
                     same_region_threshold,
                 )
-                inferred_is_subregion_of_extracted = inferred_region.is_almost_subregion_of(
-                    extracted_region,
+                inferred_is_subregion_of_extracted = inferred_region.bbox.is_almost_subregion_of(
+                    extracted_region.bbox,
                     subregion_threshold=subregion_threshold,
                 )
                 inferred_is_text = inferred_region.type not in (
@@ -135,8 +136,8 @@ def merge_inferred_layout_with_extracted_layout(
                     "PageBreak",
                     "Table",
                 )
-                extracted_is_subregion_of_inferred = extracted_region.is_almost_subregion_of(
-                    inferred_region,
+                extracted_is_subregion_of_inferred = extracted_region.bbox.is_almost_subregion_of(
+                    inferred_region.bbox,
                     subregion_threshold=subregion_threshold,
                 )
                 either_region_is_subregion_of_other = (
@@ -144,11 +145,11 @@ def merge_inferred_layout_with_extracted_layout(
                 )
                 if same_bbox:
                     # Looks like these represent the same region
-                    grow_region_to_match_region(inferred_region, extracted_region)
+                    grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
                     inferred_region.text = extracted_region.text
                     region_matched = True
                 elif extracted_is_subregion_of_inferred and inferred_is_text and extracted_is_image:
-                    grow_region_to_match_region(inferred_region, extracted_region)
+                    grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
                     region_matched = True
                 elif either_region_is_subregion_of_other and inferred_region.type != "Table":
                     inferred_regions_to_remove.append(inferred_region)
@@ -157,13 +158,10 @@ def merge_inferred_layout_with_extracted_layout(
     # Need to classify the extracted layout elements we're keeping.
     categorized_extracted_elements_to_add = [
         LayoutElement(
-            el.x1,
-            el.y1,
-            el.x2,
-            el.y2,
             text=el.text,
             type="Image" if isinstance(el, ImageTextRegion) else "UncategorizedText",
             source=el.source,
+            bbox=el.bbox,
         )
         for el in extracted_elements_to_add
     ]
@@ -232,8 +230,8 @@ def aggregate_ocr_text_by_block(
     extracted_texts = []
 
     for ocr_region in ocr_layout:
-        ocr_region_is_subregion_of_given_region = ocr_region.is_almost_subregion_of(
-            region,
+        ocr_region_is_subregion_of_given_region = ocr_region.bbox.is_almost_subregion_of(
+            region.bbox,
             subregion_threshold=subregion_threshold,
         )
         if ocr_region_is_subregion_of_given_region and ocr_region.text:
@@ -275,8 +273,8 @@ def supplement_layout_with_ocr_elements(
     ocr_regions_to_remove = []
     for ocr_region in ocr_layout:
         for el in layout:
-            ocr_region_is_subregion_of_out_el = ocr_region.is_almost_subregion_of(
-                cast(Rectangle, el),
+            ocr_region_is_subregion_of_out_el = ocr_region.bbox.is_almost_subregion_of(
+                el.bbox,
                 SUBREGION_THRESHOLD_FOR_OCR,
             )
             if ocr_region_is_subregion_of_out_el:
@@ -304,15 +302,15 @@ def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
     - TextRegion: A single merged TextRegion object.
     """
 
-    min_x1 = min([tr.x1 for tr in regions])
-    min_y1 = min([tr.y1 for tr in regions])
-    max_x2 = max([tr.x2 for tr in regions])
-    max_y2 = max([tr.y2 for tr in regions])
+    min_x1 = min([tr.bbox.x1 for tr in regions])
+    min_y1 = min([tr.bbox.y1 for tr in regions])
+    max_x2 = max([tr.bbox.x2 for tr in regions])
+    max_y2 = max([tr.bbox.y2 for tr in regions])
 
     merged_text = " ".join([tr.text for tr in regions if tr.text])
     sources = [*{tr.source for tr in regions}]
     source = sources.pop() if len(sources) == 1 else "merged:".join(sources)  # type:ignore
-    return TextRegion(min_x1, min_y1, max_x2, max_y2, source=source, text=merged_text)
+    return TextRegion.from_coords(min_x1, min_y1, max_x2, max_y2, source=source, text=merged_text)
 
 
 def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutElement]:
@@ -326,15 +324,7 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
     )
     merged_regions = [merge_text_regions(group) for group in grouped_regions]
     return [
-        LayoutElement(
-            r.x1,
-            r.y1,
-            r.x2,
-            r.y2,
-            text=r.text,
-            source=None,
-            type="UncategorizedText",
-        )
+        LayoutElement(text=r.text, source=None, type="UncategorizedText", bbox=r.bbox)
         for r in merged_regions
     ]
 

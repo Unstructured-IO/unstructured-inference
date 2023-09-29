@@ -141,7 +141,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
             # being (x1,y1) the top left and (x2,y2) the bottom right
             x1, y1, x2, y2, prob, class_id = det.tolist()
             detected_class = self.layout_classes[int(class_id)]
-            region = LayoutElement(
+            region = LayoutElement.from_coords(
                 x1,
                 y1,
                 x2,
@@ -154,7 +154,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
             regions.append(region)
 
-        regions.sort(key=lambda element: element.y1)
+        regions.sort(key=lambda element: element.bbox.y1)
 
         page_layout = regions  # TODO(benjamin): encode image as base64?
 

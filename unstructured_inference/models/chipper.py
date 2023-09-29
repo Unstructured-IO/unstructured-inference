@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Sequence
 
 import cv2
 import numpy as np
@@ -120,7 +120,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 ).pixel_values.to(self.device),
                 decoder_input_ids=self.input_ids,
                 logits_processor=[self.logits_processor],
-                max_length=self.max_length,
+                # max_length=self.max_length,
                 do_sample=True,
                 top_p=0.92,
                 top_k=5,
@@ -157,9 +157,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
     def postprocess(
         self,
-        image,
-        output_ids,
-        decoder_cross_attentions,
+        image: Image,
+        output_ids: torch.Tensor,
+        decoder_cross_attentions: Sequence[Sequence[torch.Tensor]],
     ) -> List[LocationlessLayoutElement]:
         """Process tokens into layout elements."""
         elements = []
@@ -310,7 +310,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
     def get_bounding_box(
         self,
-        decoder_cross_attentions: torch.Tensor,
+        decoder_cross_attentions: Sequence[Sequence[torch.Tensor]],
         tkn_indexes: List[int],
         final_h: int = 1280,
         final_w: int = 960,
