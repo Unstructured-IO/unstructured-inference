@@ -743,7 +743,9 @@ def parse_ocr_data_tesseract(ocr_data: dict) -> List[TextRegion]:
         (x1, y1, x2, y2) = l, t, l + w, t + h
         text = ocr_data["text"][i]
         if text:
-            text_region = TextRegion.from_coords(x1, y1, x2, y2, text=text, source=Source.OCR_TESSERACT)
+            text_region = TextRegion.from_coords(
+                x1, y1, x2, y2, text=text, source=Source.OCR_TESSERACT,
+            )
             text_regions.append(text_region)
 
     return text_regions
