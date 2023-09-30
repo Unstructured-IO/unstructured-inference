@@ -334,7 +334,12 @@ def merge_text_regions(regions: List[TextRegion]) -> TextRegion:
     sources = [*{tr.source for tr in regions}]
     source = sources.pop() if len(sources) == 1 else Source.MERGED
     element = TextRegion.from_coords(
-        min_x1, min_y1, max_x2, max_y2, source=source, text=merged_text,
+        min_x1,
+        min_y1,
+        max_x2,
+        max_y2,
+        source=source,
+        text=merged_text,
     )
     setattr(element, "merged_sources", sources)
     return element

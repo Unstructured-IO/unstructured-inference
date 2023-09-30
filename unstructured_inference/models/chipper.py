@@ -316,8 +316,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     ) -> Union[Tuple[int, int, int, int], Tuple[Tuple[int, int, int, int], np.ndarray]]:
         """
         decoder_cross_attention: tuple(tuple(torch.FloatTensor))
-        Tuple (one element for each generated token) of tuples (one element for each layer of the decoder) of
-        `torch.FloatTensor` of shape `(batch_size, num_heads, generated_length, sequence_length)`
+        Tuple (one element for each generated token) of tuples (one element for
+        each layer of the decoder) of  `torch.FloatTensor` of shape
+        `(batch_size, num_heads, generated_length, sequence_length)`
         """
         agg_heatmap = np.zeros([final_h, final_w], dtype=np.uint8)
 
@@ -378,7 +379,10 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 y,
                 x + w,
                 y + h,
-            ],  # self.refined_height_box(agg_heatmap, [x, y, x + w, y + h], percentage_coverage=0.01),
+            ],  # self.refined_height_box
+            (agg_heatmap,
+            [x, y, x + w, y + h],
+            percentage_coverage=0.01),
             percentage_coverage=0.05,
         )
         """
@@ -389,7 +393,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
     def image_padding(self, input_size, target_size):
         """
-        Resize an image to a defined size, preserving the aspect ratio, and pad with a background color to maintain aspect ratio.
+        Resize an image to a defined size, preserving the aspect ratio,
+        and pad with a background color to maintain aspect ratio.
 
         Args:
             input_size (str): Size of the input in the format (width, height).
@@ -401,7 +406,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         aspect_ratio_input = input_width / input_height  # 0.773
         aspect_ratio_target = target_width / target_height  # 0.75
 
-        # Determine the size of the image when resized to fit within the target size while preserving the aspect ratio
+        # Determine the size of the image when resized to fit within the
+        # target size while preserving the aspect ratio
         if aspect_ratio_input > aspect_ratio_target:
             # Resize the image to fit the target width and calculate the new height
             new_width = target_width
@@ -418,7 +424,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         return x_offset, y_offset, new_width / input_width
 
 
-# Inspired on https://github.com/huggingface/transformers/blob/8e3980a290acc6d2f8ea76dba111b9ef0ef00309/src/transformers/generation/logits_process.py#L706
+# Inspired on
+# https://github.com/huggingface/transformers/blob/8e3980a290acc6d2f8ea76dba111b9ef0ef00309/src/transformers/generation/logits_process.py#L706
 class NoRepeatNGramLogitsProcessor(LogitsProcessor):
     def __init__(self, ngram_size: int, skip_tokens=None):
         if not isinstance(ngram_size, int) or ngram_size <= 0:
@@ -452,7 +459,8 @@ def _no_repeat_ngram_logits(
 ):
     if no_repeat_ngram_size > 0:
         # calculate a list of banned tokens to prevent repetitively generating the same ngrams
-        # from fairseq: https://github.com/pytorch/fairseq/blob/a07cb6f40480928c9e0548b737aadd36ee66ac76/fairseq/sequence_generator.py#L345
+        # from fairseq:
+        # https://github.com/pytorch/fairseq/blob/a07cb6f40480928c9e0548b737aadd36ee66ac76/fairseq/sequence_generator.py#L345
         banned_tokens = _calc_banned_tokens(input_ids, batch_size, no_repeat_ngram_size, cur_len)
         for batch_idx in range(batch_size):
             if skip_tokens is not None:

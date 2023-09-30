@@ -12,7 +12,6 @@ from PIL import Image
 from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.config import inference_config
-from unstructured_inference.constants import Source
 from unstructured_inference.logger import logger
 from unstructured_inference.math import safe_division
 from unstructured_inference.models import tesseract
