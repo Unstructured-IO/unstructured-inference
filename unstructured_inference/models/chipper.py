@@ -168,7 +168,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         start = end = -1
 
         x_offset, y_offset, ratio = self.image_padding(
-            image.size[::-1],
+            image.size,
             (
                 self.processor.image_processor.size["width"],
                 self.processor.image_processor.size["height"],
@@ -209,8 +209,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     bbox_coords = self.get_bounding_box(
                         decoder_cross_attentions=decoder_cross_attentions,
                         tkn_indexes=range(start - 1, end),
-                        final_w=self.processor.image_processor.size["height"],
-                        final_h=self.processor.image_processor.size["width"],
+                        final_w=self.processor.image_processor.size["width"],
+                        final_h=self.processor.image_processor.size["height"],
                         heatmap_w=self.heatmap_w,
                         heatmap_h=self.heatmap_h,
                     )
@@ -240,6 +240,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         return elements
 
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio):
+        """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
         return [
             (bbox[0] - x_offset) / ratio,
             (bbox[1] - y_offset) / ratio,
@@ -248,7 +249,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ]
 
     def refined_height_box(self, area, bbox, percentage_coverage=0.015):
-        vertical_projection = np.sum(area[bbox[1] : bbox[3], bbox[0] : bbox[2]], axis=0)
+        x_start, y_start, x_end, y_end = bbox
+        vertical_projection = np.sum(area[y_start:y_end, x_start:x_end], axis=0)
         total_sum = np.sum(vertical_projection)
 
         lower_boundary = bbox[1]
@@ -274,24 +276,25 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         return [bbox[0], lower_boundary, bbox[2], upper_boundary]
 
     def refined_width_box(self, area, bbox, percentage_coverage=0.03):
-        horizontal_projection = np.sum(area[bbox[1] : bbox[3], bbox[0] : bbox[2]], axis=1)
+        x_start, y_start, x_end, y_end = bbox
+        horizontal_projection = np.sum(area[y_start:y_end, x_start:x_end], axis=1)
         total_sum = np.sum(horizontal_projection)
 
-        lower_boundary = bbox[1]
-        upper_boundary = bbox[3] - 1
+        lower_boundary = y_start
+        upper_boundary = y_end - 1
 
         cumulative_sum = 0
         for i, value in enumerate(horizontal_projection):
             cumulative_sum += value
             if cumulative_sum >= total_sum * percentage_coverage:
-                lower_boundary = bbox[0] + i
+                lower_boundary = x_start + i
                 break
 
         cumulative_sum = 0
         for i, value in enumerate(horizontal_projection[::-1]):
             cumulative_sum += value
             if cumulative_sum >= total_sum * percentage_coverage:
-                upper_boundary = bbox[2] - 1 - i
+                upper_boundary = x_end - 1 - i
                 break
 
         if lower_boundary >= upper_boundary:
@@ -319,15 +322,21 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         for tidx in tkn_indexes:
             hmaps = torch.stack(decoder_cross_attentions[tidx], dim=0)
+            print(hmaps.shape)
             # shape [4, 1, 16, 1, 1200]->[4, 16, 1200]
             hmaps = hmaps.permute(1, 3, 0, 2, 4).squeeze(0)
+            print(hmaps.shape)
             hmaps = hmaps[-1]
+            print(hmaps.shape)
             # change shape [4, 16, 1200]->[4, 16, 40, 30] assuming (heatmap_h, heatmap_w) = (40, 30)
             hmaps = hmaps.view(4, 16, heatmap_h, heatmap_w)
+            print(hmaps.shape)
             # fusing 16 decoder attention heads i.e. [4, 16, 40, 30]-> [16, 40, 30]
             hmaps = torch.max(hmaps, dim=1)[0]
+            print(hmaps.shape)
             # fusing 4 decoder layers from BART i.e. [16, 40, 30]-> [40, 30]
             hmap = torch.max(hmaps, dim=0)[0]
+            print(hmap.shape)
 
             # dropping discard ratio activations
             flat = hmap.view(heatmap_h * heatmap_w)
@@ -375,29 +384,30 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         Resize an image to a defined size, preserving the aspect ratio, and pad with a background color to maintain aspect ratio.
 
         Args:
-            input_path (str): Path to the input image file.
-            output_path (str): Path to save the output resized and padded image.
+            input_size (str): Size of the input in the format (width, height).
             target_size (tuple): Desired target size in the format (width, height).
         """
         # Calculate the aspect ratio of the input and target sizes
-        aspect_ratio_input = input_size[0] / input_size[1]
-        aspect_ratio_target = target_size[0] / target_size[1]
+        input_width, input_height = input_size  # 612, 792
+        target_width, target_height = target_size  # 960, 1280
+        aspect_ratio_input = input_width / input_height  # 0.773
+        aspect_ratio_target = target_width / target_height  # 0.75
 
         # Determine the size of the image when resized to fit within the target size while preserving the aspect ratio
         if aspect_ratio_input > aspect_ratio_target:
             # Resize the image to fit the target width and calculate the new height
-            new_width = target_size[0]
+            new_width = target_width
             new_height = int(new_width / aspect_ratio_input)
         else:
             # Resize the image to fit the target height and calculate the new width
-            new_height = target_size[1]
+            new_height = target_height
             new_width = int(new_height * aspect_ratio_input)
 
         # Calculate the position to paste the resized image to center it within the target size
-        x_offset = (target_size[0] - new_width) // 2
-        y_offset = (target_size[1] - new_height) // 2
+        x_offset = (target_width - new_width) // 2
+        y_offset = (target_height - new_height) // 2
 
-        return x_offset, y_offset, new_width / input_size[0]
+        return x_offset, y_offset, new_width / input_width
 
 
 # Inspired on https://github.com/huggingface/transformers/blob/8e3980a290acc6d2f8ea76dba111b9ef0ef00309/src/transformers/generation/logits_process.py#L706
