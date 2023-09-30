@@ -25,6 +25,7 @@ class LayoutElement(TextRegion):
     type: Optional[str] = None
     prob: Optional[float] = None
     image_path: Optional[str] = None
+    parent: Optional[LayoutElement] = None
 
     def extract_text(
         self,
