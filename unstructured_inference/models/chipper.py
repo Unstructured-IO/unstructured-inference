@@ -13,8 +13,8 @@ from transformers.generation.logits_process import (
 )
 from transformers.utils import add_start_docstrings
 
-from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.inference.elements import Rectangle
+from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredElementExtractionModel
 
 MODEL_TYPES = {
@@ -129,7 +129,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 num_beams=3,
                 return_dict_in_generate=True,
                 output_attentions=True,
-                output_scores=False,
+                output_scores=True,
                 output_hidden_states=False,
             )
 
@@ -190,7 +190,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     parent=parent,
                     type=stype[3:-1],
                     text="",
-                    bbox=None
+                    bbox=None,
                     # source="chipper",
                     # type=None,
                     # prob=None,
@@ -220,6 +220,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         x_offset,
                         y_offset,
                         ratio,
+                        image.size,
                     )
                     element.bbox = Rectangle(*bbox_coords)
                 start = -1
@@ -239,13 +240,13 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         return elements
 
-    def adjust_bbox(self, bbox, x_offset, y_offset, ratio):
+    def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
         return [
-            (bbox[0] - x_offset) / ratio,
-            (bbox[1] - y_offset) / ratio,
-            (bbox[2] - x_offset) / ratio,
-            (bbox[3] - y_offset) / ratio,
+            max((bbox[0] - x_offset) / ratio, 0),
+            max((bbox[1] - y_offset) / ratio, 0),
+            min((bbox[2] - x_offset) / ratio, target_size[0]),
+            min((bbox[3] - y_offset) / ratio, target_size[1]),
         ]
 
     def refined_height_box(self, area, bbox, percentage_coverage=0.015):
@@ -322,21 +323,21 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         for tidx in tkn_indexes:
             hmaps = torch.stack(decoder_cross_attentions[tidx], dim=0)
-            print(hmaps.shape)
+            # print(hmaps.shape)
             # shape [4, 1, 16, 1, 1200]->[4, 16, 1200]
             hmaps = hmaps.permute(1, 3, 0, 2, 4).squeeze(0)
-            print(hmaps.shape)
+            # print(hmaps.shape)
             hmaps = hmaps[-1]
-            print(hmaps.shape)
+            # print(hmaps.shape)
             # change shape [4, 16, 1200]->[4, 16, 40, 30] assuming (heatmap_h, heatmap_w) = (40, 30)
             hmaps = hmaps.view(4, 16, heatmap_h, heatmap_w)
-            print(hmaps.shape)
+            # print(hmaps.shape)
             # fusing 16 decoder attention heads i.e. [4, 16, 40, 30]-> [16, 40, 30]
             hmaps = torch.max(hmaps, dim=1)[0]
-            print(hmaps.shape)
+            # print(hmaps.shape)
             # fusing 4 decoder layers from BART i.e. [16, 40, 30]-> [40, 30]
             hmap = torch.max(hmaps, dim=0)[0]
-            print(hmap.shape)
+            # print(hmap.shape)
 
             # dropping discard ratio activations
             flat = hmap.view(heatmap_h * heatmap_w)
@@ -356,7 +357,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         # threshold to remove small attention pockets
         thres_heatmap = cv2.threshold(agg_heatmap, 200, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
 
-        kernel = np.ones((1, 10), np.uint8)
+        kernel = np.ones((1, 50), np.uint8)
         thres_heatmap = cv2.dilate(thres_heatmap, kernel, iterations=1)
         kernel = np.ones((5, 1), np.uint8)
         thres_heatmap = cv2.erode(thres_heatmap, kernel, iterations=1)
@@ -369,11 +370,18 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])
         max_area_box = [x, y, x + w, y + h]
 
+        """
         max_area_box = self.refined_width_box(
             agg_heatmap,
-            self.refined_height_box(agg_heatmap, [x, y, x + w, y + h], percentage_coverage=0.02),
+            [
+                x,
+                y,
+                x + w,
+                y + h,
+            ],  # self.refined_height_box(agg_heatmap, [x, y, x + w, y + h], percentage_coverage=0.01),
             percentage_coverage=0.05,
         )
+        """
 
         if return_thres_agg_heatmap:
             return max_area_box, thres_heatmap, agg_heatmap, hmap
