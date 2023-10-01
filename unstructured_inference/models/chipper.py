@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence
 
 import cv2
 import numpy as np
@@ -104,7 +104,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         elements = self.postprocess(image, tokens, decoder_cross_attentions)
         return elements
 
-    def predict_tokens(self, image: Image) -> List[int]:
+    def predict_tokens(self, image: Image) -> tuple[List[int], Sequence[Sequence[torch.Tensor]]]:
         """Predict tokens from image."""
         with torch.no_grad():
             outputs = self.model.generate(
@@ -132,7 +132,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         if "beam_indices" in outputs:
             offset = len(outputs["beam_indices"][0]) - len(outputs["cross_attentions"])
 
-            decoder_cross_attentions = [""] * offset
+            decoder_cross_attentions = [[torch.Tensor(0)]] * offset
 
             for token_id in range(0, len(outputs["beam_indices"][0])):
                 token_attentions = []
@@ -155,7 +155,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     def postprocess(
         self,
         image: Image,
-        output_ids: torch.Tensor,
+        output_ids: List[int],
         decoder_cross_attentions: Sequence[Sequence[torch.Tensor]],
     ) -> List[LayoutElement]:
         """Process tokens into layout elements."""
@@ -204,7 +204,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     element.text = string
                     bbox_coords = self.get_bounding_box(
                         decoder_cross_attentions=decoder_cross_attentions,
-                        tkn_indexes=range(start - 1, end),
+                        tkn_indexes=list(range(start - 1, end)),
                         final_w=self.processor.image_processor.size["width"],
                         final_h=self.processor.image_processor.size["height"],
                         heatmap_w=self.heatmap_w,
@@ -254,8 +254,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         heatmap_h: int = 40,
         heatmap_w: int = 30,
         discard_ratio: float = 0.99,
-        return_thres_agg_heatmap: bool = False,
-    ) -> Union[Tuple[int, int, int, int], Tuple[Tuple[int, int, int, int], np.ndarray]]:
+    ) -> List[int]:
         """
         decoder_cross_attention: tuple(tuple(torch.FloatTensor))
         Tuple (one element for each generated token) of tuples (one element for
@@ -265,7 +264,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         agg_heatmap = np.zeros([final_h, final_w], dtype=np.uint8)
 
         for tidx in tkn_indexes:
-            hmaps = torch.stack(decoder_cross_attentions[tidx], dim=0)
+            hmaps = torch.stack(list(decoder_cross_attentions[tidx]), dim=0)
             # print(hmaps.shape)
             # shape [4, 1, 16, 1, 1200]->[4, 16, 1200]
             hmaps = hmaps.permute(1, 3, 0, 2, 4).squeeze(0)
@@ -311,11 +310,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         bboxes = [cv2.boundingRect(ctr) for ctr in contours]
         # return box with max area
         x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])
-        max_area_box = [x, y, x + w, y + h]
 
-        if return_thres_agg_heatmap:
-            return max_area_box, thres_heatmap, agg_heatmap, hmap
-        return max_area_box
+        return [x, y, x + w, y + h]
 
     def image_padding(self, input_size, target_size):
         """
