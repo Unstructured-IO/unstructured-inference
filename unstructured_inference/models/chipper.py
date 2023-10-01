@@ -7,11 +7,7 @@ import torch
 from huggingface_hub import hf_hub_download
 from PIL.Image import Image
 from transformers import DonutProcessor, VisionEncoderDecoderModel
-from transformers.generation.logits_process import (
-    LOGITS_PROCESSOR_INPUTS_DOCSTRING,
-    LogitsProcessor,
-)
-from transformers.utils import add_start_docstrings
+from transformers.generation.logits_process import LogitsProcessor
 
 from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.inference.layoutelement import LayoutElement
@@ -249,60 +245,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             min((bbox[3] - y_offset) / ratio, target_size[1]),
         ]
 
-    def refined_height_box(self, area, bbox, percentage_coverage=0.015):
-        x_start, y_start, x_end, y_end = bbox
-        vertical_projection = np.sum(area[y_start:y_end, x_start:x_end], axis=0)
-        total_sum = np.sum(vertical_projection)
-
-        lower_boundary = bbox[1]
-        upper_boundary = bbox[3] - 1
-
-        cumulative_sum = 0
-        for i, value in enumerate(vertical_projection):
-            cumulative_sum += value
-            if cumulative_sum >= total_sum * percentage_coverage:
-                lower_boundary = bbox[1] + i
-                break
-
-        cumulative_sum = 0
-        for i, value in enumerate(vertical_projection[::-1]):
-            cumulative_sum += value
-            if cumulative_sum >= total_sum * percentage_coverage:
-                upper_boundary = bbox[3] - 1 - i
-                break
-
-        if lower_boundary >= upper_boundary:
-            return bbox
-
-        return [bbox[0], lower_boundary, bbox[2], upper_boundary]
-
-    def refined_width_box(self, area, bbox, percentage_coverage=0.03):
-        x_start, y_start, x_end, y_end = bbox
-        horizontal_projection = np.sum(area[y_start:y_end, x_start:x_end], axis=1)
-        total_sum = np.sum(horizontal_projection)
-
-        lower_boundary = y_start
-        upper_boundary = y_end - 1
-
-        cumulative_sum = 0
-        for i, value in enumerate(horizontal_projection):
-            cumulative_sum += value
-            if cumulative_sum >= total_sum * percentage_coverage:
-                lower_boundary = x_start + i
-                break
-
-        cumulative_sum = 0
-        for i, value in enumerate(horizontal_projection[::-1]):
-            cumulative_sum += value
-            if cumulative_sum >= total_sum * percentage_coverage:
-                upper_boundary = x_end - 1 - i
-                break
-
-        if lower_boundary >= upper_boundary:
-            return bbox
-
-        return [lower_boundary, bbox[1], upper_boundary, bbox[3]]
-
     def get_bounding_box(
         self,
         decoder_cross_attentions: Sequence[Sequence[torch.Tensor]],
@@ -371,22 +313,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])
         max_area_box = [x, y, x + w, y + h]
 
-        """
-        max_area_box = self.refined_width_box(
-            agg_heatmap,
-            [
-                x,
-                y,
-                x + w,
-                y + h,
-            ],  # self.refined_height_box
-            (agg_heatmap,
-            [x, y, x + w, y + h],
-            percentage_coverage=0.01),
-            percentage_coverage=0.05,
-        )
-        """
-
         if return_thres_agg_heatmap:
             return max_area_box, thres_heatmap, agg_heatmap, hmap
         return max_area_box
@@ -397,7 +323,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         and pad with a background color to maintain aspect ratio.
 
         Args:
-            input_size (str): Size of the input in the format (width, height).
+            input_size (tuple): Size of the input in the format (width, height).
             target_size (tuple): Desired target size in the format (width, height).
         """
         # Calculate the aspect ratio of the input and target sizes
@@ -435,8 +361,22 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         self.ngram_size = ngram_size
         self.skip_tokens = skip_tokens
 
-    @add_start_docstrings(LOGITS_PROCESSOR_INPUTS_DOCSTRING)
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
+        """
+        Args:
+            input_ids (`torch.LongTensor` of shape `(batch_size, sequence_length)`):
+                Indices of input sequence tokens in the vocabulary.
+                [What are input IDs?](../glossary#input-ids)
+            scores (`torch.FloatTensor` of shape `(batch_size, config.vocab_size)`):
+                Prediction scores of a language modeling head. These can be logits
+                for each vocabulary when not using beam search or log softmax for
+                each vocabulary token when using beam search
+
+        Return:
+            `torch.FloatTensor` of shape `(batch_size, config.vocab_size)`: The
+            processed prediction scores.
+
+        """
         num_batch_hypotheses = scores.shape[0]
         cur_len = input_ids.shape[-1]
         return _no_repeat_ngram_logits(
@@ -501,6 +441,12 @@ def _calc_banned_tokens(prev_input_ids, num_hypos, no_repeat_ngram_size, cur_len
 
 
 def get_table_token_ids(processor):
+    """
+    Extracts the table tokens from the tokenizer of the processor
+
+    Args:
+        processor (DonutProcessor): processor used to pre-process the images and text.
+    """
     skip_tokens = {
         token_id
         for token, token_id in processor.tokenizer.get_added_vocab().items()
