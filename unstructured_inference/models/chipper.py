@@ -1,6 +1,5 @@
 import os
-import typing
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Tuple
 
 import cv2
 import numpy as np
@@ -106,8 +105,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         return elements
 
     def predict_tokens(
-        self, image: Image
-    ) -> typing.tuple[List[int], Sequence[Sequence[torch.Tensor]]]:
+        self,
+        image: Image,
+    ) -> Tuple[List[int], Sequence[Sequence[torch.Tensor]]]:
         """Predict tokens from image."""
         with torch.no_grad():
             outputs = self.model.generate(
