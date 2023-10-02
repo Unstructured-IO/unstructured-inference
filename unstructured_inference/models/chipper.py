@@ -1,3 +1,4 @@
+import copy
 import os
 from typing import List, Optional, Sequence, Tuple
 
@@ -221,7 +222,22 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         ratio,
                         image.size,
                     )
+
                     element.bbox = Rectangle(*bbox_coords)
+
+                    # Check if children, if so update parent bbox
+                    if element.parent is not None:
+                        parent = element.parent
+                        # parent has no box, create one
+                        if parent.bbox is None:
+                            parent.bbox = copy.copy(element.bbox)
+                        else:
+                            # adjust parent box
+                            parent.bbox.x1 = min(parent.bbox.x1, element.bbox.x1)
+                            parent.bbox.y1 = min(parent.bbox.y1, element.bbox.y1)
+                            parent.bbox.x2 = max(parent.bbox.x2, element.bbox.x2)
+                            parent.bbox.y2 = max(parent.bbox.y2, element.bbox.y2)
+
                 start = -1
             else:
                 if start == -1:
