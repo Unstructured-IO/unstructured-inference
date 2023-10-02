@@ -1,7 +1,7 @@
 import functools
 
 import paddle
-from unstructured_paddleocr import PaddleOCR
+from paddleocr import PaddleOCR
 
 from unstructured_inference.logger import logger
 
