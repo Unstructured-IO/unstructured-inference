@@ -121,3 +121,67 @@ def test_predict():
         model.predict("hello")
         mock_predict_tokens.assert_called_once()
         mock_postprocess.assert_called_once()
+
+
+def test_no_repeat_ngram_logits():
+    input_ids = torch.tensor([[1, 2, 3, 4, 5, 1, 2, 3, 4]])
+    logits = torch.tensor([[0.1, -0.3, -0.5, 0, 1.0, -0.9]])
+
+    batch_size = input_ids.shape[0]
+    cur_len = input_ids.shape[-1]
+
+    no_repeat_ngram_size = 2
+
+    output = chipper._no_repeat_ngram_logits(
+        input_ids=input_ids,
+        cur_len=cur_len,
+        logits=logits,
+        batch_size=batch_size,
+        no_repeat_ngram_size=no_repeat_ngram_size,
+    )
+
+    assert (
+        int(
+            torch.sum(
+                output == torch.tensor([[0.1000, -0.3000, -0.5000, 0.0000, 1.0000, -float("inf")]]),
+            ),
+        )
+        == 6
+    )
+
+    skip_tokens = {5}
+
+    output = chipper._no_repeat_ngram_logits(
+        input_ids=input_ids,
+        cur_len=cur_len,
+        logits=logits,
+        batch_size=batch_size,
+        no_repeat_ngram_size=no_repeat_ngram_size,
+        skip_tokens=skip_tokens,
+    )
+
+    assert (
+        int(
+            torch.sum(
+                output == logits,
+            ),
+        )
+        == 6
+    )
+
+    output = chipper._no_repeat_ngram_logits(
+        input_ids=input_ids,
+        cur_len=cur_len,
+        logits=logits,
+        batch_size=batch_size,
+        no_repeat_ngram_size=12,
+    )
+
+    assert (
+        int(
+            torch.sum(
+                output == logits,
+            ),
+        )
+        == 6
+    )
