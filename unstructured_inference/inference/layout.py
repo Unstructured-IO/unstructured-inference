@@ -778,8 +778,8 @@ def parse_ocr_data_paddle(ocr_data: list) -> List[TextRegion]:
     """
     text_regions = []
     for entry in ocr_data:
-        for (coords, *_), (text, *_), *_ in entry:
-            xs, ys = zip(*coords)
+        for coords, (text, *_), *_ in entry:
+            xs, ys, *_ = zip(*coords)
             x1 = min(xs)
             y1 = min(ys)
             x2 = max(xs)
