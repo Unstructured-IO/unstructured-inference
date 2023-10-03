@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Final, List, Optional, Union
+from typing import Dict, Final, List, Optional, Union, cast
 
 import cv2
 import numpy as np
@@ -165,4 +165,4 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
                 regions.append(region)
 
         regions.sort(key=lambda element: element.bbox.y1)
-        return regions
+        return cast(List[LayoutElement], regions)

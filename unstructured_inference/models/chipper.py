@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import cv2
 import numpy as np
@@ -12,8 +12,9 @@ from transformers.generation.logits_process import LogitsProcessor
 from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredElementExtractionModel
+from unstructured_inference.utils import LazyDict
 
-MODEL_TYPES = {
+MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
     "chipper": {
         "pre_trained_model_repo": "unstructuredio/ved-fine-tuning",
         "swap_head": False,
@@ -189,11 +190,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     parent=parent,
                     type=stype[3:-1],
                     text="",
-                    bbox=None,
-                    # source="chipper",
-                    # type=None,
-                    # prob=None,
-                    # image_path=None,
+                    bbox=None,  # type: ignore
                 )
                 parents.append(element)
                 elements.append(element)
@@ -268,21 +265,15 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         for tidx in tkn_indexes:
             hmaps = torch.stack(list(decoder_cross_attentions[tidx]), dim=0)
-            # print(hmaps.shape)
             # shape [4, 1, 16, 1, 1200]->[4, 16, 1200]
             hmaps = hmaps.permute(1, 3, 0, 2, 4).squeeze(0)
-            # print(hmaps.shape)
             hmaps = hmaps[-1]
-            # print(hmaps.shape)
             # change shape [4, 16, 1200]->[4, 16, 40, 30] assuming (heatmap_h, heatmap_w) = (40, 30)
             hmaps = hmaps.view(4, 16, heatmap_h, heatmap_w)
-            # print(hmaps.shape)
             # fusing 16 decoder attention heads i.e. [4, 16, 40, 30]-> [16, 40, 30]
             hmaps = torch.max(hmaps, dim=1)[0]
-            # print(hmaps.shape)
             # fusing 4 decoder layers from BART i.e. [16, 40, 30]-> [40, 30]
             hmap = torch.max(hmaps, dim=0)[0]
-            # print(hmap.shape)
 
             # dropping discard ratio activations
             flat = hmap.view(heatmap_h * heatmap_w)

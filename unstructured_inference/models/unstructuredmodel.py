@@ -9,9 +9,8 @@ from PIL.Image import Image
 from unstructured_inference.inference.elements import (
     grow_region_to_match_region,
     intersections,
-    partition_groups_from_regions,
 )
-from unstructured_inference.inference.layoutelement import separate
+from unstructured_inference.inference.layoutelement import partition_groups_from_regions, separate
 
 if TYPE_CHECKING:
     from unstructured_inference.inference.layoutelement import LayoutElement
@@ -67,7 +66,8 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
     ) -> List[LayoutElement]:
         """This function traverses all the elements and either deletes nested elements,
         or merges or splits them depending on the iom score for both regions"""
-        intersections_mtx = intersections(*elements)
+        rects = [el.bbox for el in elements]
+        intersections_mtx = intersections(*rects)
 
         for i, row in enumerate(intersections_mtx):
             first = elements[i]
@@ -80,7 +80,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                     continue
                 if len(indices_to_check) > 1:  # sort by iom
                     iom_to_check = [
-                        (j, first.intersection_over_minimum(elements[j]))
+                        (j, first.bbox.intersection_over_minimum(elements[j].bbox))
                         for j in indices_to_check
                         if elements[j] is not None
                     ]
@@ -93,11 +93,11 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                     if elements[j] is None or elements[i] is None:
                         continue
                     second = elements[j]
-                    intersection = first.intersection(
-                        second,
+                    intersection = first.bbox.intersection(
+                        second.bbox,
                     )  # we know it does, but need the region
-                    first_inside_second = first.is_in(second)
-                    second_inside_first = second.is_in(first)
+                    first_inside_second = first.bbox.is_in(second.bbox)
+                    second_inside_first = second.bbox.is_in(first.bbox)
 
                     if first_inside_second and not second_inside_first:
                         elements[i] = None  # type:ignore
@@ -105,18 +105,18 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                         # delete second element
                         elements[j] = None  # type:ignore
                     elif intersection:
-                        iom = first.intersection_over_minimum(second)
+                        iom = first.bbox.intersection_over_minimum(second.bbox)
                         if iom < iom_to_merge:  # small
-                            separate(first, second)
+                            separate(first.bbox, second.bbox)
                             # The rectangle could become too small, which is a
                             # good size to delete?
                         else:  # big
                             # merge
-                            if first.area > second.area:
-                                grow_region_to_match_region(first, second)
+                            if first.bbox.area > second.bbox.area:
+                                grow_region_to_match_region(first.bbox, second.bbox)
                                 elements[j] = None  # type:ignore
                             else:
-                                grow_region_to_match_region(second, first)
+                                grow_region_to_match_region(second.bbox, first.bbox)
                                 elements[i] = None  # type:ignore
 
         elements = [e for e in elements if e is not None]

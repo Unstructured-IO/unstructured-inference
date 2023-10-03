@@ -5,13 +5,11 @@ import re
 import unicodedata
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Collection, List, Optional, Union
+from typing import Collection, Optional, Union
 
 import numpy as np
 from PIL import Image
-from scipy.sparse.csgraph import connected_components
 
-from unstructured_inference.config import inference_config
 from unstructured_inference.logger import logger
 from unstructured_inference.math import safe_division
 from unstructured_inference.models import tesseract
@@ -144,28 +142,6 @@ def minimal_containing_region(*regions: Rectangle) -> Rectangle:
     y2 = max(region.y2 for region in regions)
 
     return Rectangle(x1, y1, x2, y2)
-
-
-def partition_groups_from_regions(regions: Collection[Rectangle]) -> List[List[Rectangle]]:
-    """Partitions regions into groups of regions based on proximity. Returns list of lists of
-    regions, each list corresponding with a group"""
-    if len(regions) == 0:
-        return []
-    padded_regions = [
-        r.bbox.vpad(r.bbox.height * inference_config.ELEMENTS_V_PADDING_COEF).hpad(
-            r.bbox.height * inference_config.ELEMENTS_H_PADDING_COEF,
-        )
-        for r in regions
-    ]
-
-    intersection_mtx = intersections(*padded_regions)
-
-    _, group_nums = connected_components(intersection_mtx)
-    groups: List[List[Rectangle]] = [[] for _ in range(max(group_nums) + 1)]
-    for region, group_num in zip(regions, group_nums):
-        groups[group_num].append(region)
-
-    return groups
 
 
 def intersections(*rects: Rectangle):

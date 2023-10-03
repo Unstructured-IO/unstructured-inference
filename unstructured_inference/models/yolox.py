@@ -4,7 +4,7 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
 import os
-from typing import List
+from typing import List, cast
 
 import cv2
 import numpy as np
@@ -157,7 +157,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
         regions.sort(key=lambda element: element.bbox.y1)
 
-        page_layout = regions  # TODO(benjamin): encode image as base64?
+        page_layout = cast(List[LayoutElement], regions)  # TODO(benjamin): encode image as base64?
 
         return page_layout
 

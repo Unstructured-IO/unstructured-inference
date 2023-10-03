@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Optional, Union, cast
+from typing import Collection, List, Optional, cast
 
 import numpy as np
 from layoutparser.elements.layout import TextBlock
 from pandas import DataFrame
 from PIL import Image
+from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.constants import (
@@ -19,7 +20,7 @@ from unstructured_inference.inference.elements import (
     Rectangle,
     TextRegion,
     grow_region_to_match_region,
-    partition_groups_from_regions,
+    intersections,
     region_bounding_boxes_are_almost_the_same,
 )
 
@@ -162,7 +163,7 @@ def merge_inferred_layout_with_extracted_layout(
                         inferred_regions_to_remove.append(inferred_region)
                     else:
                         # keep inferred region, remove extracted region
-                        grow_region_to_match_region(inferred_region, extracted_region)
+                        grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
                         inferred_region.text = extracted_region.text
                         region_matched = True
                 elif extracted_is_subregion_of_inferred and inferred_is_text:
@@ -171,7 +172,7 @@ def merge_inferred_layout_with_extracted_layout(
                         region_matched = False
                     else:
                         # keep inferred region, remove extracted region
-                        grow_region_to_match_region(inferred_region, extracted_region)
+                        grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
                         region_matched = True
                 elif either_region_is_subregion_of_other and inferred_region.type != "Table":
                     # keep extracted region, remove inferred region
@@ -361,7 +362,7 @@ def get_elements_from_ocr_regions(ocr_regions: List[TextRegion]) -> List[LayoutE
     ]
 
 
-def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutElement, Rectangle]):
+def separate(region_a: Rectangle, region_b: Rectangle):
     """Reduce leftmost rectangle to don't overlap with the other"""
 
     def reduce(keep: Rectangle, reduce: Rectangle):
@@ -415,3 +416,25 @@ def table_cells_to_dataframe(cells: dict, nrows: int = 1, ncols: int = 1, header
         arr[rows[0], cols[0]] = cell["cell text"]
 
     return DataFrame(arr, columns=header)
+
+
+def partition_groups_from_regions(regions: Collection[TextRegion]) -> List[List[TextRegion]]:
+    """Partitions regions into groups of regions based on proximity. Returns list of lists of
+    regions, each list corresponding with a group"""
+    if len(regions) == 0:
+        return []
+    padded_regions = [
+        r.bbox.vpad(r.bbox.height * inference_config.ELEMENTS_V_PADDING_COEF).hpad(
+            r.bbox.height * inference_config.ELEMENTS_H_PADDING_COEF,
+        )
+        for r in regions
+    ]
+
+    intersection_mtx = intersections(*padded_regions)
+
+    _, group_nums = connected_components(intersection_mtx)
+    groups: List[List[TextRegion]] = [[] for _ in range(max(group_nums) + 1)]
+    for region, group_num in zip(regions, group_nums):
+        groups[group_num].append(region)
+
+    return groups
