@@ -186,3 +186,45 @@ def test_no_repeat_ngram_logits():
         )
         == 6
     )
+
+
+@pytest.mark.parametrize(
+    ("decoded_str", "expected_classes"),
+    [
+        ("<s><s_Misc> 1</s_Misc><s_Text>There is some text here.</s_Text></s>", ["Misc", "Text"]),
+        (
+            "<s><s_List><s_List-item>Text here.</s_List-item><s_List><s_List-item>Final one",
+            ["List", "List-item", "List", "List-item"],
+        ),
+    ],
+)
+def test_postprocess_bbox(decoded_str, expected_classes):
+    model = chipper.UnstructuredChipperModel()
+    pre_trained_model = "unstructuredio/ved-fine-tuning"
+    model.initialize(
+        pre_trained_model,
+        prompt="<s>",
+        swap_head=False,
+        max_length=1200,
+        heatmap_h=40,
+        heatmap_w=30,
+        source="chipper",
+    )
+
+    tokens = model.tokenizer.encode(decoded_str)
+    cross_attentions = [
+        [torch.ones([1, 16, 2, 1200]) if j == 0 else torch.ones([1, 16, 1, 1200]) for i in range(4)]
+        for j in range(550)
+    ]
+    with open("sample-docs/loremipsum.png", "rb") as fp:
+        out = model.postprocess(
+            image=Image.open(fp),
+            output_ids=tokens,
+            decoder_cross_attentions=cross_attentions,
+        )
+
+    assert len(out) == len(expected_classes)
+
+    for i in range(len(out)):
+        assert out[i].bbox is not None
+        assert out[i].type == expected_classes[i]
