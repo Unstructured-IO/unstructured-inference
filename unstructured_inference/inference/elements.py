@@ -196,9 +196,9 @@ def intersections(*rects: Rectangle):
 
 @dataclass
 class TextRegion:
+    bbox: Rectangle
     text: Optional[str] = None
     source: Optional[str] = None
-    bbox: Optional[Rectangle] = None
 
     def __str__(self) -> str:
         return str(self.text)
