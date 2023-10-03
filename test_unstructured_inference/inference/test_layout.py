@@ -204,7 +204,7 @@ def test_get_page_elements_with_paddle_ocr(monkeypatch):
     text_block = layout.TextRegion(2, 4, 6, 8, text=None)
     image_block = layout.ImageTextRegion(8, 14, 16, 18)
     doc_initial_layout = [text_block, image_block]
-    text_layoutelement = layoutelement.LayoutElement(
+    text_layoutelement = layoutelement.LayoutElement.from_coords(
         2,
         4,
         6,
@@ -212,7 +212,9 @@ def test_get_page_elements_with_paddle_ocr(monkeypatch):
         text=None,
         type="UncategorizedText",
     )
-    image_layoutelement = layoutelement.LayoutElement(8, 14, 16, 18, text=None, type="Image")
+    image_layoutelement = layoutelement.LayoutElement.from_coords(
+        8, 14, 16, 18, text=None, type="Image"
+    )
     doc_final_layout = [text_layoutelement, image_layoutelement]
 
     monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
