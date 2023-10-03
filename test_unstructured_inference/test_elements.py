@@ -236,7 +236,7 @@ def test_separate(rect1, rect2):
 def test_ocr_paddle(monkeypatch, caplog):
     monkeypatch.setenv("ENTIRE_PAGE_OCR", "paddle")
     image = Image.new("RGB", (100, 100), (255, 255, 255))
-    text_block = elements.TextRegion(0, 0, 50, 50)
+    text_block = elements.TextRegion.from_coords(0, 0, 50, 50)
     # Note(yuming): paddle result is currently non-deterministic on ci
     # so don't check result like `assert result == ""`
     # use logger info to confirm we are using paddle instead
