@@ -24,6 +24,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
         "max_length": 1200,
         "heatmap_h": 52,
         "heatmap_w": 39,
+        "source": Source.CHIPPER.value,
     },
     "chipperv2": {
         "pre_trained_model_repo": "unstructuredio/chipper-fast-fine-tuning",
@@ -32,6 +33,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
         "max_length": 1536,
         "heatmap_h": 40,
         "heatmap_w": 30,
+        "source": Source.CHIPPERV2.value,
     },
 }
 
@@ -45,6 +47,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         max_length: int,
         heatmap_h: int,
         heatmap_w: int,
+        source: str,
         no_repeat_ngram_size: int = 10,
         auth_token: Optional[str] = os.environ.get("UNSTRUCTURED_HF_TOKEN"),
     ):
@@ -56,6 +59,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.max_length = max_length
         self.heatmap_h = heatmap_h
         self.heatmap_w = heatmap_w
+        self.source = source
         self.processor = DonutProcessor.from_pretrained(pre_trained_model_repo, token=auth_token)
         self.tokenizer = self.processor.tokenizer
         self.logits_processor = NoRepeatNGramLogitsProcessor(
@@ -158,6 +162,22 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         return tokens, decoder_cross_attentions
 
+    def update_parent_bbox(self, element):
+        # Check if children, if so update parent bbox
+        if element.parent is not None:
+            parent = element.parent
+            # parent has no box, create one
+            if parent.bbox is None:
+                parent.bbox = copy.copy(element.bbox)
+            else:
+                # adjust parent box
+                parent.bbox.x1 = min(parent.bbox.x1, element.bbox.x1)
+                parent.bbox.y1 = min(parent.bbox.y1, element.bbox.y1)
+                parent.bbox.x2 = max(parent.bbox.x2, element.bbox.x2)
+                parent.bbox.y2 = max(parent.bbox.y2, element.bbox.y2)
+
+            self.update_parent_bbox(element.parent)
+
     def postprocess(
         self,
         image: Image,
@@ -193,17 +213,19 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     type=stype[3:-1],
                     text="",
                     bbox=None,  # type: ignore
-                    source=Source.CHIPPERV2.value,
+                    source=self.source,
                 )
+
                 parents.append(element)
                 elements.append(element)
                 start = -1
             elif output_ids[i] in self.end_tokens:
-                if start != -1 and start < end and len(parents) > 0:
+                if start != -1 and start <= end and len(parents) > 0:
                     slicing_end = end + 1
                     string = self.tokenizer.decode(output_ids[start:slicing_end])
 
                     element = parents.pop(-1)
+
                     element.text = string
                     bbox_coords = self.get_bounding_box(
                         decoder_cross_attentions=decoder_cross_attentions,
@@ -224,18 +246,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                     element.bbox = Rectangle(*bbox_coords)
 
-                    # Check if children, if so update parent bbox
-                    if element.parent is not None:
-                        parent = element.parent
-                        # parent has no box, create one
-                        if parent.bbox is None:
-                            parent.bbox = copy.copy(element.bbox)
-                        else:
-                            # adjust parent box
-                            parent.bbox.x1 = min(parent.bbox.x1, element.bbox.x1)
-                            parent.bbox.y1 = min(parent.bbox.y1, element.bbox.y1)
-                            parent.bbox.x2 = max(parent.bbox.x2, element.bbox.x2)
-                            parent.bbox.y2 = max(parent.bbox.y2, element.bbox.y2)
+                    self.update_parent_bbox(element)
 
                 start = -1
             else:
@@ -251,6 +262,27 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
             element = parents.pop(-1)
             element.text = string
+
+            bbox_coords = self.get_bounding_box(
+                decoder_cross_attentions=decoder_cross_attentions,
+                tkn_indexes=list(range(start - 1, end)),
+                final_w=self.processor.image_processor.size["width"],
+                final_h=self.processor.image_processor.size["height"],
+                heatmap_w=self.heatmap_w,
+                heatmap_h=self.heatmap_h,
+            )
+
+            bbox_coords = self.adjust_bbox(
+                bbox_coords,
+                x_offset,
+                y_offset,
+                ratio,
+                image.size,
+            )
+
+            element.bbox = Rectangle(*bbox_coords)
+
+            self.update_parent_bbox(element)
 
         return elements
 

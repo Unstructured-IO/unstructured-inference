@@ -15,6 +15,7 @@ class Source(Enum):
     YOLOX = "yolox"
     DETECTRON2_ONNX = "detectron2_onnx"
     DETECTRON2_LP = "detectron2_lp"
+    CHIPPER = "chipper"
     CHIPPERV2 = "chipperv2"
     OCR_TESSERACT = "OCR-tesseract"
     OCR_PADDLE = "OCR-paddle"

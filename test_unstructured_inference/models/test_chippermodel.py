@@ -19,7 +19,7 @@ def test_initialize():
         "from_pretrained",
     ) as mock_vision_encoder_decoder_model:
         model = chipper.UnstructuredChipperModel()
-        model.initialize("", "", "", "", "", "")
+        model.initialize("", "", "", "", "", "", "")
         mock_donut_processor.assert_called_once()
         mock_logits_processor.assert_called_once()
         mock_vision_encoder_decoder_model.assert_called_once()
@@ -84,6 +84,7 @@ def test_postprocess(decoded_str, expected_classes, expected_parent_ids):
         max_length=1200,
         heatmap_h=40,
         heatmap_w=30,
+        source="chipper",
     )
 
     tokens = model.tokenizer.encode(decoded_str)
