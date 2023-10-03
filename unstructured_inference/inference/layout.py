@@ -777,14 +777,13 @@ def parse_ocr_data_paddle(ocr_data: list) -> List[TextRegion]:
       dictionary will result in its associated bounding box being ignored.
     """
     text_regions = []
-    for idx in range(len(ocr_data)):
-        res = ocr_data[idx]
-        for line in res:
-            x1 = min([i[0] for i in line[0]])
-            y1 = min([i[1] for i in line[0]])
-            x2 = max([i[0] for i in line[0]])
-            y2 = max([i[1] for i in line[0]])
-            text = line[1][0]
+    for entry in ocr_data:
+        for (coords, *_), (text, *_), *_ in entry:
+            xs, ys = zip(*coords)
+            x1 = min(xs)
+            y1 = min(ys)
+            x2 = max(xs)
+            y2 = max(ys)
             if text:
                 text_region = TextRegion.from_coords(
                     x1,
