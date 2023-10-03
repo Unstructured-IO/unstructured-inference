@@ -163,6 +163,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         return tokens, decoder_cross_attentions
 
     def update_parent_bbox(self, element):
+        """Update parents bboxes in a recursive way"""
         # Check if children, if so update parent bbox
         if element.parent is not None:
             parent = element.parent
