@@ -1043,7 +1043,7 @@ def test_get_image(filename, img_num, should_complete):
         assert not should_complete
 
 
-@pytest.fixture
+@pytest.fixture()
 def ocr_results():
     out = [[[[(1, 2), (3, 4)], ["test"]]]]
     return out
