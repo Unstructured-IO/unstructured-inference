@@ -1041,3 +1041,18 @@ def test_get_image(filename, img_num, should_complete):
         assert img.mean() == 255.0
     except ValueError:
         assert not should_complete
+
+
+@pytest.fixture
+def ocr_results():
+    out = [[[[(1, 2), (3, 4)], ["test"]]]]
+    return out
+
+
+def test_parse_ocr_data_paddle(ocr_results):
+    el, *_ = layout.parse_ocr_data_paddle(ocr_results)
+    assert el.bbox.x1 == 1
+    assert el.bbox.x2 == 3
+    assert el.bbox.y1 == 2
+    assert el.bbox.y2 == 4
+    assert el.text == "test"
