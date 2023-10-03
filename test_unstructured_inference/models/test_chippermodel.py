@@ -55,7 +55,7 @@ def test_predict_tokens():
 
 
 @pytest.mark.parametrize(
-    ("decoded_str", "expected_classes", "expected_ids", "expected_parent_ids"),
+    ("decoded_str", "expected_classes", "expected_parent_ids"),
     [
         (
             "<s_Title>Hi buddy!</s_Title><s_Text>There is some text here.</s_Text>",
