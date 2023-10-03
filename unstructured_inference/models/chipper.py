@@ -10,6 +10,7 @@ from PIL.Image import Image
 from transformers import DonutProcessor, VisionEncoderDecoderModel
 from transformers.generation.logits_process import LogitsProcessor
 
+from unstructured_inference.constants import Source
 from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredElementExtractionModel
@@ -192,6 +193,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     type=stype[3:-1],
                     text="",
                     bbox=None,  # type: ignore
+                    source=Source.CHIPPERV2.value,
                 )
                 parents.append(element)
                 elements.append(element)
