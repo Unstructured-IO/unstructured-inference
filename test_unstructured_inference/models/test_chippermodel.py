@@ -1,8 +1,8 @@
 from unittest import mock
 
 import pytest
-from PIL import Image
 import torch
+from PIL import Image
 
 from unstructured_inference.models import chipper
 
@@ -93,7 +93,9 @@ def test_postprocess(decoded_str, expected_classes, expected_parent_ids):
     ]
     with open("sample-docs/loremipsum.png", "rb") as fp:
         out = model.postprocess(
-            image=Image.open(fp), output_ids=tokens, decoder_cross_attentions=cross_attentions
+            image=Image.open(fp),
+            output_ids=tokens,
+            decoder_cross_attentions=cross_attentions,
         )
     assert len(out) == 2
     element1, element2 = out
