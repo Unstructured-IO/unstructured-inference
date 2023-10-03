@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 
 import unstructured_inference.models.base as models
+from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import (
     ModelNotInitializedError,
     UnstructuredObjectDetectionModel,
@@ -104,22 +105,27 @@ def test_enhance_regions():
     from unstructured_inference.models.base import get_model
 
     elements = [
-        Rectangle(0, 0, 1, 1),
-        Rectangle(0.01, 0.01, 1.01, 1.01),
-        Rectangle(0.02, 0.02, 1.02, 1.02),
-        Rectangle(0.03, 0.03, 1.03, 1.03),
-        Rectangle(0.04, 0.04, 1.04, 1.04),
-        Rectangle(0.05, 0.05, 1.05, 1.05),
-        Rectangle(0.06, 0.06, 1.06, 1.06),
-        Rectangle(0.07, 0.07, 1.07, 1.07),
-        Rectangle(0.08, 0.08, 1.08, 1.08),
-        Rectangle(0.09, 0.09, 1.09, 1.09),
-        Rectangle(0.10, 0.10, 1.10, 1.10),
+        LayoutElement(bbox=Rectangle(0, 0, 1, 1)),
+        LayoutElement(bbox=Rectangle(0.01, 0.01, 1.01, 1.01)),
+        LayoutElement(bbox=Rectangle(0.02, 0.02, 1.02, 1.02)),
+        LayoutElement(bbox=Rectangle(0.03, 0.03, 1.03, 1.03)),
+        LayoutElement(bbox=Rectangle(0.04, 0.04, 1.04, 1.04)),
+        LayoutElement(bbox=Rectangle(0.05, 0.05, 1.05, 1.05)),
+        LayoutElement(bbox=Rectangle(0.06, 0.06, 1.06, 1.06)),
+        LayoutElement(bbox=Rectangle(0.07, 0.07, 1.07, 1.07)),
+        LayoutElement(bbox=Rectangle(0.08, 0.08, 1.08, 1.08)),
+        LayoutElement(bbox=Rectangle(0.09, 0.09, 1.09, 1.09)),
+        LayoutElement(bbox=Rectangle(0.10, 0.10, 1.10, 1.10)),
     ]
     model = get_model("yolox_tiny")
     elements = model.enhance_regions(elements, 0.5)
     assert len(elements) == 1
-    assert (elements[0].x1, elements[0].y1, elements[0].x2, elements[0].x2) == (0, 0, 1.10, 1.10)
+    assert (elements[0].bbox.x1, elements[0].bbox.y1, elements[0].bbox.x2, elements[0].bbox.x2) == (
+        0,
+        0,
+        1.10,
+        1.10,
+    )
 
 
 def test_clean_type():

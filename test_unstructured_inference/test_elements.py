@@ -7,7 +7,7 @@ import pytest
 from PIL import Image
 
 from unstructured_inference.inference import elements
-from unstructured_inference.inference.layoutelement import separate
+from unstructured_inference.inference.layoutelement import partition_groups_from_regions, separate
 
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
@@ -95,7 +95,7 @@ def test_minimal_containing_rect():
 
 def test_partition_groups_from_regions(mock_embedded_text_regions):
     words = mock_embedded_text_regions
-    groups = elements.partition_groups_from_regions(words)
+    groups = partition_groups_from_regions(words)
     assert len(groups) == 1
     sorted_groups = sorted(groups, key=lambda group: group[0].bbox.y1)
     text = "".join([el.text for el in sorted_groups[-1]])
