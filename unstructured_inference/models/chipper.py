@@ -359,7 +359,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 # Inspired on
 # https://github.com/huggingface/transformers/blob/8e3980a290acc6d2f8ea76dba111b9ef0ef00309/src/transformers/generation/logits_process.py#L706
 class NoRepeatNGramLogitsProcessor(LogitsProcessor):
-    def __init__(self, ngram_size: int, skip_tokens=None):
+    def __init__(self, ngram_size: int, skip_tokens: Optional[Sequence[int]] = None):
         if not isinstance(ngram_size, int) or ngram_size <= 0:
             raise ValueError(
                 f"`ngram_size` has to be a strictly positive integer, but is {ngram_size}",
@@ -396,13 +396,13 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
 
 
 def _no_repeat_ngram_logits(
-    input_ids,
-    cur_len,
-    logits,
-    batch_size=1,
-    no_repeat_ngram_size=0,
-    skip_tokens=None,
-):
+    input_ids: torch.LongTensor,
+    cur_len: int,
+    logits: torch.FloatTensor,
+    batch_size: int = 1,
+    no_repeat_ngram_size: int = 0,
+    skip_tokens: Optional[Sequence[int]] = None,
+) -> torch.FloatTensor:
     if no_repeat_ngram_size > 0:
         # calculate a list of banned tokens to prevent repetitively generating the same ngrams
         # from fairseq:
@@ -420,12 +420,17 @@ def _no_repeat_ngram_logits(
     return logits
 
 
-def _calc_banned_tokens(prev_input_ids, num_hypos, no_repeat_ngram_size, cur_len):
+def _calc_banned_tokens(
+    prev_input_ids: torch.LongTensor,
+    num_hypos: int,
+    no_repeat_ngram_size: int,
+    cur_len: int,
+) -> List[Tuple[int, ...]]:
     # Copied from fairseq for no_repeat_ngram in beam_search"""
     if cur_len + 1 < no_repeat_ngram_size:
         # return no banned tokens if we haven't generated no_repeat_ngram_size tokens yet
-        return [[] for _ in range(num_hypos)]
-    generated_ngrams = [{} for _ in range(num_hypos)]
+        return [() for _ in range(num_hypos)]
+    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [{} for _ in range(num_hypos)]
     for idx in range(num_hypos):
         gen_tokens = prev_input_ids[idx].tolist()
         generated_ngram = generated_ngrams[idx]
