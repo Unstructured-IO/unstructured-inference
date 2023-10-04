@@ -213,9 +213,7 @@ class TextRegion(Rectangle):
         elif objects is not None:
             text = aggregate_by_block(self, objects)
         else:
-            raise ValueError(
-                "Got layout as None, expected be populated to use for text extraction.",
-            )
+            text = ""
         return text
 
 
