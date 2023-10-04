@@ -496,6 +496,6 @@ def get_table_token_ids(processor):
     skip_tokens = {
         token_id
         for token, token_id in processor.tokenizer.get_added_vocab().items()
-        if token.startswith("<t")
+        if token.startswith("<t") or token.startswith("</t")
     }
     return skip_tokens
