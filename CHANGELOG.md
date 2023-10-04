@@ -2,6 +2,7 @@
 
 * Integration of Chipperv2 and additional Chipper functionality, which includes automatic detection of GPU,
 bounding box prediction and hierarchical representation.
+
 ## 0.6.6
 
 * Stop passing ocr_languages parameter into paddle to avoid invalid paddle language code error, this will be fixed until
