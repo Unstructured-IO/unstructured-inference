@@ -1,4 +1,4 @@
-## 0.6.7
+## 0.7.0
 
 * Remove all OCR related code expect the table OCR code
 
