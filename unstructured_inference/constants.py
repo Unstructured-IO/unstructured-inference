@@ -15,3 +15,6 @@ class Source(Enum):
 
 
 FULL_PAGE_REGION_THRESHOLD = 0.99
+
+# this field is defined by pytesseract/unstructured.pytesseract
+TESSERACT_TEXT_HEIGHT = "height"
