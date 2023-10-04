@@ -37,7 +37,6 @@ class LayoutElement(TextRegion):
         """Extracts text contained in region"""
         text = super().extract_text(
             objects=objects,
-            image=image,
             extract_tables=extract_tables,
         )
         if extract_tables and self.type == "Table":

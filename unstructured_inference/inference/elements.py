@@ -211,13 +211,10 @@ class TextRegion(Rectangle):
             # If block text is already populated, we'll assume it's correct
             text = self.text
         elif objects is not None:
-            text = aggregate_by_block(self, image, objects)
-        elif image is not None:
-            text = ""
+            text = aggregate_by_block(self, objects)
         else:
             raise ValueError(
-                "Got arguments image and layout as None, at least one must be populated to use for "
-                "text extraction.",
+                "Got layout as None, expected be populated to use for text extraction.",
             )
         return text
 
@@ -247,12 +244,11 @@ class ImageTextRegion(TextRegion):
         if self.text is None:
             return ""
         else:
-            return super().extract_text(objects, image, extract_tables)
+            return super().extract_text(objects, extract_tables)
 
 
 def aggregate_by_block(
     text_region: TextRegion,
-    image: Optional[Image.Image],
     pdf_objects: Collection[TextRegion],
 ) -> str:
     """Extracts the text aggregated from the elements of the given layout that lie within the given
