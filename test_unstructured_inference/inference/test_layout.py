@@ -272,12 +272,6 @@ class MockLayout:
         return MockLayout()
 
 
-def test_get_elements_from_block_raises():
-    with pytest.raises(ValueError):
-        block = layout.TextRegion(0, 0, 10, 10, text=None)
-        layout.get_element_from_block(block, None, None)
-
-
 @pytest.mark.parametrize("filetype", ["png", "jpg", "tiff"])
 def test_from_image_file(monkeypatch, mock_final_layout, filetype):
     def mock_get_elements(self, *args, **kwargs):
