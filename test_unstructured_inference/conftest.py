@@ -115,27 +115,10 @@ def mock_embedded_text_regions():
     ]
 
 
-@pytest.fixture()
-def mock_ocr_regions():
-    return [
-        EmbeddedTextRegion.from_coords(10, 10, 90, 90, text="0", source=None),
-        EmbeddedTextRegion.from_coords(200, 200, 300, 300, text="1", source=None),
-        EmbeddedTextRegion.from_coords(500, 320, 600, 350, text="3", source=None),
-    ]
-
-
 # TODO(alan): Make a better test layout
 @pytest.fixture()
 def mock_layout(mock_embedded_text_regions):
     return [
         LayoutElement(text=r.text, type="UncategorizedText", bbox=r.bbox)
-        for r in mock_embedded_text_regions
-    ]
-
-
-@pytest.fixture()
-def mock_inferred_layout(mock_embedded_text_regions):
-    return [
-        LayoutElement(text=None, source=None, type="Text", bbox=r.bbox)
         for r in mock_embedded_text_regions
     ]

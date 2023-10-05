@@ -1,7 +1,10 @@
-## 0.6.7
+## 0.7.1-dev0
 
 * Integration of Chipperv2 and additional Chipper functionality, which includes automatic detection of GPU,
 bounding box prediction and hierarchical representation.
+## 0.7.0
+
+* Remove all OCR related code expect the table OCR code
 
 ## 0.6.6
 
