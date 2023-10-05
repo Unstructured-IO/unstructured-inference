@@ -16,11 +16,11 @@ from PIL import Image
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 
 from unstructured_inference.config import inference_config
-from unstructured_inference.logger import logger
-from unstructured_inference.models.table_postprocess import Rect
-from unstructured_inference.models.tesseract import (
+from unstructured_inference.constants import (
     TESSERACT_TEXT_HEIGHT,
 )
+from unstructured_inference.logger import logger
+from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.utils import pad_image_with_background_color
 
