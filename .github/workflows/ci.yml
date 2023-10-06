@@ -120,6 +120,7 @@ jobs:
         GH_READ_ONLY_ACCESS_TOKEN: ${{ secrets.GH_READ_ONLY_ACCESS_TOKEN }}
         SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
         DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+        UNSTRUCTURED_HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         python${{ matrix.python-version }} -m venv .venv
         source .venv/bin/activate
