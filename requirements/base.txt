@@ -8,9 +8,9 @@ antlr4-python3-runtime==4.9.3
     # via omegaconf
 certifi==2023.7.22
     # via requests
-cffi==1.15.1
+cffi==1.16.0
     # via cryptography
-charset-normalizer==3.2.0
+charset-normalizer==3.3.0
     # via
     #   pdfminer-six
     #   requests
@@ -20,7 +20,7 @@ contourpy==1.1.1
     # via matplotlib
 cryptography==41.0.4
     # via pdfminer-six
-cycler==0.11.0
+cycler==0.12.0
     # via matplotlib
 effdet==0.4.1
     # via layoutparser
@@ -31,14 +31,17 @@ filelock==3.12.4
     #   transformers
 flatbuffers==23.5.26
     # via onnxruntime
-fonttools==4.42.1
+fonttools==4.43.0
     # via matplotlib
-fsspec==2023.9.1
-    # via huggingface-hub
-huggingface-hub==0.17.2
+fsspec==2023.9.2
+    # via
+    #   huggingface-hub
+    #   torch
+huggingface-hub==0.16.4
     # via
     #   -r requirements/base.in
     #   timm
+    #   tokenizers
     #   transformers
 humanfriendly==10.0
     # via coloredlogs
@@ -79,13 +82,13 @@ omegaconf==2.3.0
     # via effdet
 onnx==1.14.1
     # via -r requirements/base.in
-onnxruntime==1.16.0
+onnxruntime==1.15.1
     # via -r requirements/base.in
-opencv-python==4.8.0.76
+opencv-python==4.8.1.78
     # via
     #   -r requirements/base.in
     #   layoutparser
-packaging==23.1
+packaging==23.2
     # via
     #   huggingface-hub
     #   matplotlib
@@ -110,7 +113,7 @@ pillow==10.0.1
     #   torchvision
 portalocker==2.8.2
     # via iopath
-protobuf==4.24.3
+protobuf==4.24.4
     # via
     #   onnx
     #   onnxruntime
@@ -139,9 +142,9 @@ pyyaml==6.0.1
     #   omegaconf
     #   timm
     #   transformers
-rapidfuzz==3.3.0
+rapidfuzz==3.3.1
     # via -r requirements/base.in
-regex==2023.8.8
+regex==2023.10.3
     # via transformers
 requests==2.31.0
     # via
@@ -162,15 +165,15 @@ sympy==1.12
     #   torch
 timm==0.9.7
     # via effdet
-tokenizers==0.13.3
+tokenizers==0.14.0
     # via transformers
-torch==2.0.1
+torch==2.1.0
     # via
     #   effdet
     #   layoutparser
     #   timm
     #   torchvision
-torchvision==0.15.2
+torchvision==0.16.0
     # via
     #   effdet
     #   layoutparser
@@ -180,7 +183,7 @@ tqdm==4.66.1
     #   huggingface-hub
     #   iopath
     #   transformers
-transformers==4.33.2
+transformers==4.34.0
     # via -r requirements/base.in
 typing-extensions==4.8.0
     # via
@@ -190,7 +193,7 @@ typing-extensions==4.8.0
     #   torch
 tzdata==2023.3
     # via pandas
-urllib3==2.0.5
+urllib3==2.0.6
     # via requests
 zipp==3.17.0
     # via importlib-resources
