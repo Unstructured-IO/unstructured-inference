@@ -1,3 +1,7 @@
+## 0.7.2
+
+* Sort elements extracted by `pdfminer` to get consistent result from `aggregate_by_block()`
+
 ## 0.7.1
 
 * Download yolox_quantized from HF
