@@ -1,3 +1,7 @@
+## 0.7.1
+
+* sort elements extracted by `pdfminer` to get consistent result from `aggregate_by_block()`
+
 ## 0.7.0
 
 * Remove all OCR related code expect the table OCR code
