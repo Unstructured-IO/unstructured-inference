@@ -1,3 +1,7 @@
+## 0.7.1
+
+* Download yolox_quantized from HF
+
 ## 0.7.0
 
 * Remove all OCR related code expect the table OCR code
