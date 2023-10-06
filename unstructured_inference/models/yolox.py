@@ -3,20 +3,16 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/237e943ac64aa32eb32f875faa93ebb18512d41d/yolox/data/data_augment.py
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
-import os
 from typing import List
 
 import cv2
 import numpy as np
 import onnxruntime
 from huggingface_hub import hf_hub_download
-from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
-from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
 from unstructured_inference.constants import Source
 from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 
@@ -51,14 +47,14 @@ MODEL_TYPES = {
         ),
         label_map=YOLOX_LABEL_MAP,
     ),
-    "yolox_quantized": {
-        "model_path": os.path.join(
-            HUGGINGFACE_HUB_CACHE,
-            "yolox_quantized",
-            "yolox_quantized.onnx",
+    "yolox_quantized": LazyDict(
+        model_path=LazyEvaluateInfo(
+            hf_hub_download,
+            "unstructuredio/yolo_x_layout",
+            "yolox_l0.05_quantized.onnx",
         ),
-        "label_map": YOLOX_LABEL_MAP,
-    },
+        label_map=YOLOX_LABEL_MAP,
+    ),
 }
 
 
@@ -70,15 +66,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
     def initialize(self, model_path: str, label_map: dict):
         """Start inference session for YoloX model."""
-        if not os.path.exists(model_path) and "yolox_quantized" in model_path:
-            logger.info("Quantized model don't currently exists, quantizing now...")
-            model_folder = "".join(os.path.split(model_path)[:-1])
-            if not os.path.exists(model_folder):
-                os.mkdir(model_folder)
-            source_path = MODEL_TYPES["yolox"]["model_path"]
-            quantize_dynamic(source_path, model_path, weight_type=QuantType.QUInt8)
         self.model_path = model_path
-
         self.model = onnxruntime.InferenceSession(
             model_path,
             providers=[
