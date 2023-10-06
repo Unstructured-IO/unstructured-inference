@@ -5,6 +5,7 @@ import torch
 from PIL import Image
 
 from unstructured_inference.models import chipper
+from unstructured_inference.models.base import get_model
 
 
 def test_initialize():
@@ -228,3 +229,11 @@ def test_postprocess_bbox(decoded_str, expected_classes):
     for i in range(len(out)):
         assert out[i].bbox is not None
         assert out[i].type == expected_classes[i]
+
+
+def test_run_chipper_v2():
+    model = get_model("chipperv2")
+    img = Image.open("sample-docs/easy_table.jpg")
+    elements = model(img)
+    tables = [el for el in elements if el.type == "Table"]
+    assert tables
