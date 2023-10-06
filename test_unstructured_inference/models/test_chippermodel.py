@@ -31,6 +31,9 @@ class MockToList:
 
 
 class MockModel:
+    def encoder(*args, **kwargs):
+        return {}
+
     def generate(*args, **kwargs):
         return {"cross_attentions": mock.MagicMock(), "sequences": [[5, 4, 3, 2, 1]]}
         return MockToList()
@@ -39,6 +42,8 @@ class MockModel:
 def mock_initialize(self, *arg, **kwargs):
     self.model = MockModel()
     self.processor = mock.MagicMock()
+    self.stopping_criteria = mock.MagicMock()
+    self.max_length = 1200
     self.logits_processor = mock.MagicMock()
     self.input_ids = mock.MagicMock()
     self.device = "cpu"
