@@ -89,6 +89,8 @@ jobs:
         sudo apt-get update
         sudo apt-get -y install poppler-utils tesseract-ocr
     - name: Test
+      env:
+        UNSTRUCTURED_HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         source .venv/bin/activate
         CI=true make test
@@ -120,7 +122,6 @@ jobs:
         GH_READ_ONLY_ACCESS_TOKEN: ${{ secrets.GH_READ_ONLY_ACCESS_TOKEN }}
         SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
         DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
-        UNSTRUCTURED_HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         python${{ matrix.python-version }} -m venv .venv
         source .venv/bin/activate
