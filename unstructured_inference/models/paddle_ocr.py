@@ -1,3 +1,4 @@
+"""This OCR module is used in table models only and will be removed after table OCR refactoring"""
 import functools
 
 import paddle

@@ -20,7 +20,6 @@ RUN python3.8 -m pip install pip==${PIP_VERSION} && \
   pip install --no-cache -r requirements/base.txt && \
   pip install --no-cache -r requirements/test.txt && \
   pip install --no-cache -r requirements/dev.txt && \
-  pip install "unstructured.PaddleOCR" && \
   dnf -y groupremove "Development Tools" && \
   dnf clean all
 

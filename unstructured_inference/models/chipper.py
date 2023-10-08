@@ -334,7 +334,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             hmap = flat.view(heatmap_h, heatmap_w)
 
             hmap = hmap.unsqueeze(dim=-1).cpu().numpy()
-            hmap = (hmap * 255.0).astype(np.uint8)  # (40, 30, 1) uint8
+            hmap = (hmap * 255.0).astype(np.uint8)  # type:ignore
+            # (40, 30, 1) uint8
             # fuse heatmaps for different tokens by taking the max
             agg_heatmap = np.max(
                 np.asarray([agg_heatmap, cv2.resize(hmap, (final_w, final_h))]),
