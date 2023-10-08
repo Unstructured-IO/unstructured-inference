@@ -127,7 +127,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 ).pixel_values.to(self.device),
                 decoder_input_ids=self.input_ids,
                 logits_processor=[self.logits_processor],
-                # max_length=self.max_length,
+                max_length=self.max_length,
                 do_sample=True,
                 top_p=0.92,
                 top_k=5,

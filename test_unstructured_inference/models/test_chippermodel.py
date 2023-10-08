@@ -42,6 +42,7 @@ def mock_initialize(self, *arg, **kwargs):
     self.logits_processor = mock.MagicMock()
     self.input_ids = mock.MagicMock()
     self.device = "cpu"
+    self.max_length = 1200
 
 
 def test_predict_tokens():
