@@ -1,3 +1,7 @@
+## 0.7.3-dev0
+
+* Remove control characters from the text of all layout elements
+
 ## 0.7.2
 
 * Sort elements extracted by `pdfminer` to get consistent result from `aggregate_by_block()`
