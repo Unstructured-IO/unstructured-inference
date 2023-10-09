@@ -15,6 +15,7 @@ from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredElementExtractionModel
 from unstructured_inference.utils import LazyDict
+from unstructured_inference.logger import logger
 
 MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
     "chipper": {
@@ -29,6 +30,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
     "chipperv2": {
         "pre_trained_model_repo": "unstructuredio/chipper-fast-fine-tuning",
         "swap_head": True,
+        "swap_head_hidden_layer_size": 128,
         "prompt": "<s><s_hierarchical>",
         "max_length": 1536,
         "heatmap_h": 40,
@@ -43,6 +45,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self,
         pre_trained_model_repo: str,
         swap_head: bool,
+        swap_head_hidden_layer_size: Optional[int],
         prompt: str,
         max_length: int,
         heatmap_h: int,
@@ -82,13 +85,19 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 filename="lm_head.pth",
                 token=auth_token,
             )
-            rank = 128
+            rank = swap_head_hidden_layer_size
             self.model.decoder.lm_head = torch.nn.Sequential(
                 torch.nn.Linear(self.model.decoder.lm_head.weight.shape[1], rank, bias=False),
                 torch.nn.Linear(rank, rank, bias=False),
                 torch.nn.Linear(rank, self.model.decoder.lm_head.weight.shape[0], bias=True),
             )
             self.model.decoder.lm_head.load_state_dict(torch.load(lm_head_file))
+        else:
+            if swap_head_hidden_layer_size is not None:
+                logger.warning(
+                    f"swap_head is False but recieved value {swap_head_hidden_layer_size} for "
+                    "swap_head_hidden_layer_size, which will be ignored."
+                )
 
         self.input_ids = self.processor.tokenizer(
             prompt,
