@@ -20,7 +20,7 @@ def test_initialize():
         "from_pretrained",
     ) as mock_vision_encoder_decoder_model:
         model = chipper.UnstructuredChipperModel()
-        model.initialize("", "", "", "", "", "", "")
+        model.initialize("", "", "", "", "", "", "", "", "")
         mock_donut_processor.assert_called_once()
         mock_logits_processor.assert_called_once()
         mock_vision_encoder_decoder_model.assert_called_once()
@@ -83,6 +83,8 @@ def test_postprocess(decoded_str, expected_classes, expected_parent_ids):
         pre_trained_model,
         prompt="<s>",
         swap_head=False,
+        swap_head_hidden_layer_size=128,
+        start_token_prefix="<s_",
         max_length=1200,
         heatmap_h=40,
         heatmap_w=30,
@@ -207,6 +209,8 @@ def test_postprocess_bbox(decoded_str, expected_classes):
         pre_trained_model,
         prompt="<s>",
         swap_head=False,
+        swap_head_hidden_layer_size=128,
+        start_token_prefix="<s_",
         max_length=1200,
         heatmap_h=40,
         heatmap_w=30,
