@@ -22,13 +22,16 @@ from unstructured_inference.models.yolox import (
 from unstructured_inference.models.yolox import (
     UnstructuredYoloXModel,
 )
+from unstructured_inference.models.super_gradients import (
+    UnstructuredSuperGradients,
+)
 
 DEFAULT_MODEL = "yolox_quantized"
 
 models: Dict[str, UnstructuredModel] = {}
 
 
-def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
+def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
     """Gets the model object by model name."""
     # TODO(alan): These cases are similar enough that we can probably do them all together with
     # importlib
@@ -43,13 +46,13 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
 
     if model_name in DETECTRON2_MODEL_TYPES:
         model: UnstructuredModel = UnstructuredDetectronModel()
-        model.initialize(**DETECTRON2_MODEL_TYPES[model_name])
+        initialize_params = {**DETECTRON2_MODEL_TYPES[model_name], **kwargs}
     elif model_name in DETECTRON2_ONNX_MODEL_TYPES:
         model = UnstructuredDetectronONNXModel()
-        model.initialize(**DETECTRON2_ONNX_MODEL_TYPES[model_name])
+        initialize_params = {**DETECTRON2_ONNX_MODEL_TYPES[model_name], **kwargs}
     elif model_name in YOLOX_MODEL_TYPES:
         model = UnstructuredYoloXModel()
-        model.initialize(**YOLOX_MODEL_TYPES[model_name])
+        initialize_params = {**YOLOX_MODEL_TYPES[model_name], **kwargs}
     elif model_name in CHIPPER_MODEL_TYPES:
         logger.warning(
             "The Chipper model is currently in Beta and is not yet ready for production use. "
@@ -60,9 +63,13 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
             "zt-1x7cgo0pg-PTptXWylzPQF9xZolzCnwQ",
         )
         model = UnstructuredChipperModel()
-        model.initialize(**CHIPPER_MODEL_TYPES[model_name])
+        initialize_params = {**CHIPPER_MODEL_TYPES[model_name], **kwargs}
+    elif model_name == 'super_gradients':
+        model = UnstructuredSuperGradients()
+        initialize_params = {**kwargs}
     else:
         raise UnknownModelException(f"Unknown model type: {model_name}")
+    model.initialize(initialize_params)
     models[model_name] = model
     return model
 

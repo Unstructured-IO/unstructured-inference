@@ -480,7 +480,7 @@ def process_file_with_model(
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
 
-    model = get_model(model_name)
+    model = get_model(model_name, **kwargs)
     if isinstance(model, UnstructuredObjectDetectionModel):
         detection_model = model
         element_extraction_model = None

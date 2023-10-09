@@ -12,6 +12,7 @@ class Source(Enum):
     DETECTRON2_LP = "detectron2_lp"
     PDFMINER = "pdfminer"
     MERGED = "merged"
+    SUPER_GRADIENTS = 'super-gradients'
 
 
 FULL_PAGE_REGION_THRESHOLD = 0.99
