@@ -70,9 +70,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.heatmap_h = heatmap_h
         self.heatmap_w = heatmap_w
         self.source = source
-        self.processor = DonutProcessor.from_pretrained(
-            pre_trained_model_repo, token=auth_token
-        ).to(device)
+        self.processor = DonutProcessor.from_pretrained(pre_trained_model_repo, token=auth_token)
         self.tokenizer = self.processor.tokenizer
         self.logits_processor = NoRepeatNGramLogitsProcessor(
             no_repeat_ngram_size,
