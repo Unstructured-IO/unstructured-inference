@@ -192,6 +192,9 @@ class PageLayout:
         self.elements: Collection[LayoutElement] = []
         self.extract_tables = extract_tables
         self.analysis = analysis
+        # NOTE(alan): Dropped LocationlessLayoutElement that was created for chipper - chipper has
+        # locations now and if we need to support LayoutElements without bounding boxes we can make
+        # the bbox property optional
         self.inferred_layout: Optional[List[LayoutElement]] = None
 
     def __str__(self) -> str:
