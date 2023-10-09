@@ -572,6 +572,8 @@ def load_pdf(
 
             if text_region.bbox is not None and text_region.bbox.area > 0:
                 layout.append(text_region)
+
+        layout = order_layout(layout)
         layouts.append(layout)
 
     if path_only and not output_folder:
