@@ -50,12 +50,16 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         source: str,
         no_repeat_ngram_size: int = 10,
         auth_token: Optional[str] = os.environ.get("UNSTRUCTURED_HF_TOKEN"),
+        device: Optional[str] = None,
     ):
         """Load the model for inference."""
-        if torch.cuda.is_available():
-            self.device = "cuda"
+        if device is None:
+            if torch.cuda.is_available():
+                self.device = "cuda"
+            else:
+                self.device = "cpu"
         else:
-            self.device = "cpu"
+            self.device = device
         self.max_length = max_length
         self.heatmap_h = heatmap_h
         self.heatmap_w = heatmap_w
