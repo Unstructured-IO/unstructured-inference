@@ -13,9 +13,9 @@ from transformers.generation.logits_process import LogitsProcessor
 from unstructured_inference.constants import Source
 from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import UnstructuredElementExtractionModel
 from unstructured_inference.utils import LazyDict
-from unstructured_inference.logger import logger
 
 MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
     "chipper": {
@@ -26,7 +26,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
         "max_length": 1200,
         "heatmap_h": 52,
         "heatmap_w": 39,
-        "source": Source.CHIPPER.value,
+        "source": Source.CHIPPER,
     },
     "chipperv2": {
         "pre_trained_model_repo": "unstructuredio/chipper-fast-fine-tuning",
@@ -37,7 +37,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
         "max_length": 1536,
         "heatmap_h": 40,
         "heatmap_w": 30,
-        "source": Source.CHIPPERV2.value,
+        "source": Source.CHIPPERV2,
     },
 }
 
@@ -47,13 +47,13 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self,
         pre_trained_model_repo: str,
         swap_head: bool,
-        swap_head_hidden_layer_size: Optional[int],
+        swap_head_hidden_layer_size: int,
         start_token_prefix: str,
         prompt: str,
         max_length: int,
         heatmap_h: int,
         heatmap_w: int,
-        source: str,
+        source: Source,
         no_repeat_ngram_size: int = 10,
         auth_token: Optional[str] = os.environ.get("UNSTRUCTURED_HF_TOKEN"),
         device: Optional[str] = None,
@@ -99,7 +99,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             if swap_head_hidden_layer_size is not None:
                 logger.warning(
                     f"swap_head is False but recieved value {swap_head_hidden_layer_size} for "
-                    "swap_head_hidden_layer_size, which will be ignored."
+                    "swap_head_hidden_layer_size, which will be ignored.",
                 )
 
         self.input_ids = self.processor.tokenizer(

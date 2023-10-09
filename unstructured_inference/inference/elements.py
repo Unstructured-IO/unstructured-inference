@@ -9,6 +9,7 @@ from typing import Collection, Optional, Union
 import numpy as np
 from PIL import Image
 
+from unstructured_inference.constants import Source
 from unstructured_inference.math import safe_division
 
 
@@ -171,7 +172,7 @@ def intersections(*rects: Rectangle):
 class TextRegion:
     bbox: Rectangle
     text: Optional[str] = None
-    source: Optional[str] = None
+    source: Optional[Source] = None
 
     def __str__(self) -> str:
         return str(self.text)
@@ -199,8 +200,8 @@ class TextRegion:
         y1: Union[int, float],
         x2: Union[int, float],
         y2: Union[int, float],
-        text: Optional[str],
-        source: Optional[str],
+        text: Optional[str] = None,
+        source: Optional[Source] = None,
         **kwargs,
     ) -> TextRegion:
         """Constructs a region from coordinates."""
