@@ -199,12 +199,14 @@ class TextRegion:
         y1: Union[int, float],
         x2: Union[int, float],
         y2: Union[int, float],
+        text: Optional[str],
+        source: Optional[str],
         **kwargs,
     ) -> TextRegion:
         """Constructs a region from coordinates."""
         bbox = Rectangle(x1, y1, x2, y2)
 
-        return cls(**kwargs, bbox=bbox)
+        return cls(text=text, source=source, bbox=bbox, **kwargs)
 
 
 class EmbeddedTextRegion(TextRegion):
