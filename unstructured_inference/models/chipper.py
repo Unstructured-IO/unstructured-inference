@@ -21,6 +21,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
     "chipper": {
         "pre_trained_model_repo": "unstructuredio/ved-fine-tuning",
         "swap_head": False,
+        "start_token_prefix": "<s_",
         "prompt": "<s>",
         "max_length": 1200,
         "heatmap_h": 52,
@@ -31,6 +32,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
         "pre_trained_model_repo": "unstructuredio/chipper-fast-fine-tuning",
         "swap_head": True,
         "swap_head_hidden_layer_size": 128,
+        "start_token_prefix": "<s_",
         "prompt": "<s><s_hierarchical>",
         "max_length": 1536,
         "heatmap_h": 40,
@@ -46,6 +48,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         pre_trained_model_repo: str,
         swap_head: bool,
         swap_head_hidden_layer_size: Optional[int],
+        start_token_prefix: str,
         prompt: str,
         max_length: int,
         heatmap_h: int,
@@ -108,7 +111,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.start_tokens = [
             v
             for k, v in self.processor.tokenizer.get_added_vocab().items()
-            if k.startswith("<s_") and v not in self.input_ids
+            if k.startswith(start_token_prefix) and v not in self.input_ids
         ]
         self.end_tokens = [
             v for k, v in self.processor.tokenizer.get_added_vocab().items() if k.startswith("</s_")
