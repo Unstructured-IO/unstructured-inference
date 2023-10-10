@@ -1,15 +1,17 @@
 import os
-from typing import List, Callable
+from typing import Callable, List
+
 import numpy as np
-from PIL import Image
-import yaml
 import supervision as sv
+import yaml
+from PIL import Image
+from super_gradients.training import models
+
 from unstructured_inference.constants import Source
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
-from super_gradients.training import models
-import torch
+
 
 class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
     def predict(self, x: Image):
@@ -17,23 +19,29 @@ class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
         super().predict(x)
         return self.image_processing(x)
 
-    def initialize(self, model_arch: str, model_path: str, dataset_yaml_path: str, callback: Callable[[np.ndarray, models.sg_module.SgModule], sv.Detections]):
+    def initialize(
+        self,
+        model_arch: str,
+        model_path: str,
+        dataset_yaml_path: str,
+        callback: Callable[[np.ndarray, models.sg_module.SgModule], sv.Detections],
+    ):
         """Start inference session for SuperGradients model."""
         if not os.path.exists(model_path):
             logger.info("Super Gradients Model Path Does Not Exist!")
         self.model_path = model_path
-        
-        with open(dataset_yaml_path, 'r') as file:
+
+        with open(dataset_yaml_path) as file:
             dataset_yaml = yaml.safe_load(file)
 
         self.model = models.get(
-        model_name=model_arch,
-        num_classes=len(dataset_yaml['names']),
-        checkpoint_path=model_path
+            model_name=model_arch,
+            num_classes=len(dataset_yaml["names"]),
+            checkpoint_path=model_path,
         )
-        
+
         label_map = {}
-        for i,x in enumerate(dataset_yaml['names']):
+        for i, x in enumerate(dataset_yaml["names"]):
             label_map[i] = x
         self.callback = callback
         self.layout_classes = label_map
@@ -42,8 +50,7 @@ class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
         self,
         image: Image = None,
     ) -> List[LayoutElement]:
-        """Method runing SuperGradients Model for layout detection, returns a PageLayout
-        """
+        """Method runing SuperGradients Model for layout detection, returns a PageLayout"""
         # Not handling various input images right now
         # TODO (Pravin): check other shapes for inference
         origin_img = np.array(image)

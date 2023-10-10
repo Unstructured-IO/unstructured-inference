@@ -15,15 +15,15 @@ from unstructured_inference.models.detectron2onnx import (
 from unstructured_inference.models.detectron2onnx import (
     UnstructuredDetectronONNXModel,
 )
+from unstructured_inference.models.super_gradients import (
+    UnstructuredSuperGradients,
+)
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.models.yolox import (
     MODEL_TYPES as YOLOX_MODEL_TYPES,
 )
 from unstructured_inference.models.yolox import (
     UnstructuredYoloXModel,
-)
-from unstructured_inference.models.super_gradients import (
-    UnstructuredSuperGradients,
 )
 
 DEFAULT_MODEL = "yolox_quantized"
@@ -64,7 +64,7 @@ def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
         )
         model = UnstructuredChipperModel()
         initialize_params = {**CHIPPER_MODEL_TYPES[model_name], **kwargs}
-    elif model_name == 'super_gradients':
+    elif model_name == "super_gradients":
         model = UnstructuredSuperGradients()
         initialize_params = {**kwargs}
     else:
