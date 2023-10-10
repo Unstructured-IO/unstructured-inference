@@ -485,12 +485,12 @@ def test_annotate(colors, add_details, threshold):
     image = Image.fromarray(test_image_arr)
     page = layout.PageLayout(number=1, image=image, layout=None)
     coords1 = (21, 30, 37, 41)
-    rect1 = elements.Rectangle(*coords1)
+    rect1 = elements.TextRegion.from_coords(*coords1)
     coords2 = (1, 10, 7, 11)
-    rect2 = elements.Rectangle(*coords2)
+    rect2 = elements.TextRegion.from_coords(*coords2)
     page.elements = [rect1, rect2]
 
-    annotated_image = page.annotate(colors=colors, add_details=add_details, sources=["all"])
+    annotated_image = page.annotate(colors=colors, add_details=add_details, sources=None)
     check_annotated_image()
 
     # Scenario 1: where self.image exists
