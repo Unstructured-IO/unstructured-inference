@@ -15,7 +15,6 @@ from unstructured_inference.constants import Source
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
-    Rectangle,
     TextRegion,
 )
 from unstructured_inference.inference.layoutelement import (
@@ -231,9 +230,10 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         inferred_layout: List[LayoutElement] = self.detection_model(self.image)
-        inferred_layout = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
-            inferred_layout,
-        )
+        print("not deduping!")
+        # inferred_layout = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
+        #     inferred_layout,
+        # )
 
         if self.layout is not None:
             threshold_kwargs = {}
@@ -357,16 +357,15 @@ class PageLayout:
                     color = style["color"]
                     width = style["width"]
                     for region in getattr(self, attribute):
-                        if isinstance(region, Rectangle):
-                            required_source = getattr(region, "source", None)
-                            if "all" in sources or required_source in sources:
-                                img = draw_bbox(
-                                    img,
-                                    region,
-                                    color=color,
-                                    width=width,
-                                    details=add_details,
-                                )
+                        required_source = getattr(region, "source", None)
+                        if (sources is None) or (required_source in sources):
+                            img = draw_bbox(
+                                img,
+                                region,
+                                color=color,
+                                width=width,
+                                details=add_details,
+                            )
 
         return img
 
