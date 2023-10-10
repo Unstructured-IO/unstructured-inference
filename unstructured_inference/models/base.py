@@ -69,7 +69,7 @@ def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
         initialize_params = {**kwargs}
     else:
         raise UnknownModelException(f"Unknown model type: {model_name}")
-    model.initialize(initialize_params)
+    model.initialize(**initialize_params)
     models[model_name] = model
     return model
 
