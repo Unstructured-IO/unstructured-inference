@@ -1,17 +1,20 @@
-import torch
-import numpy as np
-from PIL import Image
 from unittest import mock
-from unstructured_inference.models import super_gradients
+
+import numpy as np
+import torch
+from PIL import Image
+
 from unstructured_inference.constants import Source
+from unstructured_inference.models import super_gradients
 
 
 def test_supergradients_model():
     model_path = ""
     model = super_gradients.UnstructuredSuperGradients()
     with mock.patch("builtins.open", mock.mock_open()), mock.patch(
-        "yaml.safe_load", mock.MagicMock(return_value={"names": ["a", "b"]})
-    ) as mock_yaml_load, mock.patch("torch.load", lambda x: torch.nn.Linear(2, 1)):
+        "yaml.safe_load",
+        return_value={"names": ["a", "b"]},
+    ) as mock_yaml_load, mock.patch("torch.load", return_value=torch.nn.Linear(2, 1)):
         model.initialize(
             model_arch="resnet18",
             model_path=model_path,
