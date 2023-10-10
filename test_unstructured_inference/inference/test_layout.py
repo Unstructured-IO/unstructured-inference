@@ -102,6 +102,9 @@ class MockLayoutModel:
     def initialize(self, *args, **kwargs):
         pass
 
+    def deduplicate_detected_elements(self, elements, *args, **kwargs):
+        return elements
+
 
 def test_get_page_elements(monkeypatch, mock_final_layout):
     image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")

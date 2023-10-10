@@ -160,8 +160,8 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         final_elements.sort(key=lambda e: e.bbox.y1)
         return final_elements
 
-    @staticmethod
     def deduplicate_detected_elements(
+        self,
         elements: List[LayoutElement],
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
