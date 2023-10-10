@@ -381,7 +381,7 @@ def test_from_file_fixed_layout(fixed_layouts, called_method, not_called_method)
 
 @pytest.mark.parametrize(
     ("text", "expected"),
-    [("a\ts\x0cd\nfas\fd\rf\b", "asdfasdf"), ("\"'\\", "\"'\\")],
+    [("c\to\x0cn\ftrol\ncharacter\rs\b", "control characters"), ("\"'\\", "\"'\\")],
 )
 def test_remove_control_characters(text, expected):
     assert elements.remove_control_characters(text) == expected
