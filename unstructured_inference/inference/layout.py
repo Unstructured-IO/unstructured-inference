@@ -323,7 +323,7 @@ class PageLayout:
         image_dpi: int = 200,
         annotation_data: Optional[dict[str, dict]] = None,
         add_details: bool = False,
-        sources: List[str] = ["all"],
+        sources: Optional[List[str]] = None,
     ) -> Image.Image:
         """Annotates the elements on the page image.
         if add_details is True, and the elements contain type and source attributes, then
