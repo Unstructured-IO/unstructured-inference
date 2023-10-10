@@ -231,10 +231,9 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         inferred_layout: List[LayoutElement] = self.detection_model(self.image)
-        print("not deduping!")
-        # inferred_layout = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
-        #     inferred_layout,
-        # )
+        inferred_layout = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
+            inferred_layout,
+        )
 
         if self.layout is not None:
             threshold_kwargs = {}
