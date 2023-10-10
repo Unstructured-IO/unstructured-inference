@@ -231,9 +231,10 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         inferred_layout: List[LayoutElement] = self.detection_model(self.image)
-        inferred_layout = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
-            inferred_layout,
-        )
+        print("not deduping!")
+        # inferred_layout = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
+        #     inferred_layout,
+        # )
 
         if self.layout is not None:
             threshold_kwargs = {}
@@ -349,10 +350,8 @@ class PageLayout:
 
         if annotation_data is None:
             for el, color in zip(self.elements, colors):
-                if isinstance(el, Rectangle):
-                    required_source = getattr(el, "source", None)
-                    if "all" in sources or required_source in sources:
-                        img = draw_bbox(img, el, color=color, details=add_details)
+                if sources is None or el.source in sources:
+                    img = draw_bbox(img, el.bbox, color=color, details=add_details)
         else:
             for attribute, style in annotation_data.items():
                 if hasattr(self, attribute) and getattr(self, attribute):
