@@ -303,6 +303,14 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         return elements
 
+    def deduplicate_detected_elements(
+        self,
+        elements: List[LayoutElement],
+        min_text_size: int = 15,
+    ) -> List[LayoutElement]:
+        """For chipper, remove elements from other sources."""
+        return [el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV2)]
+
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
         return [
