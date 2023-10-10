@@ -48,7 +48,7 @@ class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
 
     def image_processing(
         self,
-        image: Image = None,
+        image: Image.Image,
     ) -> List[LayoutElement]:
         """Method runing SuperGradients Model for layout detection, returns a PageLayout"""
         # Not handling various input images right now
