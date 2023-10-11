@@ -237,7 +237,7 @@ def test_postprocess_bbox(decoded_str, expected_classes):
 
 
 def test_run_chipper_v2():
-    model = get_model("chipperv2")
+    model = get_model("chipper")
     img = Image.open("sample-docs/easy_table.jpg")
     elements = model(img)
     tables = [el for el in elements if el.type == "Table"]
