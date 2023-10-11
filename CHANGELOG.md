@@ -1,5 +1,6 @@
-## 0.7.3-dev0
+## 0.7.3
 
+* Remove layoutparser dependency and detectron_lp model
 * Remove control characters from the text of all layout elements
 
 ## 0.7.2
