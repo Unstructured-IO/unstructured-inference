@@ -1,5 +1,5 @@
 import os
-from typing import Callable, List
+from typing import Callable, List, cast
 
 import numpy as np
 import supervision as sv
@@ -65,7 +65,7 @@ class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
             prob = det[2]
             class_id = det[3]
             detected_class = self.layout_classes[int(class_id)]
-            region = LayoutElement(
+            region = LayoutElement.from_coords(
                 x1,
                 y1,
                 x2,
@@ -76,9 +76,9 @@ class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
                 source=Source.SUPER_GRADIENTS,
             )
 
-            regions.append(region)
+            regions.append(cast(LayoutElement, region))
 
-        regions.sort(key=lambda element: element.y1)
+        regions.sort(key=lambda element: element.bbox.y1)
 
         page_layout = regions  # TODO(benjamin): encode image as base64?
 
