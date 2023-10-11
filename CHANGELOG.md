@@ -1,4 +1,4 @@
-## 0.7.3-dev3
+## 0.7.3
 
 * Integration of Chipperv2 and additional Chipper functionality, which includes automatic detection of GPU,
 bounding box prediction and hierarchical representation.
