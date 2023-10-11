@@ -18,7 +18,7 @@ from unstructured_inference.models.unstructuredmodel import UnstructuredElementE
 from unstructured_inference.utils import LazyDict
 
 MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
-    "chipper": {
+    "chipperv1": {
         "pre_trained_model_repo": "unstructuredio/ved-fine-tuning",
         "swap_head": False,
         "start_token_prefix": "<s_",
@@ -28,7 +28,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
         "heatmap_w": 39,
         "source": Source.CHIPPER,
     },
-    "chipperv2": {
+    "chipper": {
         "pre_trained_model_repo": "unstructuredio/chipper-fast-fine-tuning",
         "swap_head": True,
         "swap_head_hidden_layer_size": 128,
