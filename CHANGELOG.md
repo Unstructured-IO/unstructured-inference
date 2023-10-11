@@ -1,3 +1,19 @@
+## 0.7.3-dev0
+
+* Remove control characters from the text of all layout elements
+
+## 0.7.2
+
+* Sort elements extracted by `pdfminer` to get consistent result from `aggregate_by_block()`
+
+## 0.7.1
+
+* Download yolox_quantized from HF
+
+## 0.7.0
+
+* Remove all OCR related code expect the table OCR code
+
 ## 0.6.6
 
 * Stop passing ocr_languages parameter into paddle to avoid invalid paddle language code error, this will be fixed until

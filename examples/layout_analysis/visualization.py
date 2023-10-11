@@ -14,7 +14,6 @@ def run(f_path, scope):
         "final": None,
         "extracted": {"layout": {"color": "green", "width": 2}},
         "inferred": {"inferred_layout": {"color": "blue", "width": 2}},
-        "ocr": {"ocr_layout": {"color": "yellow", "width": 2}},
     }
 
     f_basename = os.path.splitext(os.path.basename(f_path))[0]
@@ -47,8 +46,7 @@ def run(f_path, scope):
             write_image(img, output_f_path)
 
         print(f"page_num: {idx+1} - n_total_elements: {len(page.elements)} - n_extracted_elements: "
-              f"{len(page.layout)} - n_inferred_elements: {len(page.inferred_layout)} - "
-              f"n_ocr_elements: {len(page.ocr_layout)}")
+              f"{len(page.layout)} - n_inferred_elements: {len(page.inferred_layout)}")
 
 
 if __name__ == '__main__':

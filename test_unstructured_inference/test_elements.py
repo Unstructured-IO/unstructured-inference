@@ -1,10 +1,8 @@
-import logging
 import os
 from random import randint
 from unittest.mock import PropertyMock, patch
 
 import pytest
-from PIL import Image
 
 from unstructured_inference.inference import elements
 from unstructured_inference.inference.layoutelement import (
@@ -240,16 +238,3 @@ def test_separate(rect1, rect2):
     separate(rect1, rect2)
 
     # assert not rect1.intersects(rect2) #TODO: fix this test
-
-
-@pytest.mark.skipif(skip_outside_ci, reason="Skipping paddle test run outside of CI")
-def test_ocr_paddle(monkeypatch, caplog):
-    monkeypatch.setenv("ENTIRE_PAGE_OCR", "paddle")
-    image = Image.new("RGB", (100, 100), (255, 255, 255))
-    text_block = elements.TextRegion(0, 0, 50, 50)
-    # Note(yuming): paddle result is currently non-deterministic on ci
-    # so don't check result like `assert result == ""`
-    # use logger info to confirm we are using paddle instead
-    with caplog.at_level(logging.INFO):
-        _ = elements.ocr(text_block, image, languages="en")
-        assert "paddle" in caplog.text
