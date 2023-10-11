@@ -19,20 +19,6 @@ These models are invoked via API as part of the partitioning bricks in the `unst
 
 Run `pip install unstructured-inference`.
 
-### Detectron2
-
-[Detectron2](https://github.com/facebookresearch/detectron2) is required for using models from the [layoutparser model zoo](#using-models-from-the-layoutparser-model-zoo) 
-but is not automatically installed with this package. 
-For MacOS and Linux, build from source with:
-```shell
-pip install 'git+https://github.com/facebookresearch/detectron2.git@57bdb21249d5418c130d54e2ebdc94dda7a4c01a'
-```
-Other install options can be found in the 
-[Detectron2 installation guide](https://detectron2.readthedocs.io/en/latest/tutorials/install.html).
-
-Windows is not officially supported by Detectron2, but some users are able to install it anyway. 
-See discussion [here](https://layout-parser.github.io/tutorials/installation#for-windows-users) for 
-tips on installing Detectron2 on Windows.
 
 ### PaddleOCR
 
@@ -69,7 +55,7 @@ layout = DocumentLayout.from_file("sample-docs/loremipsum.pdf")
 print(layout.pages[0].elements)
 ```
 
-Once the model has detected the layout and OCR'd the document, the text extracted from the first 
+Once the model has detected the layout, the text extracted from the first 
 page of the sample document will be displayed.
 You can convert a given element to a `dict` by running the `.to_dict()` method.
 
@@ -86,13 +72,9 @@ When doing inference, an alternate model can be used by passing the model object
 from unstructured_inference.models.base import get_model
 from unstructured_inference.inference.layout import DocumentLayout
 
-model = get_model("yolox")
+model = get_model("detectron2_onnx")
 layout = DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf", detection_model=model)
 ```
-
-### Using models from the layoutparser model zoo
-
-The `UnstructuredDetectronModel` class in `unstructured_inference.modelts.detectron2` uses the `faster_rcnn_R_50_FPN_3x` model pretrained on DocLayNet, but by using different construction parameters, any model in the `layoutparser` [model zoo](https://layout-parser.readthedocs.io/en/latest/notes/modelzoo.html) can be used. `UnstructuredDetectronModel` is a light wrapper around the `layoutparser` `Detectron2LayoutModel` object, and accepts the same arguments. See [layoutparser documentation](https://layout-parser.readthedocs.io/en/latest/api_doc/models.html#layoutparser.models.Detectron2LayoutModel) for details.
 
 ### Using your own model
 
