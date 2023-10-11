@@ -4,13 +4,11 @@ import re
 import unicodedata
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Collection, List, Optional, Union
+from typing import Collection, Optional, Union
 
 import numpy as np
 from PIL import Image
-from scipy.sparse.csgraph import connected_components
 
-from unstructured_inference.config import inference_config
 from unstructured_inference.constants import Source
 from unstructured_inference.math import safe_division
 
@@ -144,28 +142,6 @@ def minimal_containing_region(*regions: Rectangle) -> Rectangle:
     return Rectangle(x1, y1, x2, y2)
 
 
-def partition_groups_from_regions(regions: Collection[Rectangle]) -> List[List[Rectangle]]:
-    """Partitions regions into groups of regions based on proximity. Returns list of lists of
-    regions, each list corresponding with a group"""
-    if len(regions) == 0:
-        return []
-    padded_regions = [
-        r.vpad(r.height * inference_config.ELEMENTS_V_PADDING_COEF).hpad(
-            r.height * inference_config.ELEMENTS_H_PADDING_COEF,
-        )
-        for r in regions
-    ]
-
-    intersection_mtx = intersections(*padded_regions)
-
-    _, group_nums = connected_components(intersection_mtx)
-    groups: List[List[Rectangle]] = [[] for _ in range(max(group_nums) + 1)]
-    for region, group_num in zip(regions, group_nums):
-        groups[group_num].append(region)
-
-    return groups
-
-
 def intersections(*rects: Rectangle):
     """Returns a square boolean matrix of intersections of an arbitrary number of rectangles, i.e.
     the ijth entry of the matrix is True if and only if the ith Rectangle and jth Rectangle
@@ -193,7 +169,8 @@ def intersections(*rects: Rectangle):
 
 
 @dataclass
-class TextRegion(Rectangle):
+class TextRegion:
+    bbox: Rectangle
     text: Optional[str] = None
     source: Optional[Source] = None
 
@@ -216,6 +193,22 @@ class TextRegion(Rectangle):
             text = ""
         cleaned_text = remove_control_characters(text)
         return cleaned_text
+
+    @classmethod
+    def from_coords(
+        cls,
+        x1: Union[int, float],
+        y1: Union[int, float],
+        x2: Union[int, float],
+        y2: Union[int, float],
+        text: Optional[str] = None,
+        source: Optional[Source] = None,
+        **kwargs,
+    ) -> TextRegion:
+        """Constructs a region from coordinates."""
+        bbox = Rectangle(x1, y1, x2, y2)
+
+        return cls(text=text, source=source, bbox=bbox, **kwargs)
 
 
 class EmbeddedTextRegion(TextRegion):
@@ -252,7 +245,9 @@ def aggregate_by_block(
 ) -> str:
     """Extracts the text aggregated from the elements of the given layout that lie within the given
     block."""
-    filtered_blocks = [obj for obj in pdf_objects if obj.is_in(text_region, error_margin=5)]
+    filtered_blocks = [
+        obj for obj in pdf_objects if obj.bbox.is_in(text_region.bbox, error_margin=5)
+    ]
     text = " ".join([x.text for x in filtered_blocks if x.text])
     return text
 

@@ -15,12 +15,10 @@ from unstructured_inference.constants import Source
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
-    Rectangle,
     TextRegion,
 )
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
-    LocationlessLayoutElement,
     merge_inferred_layout_with_extracted_layout,
 )
 from unstructured_inference.inference.ordering import order_layout
@@ -190,9 +188,12 @@ class PageLayout:
         self.number = number
         self.detection_model = detection_model
         self.element_extraction_model = element_extraction_model
-        self.elements: Collection[Union[LayoutElement, LocationlessLayoutElement]] = []
+        self.elements: Collection[LayoutElement] = []
         self.extract_tables = extract_tables
         self.analysis = analysis
+        # NOTE(alan): Dropped LocationlessLayoutElement that was created for chipper - chipper has
+        # locations now and if we need to support LayoutElements without bounding boxes we can make
+        # the bbox property optional
         self.inferred_layout: Optional[List[LayoutElement]] = None
 
     def __str__(self) -> str:
@@ -201,7 +202,7 @@ class PageLayout:
     def get_elements_using_image_extraction(
         self,
         inplace=True,
-    ) -> Optional[List[LocationlessLayoutElement]]:
+    ) -> Optional[List[LayoutElement]]:
         """Uses end-to-end text element extraction model to extract the elements on the page."""
         if self.element_extraction_model is None:
             raise ValueError(
@@ -229,7 +230,7 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         inferred_layout: List[LayoutElement] = self.detection_model(self.image)
-        inferred_layout = UnstructuredObjectDetectionModel.deduplicate_detected_elements(
+        inferred_layout = self.detection_model.deduplicate_detected_elements(
             inferred_layout,
         )
 
@@ -290,7 +291,7 @@ class PageLayout:
 
         figure_number = 0
         for el in self.elements:
-            if isinstance(el, LocationlessLayoutElement) or el.type not in ["Image"]:
+            if (el.bbox is None) or (el.type not in ["Image"]):
                 continue
 
             figure_number += 1
@@ -299,7 +300,7 @@ class PageLayout:
                     output_dir_path,
                     f"figure-{self.number}-{figure_number}.jpg",
                 )
-                cropped_image = self.image.crop((el.x1, el.y1, el.x2, el.y2))
+                cropped_image = self.image.crop((el.bbox.x1, el.bbox.y1, el.bbox.x2, el.bbox.y2))
                 write_image(cropped_image, output_f_path)
                 el.image_path = output_f_path
             except (ValueError, IOError):
@@ -321,7 +322,7 @@ class PageLayout:
         image_dpi: int = 200,
         annotation_data: Optional[dict[str, dict]] = None,
         add_details: bool = False,
-        sources: List[str] = ["all"],
+        sources: Optional[List[str]] = None,
     ) -> Image.Image:
         """Annotates the elements on the page image.
         if add_details is True, and the elements contain type and source attributes, then
@@ -347,26 +348,23 @@ class PageLayout:
 
         if annotation_data is None:
             for el, color in zip(self.elements, colors):
-                if isinstance(el, Rectangle):
-                    required_source = getattr(el, "source", None)
-                    if "all" in sources or required_source in sources:
-                        img = draw_bbox(img, el, color=color, details=add_details)
+                if sources is None or el.source in sources:
+                    img = draw_bbox(img, el.bbox, color=color, details=add_details)
         else:
             for attribute, style in annotation_data.items():
                 if hasattr(self, attribute) and getattr(self, attribute):
                     color = style["color"]
                     width = style["width"]
                     for region in getattr(self, attribute):
-                        if isinstance(region, Rectangle):
-                            required_source = getattr(region, "source", None)
-                            if "all" in sources or required_source in sources:
-                                img = draw_bbox(
-                                    img,
-                                    region,
-                                    color=color,
-                                    width=width,
-                                    details=add_details,
-                                )
+                        required_source = getattr(region, "source", None)
+                        if (sources is None) or (required_source in sources):
+                            img = draw_bbox(
+                                img,
+                                region,
+                                color=color,
+                                width=width,
+                                details=add_details,
+                            )
 
         return img
 
@@ -559,7 +557,7 @@ def load_pdf(
                 else:
                     continue
 
-            text_region = element_class(
+            text_region = element_class.from_coords(
                 x1 * coef,
                 y1 * coef,
                 x2 * coef,
@@ -568,7 +566,7 @@ def load_pdf(
                 source=Source.PDFMINER,
             )
 
-            if text_region.area > 0:
+            if text_region.bbox is not None and text_region.bbox.area > 0:
                 layout.append(text_region)
 
         layout = order_layout(layout)
