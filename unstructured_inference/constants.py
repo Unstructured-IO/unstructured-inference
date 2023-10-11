@@ -11,7 +11,7 @@ class Source(Enum):
     DETECTRON2_ONNX = "detectron2_onnx"
     DETECTRON2_LP = "detectron2_lp"
     CHIPPER = "chipper"
-    CHIPPERV2 = "chipperv2"
+    CHIPPERV1 = "chipperv1"
     PDFMINER = "pdfminer"
     MERGED = "merged"
 
