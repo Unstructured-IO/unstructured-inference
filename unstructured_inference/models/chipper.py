@@ -28,7 +28,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
         "heatmap_w": 39,
         "source": Source.CHIPPERV1,
     },
-    "chipper": {
+    "chipperv2": {
         "pre_trained_model_repo": "unstructuredio/chipper-fast-fine-tuning",
         "swap_head": True,
         "swap_head_hidden_layer_size": 128,
@@ -40,6 +40,8 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
         "source": Source.CHIPPER,
     },
 }
+
+MODEL_TYPES["chipper"] = MODEL_TYPES["chipperv2"]
 
 
 class UnstructuredChipperModel(UnstructuredElementExtractionModel):
