@@ -32,7 +32,7 @@ backcall==0.2.0
     # via ipython
 beautifulsoup4==4.12.2
     # via nbconvert
-bleach==6.0.0
+bleach==6.1.0
     # via nbconvert
 build==1.0.3
     # via pip-tools
@@ -62,7 +62,7 @@ contourpy==1.1.1
     # via
     #   -c requirements/base.txt
     #   matplotlib
-cycler==0.12.0
+cycler==0.12.1
     # via
     #   -c requirements/base.txt
     #   matplotlib
@@ -80,7 +80,7 @@ executing==2.0.0
     # via stack-data
 fastjsonschema==2.18.1
     # via nbformat
-fonttools==4.43.0
+fonttools==4.43.1
     # via
     #   -c requirements/base.txt
     #   matplotlib
@@ -148,7 +148,7 @@ jsonschema-specifications==2023.7.1
     # via jsonschema
 jupyter==1.0.0
     # via -r requirements/dev.in
-jupyter-client==8.3.1
+jupyter-client==8.4.0
     # via
     #   ipykernel
     #   jupyter-console
@@ -157,7 +157,7 @@ jupyter-client==8.3.1
     #   qtconsole
 jupyter-console==6.6.3
     # via jupyter
-jupyter-core==5.3.2
+jupyter-core==5.4.0
     # via
     #   ipykernel
     #   jupyter-client
@@ -181,7 +181,7 @@ jupyter-server==2.7.3
     #   notebook-shim
 jupyter-server-terminals==0.4.4
     # via jupyter-server
-jupyterlab==4.0.6
+jupyterlab==4.0.7
     # via notebook
 jupyterlab-pygments==0.2.2
     # via nbconvert
@@ -229,9 +229,10 @@ notebook-shim==0.2.3
     # via
     #   jupyterlab
     #   notebook
-numpy==1.24.4
+numpy==1.23.0
     # via
     #   -c requirements/base.txt
+    #   -c requirements/constraints.in
     #   contourpy
     #   matplotlib
 overrides==7.4.0
@@ -346,7 +347,7 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
-rpds-py==0.10.4
+rpds-py==0.10.6
     # via
     #   jsonschema
     #   referencing
@@ -428,7 +429,7 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-websocket-client==1.6.3
+websocket-client==1.6.4
     # via jupyter-server
 wheel==0.41.2
     # via pip-tools
