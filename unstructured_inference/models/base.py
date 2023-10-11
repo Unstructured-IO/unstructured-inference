@@ -3,12 +3,6 @@ from typing import Dict, Optional
 from unstructured_inference.logger import logger
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
 from unstructured_inference.models.chipper import UnstructuredChipperModel
-from unstructured_inference.models.detectron2 import (
-    MODEL_TYPES as DETECTRON2_MODEL_TYPES,
-)
-from unstructured_inference.models.detectron2 import (
-    UnstructuredDetectronModel,
-)
 from unstructured_inference.models.detectron2onnx import (
     MODEL_TYPES as DETECTRON2_ONNX_MODEL_TYPES,
 )
@@ -41,10 +35,7 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     if model_name in models:
         return models[model_name]
 
-    if model_name in DETECTRON2_MODEL_TYPES:
-        model: UnstructuredModel = UnstructuredDetectronModel()
-        model.initialize(**DETECTRON2_MODEL_TYPES[model_name])
-    elif model_name in DETECTRON2_ONNX_MODEL_TYPES:
+    if model_name in DETECTRON2_ONNX_MODEL_TYPES:
         model = UnstructuredDetectronONNXModel()
         model.initialize(**DETECTRON2_ONNX_MODEL_TYPES[model_name])
     elif model_name in YOLOX_MODEL_TYPES:

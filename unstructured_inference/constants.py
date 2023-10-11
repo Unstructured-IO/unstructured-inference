@@ -9,7 +9,6 @@ class AnnotationResult(Enum):
 class Source(Enum):
     YOLOX = "yolox"
     DETECTRON2_ONNX = "detectron2_onnx"
-    DETECTRON2_LP = "detectron2_lp"
     PDFMINER = "pdfminer"
     MERGED = "merged"
 

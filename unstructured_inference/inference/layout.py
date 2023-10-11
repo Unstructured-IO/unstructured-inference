@@ -327,7 +327,7 @@ class PageLayout:
         if add_details is True, and the elements contain type and source attributes, then
         the type and source will be added to the image.
         sources is a list of sources to annotate. If sources is ["all"], then all sources will be
-        annotated. Current sources allowed are "yolox","detectron2_onnx" and "detectron2_lp" """
+        annotated. Current sources allowed are "yolox" and "detectron2_onnx"""
         if colors is None:
             colors = ["red" for _ in self.elements]
         if isinstance(colors, str):

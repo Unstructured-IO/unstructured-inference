@@ -28,10 +28,10 @@ def test_get_model(monkeypatch):
     monkeypatch.setattr(models, "models", {})
     monkeypatch.setattr(
         models,
-        "UnstructuredDetectronModel",
+        "UnstructuredDetectronONNXModel",
         MockModel,
     )
-    assert isinstance(models.get_model("checkbox"), MockModel)
+    assert isinstance(models.get_model("detectron2_onnx"), MockModel)
 
 
 def test_get_model_warns_on_chipper(monkeypatch, caplog):
@@ -52,7 +52,7 @@ def test_raises_invalid_model():
 
 def test_raises_uninitialized():
     with pytest.raises(ModelNotInitializedError):
-        models.UnstructuredDetectronModel().predict(None)
+        models.UnstructuredDetectronONNXModel().predict(None)
 
 
 def test_model_initializes_once():

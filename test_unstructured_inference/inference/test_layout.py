@@ -11,7 +11,6 @@ from PIL import Image
 import unstructured_inference.models.base as models
 from unstructured_inference.constants import Source
 from unstructured_inference.inference import elements, layout, layoutelement
-from unstructured_inference.models import detectron2
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -137,13 +136,12 @@ def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout, mock_imag
 
         monkeypatch.setattr(
             models,
-            "UnstructuredDetectronModel",
+            "UnstructuredDetectronONNXModel",
             partial(MockLayoutModel, layout=mock_final_layout),
         )
-        monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
         with patch.object(layout, "load_pdf", return_value=(layouts, image_paths)):
-            model = layout.get_model("detectron2_lp")
+            model = layout.get_model("detectron2_onnx")
             doc = layout.DocumentLayout.from_file("fake-file.pdf", detection_model=model)
 
             assert str(doc).startswith("A Catchy Title")
@@ -156,7 +154,7 @@ def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout, mock_imag
             assert str(doc) == "\n\n".join([str(page) for page in pages])
 
 
-@pytest.mark.parametrize("model_name", [None, "checkbox", "fake"])
+@pytest.mark.parametrize("model_name", [None, "detectron2_onnx", "fake"])
 def test_process_data_with_model(monkeypatch, mock_final_layout, model_name):
     monkeypatch.setattr(layout, "get_model", lambda x: MockLayoutModel(mock_final_layout))
     monkeypatch.setattr(
@@ -164,12 +162,6 @@ def test_process_data_with_model(monkeypatch, mock_final_layout, model_name):
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
-
-    def new_isinstance(obj, cls):
-        if type(obj) is MockLayoutModel:
-            return True
-        else:
-            return isinstance(obj, cls)
 
     with patch("builtins.open", mock_open(read_data=b"000000")), patch(
         "unstructured_inference.inference.layout.UnstructuredObjectDetectionModel",
@@ -185,19 +177,21 @@ def test_process_data_with_model_raises_on_invalid_model_name():
         layout.process_data_with_model(fp, model_name="fake")
 
 
-@pytest.mark.parametrize("model_name", [None, "checkbox"])
+@pytest.mark.parametrize("model_name", [None, "detectron2_onnx", "fake"])
 def test_process_file_with_model(monkeypatch, mock_final_layout, model_name):
-    def mock_initialize(self, *args, **kwargs):
-        self.model = MockLayoutModel(mock_final_layout)
-
+    monkeypatch.setattr(layout, "get_model", lambda x: MockLayoutModel(mock_final_layout))
     monkeypatch.setattr(
         layout.DocumentLayout,
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
-    monkeypatch.setattr(models.UnstructuredDetectronModel, "initialize", mock_initialize)
-    filename = ""
-    assert layout.process_file_with_model(filename, model_name=model_name)
+
+    with patch(
+        "unstructured_inference.inference.layout.UnstructuredObjectDetectionModel",
+        MockLayoutModel,
+    ):
+        filename = ""
+        assert layout.process_file_with_model(filename, model_name=model_name)
 
 
 def test_process_file_with_model_raises_on_invalid_model_name():
