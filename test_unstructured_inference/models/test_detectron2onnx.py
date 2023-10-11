@@ -69,7 +69,7 @@ def test_inference():
         elements = model(image)
         assert len(elements) == 1
         element = elements[0]
-        (x1, y1), _, (x2, y2), _ = element.coordinates
+        (x1, y1), _, (x2, y2), _ = element.bbox.coordinates
         assert hasattr(
             element,
             "prob",
