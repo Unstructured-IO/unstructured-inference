@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Final, List, Optional, Union
+from typing import Dict, Final, List, Optional, Union, cast
 
 import cv2
 import numpy as np
@@ -151,7 +151,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         for (x1, y1, x2, y2), label, conf in zip(bboxes, labels, confidence_scores):
             detected_class = self.label_map[int(label)]
             if conf >= self.confidence_threshold:
-                region = LayoutElement(
+                region = LayoutElement.from_coords(
                     x1 * width_conversion,
                     y1 * height_conversion,
                     x2 * width_conversion,
@@ -164,5 +164,5 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
 
                 regions.append(region)
 
-        regions.sort(key=lambda element: element.y1)
-        return regions
+        regions.sort(key=lambda element: element.bbox.y1)
+        return cast(List[LayoutElement], regions)

@@ -3,7 +3,7 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/237e943ac64aa32eb32f875faa93ebb18512d41d/yolox/data/data_augment.py
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
-from typing import List
+from typing import List, cast
 
 import cv2
 import numpy as np
@@ -130,7 +130,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
             # being (x1,y1) the top left and (x2,y2) the bottom right
             x1, y1, x2, y2, prob, class_id = det.tolist()
             detected_class = self.layout_classes[int(class_id)]
-            region = LayoutElement(
+            region = LayoutElement.from_coords(
                 x1,
                 y1,
                 x2,
@@ -143,9 +143,9 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
             regions.append(region)
 
-        regions.sort(key=lambda element: element.y1)
+        regions.sort(key=lambda element: element.bbox.y1)
 
-        page_layout = regions  # TODO(benjamin): encode image as base64?
+        page_layout = cast(List[LayoutElement], regions)  # TODO(benjamin): encode image as base64?
 
         return page_layout
 

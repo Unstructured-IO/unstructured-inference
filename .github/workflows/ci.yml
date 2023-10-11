@@ -89,6 +89,8 @@ jobs:
         sudo apt-get update
         sudo apt-get -y install poppler-utils tesseract-ocr
     - name: Test
+      env:
+        UNSTRUCTURED_HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         source .venv/bin/activate
         CI=true make test
