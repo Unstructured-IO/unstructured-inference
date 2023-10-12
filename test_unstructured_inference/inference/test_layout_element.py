@@ -1,8 +1,6 @@
 import pytest
 
-from unstructured_inference.inference.layoutelement import (
-    LayoutElement,
-)
+from unstructured_inference.inference.layoutelement import LayoutElement, TextRegion
 
 
 @pytest.mark.parametrize("is_table", [False, True])
@@ -41,6 +39,7 @@ def test_layout_element_do_dict(mock_layout_element):
 
 
 def test_layout_element_from_region(mock_rectangle):
-    expected = LayoutElement(100, 100, 300, 300, None, None)
+    expected = LayoutElement.from_coords(100, 100, 300, 300)
+    region = TextRegion(bbox=mock_rectangle)
 
-    assert LayoutElement.from_region(mock_rectangle) == expected
+    assert LayoutElement.from_region(region) == expected

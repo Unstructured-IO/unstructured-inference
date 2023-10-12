@@ -26,7 +26,7 @@ def mock_image():
 
 @pytest.fixture()
 def mock_initial_layout():
-    text_block = layout.EmbeddedTextRegion(
+    text_block = layout.EmbeddedTextRegion.from_coords(
         2,
         4,
         6,
@@ -35,14 +35,21 @@ def mock_initial_layout():
         source="Mock",
     )
 
-    title_block = layout.EmbeddedTextRegion(1, 2, 3, 4, text="A Catchy Title", source="Mock")
+    title_block = layout.EmbeddedTextRegion.from_coords(
+        1,
+        2,
+        3,
+        4,
+        text="A Catchy Title",
+        source="Mock",
+    )
 
     return [text_block, title_block]
 
 
 @pytest.fixture()
 def mock_final_layout():
-    text_block = layoutelement.LayoutElement(
+    text_block = layoutelement.LayoutElement.from_coords(
         2,
         4,
         6,
@@ -52,7 +59,7 @@ def mock_final_layout():
         type="NarrativeText",
     )
 
-    title_block = layoutelement.LayoutElement(
+    title_block = layoutelement.LayoutElement.from_coords(
         1,
         2,
         3,
@@ -93,6 +100,9 @@ class MockLayoutModel:
 
     def initialize(self, *args, **kwargs):
         pass
+
+    def deduplicate_detected_elements(self, elements, *args, **kwargs):
+        return elements
 
 
 def test_get_page_elements(monkeypatch, mock_final_layout):
@@ -336,7 +346,8 @@ def test_from_file_raises_on_length_mismatch(monkeypatch):
 @pytest.mark.parametrize("idx", range(2))
 def test_get_elements_from_layout(mock_initial_layout, idx):
     page = MockPageLayout(layout=mock_initial_layout)
-    block = mock_initial_layout[idx].pad(3)
+    block = mock_initial_layout[idx]
+    block.bbox.pad(3)
     fixed_layout = [block]
     elements = page.get_elements_from_layout(fixed_layout)
     assert elements[0].text == block.text
@@ -381,19 +392,19 @@ def test_remove_control_characters(text, expected):
     assert elements.remove_control_characters(text) == expected
 
 
-no_text_region = layout.EmbeddedTextRegion(0, 0, 100, 100)
-text_region = layout.EmbeddedTextRegion(0, 0, 100, 100, text="test")
-cid_text_region = layout.EmbeddedTextRegion(
+no_text_region = layout.EmbeddedTextRegion.from_coords(0, 0, 100, 100)
+text_region = layout.EmbeddedTextRegion.from_coords(0, 0, 100, 100, text="test")
+cid_text_region = layout.EmbeddedTextRegion.from_coords(
     0,
     0,
     100,
     100,
     text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)",
 )
-overlapping_rect = layout.ImageTextRegion(50, 50, 150, 150)
-nonoverlapping_rect = layout.ImageTextRegion(150, 150, 200, 200)
-populated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text="test")
-unpopulated_text_region = layout.EmbeddedTextRegion(50, 50, 60, 60, text=None)
+overlapping_rect = layout.ImageTextRegion.from_coords(50, 50, 150, 150)
+nonoverlapping_rect = layout.ImageTextRegion.from_coords(150, 150, 200, 200)
+populated_text_region = layout.EmbeddedTextRegion.from_coords(50, 50, 60, 60, text="test")
+unpopulated_text_region = layout.EmbeddedTextRegion.from_coords(50, 50, 60, 60, text=None)
 
 
 @pytest.mark.parametrize("filename", ["loremipsum.pdf", "IRS-form-1987.pdf"])
@@ -419,8 +430,8 @@ def test_load_pdf_image_placement():
     image_regions = [region for region in page_layout if isinstance(region, layout.ImageTextRegion)]
     image_region = image_regions[0]
     # Image is in top half of the page, so that should be reflected in the pixel coordinates
-    assert image_region.y1 < images[5].height / 2
-    assert image_region.y2 < images[5].height / 2
+    assert image_region.bbox.y1 < images[5].height / 2
+    assert image_region.bbox.y2 < images[5].height / 2
 
 
 def test_load_pdf_raises_with_path_only_no_output_folder():
@@ -471,12 +482,12 @@ def test_annotate(colors, add_details, threshold):
     image = Image.fromarray(test_image_arr)
     page = layout.PageLayout(number=1, image=image, layout=None)
     coords1 = (21, 30, 37, 41)
-    rect1 = elements.Rectangle(*coords1)
+    rect1 = elements.TextRegion.from_coords(*coords1)
     coords2 = (1, 10, 7, 11)
-    rect2 = elements.Rectangle(*coords2)
+    rect2 = elements.TextRegion.from_coords(*coords2)
     page.elements = [rect1, rect2]
 
-    annotated_image = page.annotate(colors=colors, add_details=add_details, sources=["all"])
+    annotated_image = page.annotate(colors=colors, add_details=add_details, sources=None)
     check_annotated_image()
 
     # Scenario 1: where self.image exists
@@ -493,7 +504,7 @@ def test_annotate(colors, add_details, threshold):
 
 @pytest.mark.parametrize(("text", "expected"), [("asdf", "asdf"), (None, "")])
 def test_embedded_text_region(text, expected):
-    etr = elements.EmbeddedTextRegion(0, 0, 24, 24, text=text)
+    etr = elements.EmbeddedTextRegion.from_coords(0, 0, 24, 24, text=text)
     assert etr.extract_text(objects=None) == expected
 
 
@@ -503,13 +514,13 @@ class MockDetectionModel(layout.UnstructuredObjectDetectionModel):
 
     def predict(self, x):
         return [
-            layout.LayoutElement(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
-            layout.LayoutElement(x1=380.6, y1=473.4, x2=1334.8, y2=533.9, text="1"),
-            layout.LayoutElement(x1=578.6, y1=556.8, x2=1109.0, y2=874.4, text="2"),
-            layout.LayoutElement(x1=444.5, y1=942.3, x2=1261.1, y2=1584.1, text="3"),
-            layout.LayoutElement(x1=444.8, y1=1609.4, x2=1257.2, y2=1665.2, text="4"),
-            layout.LayoutElement(x1=414.0, y1=1718.8, x2=635.0, y2=1755.2, text="5"),
-            layout.LayoutElement(x1=372.6, y1=1786.9, x2=1333.6, y2=1848.7, text="6"),
+            layout.LayoutElement.from_coords(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
+            layout.LayoutElement.from_coords(x1=380.6, y1=473.4, x2=1334.8, y2=533.9, text="1"),
+            layout.LayoutElement.from_coords(x1=578.6, y1=556.8, x2=1109.0, y2=874.4, text="2"),
+            layout.LayoutElement.from_coords(x1=444.5, y1=942.3, x2=1261.1, y2=1584.1, text="3"),
+            layout.LayoutElement.from_coords(x1=444.8, y1=1609.4, x2=1257.2, y2=1665.2, text="4"),
+            layout.LayoutElement.from_coords(x1=414.0, y1=1718.8, x2=635.0, y2=1755.2, text="5"),
+            layout.LayoutElement.from_coords(x1=372.6, y1=1786.9, x2=1333.6, y2=1848.7, text="6"),
         ]
 
 
@@ -604,8 +615,8 @@ def test_from_image(
 def test_extract_images(mock_pil_image):
     page = MockPageLayout(image=mock_pil_image)
     page.elements = [
-        layoutelement.LayoutElement(1, 1, 10, 10, text=None, type="Image"),
-        layoutelement.LayoutElement(11, 11, 20, 20, text=None, type="Image"),
+        layoutelement.LayoutElement.from_coords(1, 1, 10, 10, text=None, type="Image"),
+        layoutelement.LayoutElement.from_coords(11, 11, 20, 20, text=None, type="Image"),
     ]
 
     with tempfile.TemporaryDirectory() as tmpdir:

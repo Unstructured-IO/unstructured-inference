@@ -1,6 +1,10 @@
-## 0.7.3
+## 0.7.4
 
 * Remove layoutparser dependency and detectron_lp model
+
+## 0.7.3
+* Integration of Chipperv2 and additional Chipper functionality, which includes automatic detection of GPU,
+bounding box prediction and hierarchical representation.
 * Remove control characters from the text of all layout elements
 
 ## 0.7.2

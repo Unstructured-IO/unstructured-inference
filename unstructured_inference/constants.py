@@ -9,6 +9,9 @@ class AnnotationResult(Enum):
 class Source(Enum):
     YOLOX = "yolox"
     DETECTRON2_ONNX = "detectron2_onnx"
+    CHIPPER = "chipper"
+    CHIPPERV1 = "chipperv1"
+    CHIPPERV2 = "chipperv2"
     PDFMINER = "pdfminer"
     MERGED = "merged"
 
