@@ -22,11 +22,16 @@ install-base: install-base-pip-packages
 install: install-base-pip-packages install-dev install-test
 
 .PHONY: install-ci
-install-ci: install-base-pip-packages install-test
+install-ci: install-base-pip-packages install-test install-paddleocr
 
 .PHONY: install-base-pip-packages
 install-base-pip-packages:
 	python3 -m pip install pip==${PIP_VERSION}
+
+.PHONY: install-paddleocr
+install-paddleocr:
+	pip install --no-cache-dir paddlepaddle
+	pip install --no-cache-dir "unstructured.PaddleOCR"
 
 .PHONY: install-test
 install-test: install-base
@@ -40,10 +45,6 @@ install-dev: install-test
 .PHONY: pip-compile
 pip-compile:
 	pip-compile --upgrade requirements/base.in
-	# NOTE(robinson) - We want the dependencies for detectron2 in the requirements.txt, but not
-	# the detectron2 repo itself. If detectron2 is in the requirements.txt file, an order of
-	# operations issue related to the torch library causes the install to fail
-	sed 's/^detectron2 @/# detectron2 @/g' requirements/base.txt
 	pip-compile --upgrade requirements/test.in
 	pip-compile --upgrade requirements/dev.in
 
