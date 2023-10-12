@@ -6,34 +6,53 @@
 #
 certifi==2023.7.22
     # via requests
+cffi==1.16.0
+    # via cryptography
 charset-normalizer==3.3.0
-    # via requests
+    # via
+    #   pdfminer-six
+    #   requests
 coloredlogs==15.0.1
     # via onnxruntime
+cryptography==41.0.4
+    # via pdfminer-six
 filelock==3.12.4
     # via
     #   huggingface-hub
+    #   torch
     #   transformers
 flatbuffers==23.5.26
     # via onnxruntime
 fsspec==2023.9.2
-    # via huggingface-hub
+    # via
+    #   huggingface-hub
+    #   torch
 huggingface-hub==0.17.3
     # via
     #   -r requirements/base.in
+    #   timm
     #   tokenizers
     #   transformers
 humanfriendly==10.0
     # via coloredlogs
 idna==3.4
     # via requests
+jinja2==3.1.2
+    # via torch
+markupsafe==2.1.3
+    # via jinja2
 mpmath==1.3.0
     # via sympy
+networkx==3.1
+    # via torch
 numpy==1.24.4
     # via
     #   onnx
     #   onnxruntime
     #   opencv-python
+    #   pandas
+    #   scipy
+    #   torchvision
     #   transformers
 onnx==1.14.1
     # via -r requirements/base.in
@@ -45,16 +64,45 @@ packaging==23.2
     # via
     #   huggingface-hub
     #   onnxruntime
+    #   pytesseract
     #   transformers
+pandas==2.0.3
+    # via -r requirements/base.in
+pdfminer==20191125
+    # via -r requirements/base.in
+pdfminer-six==20221105
+    # via
+    #   -r requirements/base.in
+    #   pdfplumber
+pdfplumber==0.10.2
+    # via -r requirements/base.in
+pillow==10.0.1
+    # via
+    #   pdfplumber
+    #   pytesseract
+    #   torchvision
 protobuf==4.24.4
     # via
     #   onnx
     #   onnxruntime
+pycparser==2.21
+    # via cffi
+pycryptodome==3.19.0
+    # via pdfminer
+pypdfium2==4.21.0
+    # via pdfplumber
+pytesseract==0.3.10
+    # via -r requirements/base.in
+python-dateutil==2.8.2
+    # via pandas
 python-multipart==0.0.6
     # via -r requirements/base.in
+pytz==2023.3.post1
+    # via pandas
 pyyaml==6.0.1
     # via
     #   huggingface-hub
+    #   timm
     #   transformers
 rapidfuzz==3.4.0
     # via -r requirements/base.in
@@ -63,13 +111,31 @@ regex==2023.10.3
 requests==2.31.0
     # via
     #   huggingface-hub
+    #   torchvision
     #   transformers
 safetensors==0.4.0
-    # via transformers
+    # via
+    #   timm
+    #   transformers
+scipy==1.10.1
+    # via -r requirements/base.in
+six==1.16.0
+    # via python-dateutil
 sympy==1.12
-    # via onnxruntime
+    # via
+    #   onnxruntime
+    #   torch
+timm==0.9.7
+    # via -r requirements/base.in
 tokenizers==0.14.1
     # via transformers
+torch==2.1.0
+    # via
+    #   -r requirements/base.in
+    #   timm
+    #   torchvision
+torchvision==0.16.0
+    # via timm
 tqdm==4.66.1
     # via
     #   huggingface-hub
@@ -80,5 +146,8 @@ typing-extensions==4.8.0
     # via
     #   huggingface-hub
     #   onnx
+    #   torch
+tzdata==2023.3
+    # via pandas
 urllib3==2.0.6
     # via requests

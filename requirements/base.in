@@ -7,3 +7,11 @@ onnxruntime<1.16
 # NOTE(alan): Pinned because this is when the most recent module we import appeared
 transformers>=4.25.1
 rapidfuzz
+pandas
+scipy
+torch
+pdfminer
+pdfminer-six
+pytesseract
+pdfplumber
+timm
