@@ -39,7 +39,7 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
         model = UnstructuredDetectronONNXModel()
         model.initialize(**DETECTRON2_ONNX_MODEL_TYPES[model_name])
     elif model_name in YOLOX_MODEL_TYPES:
-        model = UnstructuredYoloXModel()
+        model = UnstructuredYoloXModel()  # type: ignore
         model.initialize(**YOLOX_MODEL_TYPES[model_name])
     elif model_name in CHIPPER_MODEL_TYPES:
         logger.warning(
@@ -50,7 +50,7 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
             "https://join.slack.com/t/unstructuredw-kbe4326/shared_invite/"
             "zt-1x7cgo0pg-PTptXWylzPQF9xZolzCnwQ",
         )
-        model = UnstructuredChipperModel()
+        model = UnstructuredChipperModel()  # type: ignore
         model.initialize(**CHIPPER_MODEL_TYPES[model_name])
     else:
         raise UnknownModelException(f"Unknown model type: {model_name}")
