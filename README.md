@@ -72,7 +72,7 @@ When doing inference, an alternate model can be used by passing the model object
 from unstructured_inference.models.base import get_model
 from unstructured_inference.inference.layout import DocumentLayout
 
-model = get_model("detectron2_onnx")
+model = get_model("yolox")
 layout = DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf", detection_model=model)
 ```
 
