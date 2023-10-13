@@ -1,9 +1,12 @@
+## 0.7.4-dev0
+
+* Allows user to use super-gradients model if they have a callback predict function, a yaml file with names field corresponding to classes and a path to the model weights
+
 ## 0.7.3
 
 * Integration of Chipperv2 and additional Chipper functionality, which includes automatic detection of GPU,
 bounding box prediction and hierarchical representation.
 * Remove control characters from the text of all layout elements
-* Allows user to use super-gradients model if they have a callback predict function, a yaml file with names field corresponding to classes and a path to the model weights
 
 ## 0.7.2
 
