@@ -9,9 +9,7 @@ from PIL import Image
 from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.config import inference_config
-from unstructured_inference.constants import (
-    FULL_PAGE_REGION_THRESHOLD,
-)
+from unstructured_inference.constants import FULL_PAGE_REGION_THRESHOLD, Source
 from unstructured_inference.inference.elements import (
     ImageTextRegion,
     Rectangle,
@@ -105,6 +103,9 @@ def merge_inferred_layout_with_extracted_layout(
                 continue
         region_matched = False
         for inferred_region in inferred_layout:
+            if inferred_region.source in (Source.CHIPPER, Source.CHIPPERV1):
+                continue
+
             if inferred_region.bbox.intersects(extracted_region.bbox):
                 same_bbox = region_bounding_boxes_are_almost_the_same(
                     inferred_region.bbox,

@@ -9,6 +9,9 @@ from unstructured_inference.models.detectron2onnx import (
 from unstructured_inference.models.detectron2onnx import (
     UnstructuredDetectronONNXModel,
 )
+from unstructured_inference.models.super_gradients import (
+    UnstructuredSuperGradients,
+)
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.models.yolox import (
     MODEL_TYPES as YOLOX_MODEL_TYPES,
@@ -22,7 +25,7 @@ DEFAULT_MODEL = "yolox_quantized"
 models: Dict[str, UnstructuredModel] = {}
 
 
-def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
+def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
     """Gets the model object by model name."""
     # TODO(alan): These cases are similar enough that we can probably do them all together with
     # importlib
@@ -37,10 +40,10 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
 
     if model_name in DETECTRON2_ONNX_MODEL_TYPES:
         model = UnstructuredDetectronONNXModel()
-        model.initialize(**DETECTRON2_ONNX_MODEL_TYPES[model_name])
+        initialize_params = {**DETECTRON2_ONNX_MODEL_TYPES[model_name], **kwargs}
     elif model_name in YOLOX_MODEL_TYPES:
-        model = UnstructuredYoloXModel()  # type: ignore
-        model.initialize(**YOLOX_MODEL_TYPES[model_name])
+        model = UnstructuredYoloXModel()
+        initialize_params = {**YOLOX_MODEL_TYPES[model_name], **kwargs}
     elif model_name in CHIPPER_MODEL_TYPES:
         logger.warning(
             "The Chipper model is currently in Beta and is not yet ready for production use. "
@@ -50,10 +53,14 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
             "https://join.slack.com/t/unstructuredw-kbe4326/shared_invite/"
             "zt-1x7cgo0pg-PTptXWylzPQF9xZolzCnwQ",
         )
-        model = UnstructuredChipperModel()  # type: ignore
-        model.initialize(**CHIPPER_MODEL_TYPES[model_name])
+        model = UnstructuredChipperModel()
+        initialize_params = {**CHIPPER_MODEL_TYPES[model_name], **kwargs}
+    elif model_name == "super_gradients":
+        model = UnstructuredSuperGradients()
+        initialize_params = {**kwargs}
     else:
         raise UnknownModelException(f"Unknown model type: {model_name}")
+    model.initialize(**initialize_params)
     models[model_name] = model
     return model
 
