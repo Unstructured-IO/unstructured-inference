@@ -18,7 +18,7 @@ from unstructured_inference.models.unstructuredmodel import UnstructuredElementE
 from unstructured_inference.utils import LazyDict
 
 MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
-    "chipper": {
+    "chipperv1": {
         "pre_trained_model_repo": "unstructuredio/ved-fine-tuning",
         "swap_head": False,
         "start_token_prefix": "<s_",
@@ -26,7 +26,7 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
         "max_length": 1200,
         "heatmap_h": 52,
         "heatmap_w": 39,
-        "source": Source.CHIPPER,
+        "source": Source.CHIPPERV1,
     },
     "chipperv2": {
         "pre_trained_model_repo": "unstructuredio/chipper-fast-fine-tuning",
@@ -37,23 +37,25 @@ MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
         "max_length": 1536,
         "heatmap_h": 40,
         "heatmap_w": 30,
-        "source": Source.CHIPPERV2,
+        "source": Source.CHIPPER,
     },
 }
+
+MODEL_TYPES["chipper"] = MODEL_TYPES["chipperv2"]
 
 
 class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     def initialize(
         self,
         pre_trained_model_repo: str,
-        swap_head: bool,
-        swap_head_hidden_layer_size: int,
         start_token_prefix: str,
         prompt: str,
         max_length: int,
         heatmap_h: int,
         heatmap_w: int,
         source: Source,
+        swap_head: bool = False,
+        swap_head_hidden_layer_size: int = 0,
         no_repeat_ngram_size: int = 10,
         auth_token: Optional[str] = os.environ.get("UNSTRUCTURED_HF_TOKEN"),
         device: Optional[str] = None,
@@ -309,7 +311,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
         """For chipper, remove elements from other sources."""
-        return [el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV2)]
+        return [el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)]
 
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
