@@ -1,4 +1,4 @@
-## 0.7.4-dev1
+## 0.7.4-dev2
 
 * Fixed bug when PDFMiner predicts that an image text occupies the full page and removes annotations by Chipper.
 * Added random seed to Chipper text generation to avoid differences between calls to Chipper.
