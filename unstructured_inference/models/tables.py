@@ -33,10 +33,10 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def __init__(self):
         pass
 
-    def predict(self, x: Image):
-        """Predict table structure deferring to run_prediction"""
+    def predict(self, x: Image, ocr_tokens: List = []):
+        """Predict table structure deferring to run_prediction with ocr tokens"""
         super().predict(x)
-        return self.run_prediction(x)
+        return self.run_prediction(x, ocr_tokens=ocr_tokens)
 
     def initialize(
         self,
@@ -161,12 +161,17 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         self,
         x: Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
+        ocr_tokens: List = [],
     ):
         """Predict table structure"""
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
-        tokens = self.get_tokens(x=x)
+        if ocr_tokens == []:
+            logger.warning(
+                "Table OCR from get_tokens method will be deprecated in next unstructured release",
+            )
+            ocr_tokens = self.get_tokens(x=x)
 
-        html = recognize(outputs_structure, x, tokens=tokens, out_html=True)["html"]
+        html = recognize(outputs_structure, x, tokens=ocr_tokens, out_html=True)["html"]
         prediction = html[0] if html else ""
         return prediction
 
