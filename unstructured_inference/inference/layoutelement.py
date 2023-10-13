@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Optional, Union
+from typing import Collection, List, Optional
 
 import numpy as np
 from layoutparser.elements.layout import TextBlock
 from pandas import DataFrame
 from PIL import Image
+from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.constants import (
@@ -18,6 +19,7 @@ from unstructured_inference.inference.elements import (
     Rectangle,
     TextRegion,
     grow_region_to_match_region,
+    intersections,
     region_bounding_boxes_are_almost_the_same,
 )
 
@@ -27,6 +29,7 @@ class LayoutElement(TextRegion):
     type: Optional[str] = None
     prob: Optional[float] = None
     image_path: Optional[str] = None
+    parent: Optional[LayoutElement] = None
 
     def extract_text(
         self,
@@ -46,7 +49,7 @@ class LayoutElement(TextRegion):
     def to_dict(self) -> dict:
         """Converts the class instance to dictionary form."""
         out_dict = {
-            "coordinates": self.coordinates,
+            "coordinates": None if self.bbox is None else self.bbox.coordinates,
             "text": self.text,
             "type": self.type,
             "prob": self.prob,
@@ -55,14 +58,13 @@ class LayoutElement(TextRegion):
         return out_dict
 
     @classmethod
-    def from_region(cls, region: Rectangle):
+    def from_region(cls, region: TextRegion):
         """Create LayoutElement from superclass."""
-        x1, y1, x2, y2 = region.x1, region.y1, region.x2, region.y2
         text = region.text if hasattr(region, "text") else None
         type = region.type if hasattr(region, "type") else None
         prob = region.prob if hasattr(region, "prob") else None
         source = region.source if hasattr(region, "source") else None
-        return cls(x1, y1, x2, y2, text=text, source=source, type=type, prob=prob)
+        return cls(text=text, source=source, type=type, prob=prob, bbox=region.bbox)
 
     @classmethod
     def from_lp_textblock(cls, textblock: TextBlock):
@@ -71,7 +73,16 @@ class LayoutElement(TextRegion):
         text = textblock.text
         type = textblock.type
         prob = textblock.score
-        return cls(x1, y1, x2, y2, text=text, source=Source.DETECTRON2_LP, type=type, prob=prob)
+        return cls.from_coords(
+            x1,
+            y1,
+            x2,
+            y2,
+            text=text,
+            source=Source.DETECTRON2_LP,
+            type=type,
+            prob=prob,
+        )
 
 
 def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
@@ -81,7 +92,7 @@ def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
     tables.load_agent()
     if tables.tables_agent is None:
         raise RuntimeError("Unable to load table extraction agent.")
-    padded_block = text_block.pad(inference_config.TABLE_IMAGE_CROP_PAD)
+    padded_block = text_block.bbox.pad(inference_config.TABLE_IMAGE_CROP_PAD)
     cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
     return tables.tables_agent.predict(cropped_image)
 
@@ -105,7 +116,7 @@ def merge_inferred_layout_with_extracted_layout(
             # don't provide good text bounding boxes.
 
             is_full_page_image = region_bounding_boxes_are_almost_the_same(
-                extracted_region,
+                extracted_region.bbox,
                 full_page_region,
                 FULL_PAGE_REGION_THRESHOLD,
             )
@@ -114,14 +125,14 @@ def merge_inferred_layout_with_extracted_layout(
                 continue
         region_matched = False
         for inferred_region in inferred_layout:
-            if inferred_region.intersects(extracted_region):
+            if inferred_region.bbox.intersects(extracted_region.bbox):
                 same_bbox = region_bounding_boxes_are_almost_the_same(
-                    inferred_region,
-                    extracted_region,
+                    inferred_region.bbox,
+                    extracted_region.bbox,
                     same_region_threshold,
                 )
-                inferred_is_subregion_of_extracted = inferred_region.is_almost_subregion_of(
-                    extracted_region,
+                inferred_is_subregion_of_extracted = inferred_region.bbox.is_almost_subregion_of(
+                    extracted_region.bbox,
                     subregion_threshold=subregion_threshold,
                 )
                 inferred_is_text = inferred_region.type not in (
@@ -130,8 +141,8 @@ def merge_inferred_layout_with_extracted_layout(
                     "PageBreak",
                     "Table",
                 )
-                extracted_is_subregion_of_inferred = extracted_region.is_almost_subregion_of(
-                    inferred_region,
+                extracted_is_subregion_of_inferred = extracted_region.bbox.is_almost_subregion_of(
+                    inferred_region.bbox,
                     subregion_threshold=subregion_threshold,
                 )
                 either_region_is_subregion_of_other = (
@@ -144,7 +155,7 @@ def merge_inferred_layout_with_extracted_layout(
                         inferred_regions_to_remove.append(inferred_region)
                     else:
                         # keep inferred region, remove extracted region
-                        grow_region_to_match_region(inferred_region, extracted_region)
+                        grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
                         inferred_region.text = extracted_region.text
                         region_matched = True
                 elif extracted_is_subregion_of_inferred and inferred_is_text:
@@ -153,7 +164,7 @@ def merge_inferred_layout_with_extracted_layout(
                         region_matched = False
                     else:
                         # keep inferred region, remove extracted region
-                        grow_region_to_match_region(inferred_region, extracted_region)
+                        grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
                         region_matched = True
                 elif either_region_is_subregion_of_other and inferred_region.type != "Table":
                     # keep extracted region, remove inferred region
@@ -163,13 +174,10 @@ def merge_inferred_layout_with_extracted_layout(
     # Need to classify the extracted layout elements we're keeping.
     categorized_extracted_elements_to_add = [
         LayoutElement(
-            el.x1,
-            el.y1,
-            el.x2,
-            el.y2,
             text=el.text,
             type="Image" if isinstance(el, ImageTextRegion) else "UncategorizedText",
             source=el.source,
+            bbox=el.bbox,
         )
         for el in extracted_elements_to_add
     ]
@@ -182,7 +190,7 @@ def merge_inferred_layout_with_extracted_layout(
     return final_layout
 
 
-def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutElement, Rectangle]):
+def separate(region_a: Rectangle, region_b: Rectangle):
     """Reduce leftmost rectangle to don't overlap with the other"""
 
     def reduce(keep: Rectangle, reduce: Rectangle):
@@ -222,23 +230,6 @@ def separate(region_a: Union[LayoutElement, Rectangle], region_b: Union[LayoutEl
             reduce(keep=region_b, reduce=region_a)
 
 
-# NOTE(alan): The right way to do this is probably to rewrite LayoutElement as well as the different
-# Region types to not subclass Rectangle, and instead have an optional bbox property that is a
-# Rectangle. I or someone else will have to get to that later.
-@dataclass
-class LocationlessLayoutElement:
-    text: Optional[str]
-    type: Optional[str]
-
-    def to_dict(self) -> dict:
-        """Converts the class instance to dictionary form."""
-        out_dict = {
-            "text": self.text,
-            "type": self.type,
-        }
-        return out_dict
-
-
 def table_cells_to_dataframe(cells: dict, nrows: int = 1, ncols: int = 1, header=None) -> DataFrame:
     """convert table-transformer's cells data into a pandas dataframe"""
     arr = np.empty((nrows, ncols), dtype=object)
@@ -253,3 +244,25 @@ def table_cells_to_dataframe(cells: dict, nrows: int = 1, ncols: int = 1, header
         arr[rows[0], cols[0]] = cell["cell text"]
 
     return DataFrame(arr, columns=header)
+
+
+def partition_groups_from_regions(regions: Collection[TextRegion]) -> List[List[TextRegion]]:
+    """Partitions regions into groups of regions based on proximity. Returns list of lists of
+    regions, each list corresponding with a group"""
+    if len(regions) == 0:
+        return []
+    padded_regions = [
+        r.bbox.vpad(r.bbox.height * inference_config.ELEMENTS_V_PADDING_COEF).hpad(
+            r.bbox.height * inference_config.ELEMENTS_H_PADDING_COEF,
+        )
+        for r in regions
+    ]
+
+    intersection_mtx = intersections(*padded_regions)
+
+    _, group_nums = connected_components(intersection_mtx)
+    groups: List[List[TextRegion]] = [[] for _ in range(max(group_nums) + 1)]
+    for region, group_num in zip(regions, group_nums):
+        groups[group_num].append(region)
+
+    return groups

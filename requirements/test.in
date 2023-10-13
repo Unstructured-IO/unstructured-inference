@@ -17,3 +17,4 @@ pytest-mock
 pdf2image>=1.16.2
 huggingface_hub>=0.11.1
 ruff
+types-pyyaml

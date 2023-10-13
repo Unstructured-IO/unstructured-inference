@@ -13,7 +13,7 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/cache@v3
       id: virtualenv-cache
       with:
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/cache/restore@v3
       id: virtualenv-cache
       with:
@@ -61,7 +61,7 @@ jobs:
   shellcheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: ShellCheck
         uses: ludeeus/action-shellcheck@master
 
@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup, lint]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/cache/restore@v3
       id: virtualenv-cache
       with:
@@ -89,6 +89,8 @@ jobs:
         sudo apt-get update
         sudo apt-get -y install poppler-utils tesseract-ocr
     - name: Test
+      env:
+        UNSTRUCTURED_HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         source .venv/bin/activate
         CI=true make test
@@ -104,11 +106,11 @@ jobs:
     needs: lint
     steps:
     - name: Checkout unstructured repo for integration testing
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: 'Unstructured-IO/unstructured'
     - name: Checkout this repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: inference
     - name: Set up Python ${{ matrix.python-version }}
@@ -150,7 +152,7 @@ jobs:
   changelog:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - if: github.ref != 'refs/heads/main'
       uses: dorny/paths-filter@v2
       id: changes

@@ -4,8 +4,30 @@
 #
 #    pip-compile requirements/base.in
 #
+absl-py==2.0.0
+    # via tensorboard
+alabaster==0.7.13
+    # via sphinx
 antlr4-python3-runtime==4.9.3
-    # via omegaconf
+    # via
+    #   hydra-core
+    #   omegaconf
+attrs==23.1.0
+    # via
+    #   jsonschema
+    #   referencing
+babel==2.13.0
+    # via sphinx
+boto3==1.28.62
+    # via super-gradients
+botocore==1.31.62
+    # via
+    #   boto3
+    #   s3transfer
+build==1.0.3
+    # via pip-tools
+cachetools==5.3.1
+    # via google-auth
 certifi==2023.7.22
     # via requests
 cffi==1.16.0
@@ -14,16 +36,28 @@ charset-normalizer==3.3.0
     # via
     #   pdfminer-six
     #   requests
+click==8.1.7
+    # via pip-tools
 coloredlogs==15.0.1
     # via onnxruntime
 contourpy==1.1.1
     # via matplotlib
+coverage==5.3.1
+    # via super-gradients
 cryptography==41.0.4
     # via pdfminer-six
 cycler==0.12.1
     # via matplotlib
+deprecated==1.2.14
+    # via super-gradients
+docutils==0.17.1
+    # via
+    #   sphinx
+    #   sphinx-rtd-theme
 effdet==0.4.1
     # via layoutparser
+einops==0.3.2
+    # via super-gradients
 filelock==3.12.4
     # via
     #   huggingface-hub
@@ -45,22 +79,57 @@ huggingface-hub==0.17.3
     #   transformers
 humanfriendly==10.0
     # via coloredlogs
+hydra-core==1.3.2
+    # via super-gradients
 idna==3.4
     # via requests
+imagesize==1.4.1
+    # via sphinx
+importlib-metadata==6.8.0
+    # via
+    #   build
+    #   markdown
 importlib-resources==6.1.0
-    # via matplotlib
+    # via
+    #   hydra-core
+    #   jsonschema
+    #   jsonschema-specifications
+    #   matplotlib
 iopath==0.1.10
     # via layoutparser
 jinja2==3.1.2
-    # via torch
+    # via
+    #   sphinx
+    #   torch
+jmespath==1.0.1
+    # via
+    #   boto3
+    #   botocore
+json-tricks==3.16.1
+    # via super-gradients
+jsonschema==4.19.1
+    # via super-gradients
+jsonschema-specifications==2023.7.1
+    # via jsonschema
 kiwisolver==1.4.5
     # via matplotlib
 layoutparser[layoutmodels,tesseract]==0.3.4
     # via -r requirements/base.in
+markdown==3.5
+    # via tensorboard
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==2.1.3
-    # via jinja2
+    # via
+    #   jinja2
+    #   werkzeug
 matplotlib==3.7.3
-    # via pycocotools
+    # via
+    #   pycocotools
+    #   super-gradients
+    #   supervision
+mdurl==0.1.2
+    # via markdown-it-py
 mpmath==1.3.0
     # via sympy
 networkx==3.1
@@ -73,11 +142,18 @@ numpy==1.23.0
     #   matplotlib
     #   onnxruntime
     #   opencv-python
+    #   opencv-python-headless
     #   pandas
     #   pycocotools
     #   scipy
+    #   super-gradients
+    #   supervision
+    #   tensorboard
+    #   torchmetrics
     #   torchvision
     #   transformers
+oauthlib==3.2.2
+    # via requests-oauthlib
 omegaconf==2.3.0
     # via effdet
 onnxruntime==1.15.1
@@ -86,12 +162,20 @@ opencv-python==4.8.1.78
     # via
     #   -r requirements/base.in
     #   layoutparser
+    #   super-gradients
+opencv-python-headless==4.8.1.78
+    # via supervision
 packaging==23.2
     # via
+    #   build
     #   huggingface-hub
+    #   hydra-core
     #   matplotlib
     #   onnxruntime
     #   pytesseract
+    #   sphinx
+    #   super-gradients
+    #   torchmetrics
     #   transformers
 pandas==2.0.3
     # via layoutparser
@@ -108,7 +192,13 @@ pillow==10.0.1
     #   pdf2image
     #   pdfplumber
     #   pytesseract
+    #   super-gradients
+    #   supervision
     #   torchvision
+pip-tools==7.3.0
+    # via super-gradients
+pkgutil-resolve-name==1.3.10
+    # via jsonschema
 portalocker==2.8.2
     # via iopath
 protobuf==4.24.4
@@ -121,21 +211,27 @@ pyparsing==3.1.1
     # via matplotlib
 pypdfium2==4.21.0
     # via pdfplumber
+pyproject-hooks==1.0.0
+    # via build
 pytesseract==0.3.10
     # via layoutparser
 python-dateutil==2.8.2
     # via
+    #   botocore
     #   matplotlib
     #   pandas
 python-multipart==0.0.6
     # via -r requirements/base.in
 pytz==2023.3.post1
-    # via pandas
+    # via
+    #   babel
+    #   pandas
 pyyaml==6.0.1
     # via
     #   huggingface-hub
     #   layoutparser
     #   omegaconf
+    #   supervision
     #   timm
     #   transformers
 rapidfuzz==3.4.0
@@ -145,6 +241,9 @@ regex==2023.10.3
 requests==2.31.0
     # via
     #   huggingface-hub
+    #   requests-oauthlib
+    #   sphinx
+    #   tensorboard
     #   torchvision
     #   transformers
 safetensors==0.4.0
@@ -152,35 +251,86 @@ safetensors==0.4.0
     #   timm
     #   transformers
 scipy==1.10.1
-    # via layoutparser
+    # via
+    #   layoutparser
+    #   super-gradients
+    #   supervision
 six==1.16.0
     # via python-dateutil
+snowballstemmer==2.2.0
+    # via sphinx
+sphinx==4.0.3
+    # via
+    #   sphinx-rtd-theme
+    #   sphinxcontrib-jquery
+    #   super-gradients
+sphinx-rtd-theme==1.3.0
+    # via super-gradients
+sphinxcontrib-applehelp==1.0.4
+    # via sphinx
+sphinxcontrib-devhelp==1.0.2
+    # via sphinx
+sphinxcontrib-htmlhelp==2.0.1
+    # via sphinx
+sphinxcontrib-jquery==4.1
+    # via sphinx-rtd-theme
+sphinxcontrib-jsmath==1.0.1
+    # via sphinx
+sphinxcontrib-qthelp==1.0.3
+    # via sphinx
+sphinxcontrib-serializinghtml==1.1.5
+    # via sphinx
+stringcase==1.2.0
+    # via super-gradients
+super-gradients==3.2.1
+    # via -r requirements/base.in
+supervision==0.15.0
+    # via -r requirements/base.in
 sympy==1.12
     # via
     #   onnxruntime
     #   torch
+tensorboard==2.14.0
+    # via super-gradients
+tensorboard-data-server==0.7.1
+    # via tensorboard
+termcolor==1.1.0
+    # via super-gradients
 timm==0.9.7
     # via effdet
 tokenizers==0.14.1
     # via transformers
+tomli==2.0.1
+    # via
+    #   build
+    #   pip-tools
+    #   pyproject-hooks
 torch==2.1.0
     # via
     #   effdet
     #   layoutparser
+    #   super-gradients
     #   timm
+    #   torchmetrics
     #   torchvision
+torchmetrics==0.8.0
+    # via super-gradients
 torchvision==0.16.0
     # via
     #   effdet
     #   layoutparser
+    #   super-gradients
     #   timm
 tqdm==4.66.1
     # via
     #   huggingface-hub
     #   iopath
+    #   super-gradients
     #   transformers
 transformers==4.34.0
     # via -r requirements/base.in
+treelib==1.6.1
+    # via super-gradients
 typing-extensions==4.8.0
     # via
     #   huggingface-hub
@@ -188,7 +338,24 @@ typing-extensions==4.8.0
     #   torch
 tzdata==2023.3
     # via pandas
-urllib3==2.0.6
-    # via requests
+urllib3==1.26.17
+    # via
+    #   botocore
+    #   requests
+werkzeug==3.0.0
+    # via tensorboard
+wheel==0.41.2
+    # via
+    #   pip-tools
+    #   super-gradients
+    #   tensorboard
+wrapt==1.15.0
+    # via deprecated
 zipp==3.17.0
-    # via importlib-resources
+    # via
+    #   importlib-metadata
+    #   importlib-resources
+
+# The following packages are considered to be unsafe in a requirements file:
+# pip
+# setuptools

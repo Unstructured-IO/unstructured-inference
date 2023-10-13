@@ -20,10 +20,12 @@ charset-normalizer==3.3.0
     #   requests
 click==8.1.7
     # via
+    #   -c requirements/base.txt
     #   -r requirements/test.in
     #   black
-coverage[toml]==7.3.2
+coverage[toml]==5.3.1
     # via
+    #   -c requirements/base.txt
     #   -r requirements/test.in
     #   pytest-cov
 exceptiongroup==1.1.3
@@ -120,24 +122,30 @@ sniffio==1.3.0
     #   httpcore
     #   httpx
 snowballstemmer==2.2.0
-    # via pydocstyle
+    # via
+    #   -c requirements/base.txt
+    #   pydocstyle
+toml==0.10.2
+    # via coverage
 tomli==2.0.1
     # via
+    #   -c requirements/base.txt
     #   black
-    #   coverage
     #   mypy
     #   pytest
 tqdm==4.66.1
     # via
     #   -c requirements/base.txt
     #   huggingface-hub
+types-pyyaml==6.0.12.12
+    # via -r requirements/test.in
 typing-extensions==4.8.0
     # via
     #   -c requirements/base.txt
     #   black
     #   huggingface-hub
     #   mypy
-urllib3==2.0.6
+urllib3==1.26.17
     # via
     #   -c requirements/base.txt
     #   requests

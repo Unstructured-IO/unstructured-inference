@@ -10,8 +10,12 @@ class Source(Enum):
     YOLOX = "yolox"
     DETECTRON2_ONNX = "detectron2_onnx"
     DETECTRON2_LP = "detectron2_lp"
+    CHIPPER = "chipper"
+    CHIPPERV1 = "chipperv1"
+    CHIPPERV2 = "chipperv2"
     PDFMINER = "pdfminer"
     MERGED = "merged"
+    SUPER_GRADIENTS = "super-gradients"
 
 
 FULL_PAGE_REGION_THRESHOLD = 0.99
