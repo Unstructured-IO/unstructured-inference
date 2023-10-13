@@ -125,6 +125,9 @@ def merge_inferred_layout_with_extracted_layout(
                 continue
         region_matched = False
         for inferred_region in inferred_layout:
+            if inferred_region.source in (Source.CHIPPER, Source.CHIPPERV1):
+                continue
+
             if inferred_region.bbox.intersects(extracted_region.bbox):
                 same_bbox = region_bounding_boxes_are_almost_the_same(
                     inferred_region.bbox,
