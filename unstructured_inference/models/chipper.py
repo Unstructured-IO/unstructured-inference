@@ -512,17 +512,17 @@ class NGramRepetitonStoppingCriteria(StoppingCriteria):
         num_batch_hypotheses = input_ids.shape[0]
         cur_len = input_ids.shape[-1]
 
-        return any(
-            i
-            for la in _calc_banned_tokens(
-                input_ids,
-                num_batch_hypotheses,
-                self.repetition_window,
-                cur_len,
-            )
-            for i in la
-            if i not in self.skip_tokens
-        )
+        for banned_tokens in _calc_banned_tokens(
+            input_ids,
+            num_batch_hypotheses,
+            self.repetition_window,
+            cur_len,
+        ):
+            for token in banned_tokens:
+                if token not in self.skip_tokens:
+                    return True
+
+        return False
 
 
 def _no_repeat_ngram_logits(
