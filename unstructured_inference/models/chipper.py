@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 import cv2
 import numpy as np
 import torch
+import transformers
 from huggingface_hub import hf_hub_download
 from PIL.Image import Image
 from transformers import DonutProcessor, VisionEncoderDecoderModel
@@ -144,6 +145,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         image: Image,
     ) -> Tuple[List[int], Sequence[Sequence[torch.Tensor]]]:
         """Predict tokens from image."""
+        transformers.set_seed(42)
         with torch.no_grad():
             encoder_outputs = self.model.encoder(
                 self.processor(
