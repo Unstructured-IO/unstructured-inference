@@ -1,4 +1,4 @@
-## 0.7.4-dev2
+## 0.7.4
 
 * Dynamic beam search size has been implemented for Chipper, the decoding process starts with a size = 1 and changes to size = 3 if repetitions appear.
 * Fixed bug when PDFMiner predicts that an image text occupies the full page and removes annotations by Chipper.
