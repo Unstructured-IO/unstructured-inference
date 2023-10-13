@@ -39,10 +39,10 @@ def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
         return models[model_name]
 
     if model_name in DETECTRON2_ONNX_MODEL_TYPES:
-        model = UnstructuredDetectronONNXModel()
+        model = UnstructuredDetectronONNXModel()  # type:ignore
         initialize_params = {**DETECTRON2_ONNX_MODEL_TYPES[model_name], **kwargs}
     elif model_name in YOLOX_MODEL_TYPES:
-        model = UnstructuredYoloXModel()
+        model = UnstructuredYoloXModel()  # type:ignore
         initialize_params = {**YOLOX_MODEL_TYPES[model_name], **kwargs}
     elif model_name in CHIPPER_MODEL_TYPES:
         logger.warning(
@@ -53,10 +53,10 @@ def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
             "https://join.slack.com/t/unstructuredw-kbe4326/shared_invite/"
             "zt-1x7cgo0pg-PTptXWylzPQF9xZolzCnwQ",
         )
-        model = UnstructuredChipperModel()
+        model = UnstructuredChipperModel()  # type:ignore
         initialize_params = {**CHIPPER_MODEL_TYPES[model_name], **kwargs}
     elif model_name == "super_gradients":
-        model = UnstructuredSuperGradients()
+        model = UnstructuredSuperGradients()  # type:ignore
         initialize_params = {**kwargs}
     else:
         raise UnknownModelException(f"Unknown model type: {model_name}")
