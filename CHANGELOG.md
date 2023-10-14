@@ -1,3 +1,7 @@
+## 0.7.6
+
+* Fix: include onnx as base dependency.
+
 ## 0.7.5
 
 * Improved packaging
