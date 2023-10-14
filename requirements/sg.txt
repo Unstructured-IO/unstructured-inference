@@ -145,6 +145,7 @@ omegaconf==2.3.0
     #   super-gradients
 onnx==1.13.0
     # via
+    #   -c requirements/base.in
     #   onnx-simplifier
     #   super-gradients
 onnx-simplifier==0.4.33
