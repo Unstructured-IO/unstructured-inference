@@ -1,19 +1,32 @@
 import os
-from typing import Callable, List, cast
+from types import ModuleType
+from typing import TYPE_CHECKING, Callable, List, cast
 
 import numpy as np
-import supervision as sv
 import yaml
 from PIL import Image
-from super_gradients.training import models
 
 from unstructured_inference.constants import Source
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 
+if TYPE_CHECKING:
+    import supervision as sv
+    from super_gradients.training import models as _sgmodels
+
+sgmodels = None
+
 
 class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
+    def __init__(self):
+        super().__init__()
+        global sgmodels
+        if sgmodels is None:
+            from super_gradients.training import models as _sgmodels
+
+            sgmodels = _sgmodels
+
     def predict(self, x: Image):
         """Predict using Super-Gradients model."""
         super().predict(x)
@@ -24,9 +37,10 @@ class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
         model_arch: str,
         model_path: str,
         dataset_yaml_path: str,
-        callback: Callable[[np.ndarray, models.sg_module.SgModule], sv.Detections],
+        callback: Callable[[np.ndarray, "_sgmodels.sg_module.SgModule"], "sv.Detections"],
     ):
         """Start inference session for SuperGradients model."""
+
         if not os.path.exists(model_path):
             logger.info("Super Gradients Model Path Does Not Exist!")
         self.model_path = model_path
@@ -34,7 +48,7 @@ class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
         with open(dataset_yaml_path) as file:
             dataset_yaml = yaml.safe_load(file)
 
-        self.model = models.get(
+        self.model = cast(ModuleType, sgmodels).get(
             model_name=model_arch,
             num_classes=len(dataset_yaml["names"]),
             checkpoint_path=model_path,

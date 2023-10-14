@@ -1,3 +1,7 @@
+## 0.7.5
+
+* Improved packaging
+
 ## 0.7.4
 
 * Dynamic beam search size has been implemented for Chipper, the decoding process starts with a size = 1 and changes to size = 3 if repetitions appear.
