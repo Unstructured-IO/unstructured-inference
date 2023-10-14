@@ -1,4 +1,4 @@
-## 0.7.5-dev0
+## 0.7.5
 
 * Improved packaging
 
