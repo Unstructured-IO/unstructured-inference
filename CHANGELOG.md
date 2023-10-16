@@ -1,3 +1,7 @@
+## 0.7.6-dev0
+
+* Allow table model to accept optional OCR tokens
+
 ## 0.7.5
 
 * Improved packaging
