@@ -10,6 +10,7 @@ from huggingface_hub import hf_hub_download
 from PIL.Image import Image
 from transformers import DonutProcessor, VisionEncoderDecoderModel
 from transformers.generation.logits_process import LogitsProcessor
+from transformers.generation.stopping_criteria import StoppingCriteria
 
 from unstructured_inference.constants import Source
 from unstructured_inference.inference.elements import Rectangle
@@ -75,10 +76,19 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.source = source
         self.processor = DonutProcessor.from_pretrained(pre_trained_model_repo, token=auth_token)
         self.tokenizer = self.processor.tokenizer
-        self.logits_processor = NoRepeatNGramLogitsProcessor(
-            no_repeat_ngram_size,
-            get_table_token_ids(self.processor),
-        )
+        self.logits_processor = [
+            NoRepeatNGramLogitsProcessor(
+                no_repeat_ngram_size,
+                get_table_token_ids(self.processor),
+            ),
+        ]
+
+        self.stopping_criteria = [
+            NGramRepetitonStoppingCriteria(
+                repetition_window=30,
+                skip_tokens=get_table_token_ids(self.processor),
+            ),
+        ]
 
         self.model = VisionEncoderDecoderModel.from_pretrained(
             pre_trained_model_repo,
@@ -137,7 +147,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """Predict tokens from image."""
         transformers.set_seed(42)
         with torch.no_grad():
-            outputs = self.model.generate(
+            encoder_outputs = self.model.encoder(
                 self.processor(
                     np.array(
                         image,
@@ -145,19 +155,36 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     ),
                     return_tensors="pt",
                 ).pixel_values.to(self.device),
-                decoder_input_ids=self.input_ids,
-                logits_processor=[self.logits_processor],
-                max_length=self.max_length,
-                do_sample=True,
-                top_p=0.92,
-                top_k=5,
+            )
+
+            outputs = self.model.generate(
+                encoder_outputs=encoder_outputs,
+                input_ids=self.input_ids,
                 no_repeat_ngram_size=0,
-                num_beams=3,
+                num_beams=1,
                 return_dict_in_generate=True,
                 output_attentions=True,
                 output_scores=True,
                 output_hidden_states=False,
+                stopping_criteria=self.stopping_criteria,
             )
+
+            if (
+                len(outputs["sequences"][0]) < self.max_length
+                and outputs["sequences"][0][-1] != self.processor.tokenizer.eos_token_id
+            ):
+                outputs = self.model.generate(
+                    encoder_outputs=encoder_outputs,
+                    input_ids=self.input_ids,
+                    logits_processor=self.logits_processor,
+                    do_sample=False,
+                    no_repeat_ngram_size=0,
+                    num_beams=5,
+                    return_dict_in_generate=True,
+                    output_attentions=True,
+                    output_scores=True,
+                    output_hidden_states=False,
+                )
 
         if "beam_indices" in outputs:
             offset = len(outputs["beam_indices"][0]) - len(outputs["cross_attentions"])
@@ -457,6 +484,47 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
             no_repeat_ngram_size=self.ngram_size,
             skip_tokens=self.skip_tokens,
         )
+
+
+class NGramRepetitonStoppingCriteria(StoppingCriteria):
+    def __init__(self, repetition_window: int, skip_tokens: set = set()):
+        self.repetition_window = repetition_window
+        self.skip_tokens = skip_tokens
+
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+        """
+        Args:
+            input_ids (`torch.LongTensor` of shape `(batch_size, sequence_length)`):
+                Indices of input sequence tokens in the vocabulary.
+
+                Indices can be obtained using [`AutoTokenizer`]. See [`PreTrainedTokenizer.encode`]
+                and [`PreTrainedTokenizer.__call__`] for details.
+
+                [What are input IDs?](../glossary#input-ids)
+            scores (`torch.FloatTensor` of shape `(batch_size, config.vocab_size)`):
+                Prediction scores of a language modeling head. These can be scores for each
+                vocabulary token before SoftMax or scores for each vocabulary token after SoftMax.
+            kwargs (`Dict[str, Any]`, *optional*):
+                Additional stopping criteria specific kwargs.
+
+        Return:
+            `bool`. `False` indicates we should continue, `True` indicates we should stop.
+
+        """
+        num_batch_hypotheses = input_ids.shape[0]
+        cur_len = input_ids.shape[-1]
+
+        for banned_tokens in _calc_banned_tokens(
+            input_ids,
+            num_batch_hypotheses,
+            self.repetition_window,
+            cur_len,
+        ):
+            for token in banned_tokens:
+                if token not in self.skip_tokens:
+                    return True
+
+        return False
 
 
 def _no_repeat_ngram_logits(

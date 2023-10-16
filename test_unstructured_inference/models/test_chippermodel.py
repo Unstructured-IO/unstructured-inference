@@ -39,6 +39,8 @@ class MockModel:
 
 def mock_initialize(self, *arg, **kwargs):
     self.model = MockModel()
+    self.model.encoder = mock.MagicMock()
+    self.stopping_criteria = mock.MagicMock()
     self.processor = mock.MagicMock()
     self.logits_processor = mock.MagicMock()
     self.input_ids = mock.MagicMock()

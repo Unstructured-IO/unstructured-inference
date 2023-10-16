@@ -1,5 +1,10 @@
-## 0.7.4-dev1
+## 0.7.5
 
+* Improved packaging
+
+## 0.7.4
+
+* Dynamic beam search size has been implemented for Chipper, the decoding process starts with a size = 1 and changes to size = 3 if repetitions appear.
 * Fixed bug when PDFMiner predicts that an image text occupies the full page and removes annotations by Chipper.
 * Added random seed to Chipper text generation to avoid differences between calls to Chipper.
 * Allows user to use super-gradients model if they have a callback predict function, a yaml file with names field corresponding to classes and a path to the model weights

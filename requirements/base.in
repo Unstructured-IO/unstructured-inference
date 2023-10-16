@@ -1,9 +1,8 @@
+-c constraints.in
 layoutparser[layoutmodels,tesseract]
 python-multipart
 huggingface-hub
 opencv-python!=4.7.0.68
-super-gradients
-supervision
 # NOTE(benjamin): Pinned because onnxruntime changed the way quantization is done, and we need to update our code to support it
 onnxruntime<1.16
 # NOTE(alan): Pinned because this is when the most recent module we import appeared
