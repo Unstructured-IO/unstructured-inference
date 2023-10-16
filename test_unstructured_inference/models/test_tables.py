@@ -361,6 +361,21 @@ def test_table_prediction_tesseract(table_transformer, example_image):
     ) in prediction
 
 
+def test_table_prediction_tesseract_with_ocr_tokens(table_transformer, example_image):
+    ocr_tokens = [
+        {
+            # bounding box should match table structure
+            "bbox": [70.0, 245.0, 127.0, 266.0],
+            "block_num": 0,
+            "line_num": 0,
+            "span_num": 0,
+            "text": "Blind",
+        },
+    ]
+    prediction = table_transformer.predict(example_image, ocr_tokens=ocr_tokens)
+    assert prediction == "<table><tr><td>Blind</td></tr></table>"
+
+
 @pytest.mark.skipif(skip_outside_ci, reason="Skipping paddle test run outside of CI")
 def test_table_prediction_paddle(monkeypatch, example_image):
     monkeypatch.setenv("TABLE_OCR", "paddle")
