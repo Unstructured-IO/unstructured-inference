@@ -167,7 +167,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
         if ocr_tokens == []:
             logger.warning(
-                "Table OCR from get_tokens method will be deprecated in next unstructured release",
+                "Table OCR from get_tokens method will be deprecated.",
             )
             ocr_tokens = self.get_tokens(x=x)
 
