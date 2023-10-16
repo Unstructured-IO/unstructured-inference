@@ -1,3 +1,7 @@
+## 0.7.6
+
+* fix a bug where invalid zoom factor lead to exceptions; now invalid zoom factors results in no scaling of the image
+
 ## 0.7.5
 
 * Improved packaging
