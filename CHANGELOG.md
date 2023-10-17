@@ -1,3 +1,7 @@
+## 0.7.10-dev0
+
+* fix: Skips ordering elements coming from Chipper
+
 ## 0.7.9
 
 * Allow table model to accept optional OCR tokens
