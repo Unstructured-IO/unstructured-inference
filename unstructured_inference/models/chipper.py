@@ -138,7 +138,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """Do inference using the wrapped model."""
         tokens, decoder_cross_attentions = self.predict_tokens(image)
         elements = self.postprocess(image, tokens, decoder_cross_attentions)
-        print(elements)
         return elements
 
     def predict_tokens(
@@ -147,7 +146,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     ) -> Tuple[List[int], Sequence[Sequence[torch.Tensor]]]:
         """Predict tokens from image."""
         transformers.set_seed(42)
-        print("page")
         with torch.no_grad():
             encoder_outputs = self.model.encoder(
                 self.processor(
