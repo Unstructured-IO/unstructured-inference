@@ -1,3 +1,7 @@
+## 0.7.8
+
+* Fix: include onnx as base dependency.
+
 ## 0.7.7
 
 • Fix a memory leak in DonutProcessor when using large images in numpy format
