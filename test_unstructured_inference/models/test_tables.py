@@ -620,6 +620,17 @@ def test_auto_zoom(mocker):
     assert spy.call_count == 1
 
 
+@pytest.mark.parametrize("zoom", [1, 0.1, 5, -1, 0])
+def test_zoom_image(example_image, zoom):
+    width, height = example_image.size
+    new_image = tables.zoom_image(example_image, zoom)
+    new_w, new_h = new_image.size
+    if zoom <= 0:
+        zoom = 1
+    assert new_w == np.round(width * zoom, 0)
+    assert new_h == np.round(height * zoom, 0)
+
+
 def test_padded_results_has_right_dimensions(table_transformer, example_image):
     str_class_name2idx = tables.get_class_map("structure")
     # a simpler mapping so we keep all structure in the returned objs below for test
