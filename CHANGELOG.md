@@ -1,3 +1,9 @@
+## 0.7.7
+
+• Fix a memory leak in DonutProcessor when using large images in numpy format
+• Set the right settings for beam search size > 1
+• Fix a bug that in very rare cases made the last element predicted by Chipper to have a bbox = None
+
 ## 0.7.6
 
 * fix a bug where invalid zoom factor lead to exceptions; now invalid zoom factors results in no scaling of the image
