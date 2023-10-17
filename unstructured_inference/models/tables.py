@@ -719,6 +719,9 @@ def cells_to_html(cells):
 def zoom_image(image: Image, zoom: float) -> Image:
     """scale an image based on the zoom factor using cv2; the scaled image is post processed by
     dilation then erosion to improve edge sharpness for OCR tasks"""
+    if zoom <= 0:
+        # no zoom but still does dilation and erosion
+        zoom = 1
     new_image = cv2.resize(
         cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR),
         None,
