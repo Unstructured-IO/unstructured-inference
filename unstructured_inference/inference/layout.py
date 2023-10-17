@@ -253,8 +253,9 @@ class PageLayout:
 
         else:
             merged_layout = inferred_layout
-
-        order_elements = isinstance(self.detection_model, UnstructuredChipperModel)
+        # If the model is a chipper model, we don't want to order the
+        # elements, as they are already ordered
+        order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
         elements = self.get_elements_from_layout(
             cast(List[TextRegion], merged_layout),
             order_elements=order_elements,
