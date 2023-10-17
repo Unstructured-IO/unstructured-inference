@@ -71,6 +71,7 @@ numpy==1.23.0
     #   contourpy
     #   layoutparser
     #   matplotlib
+    #   onnx
     #   onnxruntime
     #   opencv-python
     #   pandas
@@ -80,6 +81,8 @@ numpy==1.23.0
     #   transformers
 omegaconf==2.3.0
     # via effdet
+onnx==1.14.1
+    # via -r requirements/base.in
 onnxruntime==1.15.1
     # via -r requirements/base.in
 opencv-python==4.8.1.78
@@ -112,7 +115,9 @@ pillow==10.0.1
 portalocker==2.8.2
     # via iopath
 protobuf==4.24.4
-    # via onnxruntime
+    # via
+    #   onnx
+    #   onnxruntime
 pycocotools==2.0.7
     # via effdet
 pycparser==2.21
@@ -185,6 +190,7 @@ typing-extensions==4.8.0
     # via
     #   huggingface-hub
     #   iopath
+    #   onnx
     #   torch
 tzdata==2023.3
     # via pandas
