@@ -25,6 +25,7 @@ from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.inference.pdf import get_images_from_pdf_element
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
+from unstructured_inference.models.chipper import UnstructuredChipperModel
 from unstructured_inference.models.detectron2onnx import (
     UnstructuredDetectronONNXModel,
 )
@@ -252,8 +253,13 @@ class PageLayout:
 
         else:
             merged_layout = inferred_layout
-
-        elements = self.get_elements_from_layout(cast(List[TextRegion], merged_layout))
+        # If the model is a chipper model, we don't want to order the
+        # elements, as they are already ordered
+        order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
+        elements = self.get_elements_from_layout(
+            cast(List[TextRegion], merged_layout),
+            order_elements=order_elements,
+        )
 
         if self.analysis:
             self.inferred_layout = inferred_layout
@@ -264,10 +270,15 @@ class PageLayout:
 
         return elements
 
-    def get_elements_from_layout(self, layout: List[TextRegion]) -> List[LayoutElement]:
+    def get_elements_from_layout(
+        self,
+        layout: List[TextRegion],
+        order_elements: bool = True,
+    ) -> List[LayoutElement]:
         """Uses the given Layout to separate the page text into elements, either extracting the
         text from the discovered layout blocks."""
-        layout = order_layout(layout)
+        if order_elements:
+            layout = order_layout(layout)
         elements = [
             get_element_from_block(
                 block=e,
