@@ -149,10 +149,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         with torch.no_grad():
             encoder_outputs = self.model.encoder(
                 self.processor(
-                    np.array(
-                        image,
-                        np.float32,
-                    ),
+                    image,
                     return_tensors="pt",
                 ).pixel_values.to(self.device),
             )
@@ -177,9 +174,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     encoder_outputs=encoder_outputs,
                     input_ids=self.input_ids,
                     logits_processor=self.logits_processor,
-                    do_sample=False,
+                    do_sample=True,
                     no_repeat_ngram_size=0,
-                    num_beams=5,
+                    num_beams=3,
                     return_dict_in_generate=True,
                     output_attentions=True,
                     output_scores=True,
@@ -304,7 +301,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 end = i
 
         # If exited before eos is achieved
-        if start != -1 and start < end and len(parents) > 0:
+        if start != -1 and start <= end and len(parents) > 0:
             slicing_end = end + 1
             string = self.tokenizer.decode(output_ids[start:slicing_end])
 
