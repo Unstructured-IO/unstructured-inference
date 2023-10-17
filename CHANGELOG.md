@@ -1,4 +1,4 @@
-## 0.7.6-dev0
+## 0.7.6
 
 * Allow table model to accept optional OCR tokens
 
