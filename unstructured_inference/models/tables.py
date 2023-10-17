@@ -5,7 +5,7 @@ import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import cv2
 import numpy as np
@@ -33,10 +33,24 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def __init__(self):
         pass
 
-    def predict(self, x: Image):
-        """Predict table structure deferring to run_prediction"""
+    def predict(self, x: Image, ocr_tokens: Optional[List[Dict]] = None):
+        """Predict table structure deferring to run_prediction with ocr tokens
+
+        Note:
+        `ocr_tokens` is a list of dictionaries representing OCR tokens,
+        where each dictionary has the following format:
+        {
+            "bbox": [int, int, int, int],  # Bounding box coordinates of the token
+            "block_num": int,  # Block number
+            "line_num": int,   # Line number
+            "span_num": int,   # Span number
+            "text": str,  # Text content of the token
+        }
+        The bounding box coordinates should match the table structure.
+        FIXME: refactor token data into a dataclass so we have clear expectations of the fields
+        """
         super().predict(x)
-        return self.run_prediction(x)
+        return self.run_prediction(x, ocr_tokens=ocr_tokens)
 
     def initialize(
         self,
@@ -161,12 +175,18 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         self,
         x: Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
+        ocr_tokens: Optional[List[Dict]] = None,
     ):
         """Predict table structure"""
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
-        tokens = self.get_tokens(x=x)
+        if ocr_tokens is None:
+            logger.warning(
+                "Table OCR from get_tokens method will be deprecated. "
+                "In the future the OCR tokens are expected to be passed in.",
+            )
+            ocr_tokens = self.get_tokens(x=x)
 
-        html = recognize(outputs_structure, x, tokens=tokens, out_html=True)["html"]
+        html = recognize(outputs_structure, x, tokens=ocr_tokens, out_html=True)["html"]
         prediction = html[0] if html else ""
         return prediction
 

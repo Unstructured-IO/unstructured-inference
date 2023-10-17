@@ -1,3 +1,7 @@
+## 0.7.9
+
+* Allow table model to accept optional OCR tokens
+
 ## 0.7.8
 
 * Fix: include onnx as base dependency.
