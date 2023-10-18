@@ -1,6 +1,8 @@
 import copy
 import os
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+import platform
+from contextlib import nullcontext
+from typing import ContextManager, Dict, List, Optional, Sequence, TextIO, Tuple, Union
 
 import cv2
 import numpy as np
@@ -133,6 +135,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         self.model.to(self.device)
         self.model.eval()
+        self.model = torch.compile(self.model)
 
     def predict(self, image) -> List[LayoutElement]:
         """Do inference using the wrapped model."""
@@ -147,41 +150,45 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """Predict tokens from image."""
         transformers.set_seed(42)
         with torch.no_grad():
-            encoder_outputs = self.model.encoder(
-                self.processor(
-                    image,
-                    return_tensors="pt",
-                ).pixel_values.to(self.device),
+            amp: Union[TextIO, ContextManager[None]] = (
+                torch.cpu.amp.autocast() if platform.machine() == "x86_64" else nullcontext()
             )
+            with amp:
+                encoder_outputs = self.model.encoder(
+                    self.processor(
+                        image,
+                        return_tensors="pt",
+                    ).pixel_values.to(self.device),
+                )
 
-            outputs = self.model.generate(
-                encoder_outputs=encoder_outputs,
-                input_ids=self.input_ids,
-                no_repeat_ngram_size=0,
-                num_beams=1,
-                return_dict_in_generate=True,
-                output_attentions=True,
-                output_scores=True,
-                output_hidden_states=False,
-                stopping_criteria=self.stopping_criteria,
-            )
-
-            if (
-                len(outputs["sequences"][0]) < self.max_length
-                and outputs["sequences"][0][-1] != self.processor.tokenizer.eos_token_id
-            ):
                 outputs = self.model.generate(
                     encoder_outputs=encoder_outputs,
                     input_ids=self.input_ids,
-                    logits_processor=self.logits_processor,
-                    do_sample=True,
                     no_repeat_ngram_size=0,
-                    num_beams=3,
+                    num_beams=1,
                     return_dict_in_generate=True,
                     output_attentions=True,
                     output_scores=True,
                     output_hidden_states=False,
+                    stopping_criteria=self.stopping_criteria,
                 )
+
+                if (
+                    len(outputs["sequences"][0]) < self.max_length
+                    and outputs["sequences"][0][-1] != self.processor.tokenizer.eos_token_id
+                ):
+                    outputs = self.model.generate(
+                        encoder_outputs=encoder_outputs,
+                        input_ids=self.input_ids,
+                        logits_processor=self.logits_processor,
+                        do_sample=True,
+                        no_repeat_ngram_size=0,
+                        num_beams=3,
+                        return_dict_in_generate=True,
+                        output_attentions=True,
+                        output_scores=True,
+                        output_hidden_states=False,
+                    )
 
         if "beam_indices" in outputs:
             offset = len(outputs["beam_indices"][0]) - len(outputs["cross_attentions"])
@@ -385,7 +392,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
             hmap = flat.view(heatmap_h, heatmap_w)
 
-            hmap = hmap.unsqueeze(dim=-1).cpu().numpy()
+            hmap = hmap.unsqueeze(dim=-1).to(torch.float32).cpu().numpy()
             hmap = (hmap * 255.0).astype(np.uint8)  # type:ignore
             # (40, 30, 1) uint8
             # fuse heatmaps for different tokens by taking the max

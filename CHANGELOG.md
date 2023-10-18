@@ -1,5 +1,6 @@
-## 0.7.10-dev0
+## 0.7.10-dev1
 
+* fix: Reduce Chipper memory consumption on x86_64 cpus
 * fix: Skips ordering elements coming from Chipper
 
 ## 0.7.9
