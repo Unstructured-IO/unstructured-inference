@@ -135,7 +135,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         self.model.to(self.device)
         self.model.eval()
-        self.model = torch.compile(self.model)
 
     def predict(self, image) -> List[LayoutElement]:
         """Do inference using the wrapped model."""
