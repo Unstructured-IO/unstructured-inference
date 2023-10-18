@@ -360,7 +360,7 @@ class PageLayout:
         if annotation_data is None:
             for el, color in zip(self.elements, colors):
                 if sources is None or el.source in sources:
-                    img = draw_bbox(img, el.bbox, color=color, details=add_details)
+                    img = draw_bbox(img, el, color=color, details=add_details)
         else:
             for attribute, style in annotation_data.items():
                 if hasattr(self, attribute) and getattr(self, attribute):

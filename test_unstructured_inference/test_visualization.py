@@ -13,7 +13,7 @@ def test_draw_bbox():
     image = Image.fromarray(test_image_arr)
     x1, y1, x2, y2 = (1, 10, 7, 11)
     rect = Rectangle(x1, y1, x2, y2)
-    annotated_image = draw_bbox(image=image, rect=rect)
+    annotated_image = draw_bbox(image=image, element=rect)
     annotated_array = np.array(annotated_image)
     # Make sure the pixels on the edge of the box are red
     for i, expected in zip(range(3), [255, 0, 0]):

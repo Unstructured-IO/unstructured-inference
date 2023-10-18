@@ -1,6 +1,7 @@
-## 0.7.10-dev0
+## 0.7.10-dev1
 
 * fix: Skips ordering elements coming from Chipper
+* fix: After refactoring to introduce Chipper, annotate() weren't able to show text with extra info from elements, this is fixed now.
 
 ## 0.7.9
 
