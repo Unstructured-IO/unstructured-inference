@@ -361,6 +361,52 @@ def test_table_prediction_tesseract(table_transformer, example_image):
     ) in prediction
 
 
+@pytest.mark.parametrize(
+    ("output_format", "expectation"),
+    [
+        ("html", "<tr><td>Blind</td><td>5</td><td>1</td><td>4</td><td>34.5%, n=1</td>"),
+        (
+            "cells",
+            {
+                "bbox": [68.0, 236.0, 198.0, 270.0],
+                "column_nums": [0],
+                "row_nums": [2],
+                "column header": False,
+                "subcell": False,
+                "projected row header": False,
+                "cell text": "Blind",
+                "spans": [
+                    {
+                        "bbox": [70.0, 245.0, 127.0, 266.0],
+                        "text": "Blind",
+                        "span_num": 24,
+                        "line_num": 0,
+                        "block_num": 0,
+                    },
+                ],
+            },
+        ),
+        ("dataframe", ["Blind", "5", "1", "4", "34.5%, n=1", "1199 sec, n=1"]),
+        (None, "<tr><td>Blind</td><td>5</td><td>1</td><td>4</td><td>34.5%, n=1</td>"),
+    ],
+)
+def test_table_prediction_output_format(
+    output_format,
+    expectation,
+    table_transformer,
+    example_image,
+):
+    if output_format:
+        result = table_transformer.run_prediction(example_image, result_format=output_format)
+    else:
+        result = table_transformer.run_prediction(example_image)
+
+    if output_format == "dataframe":
+        assert expectation in result.values
+    else:
+        assert expectation in result
+
+
 def test_table_prediction_tesseract_with_ocr_tokens(table_transformer, example_image):
     ocr_tokens = [
         {
