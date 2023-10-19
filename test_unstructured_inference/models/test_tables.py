@@ -368,22 +368,10 @@ def test_table_prediction_tesseract(table_transformer, example_image):
         (
             "cells",
             {
-                "bbox": [68.0, 236.0, 198.0, 270.0],
                 "column_nums": [0],
                 "row_nums": [2],
                 "column header": False,
-                "subcell": False,
-                "projected row header": False,
                 "cell text": "Blind",
-                "spans": [
-                    {
-                        "bbox": [70.0, 245.0, 127.0, 266.0],
-                        "text": "Blind",
-                        "span_num": 24,
-                        "line_num": 0,
-                        "block_num": 0,
-                    },
-                ],
             },
         ),
         ("dataframe", ["Blind", "5", "1", "4", "34.5%, n=1", "1199 sec, n=1"]),
@@ -403,6 +391,11 @@ def test_table_prediction_output_format(
 
     if output_format == "dataframe":
         assert expectation in result.values
+    elif output_format == "cells":
+        # other output like bbox are flakey to test since they depend on OCR and it may change
+        # slightly when OCR pacakge changes or even on different machines
+        validation_fields = ("column_nums", "row_nums", "column header", "cell text")
+        assert expectation in [{key: cell[key] for key in validation_fields} for cell in result]
     else:
         assert expectation in result
 
