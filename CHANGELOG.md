@@ -2,6 +2,7 @@
 
 * fix: Reduce Chipper memory consumption on x86_64 cpus
 * fix: Skips ordering elements coming from Chipper
+* fix: After refactoring to introduce Chipper, annotate() weren't able to show text with extra info from elements, this is fixed now.
 
 ## 0.7.9
 
