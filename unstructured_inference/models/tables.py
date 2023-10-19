@@ -188,7 +188,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             )
             ocr_tokens = self.get_tokens(x=x)
 
-        prediction = recognize(outputs_structure, x, tokens=ocr_tokens, out_html=True)[0]
+        prediction = recognize(outputs_structure, x, tokens=ocr_tokens)[0]
         if result_format == "html":
             # Convert cells to HTML
             prediction = cells_to_html(prediction) or ""
@@ -240,10 +240,8 @@ structure_class_thresholds = {
 }
 
 
-def recognize(outputs: dict, img: Image, tokens: list, out_html: bool = False):
+def recognize(outputs: dict, img: Image, tokens: list):
     """Recognize table elements."""
-    out_formats = {}
-
     str_class_name2idx = get_class_map("structure")
     str_class_idx2name = {v: k for k, v in str_class_name2idx.items()}
     str_class_thresholds = structure_class_thresholds
@@ -255,7 +253,6 @@ def recognize(outputs: dict, img: Image, tokens: list, out_html: bool = False):
     tables_structure = objects_to_structures(objects, tokens, str_class_thresholds)
     # Enumerate all table cells: grid cells and spanning cells
     return [structure_to_cells(structure, tokens)[0] for structure in tables_structure]
-    return out_formats
 
 
 def outputs_to_objects(outputs, img_size, class_idx2name):
