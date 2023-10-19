@@ -1,8 +1,9 @@
-## 0.7.10-dev1
+## 0.7.10-dev2
 
 * fix: Reduce Chipper memory consumption on x86_64 cpus
 * fix: Skips ordering elements coming from Chipper
 * fix: After refactoring to introduce Chipper, annotate() weren't able to show text with extra info from elements, this is fixed now.
+* feat: add table cell and dataframe output formats to table transformer's `run_prediction` call
 
 ## 0.7.9
 
