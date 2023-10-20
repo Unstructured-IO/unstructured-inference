@@ -383,7 +383,16 @@ def test_table_prediction_output_format(
     expectation,
     table_transformer,
     example_image,
+    mocker,
+    example_table_cells,
 ):
+    mocker.patch.object(tables, "recognize", return_value=example_table_cells)
+    mocker.patch.object(
+        tables.UnstructuredTableTransformerModel,
+        "get_structure",
+        return_value=None,
+    )
+    mocker.patch.object(tables.UnstructuredTableTransformerModel, "get_tokens", return_value=None)
     if output_format:
         result = table_transformer.run_prediction(example_image, result_format=output_format)
     else:

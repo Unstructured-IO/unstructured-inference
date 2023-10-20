@@ -2,7 +2,11 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from unstructured_inference.inference.elements import EmbeddedTextRegion, Rectangle, TextRegion
+from unstructured_inference.inference.elements import (
+    EmbeddedTextRegion,
+    Rectangle,
+    TextRegion,
+)
 from unstructured_inference.inference.layoutelement import LayoutElement
 
 
@@ -122,3 +126,43 @@ def mock_layout(mock_embedded_text_regions):
         LayoutElement(text=r.text, type="UncategorizedText", bbox=r.bbox)
         for r in mock_embedded_text_regions
     ]
+
+
+@pytest.fixture()
+def example_table_cells():
+    cells = [
+        {"cell text": "Disability Category", "row_nums": [0, 1], "column_nums": [0]},
+        {"cell text": "Participants", "row_nums": [0, 1], "column_nums": [1]},
+        {"cell text": "Ballots Completed", "row_nums": [0, 1], "column_nums": [2]},
+        {"cell text": "Ballots Incomplete/Terminated", "row_nums": [0, 1], "column_nums": [3]},
+        {"cell text": "Results", "row_nums": [0], "column_nums": [4, 5]},
+        {"cell text": "Accuracy", "row_nums": [1], "column_nums": [4]},
+        {"cell text": "Time to complete", "row_nums": [1], "column_nums": [5]},
+        {"cell text": "Blind", "row_nums": [2], "column_nums": [0]},
+        {"cell text": "Low Vision", "row_nums": [3], "column_nums": [0]},
+        {"cell text": "Dexterity", "row_nums": [4], "column_nums": [0]},
+        {"cell text": "Mobility", "row_nums": [5], "column_nums": [0]},
+        {"cell text": "5", "row_nums": [2], "column_nums": [1]},
+        {"cell text": "5", "row_nums": [3], "column_nums": [1]},
+        {"cell text": "5", "row_nums": [4], "column_nums": [1]},
+        {"cell text": "3", "row_nums": [5], "column_nums": [1]},
+        {"cell text": "1", "row_nums": [2], "column_nums": [2]},
+        {"cell text": "2", "row_nums": [3], "column_nums": [2]},
+        {"cell text": "4", "row_nums": [4], "column_nums": [2]},
+        {"cell text": "3", "row_nums": [5], "column_nums": [2]},
+        {"cell text": "4", "row_nums": [2], "column_nums": [3]},
+        {"cell text": "3", "row_nums": [3], "column_nums": [3]},
+        {"cell text": "1", "row_nums": [4], "column_nums": [3]},
+        {"cell text": "0", "row_nums": [5], "column_nums": [3]},
+        {"cell text": "34.5%, n=1", "row_nums": [2], "column_nums": [4]},
+        {"cell text": "98.3% n=2 (97.7%, n=3)", "row_nums": [3], "column_nums": [4]},
+        {"cell text": "98.3%, n=4", "row_nums": [4], "column_nums": [4]},
+        {"cell text": "95.4%, n=3", "row_nums": [5], "column_nums": [4]},
+        {"cell text": "1199 sec, n=1", "row_nums": [2], "column_nums": [5]},
+        {"cell text": "1716 sec, n=3 (1934 sec, n=2)", "row_nums": [3], "column_nums": [5]},
+        {"cell text": "1672.1 sec, n=4", "row_nums": [4], "column_nums": [5]},
+        {"cell text": "1416 sec, n=3", "row_nums": [5], "column_nums": [5]},
+    ]
+    for i in range(len(cells)):
+        cells[i]["column header"] = False
+    return [cells]
