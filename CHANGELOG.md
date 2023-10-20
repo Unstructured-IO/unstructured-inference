@@ -4,7 +4,7 @@
 * fix: Skips ordering elements coming from Chipper
 * fix: After refactoring to introduce Chipper, annotate() weren't able to show text with extra info from elements, this is fixed now.
 * feat: add table cell and dataframe output formats to table transformer's `run_prediction` call
-* breaking change: function `unstructured_inference.models.tables.recognize` no longer takes `out_html` parameter and it now only returns table cell data format (lists of dictionaris)
+* breaking change: function `unstructured_inference.models.tables.recognize` no longer takes `out_html` parameter and it now only returns table cell data format (lists of dictionaries)
 
 ## 0.7.9
 
