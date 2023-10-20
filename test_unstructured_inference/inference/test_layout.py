@@ -2,7 +2,7 @@ import os
 import os.path
 import tempfile
 from functools import partial
-from unittest.mock import mock_open, patch
+from unittest.mock import mock_open, patch, ANY
 
 import numpy as np
 import pytest
@@ -675,6 +675,8 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             fixed_layouts=None,
             extract_tables=False,
             pdf_image_dpi=200,
+            extract_images_in_pdf=ANY,
+            image_output_dir_path=ANY,
         )
 
 

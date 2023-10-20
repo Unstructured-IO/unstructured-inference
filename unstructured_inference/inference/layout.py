@@ -76,6 +76,8 @@ class DocumentLayout:
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         extract_tables: bool = False,
         pdf_image_dpi: int = 200,
+        extract_images_in_pdf: bool = False,
+        image_output_dir_path: Optional[str] = None,
         **kwargs,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
@@ -113,6 +115,8 @@ class DocumentLayout:
                         layout=layout,
                         fixed_layout=fixed_layout,
                         extract_tables=extract_tables,
+                        extract_images_in_pdf=extract_images_in_pdf,
+                        image_output_dir_path=image_output_dir_path,
                         **kwargs,
                     )
                     pages.append(page)
@@ -457,6 +461,8 @@ def process_data_with_model(
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
+    extract_images_in_pdf: bool = False,
+    image_output_dir_path: Optional[str] = None,
     **kwargs,
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
@@ -471,6 +477,8 @@ def process_data_with_model(
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
+            extract_images_in_pdf=extract_images_in_pdf,
+            image_output_dir_path=image_output_dir_path,
             **kwargs,
         )
 
@@ -484,6 +492,8 @@ def process_file_with_model(
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
+    extract_images_in_pdf: bool = False,
+    image_output_dir_path: Optional[str] = None,
     **kwargs,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
@@ -514,6 +524,8 @@ def process_file_with_model(
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
+            extract_images_in_pdf=extract_images_in_pdf,
+            image_output_dir_path=image_output_dir_path,
             **kwargs,
         )
     )
