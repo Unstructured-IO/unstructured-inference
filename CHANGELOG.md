@@ -1,4 +1,4 @@
-## 0.7.10-dev2
+## 0.7.10
 
 * Handle kwargs explicitly when needed, suppress otherwise
 * fix: Reduce Chipper memory consumption on x86_64 cpus
