@@ -1,5 +1,6 @@
-## 0.7.10-dev1
+## 0.7.10-dev2
 
+* Handle kwargs related to pdf processing in signature
 * fix: Reduce Chipper memory consumption on x86_64 cpus
 * fix: Skips ordering elements coming from Chipper
 * fix: After refactoring to introduce Chipper, annotate() weren't able to show text with extra info from elements, this is fixed now.
