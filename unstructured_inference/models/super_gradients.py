@@ -38,6 +38,7 @@ class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
         model_path: str,
         dataset_yaml_path: str,
         callback: Callable[[np.ndarray, "_sgmodels.sg_module.SgModule"], "sv.Detections"],
+        **kwargs,
     ):
         """Start inference session for SuperGradients model."""
 

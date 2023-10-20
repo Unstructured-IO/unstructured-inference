@@ -64,7 +64,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         super().predict(x)
         return self.image_processing(x)
 
-    def initialize(self, model_path: str, label_map: dict):
+    def initialize(self, model_path: str, label_map: dict, **kwargs):
         """Start inference session for YoloX model."""
         self.model_path = model_path
         self.model = onnxruntime.InferenceSession(

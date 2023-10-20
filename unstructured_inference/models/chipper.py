@@ -63,6 +63,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         no_repeat_ngram_size: int = 10,
         auth_token: Optional[str] = os.environ.get("UNSTRUCTURED_HF_TOKEN"),
         device: Optional[str] = None,
+        **kwargs,
     ):
         """Load the model for inference."""
         if device is None:

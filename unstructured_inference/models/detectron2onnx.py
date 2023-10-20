@@ -95,6 +95,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         model_path: str,
         label_map: Dict[int, str],
         confidence_threshold: Optional[float] = None,
+        **kwargs,
     ):
         """Loads the detectron2 model using the specified parameters"""
         if not os.path.exists(model_path) and "detectron2_quantized" in model_path:

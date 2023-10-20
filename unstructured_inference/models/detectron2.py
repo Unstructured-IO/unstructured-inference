@@ -77,6 +77,7 @@ class UnstructuredDetectronModel(UnstructuredObjectDetectionModel):
         label_map: Optional[Dict[int, str]] = None,
         extra_config: Optional[list] = None,
         device: Optional[str] = None,
+        **kwargs,
     ):
         """Loads the detectron2 model using the specified parameters"""
 
