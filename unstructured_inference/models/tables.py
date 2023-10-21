@@ -19,6 +19,7 @@ from unstructured_inference.config import inference_config
 from unstructured_inference.constants import (
     TESSERACT_TEXT_HEIGHT,
 )
+from unstructured_inference.inference.layoutelement import table_cells_to_dataframe
 from unstructured_inference.logger import logger
 from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
@@ -176,6 +177,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         x: Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
         ocr_tokens: Optional[List[Dict]] = None,
+        result_format: Optional[str] = "html",
     ):
         """Predict table structure"""
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
@@ -186,8 +188,12 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             )
             ocr_tokens = self.get_tokens(x=x)
 
-        html = recognize(outputs_structure, x, tokens=ocr_tokens, out_html=True)["html"]
-        prediction = html[0] if html else ""
+        prediction = recognize(outputs_structure, x, tokens=ocr_tokens)[0]
+        if result_format == "html":
+            # Convert cells to HTML
+            prediction = cells_to_html(prediction) or ""
+        elif result_format == "dataframe":
+            prediction = table_cells_to_dataframe(prediction)
         return prediction
 
 
@@ -234,10 +240,8 @@ structure_class_thresholds = {
 }
 
 
-def recognize(outputs: dict, img: Image, tokens: list, out_html: bool = False):
+def recognize(outputs: dict, img: Image, tokens: list):
     """Recognize table elements."""
-    out_formats = {}
-
     str_class_name2idx = get_class_map("structure")
     str_class_idx2name = {v: k for k, v in str_class_name2idx.items()}
     str_class_thresholds = structure_class_thresholds
@@ -248,14 +252,7 @@ def recognize(outputs: dict, img: Image, tokens: list, out_html: bool = False):
     # Further process the detected objects so they correspond to a consistent table
     tables_structure = objects_to_structures(objects, tokens, str_class_thresholds)
     # Enumerate all table cells: grid cells and spanning cells
-    tables_cells = [structure_to_cells(structure, tokens)[0] for structure in tables_structure]
-
-    # Convert cells to HTML
-    if out_html:
-        tables_htmls = [cells_to_html(cells) for cells in tables_cells]
-        out_formats["html"] = tables_htmls
-
-    return out_formats
+    return [structure_to_cells(structure, tokens)[0] for structure in tables_structure]
 
 
 def outputs_to_objects(outputs, img_size, class_idx2name):
