@@ -1,3 +1,7 @@
+## 0.7.11-dev0
+
+* fix: use automatic mixed precision on GPU for Chipper
+
 ## 0.7.10
 
 * Handle kwargs explicitly when needed, suppress otherwise
