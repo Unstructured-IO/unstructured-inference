@@ -153,6 +153,21 @@ class DocumentLayout:
             pages.append(page)
         return cls.from_pages(pages)
 
+    def clean_pdfminer_inner_elements(self):
+        """Clean pdfminer elements from inside tables and stores them in pdfminer_inner_text
+        property of the elements"""
+        for page in self.pages:
+            tables = [e for e in page.elements if e.type == "Table"]
+            for i, element in enumerate(page.elements):
+                if element.source == Source.PDFMINER:
+                    element_inside_table = [element.bbox.is_in(t.bbox) for t in tables]
+                    if sum(element_inside_table) == 1:
+                        parent_table_index = element_inside_table.index(True)
+                        parent_table = tables[parent_table_index]
+                        parent_table.pdfminer_inner_text.append(element)
+                        page.elements[i] = None
+            page.elements = [e for e in page.elements if e]
+
 
 class PageLayout:
     """Class for an individual PDF page."""
