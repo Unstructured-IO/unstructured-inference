@@ -160,7 +160,9 @@ class DocumentLayout:
             tables = [e for e in page.elements if e.type == "Table"]
             for i, element in enumerate(page.elements):
                 if element.source == Source.PDFMINER:
-                    element_inside_table = [element.bbox.is_in(t.bbox) for t in tables]
+                    element_inside_table = [
+                        element.bbox.is_in(t.bbox, error_margin=15) for t in tables
+                    ]
                     if sum(element_inside_table) == 1:
                         parent_table_index = element_inside_table.index(True)
                         parent_table = tables[parent_table_index]
