@@ -1,3 +1,7 @@
+## 0.7.11-dev0
+
+* enhacement: added field to LayoutElement to store elements inside them
+
 ## 0.7.10
 
 * Handle kwargs explicitly when needed, suppress otherwise
