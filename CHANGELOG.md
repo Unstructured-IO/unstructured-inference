@@ -1,6 +1,7 @@
-## 0.7.11-dev0
+## 0.7.11
 
-* enhacement: added field to LayoutElement to store elements inside them
+* enhacement: added functionality to remove  nested elements from tables when using detection models + pdfminer, also
+add a field to LayoutElement to store this nested elements
 
 ## 0.7.10
 
