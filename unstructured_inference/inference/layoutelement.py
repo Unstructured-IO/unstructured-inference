@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Collection, List, Optional
 
 import numpy as np
@@ -30,6 +30,7 @@ class LayoutElement(TextRegion):
     prob: Optional[float] = None
     image_path: Optional[str] = None
     parent: Optional[LayoutElement] = None
+    pdfminer_inner_text: List = field(default_factory=list)
 
     def extract_text(
         self,
