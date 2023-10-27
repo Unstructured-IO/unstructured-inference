@@ -135,17 +135,7 @@ jobs:
         sudo apt-get install -y tesseract-ocr-kor
         sudo apt-get install -y diffstat
         tesseract --version
-        make install-ingest-s3
-        make install-ingest-azure
-        make install-ingest-discord
-        make install-ingest-elasticsearch
-        make install-ingest-dropbox
-        make install-ingest-gcs
-        make install-ingest-google-drive
-        make install-ingest-github
-        make install-ingest-gitlab
-        make install-ingest-slack
-        make install-ingest-wikipedia
+        make install-all-ingest
         # only run ingest tests that check expected output diffs.
         bash inference/scripts/test-unstructured-ingest-helper.sh
 
