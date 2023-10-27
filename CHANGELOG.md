@@ -1,7 +1,8 @@
-## 0.7.11
+## 0.7.11-dev1
 
 * enhacement: added functionality to remove  nested elements from tables when using detection models + pdfminer, also
 add a field to LayoutElement to store this nested elements
+* fix: use automatic mixed precision on GPU for Chipper
 
 ## 0.7.10
 

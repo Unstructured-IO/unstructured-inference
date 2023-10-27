@@ -134,6 +134,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.tokens_stop = [self.tokenizer.eos_token_id, self.tokenizer.pad_token_id]
 
         self.model.to(self.device)
+
         self.model.eval()
 
     def predict(self, image) -> List[LayoutElement]:
@@ -150,7 +151,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         transformers.set_seed(42)
         with torch.no_grad():
             amp: Union[TextIO, ContextManager[None]] = (
-                torch.cpu.amp.autocast() if platform.machine() == "x86_64" else nullcontext()
+                torch.cuda.amp.autocast()
+                if self.device == "cuda"
+                else (torch.cpu.amp.autocast() if platform.machine() == "x86_64" else nullcontext())
             )
             with amp:
                 encoder_outputs = self.model.encoder(
