@@ -52,7 +52,7 @@ def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
         initialize_params = {**DETECTRON2_ONNX_MODEL_TYPES[model_name], **kwargs}
     elif model_name in YOLOX_MODEL_TYPES:
         model = UnstructuredYoloXModel()
-        initialize_params = {**YOLOX_MODEL_TYPES[model_name], **kwargs}
+        initialize_params = {**YOLOX_MODEL_TYPES[model_name]}
     elif model_name in CHIPPER_MODEL_TYPES:
         logger.warning(
             "The Chipper model is currently in Beta and is not yet ready for production use. "
@@ -63,7 +63,7 @@ def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
             "zt-1x7cgo0pg-PTptXWylzPQF9xZolzCnwQ",
         )
         model = UnstructuredChipperModel()
-        initialize_params = {**CHIPPER_MODEL_TYPES[model_name], **kwargs}
+        initialize_params = {**CHIPPER_MODEL_TYPES[model_name]}
     elif model_name == "super_gradients":
         model = UnstructuredSuperGradients()
         initialize_params = {**kwargs}
