@@ -61,14 +61,14 @@ mix_elements_inside_table = [
 
 
 @pytest.mark.parametrize(
-    ("elements", "lenght_extra_info", "expected_document_lenght"),
+    ("elements", "length_extra_info", "expected_document_length"),
     [
         (deletable_elements_inside_table, 1, 1),
         (no_deletable_elements_inside_table, 0, 3),
         (mix_elements_inside_table, 2, 5),
     ],
 )
-def test_clean_pdfminer_inner_elements(elements, lenght_extra_info, expected_document_lenght):
+def test_clean_pdfminer_inner_elements(elements, length_extra_info, expected_document_length):
     # create a sample document with pdfminer elements inside tables
     page = PageLayout(number=1, image=None, layout=elements)
     page.elements = elements
