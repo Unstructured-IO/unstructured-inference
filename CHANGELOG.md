@@ -1,3 +1,7 @@
+## 0.7.12
+
+* change the default model to yolox, as table output appears to be better and speed is similar to `yolox_quantized`
+
 ## 0.7.11
 
 * chore: remove logger info for chipper since its private
