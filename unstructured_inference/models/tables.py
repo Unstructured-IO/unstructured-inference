@@ -163,7 +163,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         """get the table structure as a dictionary contaning different types of elements as
         key-value pairs; check table-transformer documentation for more information"""
         with torch.no_grad():
-            logger.info(f"padding image by {pad_for_structure_detection} for structufre detection")
+            logger.info(f"padding image by {pad_for_structure_detection} for structure detection")
             encoding = self.feature_extractor(
                 pad_image_with_background_color(x, pad_for_structure_detection),
                 return_tensors="pt",

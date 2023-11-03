@@ -59,8 +59,7 @@ def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
             "You can reach out to the Unstructured engineering team in the Unstructured "
             "community Slack if you have any feedback on the Chipper model. "
             "You can join the community Slack here: "
-            "https://join.slack.com/t/unstructuredw-kbe4326/shared_invite/"
-            "zt-1x7cgo0pg-PTptXWylzPQF9xZolzCnwQ",
+            "https://short.unstructured.io/pzw05l7",
         )
         model = UnstructuredChipperModel()
         initialize_params = {**CHIPPER_MODEL_TYPES[model_name], **kwargs}
