@@ -89,7 +89,8 @@ class DocumentLayout:
             if len(layouts) > len(image_paths):
                 raise RuntimeError(
                     "Some images were not loaded. "
-                    "Check that poppler is installed and in your $PATH.",
+                    f"Number of extracted images ({len(image_paths)}) does not match number of "
+                    f"extracted page layouts ({len(layouts)})",
                 )
 
             pages: List[PageLayout] = []

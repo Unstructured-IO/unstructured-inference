@@ -346,7 +346,7 @@ def test_from_file_raises_on_length_mismatch(monkeypatch):
     monkeypatch.setattr(layout, "load_pdf", lambda *args, **kwargs: ([None, None], []))
     with pytest.raises(RuntimeError) as e:
         layout.DocumentLayout.from_file("fake_file")
-    assert "poppler" in str(e).lower()
+    assert "images" in str(e).lower()
 
 
 @pytest.mark.parametrize("idx", range(2))

@@ -1,5 +1,6 @@
-## 0.7.11-dev0
+## 0.7.11-dev1
 
+* enhancement: Improve error message when # images extracted doesn't match # page layouts.
 * fix: use automatic mixed precision on GPU for Chipper
 
 ## 0.7.10
@@ -7,7 +8,7 @@
 * Handle kwargs explicitly when needed, suppress otherwise
 * fix: Reduce Chipper memory consumption on x86_64 cpus
 * fix: Skips ordering elements coming from Chipper
-* fix: After refactoring to introduce Chipper, annotate() weren't able to show text with extra info from elements, this is fixed now.
+* fix: After refactoring to introduce Chipper, annotate() wasn't able to show text with extra info from elements, this is fixed now.
 * feat: add table cell and dataframe output formats to table transformer's `run_prediction` call
 * breaking change: function `unstructured_inference.models.tables.recognize` no longer takes `out_html` parameter and it now only returns table cell data format (lists of dictionaries)
 
