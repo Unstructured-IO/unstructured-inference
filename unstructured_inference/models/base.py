@@ -1,6 +1,5 @@
 from typing import Dict, Optional
 
-from unstructured_inference.logger import logger
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
 from unstructured_inference.models.chipper import UnstructuredChipperModel
 from unstructured_inference.models.detectron2 import (
