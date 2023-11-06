@@ -1,6 +1,6 @@
 ## 0.7.11-dev3
 
-* fix: remove logger info for chipper
+* chore: remove logger info for chipper since its private
 * fix: update broken slack invite link in chipper logger info
 * enhancement: Improve error message when # images extracted doesn't match # page layouts.
 * fix: use automatic mixed precision on GPU for Chipper
