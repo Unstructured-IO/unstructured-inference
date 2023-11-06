@@ -18,8 +18,10 @@ from unstructured_inference.constants import Source
 from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
-from unstructured_inference.models.unstructuredmodel import UnstructuredElementExtractionModel
-from unstructured_inference.utils import LazyDict
+from unstructured_inference.models.unstructuredmodel import (
+    UnstructuredElementExtractionModel,
+)
+from unstructured_inference.utils import LazyDict, strip_tags
 
 MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
     "chipperv1": {
@@ -140,7 +142,22 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     def predict(self, image) -> List[LayoutElement]:
         """Do inference using the wrapped model."""
         tokens, decoder_cross_attentions = self.predict_tokens(image)
-        elements = self.postprocess(image, tokens, decoder_cross_attentions)
+        elements = self.format_table_elements(
+            self.postprocess(image, tokens, decoder_cross_attentions),
+        )
+        return elements
+
+    @staticmethod
+    def format_table_elements(elements):
+        """makes chipper table element return the same as other layout models
+
+        - copies the html representation to attribute text_as_html
+        - strip html tags from the attribute text
+        """
+        for element in elements:
+            element.text_as_html = element.text
+            element.text = strip_tags(element.text)
+
         return elements
 
     def predict_tokens(

@@ -1,5 +1,7 @@
 import os
 from collections.abc import Mapping
+from html.parser import HTMLParser
+from io import StringIO
 from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterable, Iterator, Union
 
 import cv2
@@ -154,3 +156,24 @@ def pad_image_with_background_color(
     new = Image.new(image.mode, (width + pad * 2, height + pad * 2), background_color)
     new.paste(image, (pad, pad))
     return new
+
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs = True
+        self.text = StringIO()
+
+    def handle_data(self, d):
+        self.text.write(d)
+
+    def get_data(self):
+        return self.text.getvalue()
+
+
+def strip_tags(html: str) -> str:
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
