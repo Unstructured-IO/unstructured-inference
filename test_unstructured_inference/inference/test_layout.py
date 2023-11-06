@@ -222,11 +222,9 @@ def test_process_file_no_warnings(monkeypatch, mock_final_layout, recwarn):
     monkeypatch.setattr(models.UnstructuredDetectronModel, "initialize", mock_initialize)
     filename = ""
     layout.process_file_with_model(filename, model_name=None)
-    try:
+    with pytest.raises(AssertionError, match="not found in warning list"):
         user_warning = recwarn.pop(UserWarning)
         assert "not in available provider names" not in str(user_warning.message)
-    except AssertionError as e:
-        assert "not found in warning list" in str(e)
 
 
 def test_process_file_with_model_raises_on_invalid_model_name():
