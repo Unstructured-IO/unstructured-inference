@@ -14,6 +14,7 @@ from unstructured_inference.utils import (
     LazyEvaluateInfo,
     annotate_layout_elements,
     pad_image_with_background_color,
+    strip_tags,
     write_image,
 )
 
@@ -147,3 +148,17 @@ def test_pad_image_with_background_color(mock_pil_image):
 def test_pad_image_with_invalid_input(mock_pil_image):
     with pytest.raises(ValueError, match="Can not pad an image with negative space!"):
         pad_image_with_background_color(mock_pil_image, -1)
+
+
+@pytest.mark.parametrize(
+    ("html", "text"),
+    [
+        ("<table>Table</table>", "Table"),
+        # test escaped character
+        ("<table>y&ltx, x&gtz</table>", "y<x, x>z"),
+        # test tag with parameters
+        ("<table format=foo>Table", "Table"),
+    ],
+)
+def test_strip_tags(html, text):
+    assert strip_tags(html) == text

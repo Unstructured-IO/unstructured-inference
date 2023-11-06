@@ -162,18 +162,21 @@ class MLStripper(HTMLParser):
     def __init__(self):
         super().__init__()
         self.reset()
-        self.strict = False
+        self.strict = True
         self.convert_charrefs = True
         self.text = StringIO()
 
     def handle_data(self, d):
+        """process input data"""
         self.text.write(d)
 
     def get_data(self):
+        """performs stripping by get the value of text"""
         return self.text.getvalue()
 
 
 def strip_tags(html: str) -> str:
+    """stripping html tags from input string and return string without tags"""
     s = MLStripper()
     s.feed(html)
     return s.get_data()
