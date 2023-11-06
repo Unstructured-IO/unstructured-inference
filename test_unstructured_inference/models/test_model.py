@@ -35,17 +35,6 @@ def test_get_model(monkeypatch):
     assert isinstance(models.get_model("checkbox"), MockModel)
 
 
-def test_get_model_warns_on_chipper(monkeypatch, caplog):
-    monkeypatch.setattr(
-        models,
-        "UnstructuredChipperModel",
-        MockModel,
-    )
-    with mock.patch.object(models, "models", {}):
-        models.get_model("chipper")
-        assert caplog.records[0].levelname == "WARNING"
-
-
 def test_raises_invalid_model():
     with pytest.raises(models.UnknownModelException):
         models.get_model("fake_model")
