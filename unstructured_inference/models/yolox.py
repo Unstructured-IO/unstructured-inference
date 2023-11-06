@@ -70,11 +70,11 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         self.model_path = model_path
 
         available_providers = C.get_available_providers()
-        ordered_providers=[
-                "TensorrtExecutionProvider",
-                "CUDAExecutionProvider",
-                "CPUExecutionProvider",
-            ]
+        ordered_providers = [
+            "TensorrtExecutionProvider",
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider",
+        ]
         providers = [provider for provider in ordered_providers if provider in available_providers]
 
         self.model = onnxruntime.InferenceSession(

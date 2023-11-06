@@ -6,8 +6,8 @@ import numpy as np
 import onnxruntime
 from huggingface_hub import hf_hub_download
 from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
-from onnxruntime.quantization import QuantType, quantize_dynamic
 from onnxruntime.capi import _pybind_state as C
+from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
 from unstructured_inference.constants import Source
@@ -105,11 +105,11 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
             quantize_dynamic(source_path, model_path, weight_type=QuantType.QUInt8)
 
         available_providers = C.get_available_providers()
-        ordered_providers=[
-                "TensorrtExecutionProvider",
-                "CUDAExecutionProvider",
-                "CPUExecutionProvider",
-            ]
+        ordered_providers = [
+            "TensorrtExecutionProvider",
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider",
+        ]
         providers = [provider for provider in ordered_providers if provider in available_providers]
 
         self.model = onnxruntime.InferenceSession(
