@@ -5,14 +5,14 @@
 # fixtures
 
 INGEST_COMMANDS=(
-    test_unstructured_ingest/test-ingest-azure.sh
-    test_unstructured_ingest/test-ingest-biomed-api.sh
-    test_unstructured_ingest/test-ingest-biomed-path.sh
-    test_unstructured_ingest/test-ingest-box.sh
-    test_unstructured_ingest/test-ingest-dropbox.sh
-    test_unstructured_ingest/test-ingest-gcs.sh
-    test_unstructured_ingest/test-ingest-onedrive.sh
-    test_unstructured_ingest/test-ingest-s3.sh
+    test_unstructured_ingest/src/azure.sh
+    test_unstructured_ingest/src/biomed-api.sh
+    test_unstructured_ingest/src/biomed-path.sh
+    test_unstructured_ingest/src/box.sh
+    test_unstructured_ingest/src/dropbox.sh
+    test_unstructured_ingest/src/gcs.sh
+    test_unstructured_ingest/src/onedrive.sh
+    test_unstructured_ingest/src/s3.sh
 )
 
 EXIT_STATUSES=()
