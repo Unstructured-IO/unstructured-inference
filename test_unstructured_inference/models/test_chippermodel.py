@@ -243,5 +243,5 @@ def test_run_chipper_v2():
     img = Image.open("sample-docs/easy_table.jpg")
     elements = model(img)
     tables = [el for el in elements if el.type == "Table"]
-    assert all([table.text_as_html.startswith("<table>") for table in tables])
-    assert all(["<table>" not in table.text for table in tables])
+    assert all(table.text_as_html.startswith("<table>") for table in tables)
+    assert all("<table>" not in table.text for table in tables)
