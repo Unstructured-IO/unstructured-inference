@@ -54,13 +54,6 @@ def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
         model = UnstructuredYoloXModel()
         initialize_params = {**YOLOX_MODEL_TYPES[model_name], **kwargs}
     elif model_name in CHIPPER_MODEL_TYPES:
-        logger.warning(
-            "The Chipper model is currently in Beta and is not yet ready for production use. "
-            "You can reach out to the Unstructured engineering team in the Unstructured "
-            "community Slack if you have any feedback on the Chipper model. "
-            "You can join the community Slack here: "
-            "https://short.unstructured.io/pzw05l7",
-        )
         model = UnstructuredChipperModel()
         initialize_params = {**CHIPPER_MODEL_TYPES[model_name], **kwargs}
     elif model_name == "super_gradients":
