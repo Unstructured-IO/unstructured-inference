@@ -3,7 +3,6 @@ import os.path
 import tempfile
 from functools import partial
 from unittest.mock import ANY, mock_open, patch
-import warnings
 
 import numpy as np
 import pytest

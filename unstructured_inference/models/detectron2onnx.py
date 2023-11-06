@@ -90,7 +90,6 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         regions = self.postprocess(bboxes, labels, confidence_scores, input_w, input_h)
 
         return regions
-    
 
     def initialize(
         self,
