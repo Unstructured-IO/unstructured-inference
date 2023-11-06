@@ -1,8 +1,10 @@
-## 0.7.11-dev2
+## 0.7.11
 
+* chore: remove logger info for chipper since its private
 * fix: update broken slack invite link in chipper logger info
 * enhancement: Improve error message when # images extracted doesn't match # page layouts.
 * fix: use automatic mixed precision on GPU for Chipper
+* fix: chipper Table elements now match other layout models' Table element format: html representation is stored in `text_as_html` attribute and `text` attribute stores text without html tags
 
 ## 0.7.10
 

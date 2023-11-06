@@ -1,5 +1,7 @@
 import os
 from collections.abc import Mapping
+from html.parser import HTMLParser
+from io import StringIO
 from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterable, Iterator, Union
 
 import cv2
@@ -154,3 +156,29 @@ def pad_image_with_background_color(
     new = Image.new(image.mode, (width + pad * 2, height + pad * 2), background_color)
     new.paste(image, (pad, pad))
     return new
+
+
+class MLStripper(HTMLParser):
+    """simple markup language stripper that helps to strip tags from string"""
+
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = True
+        self.convert_charrefs = True
+        self.text = StringIO()
+
+    def handle_data(self, d):
+        """process input data"""
+        self.text.write(d)
+
+    def get_data(self):
+        """performs stripping by get the value of text"""
+        return self.text.getvalue()
+
+
+def strip_tags(html: str) -> str:
+    """stripping html tags from input string and return string without tags"""
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
