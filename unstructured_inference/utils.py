@@ -159,6 +159,8 @@ def pad_image_with_background_color(
 
 
 class MLStripper(HTMLParser):
+    """simple markup language stripper that helps to strip tags from string"""
+
     def __init__(self):
         super().__init__()
         self.reset()

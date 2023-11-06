@@ -1,4 +1,4 @@
-## 0.7.11-dev3
+## 0.7.11
 
 * fix: update broken slack invite link in chipper logger info
 * enhancement: Improve error message when # images extracted doesn't match # page layouts.
