@@ -3,6 +3,7 @@ import os.path
 import tempfile
 from functools import partial
 from unittest.mock import ANY, mock_open, patch
+import warnings
 
 import numpy as np
 import pytest
@@ -208,6 +209,25 @@ def test_process_file_with_model(monkeypatch, mock_final_layout, model_name):
     monkeypatch.setattr(models.UnstructuredDetectronModel, "initialize", mock_initialize)
     filename = ""
     assert layout.process_file_with_model(filename, model_name=model_name)
+
+
+def test_process_file_no_warnings(monkeypatch, mock_final_layout, recwarn):
+    def mock_initialize(self, *args, **kwargs):
+        self.model = MockLayoutModel(mock_final_layout)
+
+    monkeypatch.setattr(
+        layout.DocumentLayout,
+        "from_file",
+        lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
+    )
+    monkeypatch.setattr(models.UnstructuredDetectronModel, "initialize", mock_initialize)
+    filename = ""
+    layout.process_file_with_model(filename, model_name=None)
+    try:
+        user_warning = recwarn.pop(UserWarning)
+        assert "not in available provider names" not in str(user_warning.message)
+    except AssertionError as e:
+        assert "not found in warning list" in str(e)
 
 
 def test_process_file_with_model_raises_on_invalid_model_name():
