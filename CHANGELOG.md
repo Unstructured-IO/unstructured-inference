@@ -1,3 +1,7 @@
+## 0.7.12-dev0
+
+* chore: supress UserWarning about specified model providers
+
 ## 0.7.11
 
 * chore: remove logger info for chipper since its private
