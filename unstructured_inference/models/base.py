@@ -25,7 +25,7 @@ from unstructured_inference.models.yolox import (
     UnstructuredYoloXModel,
 )
 
-DEFAULT_MODEL = "yolox_quantized"
+DEFAULT_MODEL = "yolox"
 
 models: Dict[str, UnstructuredModel] = {}
 
