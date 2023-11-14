@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 import onnxruntime
 from huggingface_hub import hf_hub_download
+from onnxruntime.capi import _pybind_state as C
 from PIL import Image
 
 from unstructured_inference.constants import Source
@@ -67,13 +68,18 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
     def initialize(self, model_path: str, label_map: dict):
         """Start inference session for YoloX model."""
         self.model_path = model_path
+
+        available_providers = C.get_available_providers()
+        ordered_providers = [
+            "TensorrtExecutionProvider",
+            "CUDAExecutionProvider",
+            "CPUExecutionProvider",
+        ]
+        providers = [provider for provider in ordered_providers if provider in available_providers]
+
         self.model = onnxruntime.InferenceSession(
             model_path,
-            providers=[
-                "TensorrtExecutionProvider",
-                "CUDAExecutionProvider",
-                "CPUExecutionProvider",
-            ],
+            providers=providers,
         )
 
         self.layout_classes = label_map

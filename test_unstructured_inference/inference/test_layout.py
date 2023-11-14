@@ -210,6 +210,24 @@ def test_process_file_with_model(monkeypatch, mock_final_layout, model_name):
     assert layout.process_file_with_model(filename, model_name=model_name)
 
 
+def test_process_file_no_warnings(monkeypatch, mock_final_layout, recwarn):
+    def mock_initialize(self, *args, **kwargs):
+        self.model = MockLayoutModel(mock_final_layout)
+
+    monkeypatch.setattr(
+        layout.DocumentLayout,
+        "from_file",
+        lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
+    )
+    monkeypatch.setattr(models.UnstructuredDetectronModel, "initialize", mock_initialize)
+    filename = ""
+    layout.process_file_with_model(filename, model_name=None)
+    # There should be no UserWarning, but if there is one it should not have the following message
+    with pytest.raises(AssertionError, match="not found in warning list"):
+        user_warning = recwarn.pop(UserWarning)
+        assert "not in available provider names" not in str(user_warning.message)
+
+
 def test_process_file_with_model_raises_on_invalid_model_name():
     with pytest.raises(models.UnknownModelException):
         layout.process_file_with_model("", model_name="fake")

@@ -1,3 +1,7 @@
+## 0.7.13-dev0
+
+* chore: supress UserWarning about specified model providers
+
 ## 0.7.12
 
 * change the default model to yolox, as table output appears to be better and speed is similar to `yolox_quantized`
