@@ -19,10 +19,10 @@ install-base: install-base-pip-packages
 
 ## install:                 installs all test, dev, and experimental requirements
 .PHONY: install
-install: install-base-pip-packages install-dev install-sg install-detectron2
+install: install-base-pip-packages install-dev install-detectron2
 
 .PHONY: install-ci
-install-ci: install-base-pip-packages install-test install-sg install-paddleocr
+install-ci: install-base-pip-packages install-test install-paddleocr
 
 .PHONY: install-base-pip-packages
 install-base-pip-packages:
@@ -46,10 +46,6 @@ install-test: install-base
 install-dev: install-test
 	pip install -r requirements/dev.txt
 
-.PHONY: install-sg
-install-sg: install-base
-	pip install -r requirements/sg.txt
-
 ## pip-compile:             compiles all base/dev/test requirements
 .PHONY: pip-compile
 pip-compile:
@@ -60,8 +56,6 @@ pip-compile:
 	sed 's/^detectron2 @/# detectron2 @/g' requirements/base.txt
 	pip-compile --upgrade requirements/test.in
 	pip-compile --upgrade requirements/dev.in
-	pip-compile --upgrade requirements/sg.in
-
 
 #################
 # Test and Lint #

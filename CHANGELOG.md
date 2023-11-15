@@ -1,6 +1,7 @@
 ## 0.7.13-dev0
 
 * chore: supress UserWarning about specified model providers
+* enhancement: Remove Super-Gradients Dependency and Allow General Onnx Models Instead
 
 ## 0.7.12
 
