@@ -31,9 +31,6 @@ from . import table_postprocess as postprocess
 class UnstructuredTableTransformerModel(UnstructuredModel):
     """Unstructured model wrapper for table-transformer."""
 
-    def __init__(self):
-        pass
-
     def predict(self, x: Image, ocr_tokens: Optional[List[Dict]] = None):
         """Predict table structure deferring to run_prediction with ocr tokens
 
