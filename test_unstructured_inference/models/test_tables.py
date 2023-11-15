@@ -43,7 +43,8 @@ def test_load_table_model_raises_when_not_available(model_path):
 def test_table_model_inherit_init():
     table_model = tables.UnstructuredTableTransformerModel()
     assert hasattr(table_model, "model")
-    assert table_model.model == None
+    assert table_model.model is None
+
 
 @pytest.mark.parametrize(
     "model_path",
