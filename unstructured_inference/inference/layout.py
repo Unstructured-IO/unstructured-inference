@@ -11,7 +11,7 @@ from pdfminer import psparser
 from pdfminer.high_level import extract_pages
 from PIL import Image, ImageSequence
 
-from unstructured_inference.constants import Source
+from unstructured_inference.constants import ElementType, Source
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
@@ -296,7 +296,7 @@ class PageLayout:
         os.makedirs(output_dir_path, exist_ok=True)
 
         figure_number = 0
-        image_element_types = ["Image", "Picture", "Figure"]
+        image_element_types = [ElementType.IMAGE, ElementType.PICTURE, ElementType.FIGURE]
         for el in self.elements:
             if (el.bbox is None) or (el.type not in image_element_types):
                 continue

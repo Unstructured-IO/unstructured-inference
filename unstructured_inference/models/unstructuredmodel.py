@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, List, cast
 import numpy as np
 from PIL.Image import Image
 
+from unstructured_inference.constants import ElementType
 from unstructured_inference.inference.elements import (
     grow_region_to_match_region,
     intersections,
@@ -123,7 +124,9 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         return elements
 
     @staticmethod
-    def clean_type(elements: List[LayoutElement], type_to_clean="Table") -> List[LayoutElement]:
+    def clean_type(
+        elements: List[LayoutElement], type_to_clean=ElementType.TABLE
+    ) -> List[LayoutElement]:
         """After this function, the list of elements will not contain any element inside
         of the type specified"""
         target_elements = [e for e in elements if e.type == type_to_clean]
