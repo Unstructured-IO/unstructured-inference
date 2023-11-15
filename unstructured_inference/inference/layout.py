@@ -296,8 +296,9 @@ class PageLayout:
         os.makedirs(output_dir_path, exist_ok=True)
 
         figure_number = 0
+        image_element_types = ["Image", "Picture", "Figure"]
         for el in self.elements:
-            if (el.bbox is None) or (el.type not in ["Image"]):
+            if (el.bbox is None) or (el.type not in image_element_types):
                 continue
 
             figure_number += 1
