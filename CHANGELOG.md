@@ -1,5 +1,6 @@
-## 0.7.13-dev0
+## 0.7.13
 
+* don't override init function for UnstructuredTableTransformerModel so that it will has field "model"
 * chore: supress UserWarning about specified model providers
 
 ## 0.7.12
