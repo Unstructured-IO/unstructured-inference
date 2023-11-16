@@ -1,4 +1,4 @@
-## 0.7.13-dev2
+## 0.7.13
 
 * refactor: add a class `ElementType` for the element type constants and use the constants to replace element type strings
 * enhancement: support extracting elements with types `Picture` and `Figure`
