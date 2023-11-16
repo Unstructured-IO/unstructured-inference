@@ -78,7 +78,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.heatmap_h = heatmap_h
         self.heatmap_w = heatmap_w
         self.source = source
-        self.processor = DonutProcessor.from_pretrained(pre_trained_model_repo, token=auth_token)
+        self.processor = DonutProcessor.from_pretrained(
+            pre_trained_model_repo, token=auth_token
+        )
         self.tokenizer = self.processor.tokenizer
         self.logits_processor = [
             NoRepeatNGramLogitsProcessor(
@@ -107,9 +109,13 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             )
             rank = swap_head_hidden_layer_size
             self.model.decoder.lm_head = torch.nn.Sequential(
-                torch.nn.Linear(self.model.decoder.lm_head.weight.shape[1], rank, bias=False),
+                torch.nn.Linear(
+                    self.model.decoder.lm_head.weight.shape[1], rank, bias=False
+                ),
                 torch.nn.Linear(rank, rank, bias=False),
-                torch.nn.Linear(rank, self.model.decoder.lm_head.weight.shape[0], bias=True),
+                torch.nn.Linear(
+                    rank, self.model.decoder.lm_head.weight.shape[0], bias=True
+                ),
             )
             self.model.decoder.lm_head.load_state_dict(torch.load(lm_head_file))
         else:
@@ -131,7 +137,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             if k.startswith(start_token_prefix) and v not in self.input_ids
         ]
         self.end_tokens = [
-            v for k, v in self.processor.tokenizer.get_added_vocab().items() if k.startswith("</s_")
+            v
+            for k, v in self.processor.tokenizer.get_added_vocab().items()
+            if k.startswith("</s_")
         ]
         self.tokens_stop = [self.tokenizer.eos_token_id, self.tokenizer.pad_token_id]
 
@@ -170,7 +178,11 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             amp: Union[TextIO, ContextManager[None]] = (
                 torch.cuda.amp.autocast()
                 if self.device == "cuda"
-                else (torch.cpu.amp.autocast() if platform.machine() == "x86_64" else nullcontext())
+                else (
+                    torch.cpu.amp.autocast()
+                    if platform.machine() == "x86_64"
+                    else nullcontext()
+                )
             )
             with amp:
                 encoder_outputs = self.model.encoder(
@@ -194,7 +206,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                 if (
                     len(outputs["sequences"][0]) < self.max_length
-                    and outputs["sequences"][0][-1] != self.processor.tokenizer.eos_token_id
+                    and outputs["sequences"][0][-1]
+                    != self.processor.tokenizer.eos_token_id
                 ):
                     outputs = self.model.generate(
                         encoder_outputs=encoder_outputs,
@@ -217,11 +230,13 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             for token_id in range(0, len(outputs["beam_indices"][0])):
                 token_attentions = []
 
-                for decoder_layer_id in range(len(outputs["cross_attentions"][token_id - offset])):
+                for decoder_layer_id in range(
+                    len(outputs["cross_attentions"][token_id - offset])
+                ):
                     token_attentions.append(
-                        outputs["cross_attentions"][token_id - offset][decoder_layer_id][
-                            outputs["beam_indices"][0][token_id]
-                        ].unsqueeze(0),
+                        outputs["cross_attentions"][token_id - offset][
+                            decoder_layer_id
+                        ][outputs["beam_indices"][0][token_id]].unsqueeze(0),
                     )
 
                 decoder_cross_attentions.append(token_attentions)
@@ -294,13 +309,17 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 if start != -1 and start <= end and len(parents) > 0:
                     slicing_end = end + 1
                     string = self.tokenizer.decode(output_ids[start:slicing_end])
+                    print(string, start, end)
 
                     element = parents.pop(-1)
 
                     element.text = string
                     bbox_coords = self.get_bounding_box(
                         decoder_cross_attentions=decoder_cross_attentions,
-                        tkn_indexes=list(range(start - 1, end)),
+                        # tkn_indexes=list(range(start - 1, end)),
+                        tkn_indexes=list(
+                            range(start, min(end + 2, len(decoder_cross_attentions)))
+                        ),
                         final_w=self.processor.image_processor.size["width"],
                         final_h=self.processor.image_processor.size["height"],
                         heatmap_w=self.heatmap_w,
@@ -314,6 +333,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         ratio,
                         image.size,
                     )
+
+                    bbox_coords = self.reduce_bbox(image, bbox_coords)
 
                     element.bbox = Rectangle(*bbox_coords)
 
@@ -330,13 +351,17 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         if start != -1 and start <= end and len(parents) > 0:
             slicing_end = end + 1
             string = self.tokenizer.decode(output_ids[start:slicing_end])
+            print(string, start, end)
 
             element = parents.pop(-1)
             element.text = string
 
             bbox_coords = self.get_bounding_box(
                 decoder_cross_attentions=decoder_cross_attentions,
-                tkn_indexes=list(range(start - 1, end)),
+                # tkn_indexes=list(range(start - 1, end)),
+                tkn_indexes=list(
+                    range(start, min(end + 2, len(decoder_cross_attentions)))
+                ),
                 final_w=self.processor.image_processor.size["width"],
                 final_h=self.processor.image_processor.size["height"],
                 heatmap_w=self.heatmap_w,
@@ -351,6 +376,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 image.size,
             )
 
+            bbox_coords = self.reduce_bbox(image, bbox_coords)
+
             element.bbox = Rectangle(*bbox_coords)
 
             self.update_parent_bbox(element)
@@ -363,7 +390,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
         """For chipper, remove elements from other sources."""
-        return [el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)]
+        return [
+            el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)
+        ]
 
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
@@ -394,15 +423,19 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         for tidx in tkn_indexes:
             hmaps = torch.stack(list(decoder_cross_attentions[tidx]), dim=0)
-            # shape [4, 1, 16, 1, 1200]->[4, 16, 1200]
+            # shape [4, 1, 16, 1, 1200] -> [1, 4, 16, 1200]
             hmaps = hmaps.permute(1, 3, 0, 2, 4).squeeze(0)
+            # shape [4, 1, 16, 1, 1200]->[4, 16, 1200]
             hmaps = hmaps[-1]
             # change shape [4, 16, 1200]->[4, 16, 40, 30] assuming (heatmap_h, heatmap_w) = (40, 30)
             hmaps = hmaps.view(4, 16, heatmap_h, heatmap_w)
-            # fusing 16 decoder attention heads i.e. [4, 16, 40, 30]-> [16, 40, 30]
+            hmaps = torch.where(hmaps > 0.7, hmaps, 0.0)
+            # fusing 16 decoder attention heads i.e. [4, 16, 40, 30]-> [4, 40, 30]
             hmaps = torch.max(hmaps, dim=1)[0]
-            # fusing 4 decoder layers from BART i.e. [16, 40, 30]-> [40, 30]
+            # hmaps = torch.mean(hmaps, dim=1)
+            # fusing 4 decoder layers from BART i.e. [4, 40, 30]-> [4, 40, 30]
             hmap = torch.max(hmaps, dim=0)[0]
+            # hmap = torch.mean(hmaps, dim=0)
 
             # dropping discard ratio activations
             flat = hmap.view(heatmap_h * heatmap_w)
@@ -416,26 +449,112 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             # (40, 30, 1) uint8
             # fuse heatmaps for different tokens by taking the max
             agg_heatmap = np.max(
-                np.asarray([agg_heatmap, cv2.resize(hmap, (final_w, final_h))]),
+                np.asarray(
+                    [
+                        agg_heatmap,
+                        cv2.resize(
+                            hmap, (final_w, final_h), interpolation=cv2.INTER_CUBIC
+                        ),
+                    ]
+                ),
                 axis=0,
             ).astype(np.uint8)
 
         # threshold to remove small attention pockets
-        thres_heatmap = cv2.threshold(agg_heatmap, 200, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        thres_heatmap = cv2.threshold(
+            agg_heatmap, 200, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )[1]
 
-        kernel = np.ones((1, 50), np.uint8)
-        thres_heatmap = cv2.dilate(thres_heatmap, kernel, iterations=1)
+        # kernel = np.ones((1, 20), np.uint8)
+        # thres_heatmap = cv2.dilate(thres_heatmap, kernel, iterations=2)
+
+        """
         kernel = np.ones((5, 1), np.uint8)
         thres_heatmap = cv2.erode(thres_heatmap, kernel, iterations=1)
-
+        """
         # Find contours
-        contours = cv2.findContours(thres_heatmap, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = cv2.findContours(
+            thres_heatmap, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
         contours = contours[0] if len(contours) == 2 else contours[1]
         bboxes = [cv2.boundingRect(ctr) for ctr in contours]
-        # return box with max area
-        x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])
 
-        return [x, y, x + w, y + h]
+        if len(bboxes) > 1:
+            kernel = np.ones((1, 50), np.uint8)
+            thres_heatmap = cv2.dilate(thres_heatmap, kernel, iterations=1)
+
+            contours = cv2.findContours(
+                thres_heatmap, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            )
+            contours = contours[0] if len(contours) == 2 else contours[1]
+
+            bboxes = [cv2.boundingRect(ctr) for ctr in contours]
+
+        try:
+            # return box with max area
+            x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])
+
+            return [x, y, x + w, y + h]
+        except:
+            return [0, 0, 1, 1]
+
+    def reduce_bbox(self, image, input_bbox):
+        input_bbox = [int(b) for b in input_bbox]
+
+        if input_bbox[2] * input_bbox[3] == 0:
+            return input_bbox
+
+        nimage = np.array(image.crop(input_bbox))
+
+        center_h = nimage.shape[0] / 2
+        center_w = nimage.shape[1] / 2
+
+        gray = cv2.bitwise_not(cv2.cvtColor(nimage, cv2.COLOR_BGR2GRAY))
+        nim = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)[1]
+        binary_mask = cv2.threshold(nim, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[
+            1
+        ]
+
+        if center_h > center_w:
+            kernel = np.ones((1, 35), np.uint8)
+            binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
+            kernel = np.ones((60, 1), np.uint8)
+            binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
+        else:
+            kernel = np.ones((1, 50), np.uint8)
+            binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
+            kernel = np.ones((35, 1), np.uint8)
+            binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
+
+        contours = cv2.findContours(
+            binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
+        )
+        contours = contours[0] if len(contours) == 2 else contours[1]
+
+        bboxes = [cv2.boundingRect(ctr) for ctr in contours]
+
+        nbboxes = [
+            bbox
+            for bbox in bboxes
+            if bbox[2] * bbox[3] > 1
+            and (bbox[0] < center_w and bbox[0] + bbox[2] > center_w)
+            and (bbox[1] < center_h and bbox[1] + bbox[3] > center_h)
+        ]
+
+        if len(nbboxes) == 0:
+            nbboxes = [bbox for bbox in bboxes if bbox[2] * bbox[3] > 1]
+
+        if len(nbboxes) == 0:
+            return input_bbox
+
+        x, y, w, h = max(nbboxes, key=lambda box: box[2] * box[3])
+
+        return (
+            input_bbox[0] + x,
+            input_bbox[1] + y,
+            input_bbox[0] + x + w,
+            input_bbox[1] + y + h,
+        )
 
     def image_padding(self, input_size, target_size):
         """
@@ -481,7 +600,9 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         self.ngram_size = ngram_size
         self.skip_tokens = skip_tokens
 
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
+    def __call__(
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor
+    ) -> torch.FloatTensor:
         """
         Args:
             input_ids (`torch.LongTensor` of shape `(batch_size, sequence_length)`):
@@ -514,7 +635,9 @@ class NGramRepetitonStoppingCriteria(StoppingCriteria):
         self.repetition_window = repetition_window
         self.skip_tokens = skip_tokens
 
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+    def __call__(
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+    ) -> bool:
         """
         Args:
             input_ids (`torch.LongTensor` of shape `(batch_size, sequence_length)`):
@@ -562,12 +685,18 @@ def _no_repeat_ngram_logits(
         # calculate a list of banned tokens to prevent repetitively generating the same ngrams
         # from fairseq:
         # https://github.com/pytorch/fairseq/blob/a07cb6f40480928c9e0548b737aadd36ee66ac76/fairseq/sequence_generator.py#L345
-        banned_tokens = _calc_banned_tokens(input_ids, batch_size, no_repeat_ngram_size, cur_len)
+        banned_tokens = _calc_banned_tokens(
+            input_ids, batch_size, no_repeat_ngram_size, cur_len
+        )
         for batch_idx in range(batch_size):
             if skip_tokens is not None:
                 logits[
                     batch_idx,
-                    [token for token in banned_tokens[batch_idx] if int(token) not in skip_tokens],
+                    [
+                        token
+                        for token in banned_tokens[batch_idx]
+                        if int(token) not in skip_tokens
+                    ],
                 ] = -float("inf")
             else:
                 logits[batch_idx, banned_tokens[batch_idx]] = -float("inf")
@@ -585,13 +714,17 @@ def _calc_banned_tokens(
     if cur_len + 1 < no_repeat_ngram_size:
         # return no banned tokens if we haven't generated no_repeat_ngram_size tokens yet
         return [() for _ in range(num_hypos)]
-    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [{} for _ in range(num_hypos)]
+    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [
+        {} for _ in range(num_hypos)
+    ]
     for idx in range(num_hypos):
         gen_tokens = prev_input_ids[idx].tolist()
         generated_ngram = generated_ngrams[idx]
         for ngram in zip(*[gen_tokens[i:] for i in range(no_repeat_ngram_size)]):
             prev_ngram_tuple = tuple(ngram[:-1])
-            generated_ngram[prev_ngram_tuple] = generated_ngram.get(prev_ngram_tuple, []) + [
+            generated_ngram[prev_ngram_tuple] = generated_ngram.get(
+                prev_ngram_tuple, []
+            ) + [
                 ngram[-1],
             ]
 
