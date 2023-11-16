@@ -1,5 +1,6 @@
-## 0.7.13-dev0
+## 0.7.13-dev1
 
+* fix: update logger in table initalization where the logger info was not showing
 * chore: supress UserWarning about specified model providers
 
 ## 0.7.12
