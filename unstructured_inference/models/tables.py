@@ -1,6 +1,5 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
-import logging
 import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
@@ -63,13 +62,13 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         self.feature_extractor = DetrImageProcessor()
 
         try:
-            logging.info("Loading the table structure model ...")
+            logger.info("Loading the table structure model ...")
             self.model = TableTransformerForObjectDetection.from_pretrained(model)
             self.model.eval()
 
         except EnvironmentError:
-            logging.critical("Failed to initialize the model.")
-            logging.critical("Ensure that the model is correct")
+            logger.critical("Failed to initialize the model.")
+            logger.critical("Ensure that the model is correct")
             raise ImportError(
                 "Review the parameters to initialize a UnstructuredTableTransformerModel obj",
             )
