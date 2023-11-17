@@ -99,7 +99,7 @@ jobs:
         UNSTRUCTURED_HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         source .venv/bin/activate
-        aws cli s3 cp s3://utic-dvc/models/git-ci-test/test_ci_model.onnx test_unstructured_inference/models/
+        aws s3 cp s3://utic-dvc/models/git-ci-test/test_ci_model.onnx test_unstructured_inference/models/
         CI=true make test
         make check-coverage
 
