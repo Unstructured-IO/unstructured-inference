@@ -39,4 +39,4 @@ def test_supergradients_model():
     el, *_ = model(img)
     assert el.source == Source.SUPER_GRADIENTS
     assert el.prob > 0.70
-    assert el.type == "Title"
+    assert el.type == "Text"
