@@ -6,7 +6,7 @@ from unstructured_inference.models import super_gradients
 
 
 def test_supergradients_model():
-    model_path = path.dirname(__file__)
+    model_path = path.join(path.dirname(__file__), "test_ci_model.onnx")
     model = super_gradients.UnstructuredSuperGradients()
     model.initialize(
         model_path=model_path,
