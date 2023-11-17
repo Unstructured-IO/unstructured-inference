@@ -23,7 +23,6 @@ def test_load_donut_model_raises_when_not_available(model_path, processor_path, 
         )
 
 
-@pytest.mark.skip()
 @pytest.mark.parametrize(
     ("model_path", "processor_path", "config_path"),
     [
@@ -55,6 +54,7 @@ def sample_receipt_transcript():
     }
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize(
     ("model_path", "processor_path", "config_path"),
     [
