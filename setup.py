@@ -74,5 +74,4 @@ setup(
     version=__version__,
     entry_points={},
     install_requires=load_requirements(),
-    extras_require={"supergradients": load_requirements("requirements/sg.in")},
 )

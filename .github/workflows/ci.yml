@@ -20,6 +20,7 @@ jobs:
         path: |
           .venv
         key: ${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements/*.txt') }}
+        lookup-only: true
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v4
       with:
@@ -88,11 +89,18 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get -y install poppler-utils tesseract-ocr
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
     - name: Test
       env:
         UNSTRUCTURED_HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         source .venv/bin/activate
+        aws s3 cp s3://utic-dev-models/ci_test_model/test_ci_model.onnx test_unstructured_inference/models/
         CI=true make test
         make check-coverage
 

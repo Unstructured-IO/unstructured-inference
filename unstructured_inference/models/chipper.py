@@ -429,8 +429,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         thres_heatmap = cv2.erode(thres_heatmap, kernel, iterations=1)
 
         # Find contours
-        contours = cv2.findContours(thres_heatmap, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours = contours[0] if len(contours) == 2 else contours[1]
+        contour_groups = cv2.findContours(thres_heatmap, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = contour_groups[0] if len(contour_groups) == 2 else contour_groups[1]
         bboxes = [cv2.boundingRect(ctr) for ctr in contours]
         # return box with max area
         x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])

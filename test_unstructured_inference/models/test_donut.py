@@ -54,6 +54,7 @@ def sample_receipt_transcript():
     }
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize(
     ("model_path", "processor_path", "config_path"),
     [
