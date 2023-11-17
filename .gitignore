@@ -144,3 +144,4 @@ dmypy.json
 
 sample-docs/*_images
 examples/**/output
+figures

@@ -12,23 +12,23 @@ from huggingface_hub import hf_hub_download
 from onnxruntime.capi import _pybind_state as C
 from PIL import Image
 
-from unstructured_inference.constants import Source
+from unstructured_inference.constants import ElementType, Source
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
 from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 
 YOLOX_LABEL_MAP = {
-    0: "Caption",
-    1: "Footnote",
-    2: "Formula",
-    3: "List-item",
-    4: "Page-footer",
-    5: "Page-header",
-    6: "Picture",
-    7: "Section-header",
-    8: "Table",
-    9: "Text",
-    10: "Title",
+    0: ElementType.CAPTION,
+    1: ElementType.FOOTNOTE,
+    2: ElementType.FORMULA,
+    3: ElementType.LIST_ITEM,
+    4: ElementType.PAGE_FOOTER,
+    5: ElementType.PAGE_HEADER,
+    6: ElementType.PICTURE,
+    7: ElementType.SECTION_HEADER,
+    8: ElementType.TABLE,
+    9: ElementType.TEXT,
+    10: ElementType.TITLE,
 }
 
 MODEL_TYPES = {

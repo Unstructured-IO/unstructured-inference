@@ -12,6 +12,7 @@ from scipy.sparse.csgraph import connected_components
 from unstructured_inference.config import inference_config
 from unstructured_inference.constants import (
     FULL_PAGE_REGION_THRESHOLD,
+    ElementType,
     Source,
 )
 from unstructured_inference.inference.elements import (
@@ -42,7 +43,7 @@ class LayoutElement(TextRegion):
             objects=objects,
             extract_tables=extract_tables,
         )
-        if extract_tables and self.type == "Table":
+        if extract_tables and self.type == ElementType.TABLE:
             self.text_as_html = interpret_table_block(self, image)
         return text
 
@@ -139,10 +140,10 @@ def merge_inferred_layout_with_extracted_layout(
                     subregion_threshold=subregion_threshold,
                 )
                 inferred_is_text = inferred_region.type not in (
-                    "Figure",
-                    "Image",
-                    "PageBreak",
-                    "Table",
+                    ElementType.FIGURE,
+                    ElementType.IMAGE,
+                    ElementType.PAGE_BREAK,
+                    ElementType.TABLE,
                 )
                 extracted_is_subregion_of_inferred = extracted_region.bbox.is_almost_subregion_of(
                     inferred_region.bbox,
@@ -169,7 +170,10 @@ def merge_inferred_layout_with_extracted_layout(
                         # keep inferred region, remove extracted region
                         grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
                         region_matched = True
-                elif either_region_is_subregion_of_other and inferred_region.type != "Table":
+                elif (
+                    either_region_is_subregion_of_other
+                    and inferred_region.type != ElementType.TABLE
+                ):
                     # keep extracted region, remove inferred region
                     inferred_regions_to_remove.append(inferred_region)
         if not region_matched:
@@ -178,7 +182,9 @@ def merge_inferred_layout_with_extracted_layout(
     categorized_extracted_elements_to_add = [
         LayoutElement(
             text=el.text,
-            type="Image" if isinstance(el, ImageTextRegion) else "UncategorizedText",
+            type=ElementType.IMAGE
+            if isinstance(el, ImageTextRegion)
+            else ElementType.UNCATEGORIZED_TEXT,
             source=el.source,
             bbox=el.bbox,
         )
