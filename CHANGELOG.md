@@ -1,10 +1,13 @@
+## 0.7.14
+
+* enhancement: Remove Super-Gradients Dependency and Allow General Onnx Models Instead
+
 ## 0.7.13
 
 * refactor: add a class `ElementType` for the element type constants and use the constants to replace element type strings
 * enhancement: support extracting elements with types `Picture` and `Figure`
 * fix: update logger in table initalization where the logger info was not showing
 * chore: supress UserWarning about specified model providers
-* enhancement: Remove Super-Gradients Dependency and Allow General Onnx Models Instead
 
 ## 0.7.12
 
