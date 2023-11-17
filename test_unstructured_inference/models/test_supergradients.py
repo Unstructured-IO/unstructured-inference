@@ -9,12 +9,33 @@ from unstructured_inference.models import super_gradients
 
 
 def test_supergradients_model():
-    model_path = "/home/ec2-user/downloaded_s3/average_model.onnx"
+    model_path = ""
     model = super_gradients.UnstructuredSuperGradients()
     model.initialize(
         model_path=model_path,
-        label_map={0: 'Title', 1: 'Text', 2: 'Footer', 4: 'Picture', 5:'ListItem', 6:'Caption', 7:'Header'},
-        input_shape=(640,640),
+        label_map={
+            0: 'Picture',
+            1: 'Caption',
+            2: 'Text',
+            3: 'Formula',
+            4: 'Page number',
+            5: 'Address',
+            6: 'Footer',
+            7: 'Subheadline',
+            8: 'Chart',
+            9: 'Metadata',
+            10: 'Title',
+            11: 'Misc',
+            12: 'Header',
+            13: 'Table',
+            14: 'Headline',
+            15: 'List-item',
+            16: 'List',
+            17: 'Author',
+            18: 'Value',
+            19: 'Link',
+            20: 'Field-Name'},
+        input_shape=(1024,1024),
     )
     img = Image.open("sample-docs/loremipsum.jpg")
     el, *_ = model(img)
