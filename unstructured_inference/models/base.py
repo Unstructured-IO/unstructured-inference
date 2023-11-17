@@ -31,11 +31,11 @@ models: Dict[str, UnstructuredModel] = {}
 
 
 def get_model(
-    model_name: Optional[str] = None, 
-    model_path: Optional[str] = None, 
-    label_map: Optional[dict] = None, 
-    input_shape: Optional[tuple] = None
-    ) -> UnstructuredModel:
+    model_name: Optional[str] = None,
+    model_path: Optional[str] = None,
+    label_map: Optional[dict] = None,
+    input_shape: Optional[tuple] = None,
+) -> UnstructuredModel:
     """Gets the model object by model name."""
     # TODO(alan): These cases are similar enough that we can probably do them all together with
     # importlib
@@ -62,7 +62,11 @@ def get_model(
         initialize_params = {**CHIPPER_MODEL_TYPES[model_name]}
     elif model_name == "super_gradients":
         model = UnstructuredSuperGradients()
-        initialize_params = {'model_path': model_path, 'label_map': label_map, 'input_shape': input_shape}
+        initialize_params = {
+            "model_path": model_path,
+            "label_map": label_map,
+            "input_shape": input_shape,
+        }
     else:
         raise UnknownModelException(f"Unknown model type: {model_name}")
     model.initialize(**initialize_params)
