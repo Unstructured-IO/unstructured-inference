@@ -504,7 +504,10 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         if input_bbox[2] * input_bbox[3] == 0:
             return input_bbox
 
-        nimage = np.array(image.crop(input_bbox))
+        try:
+            nimage = np.array(image.crop(input_bbox))
+        except:
+            return input_bbox
 
         center_h = nimage.shape[0] / 2
         center_w = nimage.shape[1] / 2
@@ -518,12 +521,17 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         if center_h > center_w:
             kernel = np.ones((1, 35), np.uint8)
             binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
+
             kernel = np.ones((60, 1), np.uint8)
             binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
         else:
+            kernel = np.ones((10, 1), np.uint8)
+            binary_mask = cv2.erode(binary_mask, kernel, iterations=1)
+
             kernel = np.ones((1, 50), np.uint8)
             binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
-            kernel = np.ones((35, 1), np.uint8)
+
+            kernel = np.ones((30, 1), np.uint8)
             binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
 
         contours = cv2.findContours(
