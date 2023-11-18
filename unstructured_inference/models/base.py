@@ -48,13 +48,19 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     global models
 
     if model_name is None:
-        default_name_from_env = os.environ.get("UNSTRUCTURED_HI_RES_MODEL_NAME")
-        model_name = default_name_from_env if default_name_from_env is not None else DEFAULT_MODEL
+        default_name_from_env = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_NAME")
+        model_name = (
+            default_name_from_env
+            if default_name_from_env is not None
+            else DEFAULT_MODEL
+        )
 
     if model_name in models:
         return models[model_name]
 
-    initialize_param_json = os.environ.get("UNSTRUCTURED_HI_RES_MODEL_INITIALIZE_PARAMS_JSON_PATH")
+    initialize_param_json = os.environ.get(
+        "UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH"
+    )
     if initialize_param_json is not None:
         with open(initialize_param_json) as fp:
             initialize_params = json.load(fp)

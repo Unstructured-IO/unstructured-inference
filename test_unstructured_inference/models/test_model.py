@@ -44,9 +44,9 @@ def test_raises_uninitialized():
 def test_model_initializes_once():
     from unstructured_inference.inference import layout
 
-    with mock.patch.dict(models.model_class_map, {"yolox": MockModel}), mock.patch.object(
-        models, "models", {}
-    ):
+    with mock.patch.dict(
+        models.model_class_map, {"yolox": MockModel}
+    ), mock.patch.object(models, "models", {}):
         doc = layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf")
         doc.pages[0].detection_model.initializer.assert_called_once()
         # NOTE(pravin) New Assertion to Make Sure Elements have probability attribute
@@ -69,7 +69,9 @@ def test_deduplicate_detected_elements():
         file,
         model,
     )
-    known_elements = [e.bbox for e in doc.pages[0].elements if e.type != "UncategorizedText"]
+    known_elements = [
+        e.bbox for e in doc.pages[0].elements if e.type != "UncategorizedText"
+    ]
     # Compute intersection matrix
     intersections_mtx = intersections(*known_elements)
     # Get rid off diagonal (cause an element will always intersect itself)
@@ -147,7 +149,7 @@ def test_env_variables_override_default_model(monkeypatch):
     # args, we should get back the model the env var calls for
     monkeypatch.setattr(models, "models", {})
     with mock.patch.dict(
-        models.os.environ, {"UNSTRUCTURED_HI_RES_MODEL_NAME": "checkbox"}
+        models.os.environ, {"UNSTRUCTURED_DEFAULT_MODEL_NAME": "checkbox"}
     ), mock.patch.dict(models.model_class_map, {"checkbox": MockModel}):
         model = models.get_model()
     assert isinstance(model, MockModel)
@@ -159,7 +161,7 @@ def test_env_variables_override_intialization_params(monkeypatch):
     monkeypatch.setattr(models, "models", {})
     with mock.patch.dict(
         models.os.environ,
-        {"UNSTRUCTURED_HI_RES_MODEL_INITIALIZE_PARAMS_JSON_PATH": "fake_json.json"},
+        {"UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH": "fake_json.json"},
     ), mock.patch.object(models, "DEFAULT_MODEL", "fake"), mock.patch.dict(
         models.model_class_map, {"fake": mock.MagicMock()}
     ), mock.patch(
