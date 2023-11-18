@@ -27,12 +27,8 @@ class MockModel(UnstructuredObjectDetectionModel):
 
 def test_get_model(monkeypatch):
     monkeypatch.setattr(models, "models", {})
-    monkeypatch.setattr(
-        models,
-        "UnstructuredDetectronModel",
-        MockModel,
-    )
-    assert isinstance(models.get_model("checkbox"), MockModel)
+    with mock.patch.dict(models.model_class_map, {"checkbox": MockModel}):
+        assert isinstance(models.get_model("checkbox"), MockModel)
 
 
 def test_raises_invalid_model():
@@ -48,20 +44,15 @@ def test_raises_uninitialized():
 def test_model_initializes_once():
     from unstructured_inference.inference import layout
 
-    with mock.patch.object(models, "UnstructuredYoloXModel", MockModel), mock.patch.object(
-        models,
-        "models",
-        {},
+    with mock.patch.dict(models.model_class_map, {"yolox": MockModel}), mock.patch.object(
+        models, "models", {}
     ):
         doc = layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf")
         doc.pages[0].detection_model.initializer.assert_called_once()
-        assert hasattr(
-            doc.pages[0].elements[0],
-            "prob",
-        )  # NOTE(pravin) New Assertion to Make Sure Elements have probability attribute
-        assert (
-            doc.pages[0].elements[0].prob is None
-        )  # NOTE(pravin) New Assertion to Make Sure Uncategorized Text has None Probability
+        # NOTE(pravin) New Assertion to Make Sure Elements have probability attribute
+        assert hasattr(doc.pages[0].elements[0], "prob")
+        # NOTE(pravin) New Assertion to Make Sure Uncategorized Text has None Probability
+        assert doc.pages[0].elements[0].prob is None
 
 
 def test_deduplicate_detected_elements():
@@ -107,7 +98,12 @@ def test_enhance_regions():
     model = get_model("yolox_tiny")
     elements = model.enhance_regions(elements, 0.5)
     assert len(elements) == 1
-    assert (elements[0].bbox.x1, elements[0].bbox.y1, elements[0].bbox.x2, elements[0].bbox.x2) == (
+    assert (
+        elements[0].bbox.x1,
+        elements[0].bbox.y1,
+        elements[0].bbox.x2,
+        elements[0].bbox.x2,
+    ) == (
         0,
         0,
         1.10,
@@ -138,9 +134,30 @@ def test_clean_type():
     model = get_model("yolox_tiny")
     elements = model.clean_type(elements, type_to_clean="Table")
     assert len(elements) == 1
-    assert (elements[0].bbox.x1, elements[0].bbox.y1, elements[0].bbox.x2, elements[0].bbox.x2) == (
-        0,
-        0,
-        1,
-        1,
-    )
+    assert (
+        elements[0].bbox.x1,
+        elements[0].bbox.y1,
+        elements[0].bbox.x2,
+        elements[0].bbox.x2,
+    ) == (0, 0, 1, 1)
+
+
+def test_env_variables_override_default_model():
+    with mock.patch.dict(
+        models.os.environ, {"UNSTRUCTURED_HI_RES_MODEL_NAME": "checkbox"}
+    ), mock.patch.dict(models.model_class_map, {"checkbox": MockModel}):
+        model = models.get_model()
+    assert isinstance(model, MockModel)
+
+
+def test_env_variables_override_intialization_params():
+    with mock.patch.dict(
+        models.os.environ,
+        {"UNSTRUCTURED_HI_RES_MODEL_INITIALIZE_PARAMS_JSON_PATH": "fake_json.json"},
+    ), mock.patch.object(models, "DEFAULT_MODEL", "fake"), mock.patch.dict(
+        models.model_class_map, {"fake": mock.MagicMock()}
+    ), mock.patch(
+        "builtins.open", mock.mock_open(read_data='{"date": "3/26/81"}')
+    ):
+        model = models.get_model()
+    model.initialize.assert_called_once_with(date="3/26/81")
