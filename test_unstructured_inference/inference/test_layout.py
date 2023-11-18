@@ -145,13 +145,12 @@ def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout, mock_imag
 
         layouts = [mock_initial_layout, mock_initial_layout]
 
-        patch.dict(
-            models.model_class_map,
-            {"detectron2_lp": partial(MockLayoutModel, layout=mock_final_layout)},
-        )
         monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
-        with patch.object(layout, "load_pdf", return_value=(layouts, image_paths)):
+        with patch.object(layout, "load_pdf", return_value=(layouts, image_paths)), patch.dict(
+            models.model_class_map,
+            {"detectron2_lp": partial(MockLayoutModel, layout=mock_final_layout)},
+        ):
             model = layout.get_model("detectron2_lp")
             doc = layout.DocumentLayout.from_file("fake-file.pdf", detection_model=model)
 
