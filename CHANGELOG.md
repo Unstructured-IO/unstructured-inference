@@ -1,3 +1,7 @@
+## 0.7.15
+
+* enhancement: Enable env variables for model definition
+
 ## 0.7.14
 
 * enhancement: Remove Super-Gradients Dependency and Allow General Onnx Models Instead
