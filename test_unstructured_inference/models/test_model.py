@@ -44,9 +44,9 @@ def test_raises_uninitialized():
 def test_model_initializes_once():
     from unstructured_inference.inference import layout
 
-    with mock.patch.dict(
-        models.model_class_map, {"yolox": MockModel}
-    ), mock.patch.object(models, "models", {}):
+    with mock.patch.dict(models.model_class_map, {"yolox": MockModel}), mock.patch.object(
+        models, "models", {}
+    ):
         doc = layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf")
         doc.pages[0].detection_model.initializer.assert_called_once()
         # NOTE(pravin) New Assertion to Make Sure Elements have probability attribute
@@ -69,9 +69,7 @@ def test_deduplicate_detected_elements():
         file,
         model,
     )
-    known_elements = [
-        e.bbox for e in doc.pages[0].elements if e.type != "UncategorizedText"
-    ]
+    known_elements = [e.bbox for e in doc.pages[0].elements if e.type != "UncategorizedText"]
     # Compute intersection matrix
     intersections_mtx = intersections(*known_elements)
     # Get rid off diagonal (cause an element will always intersect itself)
