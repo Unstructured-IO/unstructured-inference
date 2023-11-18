@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, Type
 
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
 from unstructured_inference.models.chipper import UnstructuredChipperModel
@@ -31,7 +31,7 @@ DEFAULT_MODEL = "yolox"
 
 models: Dict[str, UnstructuredModel] = {}
 
-model_class_map = {
+model_class_map: Dict[str, Type[UnstructuredModel]] = {
     **{name: UnstructuredDetectronModel for name in DETECTRON2_MODEL_TYPES},
     **{name: UnstructuredDetectronONNXModel for name in DETECTRON2_ONNX_MODEL_TYPES},
     **{name: UnstructuredYoloXModel for name in YOLOX_MODEL_TYPES},
@@ -54,8 +54,6 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     if model_name in models:
         return models[model_name]
 
-    model: UnstructuredModel = model_class_map[model_name]()
-
     initialize_param_json = os.environ.get("UNSTRUCTURED_HI_RES_MODEL_INITIALIZE_PARAMS_JSON_PATH")
     if initialize_param_json is not None:
         with open(initialize_param_json) as fp:
@@ -71,6 +69,8 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
             initialize_params = CHIPPER_MODEL_TYPES[model_name]
         else:
             raise UnknownModelException(f"Unknown model type: {model_name}")
+
+    model: UnstructuredModel = model_class_map[model_name]()
 
     model.initialize(**initialize_params)
     models[model_name] = model
