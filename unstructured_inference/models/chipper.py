@@ -606,6 +606,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         except ValueError:
             return input_bbox
 
+        if nimage.shape[0] * nimage.shape[1] == 0:
+            return input_bbox
+
         nimage = self.remove_horizontal_lines(nimage)
 
         # Convert the image to grayscale
@@ -652,6 +655,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         try:
             nimage = np.array(image.crop(input_bbox))
         except ValueError:
+            return input_bbox
+
+        if nimage.shape[0] * nimage.shape[1] == 0:
             return input_bbox
 
         nimage = self.remove_horizontal_lines(nimage)
@@ -749,14 +755,15 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """
         Find the largest region with no text
         """
-        nimage = image.crop(input_bbox)
-
-        if input_bbox[2] * input_bbox[3] == 0:
+        if int(input_bbox[2]) * (input_bbox[3]) == 0:
             return None
 
         try:
             nimage = np.array(image.crop(input_bbox))
         except ValueError:
+            return None
+
+        if nimage.shape[0] * nimage.shape[1] == 0:
             return None
 
         if transpose:
