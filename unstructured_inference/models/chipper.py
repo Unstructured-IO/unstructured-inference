@@ -785,11 +785,11 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         box2: List[float],
     ) -> Tuple[
         str,
-        list[float],
-        list[float],
-        list[float],
-        list[float],
-        Optional[tuple[float, float, float, float]],
+        List[float],
+        List[float],
+        List[float],
+        List[float],
+        Optional[Tuple[float, float, float, float]],
     ]:
         """
         Check the overlap between two bounding boxes, return properties of the overlap and
