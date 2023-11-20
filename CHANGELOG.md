@@ -1,5 +1,6 @@
-## 0.7.13-dev0
+## 0.7.13-dev1
 
+* enhancement: improved Chipper bounding boxes
 * chore: supress UserWarning about specified model providers
 
 ## 0.7.12

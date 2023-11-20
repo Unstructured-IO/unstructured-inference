@@ -143,9 +143,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             if k.startswith(start_token_prefix) and v not in self.input_ids
         ]
         self.end_tokens = [
-            v
-            for k, v in self.processor.tokenizer.get_added_vocab().items()
-            if k.startswith("</s_")
+            v for k, v in self.processor.tokenizer.get_added_vocab().items() if k.startswith("</s_")
         ]
         self.tokens_stop = [self.tokenizer.eos_token_id, self.tokenizer.pad_token_id]
 
@@ -184,11 +182,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             amp: Union[TextIO, ContextManager[None]] = (
                 torch.cuda.amp.autocast()
                 if self.device == "cuda"
-                else (
-                    torch.cpu.amp.autocast()
-                    if platform.machine() == "x86_64"
-                    else nullcontext()
-                )
+                else (torch.cpu.amp.autocast() if platform.machine() == "x86_64" else nullcontext())
             )
             with amp:
                 encoder_outputs = self.model.encoder(
@@ -212,8 +206,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                 if (
                     len(outputs["sequences"][0]) < self.max_length
-                    and outputs["sequences"][0][-1]
-                    != self.processor.tokenizer.eos_token_id
+                    and outputs["sequences"][0][-1] != self.processor.tokenizer.eos_token_id
                 ):
                     outputs = self.model.generate(
                         encoder_outputs=encoder_outputs,
@@ -396,9 +389,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
         """For chipper, remove elements from other sources."""
-        return [
-            el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)
-        ]
+        return [el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)]
 
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
@@ -671,9 +662,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         edges = cv2.Canny(gray, 50, 150, apertureSize=3)
 
         nim = cv2.threshold(edges, 1, 255, cv2.THRESH_BINARY)[1]
-        binary_mask = cv2.threshold(nim, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[
-            1
-        ]
+        binary_mask = cv2.threshold(nim, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
 
         if center_h > center_w:
             kernel = np.ones((1, 80), np.uint8)
@@ -1076,11 +1065,7 @@ def _no_repeat_ngram_logits(
             if skip_tokens is not None:
                 logits[
                     batch_idx,
-                    [
-                        token
-                        for token in banned_tokens[batch_idx]
-                        if int(token) not in skip_tokens
-                    ],
+                    [token for token in banned_tokens[batch_idx] if int(token) not in skip_tokens],
                 ] = -float("inf")
             else:
                 logits[batch_idx, banned_tokens[batch_idx]] = -float("inf")
@@ -1098,9 +1083,7 @@ def _calc_banned_tokens(
     if cur_len + 1 < no_repeat_ngram_size:
         # return no banned tokens if we haven't generated no_repeat_ngram_size tokens yet
         return [() for _ in range(num_hypos)]
-    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [
-        {} for _ in range(num_hypos)
-    ]
+    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [{} for _ in range(num_hypos)]
     for idx in range(num_hypos):
         gen_tokens = prev_input_ids[idx].tolist()
         generated_ngram = generated_ngrams[idx]
