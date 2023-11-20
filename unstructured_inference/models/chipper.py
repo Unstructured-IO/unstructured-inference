@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import torch
 import transformers
+from cv2.typing import MatLike
 from huggingface_hub import hf_hub_download
 from PIL.Image import Image
 from transformers import DonutProcessor, VisionEncoderDecoderModel
@@ -79,7 +80,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.heatmap_w = heatmap_w
         self.source = source
         self.processor = DonutProcessor.from_pretrained(
-            pre_trained_model_repo, token=auth_token
+            pre_trained_model_repo,
+            token=auth_token,
         )
         self.tokenizer = self.processor.tokenizer
         self.logits_processor = [
@@ -110,11 +112,15 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             rank = swap_head_hidden_layer_size
             self.model.decoder.lm_head = torch.nn.Sequential(
                 torch.nn.Linear(
-                    self.model.decoder.lm_head.weight.shape[1], rank, bias=False
+                    self.model.decoder.lm_head.weight.shape[1],
+                    rank,
+                    bias=False,
                 ),
                 torch.nn.Linear(rank, rank, bias=False),
                 torch.nn.Linear(
-                    rank, self.model.decoder.lm_head.weight.shape[0], bias=True
+                    rank,
+                    self.model.decoder.lm_head.weight.shape[0],
+                    bias=True,
                 ),
             )
             self.model.decoder.lm_head.load_state_dict(torch.load(lm_head_file))
@@ -223,25 +229,39 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     )
 
         if "beam_indices" in outputs:
-            offset = len(outputs["beam_indices"][0]) - len(outputs["cross_attentions"])
+            offset = (
+                2  # len(outputs["beam_indices"][0]) - len(outputs["cross_attentions"])
+            )
+            print("offset:", offset, len(outputs["cross_attentions"]))
 
             decoder_cross_attentions = [[torch.Tensor(0)]] * offset
 
             for token_id in range(0, len(outputs["beam_indices"][0])):
+                if outputs["beam_indices"][0][token_id] == -1:
+                    break
+
                 token_attentions = []
 
                 for decoder_layer_id in range(
-                    len(outputs["cross_attentions"][token_id - offset])
+                    len(outputs["cross_attentions"][token_id]),
                 ):
                     token_attentions.append(
-                        outputs["cross_attentions"][token_id - offset][
-                            decoder_layer_id
-                        ][outputs["beam_indices"][0][token_id]].unsqueeze(0),
+                        outputs["cross_attentions"][token_id][decoder_layer_id][
+                            outputs["beam_indices"][0][token_id]
+                        ].unsqueeze(0),
                     )
 
                 decoder_cross_attentions.append(token_attentions)
         else:
-            decoder_cross_attentions = outputs["cross_attentions"]
+            offset = (
+                2  # len(outputs["sequences"][0]) - len(outputs["cross_attentions"])
+            )
+            print("offset:", [[torch.Tensor(0)]] * offset)
+            # print(outputs["cross_attentions"].shape)
+
+            decoder_cross_attentions = [[torch.Tensor(0)]] * offset + list(
+                outputs["cross_attentions"],
+            )
 
         tokens = outputs["sequences"][0]
 
@@ -316,10 +336,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     element.text = string
                     bbox_coords = self.get_bounding_box(
                         decoder_cross_attentions=decoder_cross_attentions,
-                        # tkn_indexes=list(range(start - 1, end)),
-                        tkn_indexes=list(
-                            range(start, min(end + 2, len(decoder_cross_attentions)))
-                        ),
+                        tkn_indexes=list(range(start, end + 1)),
                         final_w=self.processor.image_processor.size["width"],
                         final_h=self.processor.image_processor.size["height"],
                         heatmap_w=self.heatmap_w,
@@ -334,7 +351,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         image.size,
                     )
 
-                    bbox_coords = self.reduce_bbox(image, bbox_coords)
+                    # bbox_coords = self.reduce_bbox(image, bbox_coords)
 
                     element.bbox = Rectangle(*bbox_coords)
 
@@ -358,10 +375,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
             bbox_coords = self.get_bounding_box(
                 decoder_cross_attentions=decoder_cross_attentions,
-                # tkn_indexes=list(range(start - 1, end)),
-                tkn_indexes=list(
-                    range(start, min(end + 2, len(decoder_cross_attentions)))
-                ),
+                tkn_indexes=list(range(start, end + 1)),
                 final_w=self.processor.image_processor.size["width"],
                 final_h=self.processor.image_processor.size["height"],
                 heatmap_w=self.heatmap_w,
@@ -376,11 +390,18 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 image.size,
             )
 
-            bbox_coords = self.reduce_bbox(image, bbox_coords)
+            # bbox_coords = self.reduce_bbox(image, bbox_coords)
 
             element.bbox = Rectangle(*bbox_coords)
 
             self.update_parent_bbox(element)
+
+        # Reduce bounding boxes
+        for element in elements:
+            self.reduce_element_bbox(image, elements, element)
+
+        # Solve overlaps
+        self.resolve_bbox_overlaps(image, elements)
 
         return elements
 
@@ -429,7 +450,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             hmaps = hmaps[-1]
             # change shape [4, 16, 1200]->[4, 16, 40, 30] assuming (heatmap_h, heatmap_w) = (40, 30)
             hmaps = hmaps.view(4, 16, heatmap_h, heatmap_w)
-            hmaps = torch.where(hmaps > 0.7, hmaps, 0.0)
+            hmaps = torch.where(hmaps > 0.65, hmaps, 0.0)
             # fusing 16 decoder attention heads i.e. [4, 16, 40, 30]-> [4, 40, 30]
             hmaps = torch.max(hmaps, dim=1)[0]
             # hmaps = torch.mean(hmaps, dim=1)
@@ -453,16 +474,21 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     [
                         agg_heatmap,
                         cv2.resize(
-                            hmap, (final_w, final_h), interpolation=cv2.INTER_CUBIC
+                            hmap,
+                            (final_w, final_h),
+                            interpolation=cv2.INTER_LINEAR_EXACT,  # cv2.INTER_CUBIC
                         ),
-                    ]
+                    ],
                 ),
                 axis=0,
             ).astype(np.uint8)
 
         # threshold to remove small attention pockets
         thres_heatmap = cv2.threshold(
-            agg_heatmap, 200, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+            agg_heatmap,
+            200,
+            255,
+            cv2.THRESH_BINARY + cv2.THRESH_OTSU,
         )[1]
 
         # kernel = np.ones((1, 20), np.uint8)
@@ -474,7 +500,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """
         # Find contours
         contours = cv2.findContours(
-            thres_heatmap, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            thres_heatmap,
+            cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_SIMPLE,
         )
         contours = contours[0] if len(contours) == 2 else contours[1]
         bboxes = [cv2.boundingRect(ctr) for ctr in contours]
@@ -484,7 +512,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             thres_heatmap = cv2.dilate(thres_heatmap, kernel, iterations=1)
 
             contours = cv2.findContours(
-                thres_heatmap, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+                thres_heatmap,
+                cv2.RETR_EXTERNAL,
+                cv2.CHAIN_APPROX_SIMPLE,
             )
             contours = contours[0] if len(contours) == 2 else contours[1]
 
@@ -495,10 +525,100 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])
 
             return [x, y, x + w, y + h]
-        except:
+        except ValueError:
             return [0, 0, 1, 1]
 
-    def reduce_bbox(self, image, input_bbox):
+    def reduce_element_bbox(
+        self,
+        image: Image,
+        elements: List[LayoutElement],
+        element: LayoutElement,
+    ):
+        """
+        Given a LayoutElement element, reduce the size of the bounding box,
+        depending on existing elements
+        """
+        bbox = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
+
+        if not self.element_overlap(elements, element):
+            element.bbox = Rectangle(*self.reduce_bbox_no_overlap(image, bbox))
+        else:
+            element.bbox = Rectangle(*self.reduce_bbox_overlap(image, bbox))
+
+    def bbox_overlap(
+        self,
+        bboxa: List[float],
+        bboxb: List[float],
+    ) -> bool:
+        """
+        Check if bounding boxes bboxa and bboxb overlap
+        """
+        x1_a, y1_a, x2_a, y2_a = bboxa
+        x1_b, y1_b, x2_b, y2_b = bboxb
+
+        return bool(x1_a <= x2_b and x1_b <= x2_a and y1_a <= y2_b and y1_b <= y2_a)
+
+    def element_overlap(
+        self,
+        elements: List[LayoutElement],
+        element: LayoutElement,
+    ) -> bool:
+        """
+        Check if an element overlaps with existing elements
+        """
+        bboxb = [
+            element.bbox.x1,
+            element.bbox.y1,
+            element.bbox.x2,
+            max(element.bbox.y1, element.bbox.y2),
+        ]
+
+        for check_element in elements:
+            if check_element == element:
+                continue
+
+            if self.bbox_overlap(
+                [
+                    check_element.bbox.x1,
+                    check_element.bbox.y1,
+                    check_element.bbox.x2,
+                    max(check_element.bbox.y1, check_element.bbox.y2),
+                ],
+                bboxb,
+            ):
+                return True
+
+        return False
+
+    def remove_horizontal_lines(
+        self,
+        img_dst: MatLike,
+    ) -> MatLike:
+        """
+        Remove horizontal lines in an image
+        """
+        gray_dst = cv2.cvtColor(img_dst, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray_dst, 50, 150, apertureSize=5)
+        horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 1))
+
+        # Using morph open to get lines inside the drawing
+        opening = cv2.morphologyEx(edges, cv2.MORPH_OPEN, horizontal_kernel)
+        cnts = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+        mask = np.zeros(gray_dst.shape, np.uint8)
+        for c in cnts:
+            cv2.drawContours(mask, [c], -1, (255, 255, 255), 6)
+
+        return cv2.inpaint(img_dst, mask, 3, cv2.INPAINT_TELEA)
+
+    def reduce_bbox_no_overlap(
+        self,
+        image: Image,
+        input_bbox: List[float],
+    ) -> List[float]:
+        """
+        If an element does not overlap with other elements, remove any empty space around it
+        """
         input_bbox = [int(b) for b in input_bbox]
 
         if input_bbox[2] * input_bbox[3] == 0:
@@ -506,40 +626,105 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         try:
             nimage = np.array(image.crop(input_bbox))
-        except:
+        except ValueError:
             return input_bbox
+
+        nimage = self.remove_horizontal_lines(nimage)
+
+        # Convert the image to grayscale
+        gray = cv2.bitwise_not(cv2.cvtColor(nimage, cv2.COLOR_BGR2GRAY))
+
+        # Apply Canny edge detection
+        edges = cv2.Canny(gray, 50, 150)
+
+        # Find the contours in the edge image
+        contours, _ = cv2.findContours(
+            edges,
+            cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_SIMPLE,
+        )
+
+        try:
+            largest_contour = np.vstack(contours)
+            x, y, w, h = cv2.boundingRect(largest_contour)
+
+        except ValueError:
+            return input_bbox
+
+        print(input_bbox)
+        print(x, y, w, h)
+
+        return [
+            input_bbox[0] + x,
+            input_bbox[1] + y,
+            input_bbox[0] + x + w,
+            input_bbox[1] + y + h,
+        ]
+
+    def reduce_bbox_overlap(
+        self,
+        image: Image,
+        input_bbox: List[float],
+    ) -> List[float]:
+        """
+        If an element does overlap with other elements, reduce bouding box by selecting the largest
+        bbox after blurring existing text
+        """
+        input_bbox = [int(b) for b in input_bbox]
+
+        if input_bbox[2] * input_bbox[3] == 0:
+            return input_bbox
+
+        try:
+            nimage = np.array(image.crop(input_bbox))
+        except ValueError:
+            return input_bbox
+
+        nimage = self.remove_horizontal_lines(nimage)
 
         center_h = nimage.shape[0] / 2
         center_w = nimage.shape[1] / 2
 
         gray = cv2.bitwise_not(cv2.cvtColor(nimage, cv2.COLOR_BGR2GRAY))
-        nim = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)[1]
+        edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+
+        nim = cv2.threshold(edges, 1, 255, cv2.THRESH_BINARY)[1]
         binary_mask = cv2.threshold(nim, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[
             1
         ]
 
         if center_h > center_w:
-            kernel = np.ones((1, 35), np.uint8)
+            kernel = np.ones((1, 80), np.uint8)
             binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
 
-            kernel = np.ones((60, 1), np.uint8)
+            kernel = np.ones((40, 1), np.uint8)
             binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
         else:
-            kernel = np.ones((10, 1), np.uint8)
-            binary_mask = cv2.erode(binary_mask, kernel, iterations=1)
+            # kernel = np.ones((8, 1), np.uint8)
+            # binary_mask = cv2.erode(binary_mask, kernel, iterations=1)
 
-            kernel = np.ones((1, 50), np.uint8)
+            kernel = np.ones((1, 80), np.uint8)
             binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
 
             kernel = np.ones((30, 1), np.uint8)
             binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
 
         contours = cv2.findContours(
-            binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE
+            binary_mask,
+            cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_NONE,
         )
+
         contours = contours[0] if len(contours) == 2 else contours[1]
 
         bboxes = [cv2.boundingRect(ctr) for ctr in contours]
+
+        for b in bboxes:
+            print(
+                b[0] + (b[0] + b[2] - b[0]) / 2,
+                b[1] + (b[1] + b[3] - b[1]) / 2,
+                b[2] * b[3],
+            )
 
         nbboxes = [
             bbox
@@ -557,12 +742,230 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         x, y, w, h = max(nbboxes, key=lambda box: box[2] * box[3])
 
-        return (
+        return [
             input_bbox[0] + x,
             input_bbox[1] + y,
             input_bbox[0] + x + w,
             input_bbox[1] + y + h,
-        )
+        ]
+
+    def separation_margins(
+        self,
+        mapping: MatLike,
+    ) -> Optional[list[tuple[int, int, int]]]:
+        """
+        Find intervals with no content
+        """
+        current_start = None
+
+        margins = []
+
+        for i, value in enumerate(mapping):
+            if value[0] == 0:
+                if current_start is None:
+                    current_start = i
+            else:
+                if current_start is not None:
+                    if current_start > 0:
+                        margins.append((current_start, i, i - current_start))
+                    current_start = None
+
+        if current_start is not None:
+            margins.append((current_start, i, i - current_start))
+
+        return margins
+
+    def largest_margin(
+        self,
+        image: Image,
+        input_bbox: tuple[float, float, float, float],
+        transpose: bool = False,
+    ) -> Optional[tuple[int, int, int]]:
+        """
+        Find the largest region with no text
+        """
+        nimage = image.crop(input_bbox)
+
+        if input_bbox[2] * input_bbox[3] == 0:
+            return None
+
+        try:
+            nimage = np.array(image.crop(input_bbox))
+        except ValueError:
+            return None
+
+        if transpose:
+            print(nimage.shape)
+            nimage = np.swapaxes(nimage, 0, 1)
+
+        print(transpose, nimage.shape)
+
+        nimage = self.remove_horizontal_lines(nimage)
+
+        gray = cv2.bitwise_not(cv2.cvtColor(nimage, cv2.COLOR_BGR2GRAY))
+
+        edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+
+        mapping = cv2.reduce(edges, 1, cv2.REDUCE_MAX)
+
+        margins = self.separation_margins(mapping)
+
+        if margins is None or len(margins) == 0:
+            return None
+
+        largest_margin = sorted(margins, key=lambda x: x[2], reverse=True)[0]
+
+        return largest_margin
+
+    def check_overlap(
+        self,
+        box1: List[float],
+        box2: List[float],
+    ) -> tuple[
+        str,
+        list[float],
+        list[float],
+        list[float],
+        list[float],
+        Optional[tuple[float, float, float, float]],
+    ]:
+        """
+        Check the overlap between two bounding boxes, return properties of the overlap and
+        the bbox of the overlaped region
+        """
+        # Get the coordinates of the two boxes
+        x1, y1, x11, y11 = box1
+        x2, y2, x21, y21 = box2
+
+        w1 = x11 - x1
+        h1 = y11 - y1
+        w2 = x21 - x2
+        h2 = y21 - y2
+
+        # Check for horizontal overlap
+        horizontal_overlap = bool(x1 <= x2 + w2 and x1 + w1 >= x2)
+
+        # Check for vertical overlap
+        vertical_overlap = bool(y1 <= y2 + h2 and y1 + h1 >= y2)
+
+        # Check for both horizontal and vertical overlap
+        if horizontal_overlap and vertical_overlap:
+            overlap_type = "both"
+            intersection_x1 = max(x1, x2)
+            intersection_y1 = max(y1, y2)
+            intersection_x2 = min(x1 + w1, x2 + w2)
+            intersection_y2 = min(y1 + h1, y2 + h2)
+            overlapping_bbox = (
+                intersection_x1,
+                intersection_y1,
+                intersection_x2,
+                intersection_y2,
+            )
+        elif horizontal_overlap and not vertical_overlap:
+            overlap_type = "horizontal"
+            overlapping_bbox = None
+        elif not horizontal_overlap and vertical_overlap:
+            overlap_type = "vertical"
+            overlapping_bbox = None
+        else:
+            overlap_type = "none"
+            overlapping_bbox = None
+
+        # Check which box is on top and/or left
+        if y1 < y2:
+            top_box = box1
+            bottom_box = box2
+        else:
+            top_box = box2
+            bottom_box = box1
+
+        if x1 < x2:
+            left_box = box1
+            right_box = box2
+        else:
+            left_box = box2
+            right_box = box1
+
+        return overlap_type, top_box, bottom_box, left_box, right_box, overlapping_bbox
+
+    def resolve_bbox_overlaps(
+        self,
+        image: Image,
+        elements: List[LayoutElement],
+    ):
+        """
+        Resolve overlaping bounding boxes
+        """
+        for element in elements:
+            if element.parent is not None:
+                continue
+
+            ebbox1 = element.bbox
+            bbox1 = [ebbox1.x1, ebbox1.y1, ebbox1.x2, max(ebbox1.y1, ebbox1.y2)]
+
+            for celement in elements:
+                if element == celement or celement.parent is not None:
+                    continue
+
+                ebbox2 = celement.bbox
+                bbox2 = [ebbox2.x1, ebbox2.y1, ebbox2.x2, max(ebbox2.y1, ebbox2.y2)]
+
+                if self.bbox_overlap(bbox1, bbox2):
+                    check = self.check_overlap(bbox1, bbox2)
+                    print(check)
+
+                    # For resolution, we should be sure that the overlap in the other dimension
+                    # is large
+                    if (
+                        check[-1]
+                        and (check[0] == "vertical" or check[0] == "both")
+                        and (bbox1[2] - bbox1[0]) / check[-1][0] > 0.9
+                        and (bbox2[2] - bbox2[0]) / check[-1][0] > 0.9
+                    ):
+                        margin = self.largest_margin(image, check[-1])
+
+                        if margin:
+                            print("vertical: ", margin)
+                            # Check with box is on top
+                            print(bbox1 == check[1], bbox1, check[1])
+                            if bbox1 == check[1]:
+                                bbox1[3] -= margin[0]
+                                bbox2[1] += margin[1]
+                            else:
+                                bbox2[3] -= margin[0]
+                                bbox1[1] += margin[1]
+
+                            print("Bbox1: ", bbox1)
+                            print("Bbox2: ", bbox2)
+                            element.bbox = Rectangle(*bbox1)
+                            celement.bbox = Rectangle(*bbox2)
+
+                    # For resolution, we should be sure that the overlap in the other dimension
+                    # is large
+                    if (
+                        check[-1]
+                        and check[0] == "horizontal"
+                        and (bbox1[3] - bbox1[1]) / check[-1][1] > 0.9
+                        and (bbox2[3] - bbox2[1]) / check[-1][1] > 0.9
+                    ):
+                        margin = self.largest_margin(
+                            image,
+                            check[-1],
+                            transpose=True,
+                        )
+                        if margin:
+                            print("horizontal: ", margin)
+                            # Check with box is on top
+                            print(bbox1 == check[1], bbox1, check[3])
+                            if bbox1 == check[3]:
+                                bbox1[2] = bbox1[0] + margin[0]
+                                bbox2[0] = bbox2[2] - margin[1]
+                            else:
+                                bbox2[2] = bbox2[0] + margin[0]
+                                bbox1[0] = bbox1[2] - margin[1]
+
+                            element.bbox = Rectangle(*bbox1)
+                            celement.bbox = Rectangle(*bbox2)
 
     def image_padding(self, input_size, target_size):
         """
@@ -609,7 +1012,9 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         self.skip_tokens = skip_tokens
 
     def __call__(
-        self, input_ids: torch.LongTensor, scores: torch.FloatTensor
+        self,
+        input_ids: torch.LongTensor,
+        scores: torch.FloatTensor,
     ) -> torch.FloatTensor:
         """
         Args:
@@ -644,7 +1049,10 @@ class NGramRepetitonStoppingCriteria(StoppingCriteria):
         self.skip_tokens = skip_tokens
 
     def __call__(
-        self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+        self,
+        input_ids: torch.LongTensor,
+        scores: torch.FloatTensor,
+        **kwargs,
     ) -> bool:
         """
         Args:
@@ -694,7 +1102,10 @@ def _no_repeat_ngram_logits(
         # from fairseq:
         # https://github.com/pytorch/fairseq/blob/a07cb6f40480928c9e0548b737aadd36ee66ac76/fairseq/sequence_generator.py#L345
         banned_tokens = _calc_banned_tokens(
-            input_ids, batch_size, no_repeat_ngram_size, cur_len
+            input_ids,
+            batch_size,
+            no_repeat_ngram_size,
+            cur_len,
         )
         for batch_idx in range(batch_size):
             if skip_tokens is not None:
@@ -731,7 +1142,8 @@ def _calc_banned_tokens(
         for ngram in zip(*[gen_tokens[i:] for i in range(no_repeat_ngram_size)]):
             prev_ngram_tuple = tuple(ngram[:-1])
             generated_ngram[prev_ngram_tuple] = generated_ngram.get(
-                prev_ngram_tuple, []
+                prev_ngram_tuple,
+                [],
             ) + [
                 ngram[-1],
             ]
