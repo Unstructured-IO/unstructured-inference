@@ -480,8 +480,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             cv2.RETR_EXTERNAL,
             cv2.CHAIN_APPROX_SIMPLE,
         )
-        contours = contours[0] if len(contours) == 2 else contours[1]
-        bboxes = [cv2.boundingRect(ctr) for ctr in contours]
+        contours_selection = contours[0] if len(contours) == 2 else contours[1]
+
+        bboxes = [cv2.boundingRect(ctr) for ctr in contours_selection]
 
         if len(bboxes) > 1:
             kernel = np.ones((1, 50), np.uint8)
@@ -492,9 +493,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 cv2.RETR_EXTERNAL,
                 cv2.CHAIN_APPROX_SIMPLE,
             )
-            contours = contours[0] if len(contours) == 2 else contours[1]
+            contours_selection = contours[0] if len(contours) == 2 else contours[1]
 
-            bboxes = [cv2.boundingRect(ctr) for ctr in contours]
+            bboxes = [cv2.boundingRect(ctr) for ctr in contours_selection]
 
         try:
             # return box with max area
@@ -686,9 +687,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             cv2.CHAIN_APPROX_NONE,
         )
 
-        contours = contours[0] if len(contours) == 2 else contours[1]
+        contours_selection = contours[0] if len(contours) == 2 else contours[1]
 
-        bboxes = [cv2.boundingRect(ctr) for ctr in contours]
+        bboxes = [cv2.boundingRect(ctr) for ctr in contours_selection]
 
         nbboxes = [
             bbox
@@ -716,7 +717,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     def separation_margins(
         self,
         mapping: MatLike,
-    ) -> Optional[list[tuple[int, int, int]]]:
+    ) -> Optional[List[Tuple[int, int, int]]]:
         """
         Find intervals with no content
         """
@@ -742,9 +743,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     def largest_margin(
         self,
         image: Image,
-        input_bbox: tuple[float, float, float, float],
+        input_bbox: Tuple[float, float, float, float],
         transpose: bool = False,
-    ) -> Optional[tuple[int, int, int]]:
+    ) -> Optional[Tuple[int, int, int]]:
         """
         Find the largest region with no text
         """
@@ -782,7 +783,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self,
         box1: List[float],
         box2: List[float],
-    ) -> tuple[
+    ) -> Tuple[
         str,
         list[float],
         list[float],
