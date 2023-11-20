@@ -9,6 +9,7 @@ from layoutparser.models.detectron2.layoutmodel import (
 from layoutparser.models.model_config import LayoutModelConfig
 from PIL import Image
 
+from unstructured_inference.constants import ElementType
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import (
@@ -18,11 +19,11 @@ from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
 
 DETECTRON_CONFIG: Final = "lp://PubLayNet/faster_rcnn_R_50_FPN_3x/config"
 DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
-    0: "Text",
-    1: "Title",
-    2: "List",
-    3: "Table",
-    4: "Figure",
+    0: ElementType.TEXT,
+    1: ElementType.TITLE,
+    2: ElementType.LIST,
+    3: ElementType.TABLE,
+    4: ElementType.FIGURE,
 }
 DEFAULT_EXTRA_CONFIG: Final[List[Any]] = ["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.8]
 

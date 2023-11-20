@@ -30,7 +30,12 @@ DEFAULT_MODEL = "yolox"
 models: Dict[str, UnstructuredModel] = {}
 
 
-def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
+def get_model(
+    model_name: Optional[str] = None,
+    model_path: Optional[str] = None,
+    label_map: Optional[dict] = None,
+    input_shape: Optional[tuple] = None,
+) -> UnstructuredModel:
     """Gets the model object by model name."""
     # TODO(alan): These cases are similar enough that we can probably do them all together with
     # importlib
@@ -45,19 +50,23 @@ def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
 
     if model_name in DETECTRON2_MODEL_TYPES:
         model: UnstructuredModel = UnstructuredDetectronModel()
-        initialize_params = {**DETECTRON2_MODEL_TYPES[model_name], **kwargs}
+        initialize_params = {**DETECTRON2_MODEL_TYPES[model_name]}
     elif model_name in DETECTRON2_ONNX_MODEL_TYPES:
         model = UnstructuredDetectronONNXModel()
-        initialize_params = {**DETECTRON2_ONNX_MODEL_TYPES[model_name], **kwargs}
+        initialize_params = {**DETECTRON2_ONNX_MODEL_TYPES[model_name]}
     elif model_name in YOLOX_MODEL_TYPES:
         model = UnstructuredYoloXModel()
-        initialize_params = {**YOLOX_MODEL_TYPES[model_name], **kwargs}
+        initialize_params = {**YOLOX_MODEL_TYPES[model_name]}
     elif model_name in CHIPPER_MODEL_TYPES:
         model = UnstructuredChipperModel()
-        initialize_params = {**CHIPPER_MODEL_TYPES[model_name], **kwargs}
+        initialize_params = {**CHIPPER_MODEL_TYPES[model_name]}
     elif model_name == "super_gradients":
         model = UnstructuredSuperGradients()
-        initialize_params = {**kwargs}
+        initialize_params = {
+            "model_path": model_path,
+            "label_map": label_map,
+            "input_shape": input_shape,
+        }
     else:
         raise UnknownModelException(f"Unknown model type: {model_name}")
     model.initialize(**initialize_params)
