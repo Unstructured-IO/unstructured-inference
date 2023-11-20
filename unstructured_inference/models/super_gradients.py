@@ -71,13 +71,13 @@ class UnstructuredSuperGradients(UnstructuredObjectDetectionModel):
                 x1, y1, x2, y2 = pred_boxes[image_index, i]
                 detected_class = self.layout_classes[str(class_id)]
                 region = LayoutElement.from_coords(
-                    x1,
-                    y1,
-                    x2,
-                    y2,
+                    float(x1),
+                    float(y1),
+                    float(x2),
+                    float(y2),
                     text=None,
                     type=detected_class,
-                    prob=prob,
+                    prob=float(prob),
                     source=Source.SUPER_GRADIENTS,
                 )
                 regions.append(cast(LayoutElement, region))
