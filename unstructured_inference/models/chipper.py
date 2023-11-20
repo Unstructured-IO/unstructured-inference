@@ -143,9 +143,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             if k.startswith(start_token_prefix) and v not in self.input_ids
         ]
         self.end_tokens = [
-            v
-            for k, v in self.processor.tokenizer.get_added_vocab().items()
-            if k.startswith("</s_")
+            v for k, v in self.processor.tokenizer.get_added_vocab().items() if k.startswith("</s_")
         ]
         self.tokens_stop = [self.tokenizer.eos_token_id, self.tokenizer.pad_token_id]
 
@@ -184,11 +182,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             amp: Union[TextIO, ContextManager[None]] = (
                 torch.cuda.amp.autocast()
                 if self.device == "cuda"
-                else (
-                    torch.cpu.amp.autocast()
-                    if platform.machine() == "x86_64"
-                    else nullcontext()
-                )
+                else (torch.cpu.amp.autocast() if platform.machine() == "x86_64" else nullcontext())
             )
             with amp:
                 encoder_outputs = self.model.encoder(
@@ -212,8 +206,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                 if (
                     len(outputs["sequences"][0]) < self.max_length
-                    and outputs["sequences"][0][-1]
-                    != self.processor.tokenizer.eos_token_id
+                    and outputs["sequences"][0][-1] != self.processor.tokenizer.eos_token_id
                 ):
                     outputs = self.model.generate(
                         encoder_outputs=encoder_outputs,
@@ -228,12 +221,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         output_hidden_states=False,
                     )
 
-        if "beam_indices" in outputs:
-            offset = (
-                2  # len(outputs["beam_indices"][0]) - len(outputs["cross_attentions"])
-            )
-            print("offset:", offset, len(outputs["cross_attentions"]))
+        offset = len(self.input_ids)
 
+        if "beam_indices" in outputs:
             decoder_cross_attentions = [[torch.Tensor(0)]] * offset
 
             for token_id in range(0, len(outputs["beam_indices"][0])):
@@ -253,12 +243,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                 decoder_cross_attentions.append(token_attentions)
         else:
-            offset = (
-                2  # len(outputs["sequences"][0]) - len(outputs["cross_attentions"])
-            )
-            print("offset:", [[torch.Tensor(0)]] * offset)
-            # print(outputs["cross_attentions"].shape)
-
             decoder_cross_attentions = [[torch.Tensor(0)]] * offset + list(
                 outputs["cross_attentions"],
             )
@@ -329,7 +313,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 if start != -1 and start <= end and len(parents) > 0:
                     slicing_end = end + 1
                     string = self.tokenizer.decode(output_ids[start:slicing_end])
-                    print(string, start, end)
 
                     element = parents.pop(-1)
 
@@ -351,8 +334,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         image.size,
                     )
 
-                    # bbox_coords = self.reduce_bbox(image, bbox_coords)
-
                     element.bbox = Rectangle(*bbox_coords)
 
                     self.update_parent_bbox(element)
@@ -368,7 +349,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         if start != -1 and start <= end and len(parents) > 0:
             slicing_end = end + 1
             string = self.tokenizer.decode(output_ids[start:slicing_end])
-            print(string, start, end)
 
             element = parents.pop(-1)
             element.text = string
@@ -390,8 +370,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 image.size,
             )
 
-            # bbox_coords = self.reduce_bbox(image, bbox_coords)
-
             element.bbox = Rectangle(*bbox_coords)
 
             self.update_parent_bbox(element)
@@ -411,9 +389,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
         """For chipper, remove elements from other sources."""
-        return [
-            el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)
-        ]
+        return [el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)]
 
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
@@ -651,9 +627,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         except ValueError:
             return input_bbox
 
-        print(input_bbox)
-        print(x, y, w, h)
-
         return [
             input_bbox[0] + x,
             input_bbox[1] + y,
@@ -689,9 +662,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         edges = cv2.Canny(gray, 50, 150, apertureSize=3)
 
         nim = cv2.threshold(edges, 1, 255, cv2.THRESH_BINARY)[1]
-        binary_mask = cv2.threshold(nim, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[
-            1
-        ]
+        binary_mask = cv2.threshold(nim, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
 
         if center_h > center_w:
             kernel = np.ones((1, 80), np.uint8)
@@ -718,13 +689,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         contours = contours[0] if len(contours) == 2 else contours[1]
 
         bboxes = [cv2.boundingRect(ctr) for ctr in contours]
-
-        for b in bboxes:
-            print(
-                b[0] + (b[0] + b[2] - b[0]) / 2,
-                b[1] + (b[1] + b[3] - b[1]) / 2,
-                b[2] * b[3],
-            )
 
         nbboxes = [
             bbox
@@ -795,10 +759,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             return None
 
         if transpose:
-            print(nimage.shape)
             nimage = np.swapaxes(nimage, 0, 1)
-
-        print(transpose, nimage.shape)
 
         nimage = self.remove_horizontal_lines(nimage)
 
@@ -912,7 +873,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                 if self.bbox_overlap(bbox1, bbox2):
                     check = self.check_overlap(bbox1, bbox2)
-                    print(check)
 
                     # For resolution, we should be sure that the overlap in the other dimension
                     # is large
@@ -925,9 +885,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         margin = self.largest_margin(image, check[-1])
 
                         if margin:
-                            print("vertical: ", margin)
                             # Check with box is on top
-                            print(bbox1 == check[1], bbox1, check[1])
                             if bbox1 == check[1]:
                                 bbox1[3] -= margin[0]
                                 bbox2[1] += margin[1]
@@ -935,8 +893,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                                 bbox2[3] -= margin[0]
                                 bbox1[1] += margin[1]
 
-                            print("Bbox1: ", bbox1)
-                            print("Bbox2: ", bbox2)
                             element.bbox = Rectangle(*bbox1)
                             celement.bbox = Rectangle(*bbox2)
 
@@ -954,9 +910,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                             transpose=True,
                         )
                         if margin:
-                            print("horizontal: ", margin)
                             # Check with box is on top
-                            print(bbox1 == check[1], bbox1, check[3])
                             if bbox1 == check[3]:
                                 bbox1[2] = bbox1[0] + margin[0]
                                 bbox2[0] = bbox2[2] - margin[1]
@@ -1111,11 +1065,7 @@ def _no_repeat_ngram_logits(
             if skip_tokens is not None:
                 logits[
                     batch_idx,
-                    [
-                        token
-                        for token in banned_tokens[batch_idx]
-                        if int(token) not in skip_tokens
-                    ],
+                    [token for token in banned_tokens[batch_idx] if int(token) not in skip_tokens],
                 ] = -float("inf")
             else:
                 logits[batch_idx, banned_tokens[batch_idx]] = -float("inf")
@@ -1133,9 +1083,7 @@ def _calc_banned_tokens(
     if cur_len + 1 < no_repeat_ngram_size:
         # return no banned tokens if we haven't generated no_repeat_ngram_size tokens yet
         return [() for _ in range(num_hypos)]
-    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [
-        {} for _ in range(num_hypos)
-    ]
+    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [{} for _ in range(num_hypos)]
     for idx in range(num_hypos):
         gen_tokens = prev_input_ids[idx].tolist()
         generated_ngram = generated_ngrams[idx]
