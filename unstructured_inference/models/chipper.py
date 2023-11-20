@@ -581,9 +581,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         # Using morph open to get lines inside the drawing
         opening = cv2.morphologyEx(edges, cv2.MORPH_OPEN, horizontal_kernel)
         cnts = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+        cnts_selection = cnts[0] if len(cnts) == 2 else cnts[1]
         mask = np.zeros(gray_dst.shape, np.uint8)
-        for c in cnts:
+        for c in cnts_selection:
             cv2.drawContours(mask, [c], -1, (255, 255, 255), 6)
 
         return cv2.inpaint(img_dst, mask, 3, cv2.INPAINT_TELEA)
