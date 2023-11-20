@@ -792,7 +792,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     ]:
         """
         Check the overlap between two bounding boxes, return properties of the overlap and
-        the bbox of the overlaped region
+        the bbox of the overlapped region
         """
         # Get the coordinates of the two boxes
         x1, y1, x11, y11 = box1
@@ -855,7 +855,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         elements: List[LayoutElement],
     ):
         """
-        Resolve overlaping bounding boxes
+        Resolve overlapping bounding boxes
         """
         for element in elements:
             if element.parent is not None:
