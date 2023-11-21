@@ -1,13 +1,14 @@
-from typing import List
+from typing import List, Union
 
 from unstructured_inference.inference.elements import TextRegion
+from unstructured_inference.inference.layoutelement import LayoutElement
 
 
 def order_layout(
-    layout: List[TextRegion],
+    layout: Union[List[TextRegion], List[LayoutElement]],
     column_tol_factor: float = 0.2,
     full_page_threshold_factor: float = 0.9,
-) -> List[TextRegion]:
+) -> Union[List[TextRegion], List[LayoutElement]]:
     """Orders the layout elements detected on a page. For groups of elements that are not
     the width of the page, the algorithm attempts to group elements into column based on
     the coordinates of the bounding box. Columns are ordered left to right, and elements

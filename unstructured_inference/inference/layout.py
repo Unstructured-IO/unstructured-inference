@@ -79,26 +79,18 @@ class DocumentLayout:
         logger.info(f"Reading PDF for file: {filename} ...")
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            layouts, _image_paths = load_pdf(
+            _image_paths = convert_pdf_to_image(
                 filename,
                 pdf_image_dpi,
                 output_folder=temp_dir,
                 path_only=True,
             )
             image_paths = cast(List[str], _image_paths)
-            if len(layouts) > len(image_paths):
-                raise RuntimeError(
-                    "Some images were not loaded. "
-                    f"Number of extracted images ({len(image_paths)}) does not match number of "
-                    f"extracted page layouts ({len(layouts)})",
-                )
-
+            number_of_pages = len(image_paths)
             pages: List[PageLayout] = []
             if fixed_layouts is None:
-                fixed_layouts = [None for _ in layouts]
-            for i, (image_path, layout, fixed_layout) in enumerate(
-                zip(image_paths, layouts, fixed_layouts),
-            ):
+                fixed_layouts = [None for _ in range(0, number_of_pages)]
+            for i, (image_path, fixed_layout) in enumerate(zip(image_paths, fixed_layouts)):
                 # NOTE(robinson) - In the future, maybe we detect the page number and default
                 # to the index if it is not detected
                 with Image.open(image_path) as image:
@@ -106,7 +98,6 @@ class DocumentLayout:
                         image,
                         number=i + 1,
                         document_filename=filename,
-                        layout=layout,
                         fixed_layout=fixed_layout,
                         **kwargs,
                     )
@@ -162,7 +153,6 @@ class PageLayout:
         self,
         number: int,
         image: Image.Image,
-        layout: Optional[List[TextRegion]],
         image_metadata: Optional[dict] = None,
         image_path: Optional[Union[str, PurePath]] = None,  # TODO: Deprecate
         document_filename: Optional[Union[str, PurePath]] = None,
@@ -180,7 +170,6 @@ class PageLayout:
         self.image_path = image_path
         self.image_array: Union[np.ndarray, None] = None
         self.document_filename = document_filename
-        self.layout = layout
         self.number = number
         self.detection_model = detection_model
         self.element_extraction_model = element_extraction_model
@@ -230,40 +219,20 @@ class PageLayout:
             inferred_layout,
         )
 
-        if self.layout is not None:
-            threshold_kwargs = {}
-            # NOTE(Benjamin): With this the thresholds are only changed for detextron2_mask_rcnn
-            # In other case the default values for the functions are used
-            if (
-                isinstance(self.detection_model, UnstructuredDetectronONNXModel)
-                and "R_50" not in self.detection_model.model_path
-            ):
-                threshold_kwargs = {"same_region_threshold": 0.5, "subregion_threshold": 0.5}
-            merged_layout = merge_inferred_layout_with_extracted_layout(
-                inferred_layout=inferred_layout,
-                extracted_layout=self.layout,
-                page_image_size=self.image.size,
-                **threshold_kwargs,
-            )
-
-        else:
-            merged_layout = inferred_layout
         # If the model is a chipper model, we don't want to order the
         # elements, as they are already ordered
         order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
-        elements = self.get_elements_from_layout(
-            cast(List[TextRegion], merged_layout),
-            order_elements=order_elements,
-        )
+        if order_elements:
+            inferred_layout = order_layout(inferred_layout)
 
         if self.analysis:
             self.inferred_layout = inferred_layout
 
         if inplace:
-            self.elements = elements
+            self.elements = inferred_layout
             return None
 
-        return elements
+        return inferred_layout
 
     def get_elements_from_layout(
         self,
@@ -403,7 +372,6 @@ class PageLayout:
         number: int = 1,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
-        layout: Optional[List[TextRegion]] = None,
         extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
         extract_images_in_pdf: bool = False,
@@ -415,7 +383,6 @@ class PageLayout:
         page = cls(
             number=number,
             image=image,
-            layout=layout,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
             extract_tables=extract_tables,
@@ -593,3 +560,31 @@ def load_pdf(
         )
 
     return layouts, images
+
+
+def convert_pdf_to_image(
+    filename: str,
+    dpi: int = 200,
+    output_folder: Optional[Union[str, PurePath]] = None,
+    path_only: bool = False,
+) -> Union[List[Image.Image], List[str]]:
+    """Get the image renderings of the pdf pages using pdf2image"""
+
+    if path_only and not output_folder:
+        raise ValueError("output_folder must be specified if path_only is true")
+
+    if output_folder is not None:
+        images = pdf2image.convert_from_path(
+            filename,
+            dpi=dpi,
+            output_folder=output_folder,
+            paths_only=path_only,
+        )
+    else:
+        images = pdf2image.convert_from_path(
+            filename,
+            dpi=dpi,
+            paths_only=path_only,
+        )
+
+    return images
