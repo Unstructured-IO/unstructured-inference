@@ -177,8 +177,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         image: Image,
     ) -> Tuple[List[int], Sequence[Sequence[torch.Tensor]]]:
         """Predict tokens from image."""
-        # transformers.set_seed(42) -- check as well torch
-        transformers.set_seed(0)
+        transformers.set_seed(42)
+
         with torch.no_grad():
             amp: Union[TextIO, ContextManager[None]] = (
                 torch.cuda.amp.autocast()
