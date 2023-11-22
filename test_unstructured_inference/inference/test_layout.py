@@ -145,14 +145,12 @@ def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout, mock_imag
 
         layouts = [mock_initial_layout, mock_initial_layout]
 
-        monkeypatch.setattr(
-            models,
-            "UnstructuredDetectronModel",
-            partial(MockLayoutModel, layout=mock_final_layout),
-        )
         monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
 
-        with patch.object(layout, "load_pdf", return_value=(layouts, image_paths)):
+        with patch.object(layout, "load_pdf", return_value=(layouts, image_paths)), patch.dict(
+            models.model_class_map,
+            {"detectron2_lp": partial(MockLayoutModel, layout=mock_final_layout)},
+        ):
             model = layout.get_model("detectron2_lp")
             doc = layout.DocumentLayout.from_file("fake-file.pdf", detection_model=model)
 
@@ -266,7 +264,13 @@ class MockPageLayout(layout.PageLayout):
 
 @pytest.mark.parametrize(
     ("text", "expected"),
-    [("base", 0.0), ("", 0.0), ("(cid:2)", 1.0), ("(cid:1)a", 0.5), ("c(cid:1)ab", 0.25)],
+    [
+        ("base", 0.0),
+        ("", 0.0),
+        ("(cid:2)", 1.0),
+        ("(cid:1)a", 0.5),
+        ("c(cid:1)ab", 0.25),
+    ],
 )
 def test_cid_ratio(text, expected):
     assert elements.cid_ratio(text) == expected
@@ -274,7 +278,12 @@ def test_cid_ratio(text, expected):
 
 @pytest.mark.parametrize(
     ("text", "expected"),
-    [("base", False), ("(cid:2)", True), ("(cid:1234567890)", True), ("jkl;(cid:12)asdf", True)],
+    [
+        ("base", False),
+        ("(cid:2)", True),
+        ("(cid:1234567890)", True),
+        ("jkl;(cid:12)asdf", True),
+    ],
 )
 def test_is_cid_present(text, expected):
     assert elements.is_cid_present(text) == expected
@@ -389,7 +398,11 @@ def test_page_numbers_in_page_objects():
 @pytest.mark.parametrize(
     ("fixed_layouts", "called_method", "not_called_method"),
     [
-        ([MockLayout()], "get_elements_from_layout", "get_elements_with_detection_model"),
+        (
+            [MockLayout()],
+            "get_elements_from_layout",
+            "get_elements_with_detection_model",
+        ),
         (None, "get_elements_with_detection_model", "get_elements_from_layout"),
     ],
 )
@@ -470,7 +483,11 @@ def test_load_pdf_raises_with_path_only_no_output_folder():
 def test_load_pdf_with_multicolumn_layout(filename="sample-docs/design-thinking.pdf"):
     layouts, images = layout.load_pdf(filename)
     doc = layout.process_file_with_model(filename=filename, model_name=None)
-    test_snippets = ["Key to design thinking", "Design thinking also", "But in recent years"]
+    test_snippets = [
+        "Key to design thinking",
+        "Design thinking also",
+        "But in recent years",
+    ]
 
     test_elements = []
     for element in doc.pages[0].elements:
@@ -590,7 +607,9 @@ def test_get_elements_using_image_extraction(mock_image, inplace, expected):
     assert page.get_elements_using_image_extraction(inplace=inplace) == expected
 
 
-def test_get_elements_using_image_extraction_raises_with_no_extraction_model(mock_image):
+def test_get_elements_using_image_extraction_raises_with_no_extraction_model(
+    mock_image,
+):
     page = layout.PageLayout(1, mock_image, None, element_extraction_model=None)
     with pytest.raises(ValueError):
         page.get_elements_using_image_extraction()
@@ -707,7 +726,10 @@ def test_exposed_pdf_image_dpi(pdf_image_dpi, expected, monkeypatch):
 
 @pytest.mark.parametrize(
     ("filename", "img_num", "should_complete"),
-    [("sample-docs/empty-document.pdf", 0, True), ("sample-docs/empty-document.pdf", 10, False)],
+    [
+        ("sample-docs/empty-document.pdf", 0, True),
+        ("sample-docs/empty-document.pdf", 10, False),
+    ],
 )
 def test_get_image(filename, img_num, should_complete):
     doc = layout.DocumentLayout.from_file(filename)
