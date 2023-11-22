@@ -101,7 +101,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.model = VisionEncoderDecoderModel.from_pretrained(
             pre_trained_model_repo,
             ignore_mismatched_sizes=True,
-            use_auth_token=auth_token,
+            token=auth_token,
         )
         if swap_head:
             lm_head_file = hf_hub_download(
@@ -177,7 +177,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         image: Image,
     ) -> Tuple[List[int], Sequence[Sequence[torch.Tensor]]]:
         """Predict tokens from image."""
-        transformers.set_seed(42)
+        # transformers.set_seed(42) -- check as well torch
+        transformers.set_seed(0)
         with torch.no_grad():
             amp: Union[TextIO, ContextManager[None]] = (
                 torch.cuda.amp.autocast()
@@ -598,16 +599,10 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """
         input_bbox = [int(b) for b in input_bbox]
 
-        if input_bbox[2] * input_bbox[3] == 0:
+        if input_bbox[2] * input_bbox[3] <= 0:
             return input_bbox
 
-        try:
-            nimage = np.array(image.crop(input_bbox))
-        except ValueError:
-            return input_bbox
-
-        if nimage.shape[0] * nimage.shape[1] == 0:
-            return input_bbox
+        nimage = np.array(image.crop(input_bbox))
 
         nimage = self.remove_horizontal_lines(nimage)
 
@@ -649,16 +644,10 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """
         input_bbox = [int(b) for b in input_bbox]
 
-        if input_bbox[2] * input_bbox[3] == 0:
+        if input_bbox[2] * input_bbox[3] <= 0:
             return input_bbox
 
-        try:
-            nimage = np.array(image.crop(input_bbox))
-        except ValueError:
-            return input_bbox
-
-        if nimage.shape[0] * nimage.shape[1] == 0:
-            return input_bbox
+        nimage = np.array(image.crop(input_bbox))
 
         nimage = self.remove_horizontal_lines(nimage)
 
@@ -755,13 +744,10 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """
         Find the largest region with no text
         """
-        if int(input_bbox[2]) * (input_bbox[3]) == 0:
+        if int(input_bbox[2]) * int(input_bbox[3]) <= 0:
             return None
 
-        try:
-            nimage = np.array(image.crop(input_bbox))
-        except ValueError:
-            return None
+        nimage = np.array(image.crop(input_bbox))
 
         if nimage.shape[0] * nimage.shape[1] == 0:
             return None
@@ -886,7 +872,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     # is large
                     if (
                         check[-1]
-                        and (check[0] == "vertical" or check[0] == "both")
+                        and check[-1][0] > 0
+                        # and (check[0] == "vertical" or check[0] == "both")
                         and (bbox1[2] - bbox1[0]) / check[-1][0] > 0.9
                         and (bbox2[2] - bbox2[0]) / check[-1][0] > 0.9
                     ):
@@ -904,30 +891,36 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                             element.bbox = Rectangle(*bbox1)
                             celement.bbox = Rectangle(*bbox2)
 
-                    # For resolution, we should be sure that the overlap in the other dimension
-                    # is large
-                    if (
-                        check[-1]
-                        and check[0] == "horizontal"
-                        and (bbox1[3] - bbox1[1]) / check[-1][1] > 0.9
-                        and (bbox2[3] - bbox2[1]) / check[-1][1] > 0.9
-                    ):
-                        margin = self.largest_margin(
-                            image,
-                            check[-1],
-                            transpose=True,
-                        )
-                        if margin:
-                            # Check with box is on top
-                            if bbox1 == check[3]:
-                                bbox1[2] -= margin[0]
-                                bbox2[0] += margin[1]
-                            else:
-                                bbox2[2] -= margin[0]
-                                bbox1[0] += margin[1]
+                        check = self.check_overlap(bbox1, bbox2)
 
-                            element.bbox = Rectangle(*bbox1)
-                            celement.bbox = Rectangle(*bbox2)
+                        # We need to identify cases with horizontal alignment after
+                        # vertical resolution. This is commented out for now.
+                        """
+                        # For resolution, we should be sure that the overlap in the other dimension
+                        # is large
+                        if (
+                            check[-1]
+                            and check[-1][0] > 0
+                            and (bbox1[3] - bbox1[1]) / check[-1][1] > 0.9
+                            and (bbox2[3] - bbox2[1]) / check[-1][1] > 0.9
+                        ):
+                            margin = self.largest_margin(
+                                image,
+                                check[-1],
+                                transpose=True,
+                            )
+                            if margin:
+                                # Check with box is on top
+                                if bbox1 == check[3]:
+                                    bbox1[2] -= margin[0]
+                                    bbox2[0] += margin[1]
+                                else:
+                                    bbox2[2] -= margin[0]
+                                    bbox1[0] += margin[1]
+
+                                element.bbox = Rectangle(*bbox1)
+                                celement.bbox = Rectangle(*bbox2)
+                        """
 
     def image_padding(self, input_size, target_size):
         """

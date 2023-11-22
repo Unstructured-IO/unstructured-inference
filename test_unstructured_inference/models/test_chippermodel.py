@@ -197,7 +197,10 @@ def test_no_repeat_ngram_logits():
 @pytest.mark.parametrize(
     ("decoded_str", "expected_classes"),
     [
-        ("<s><s_Misc> 1</s_Misc><s_Text>There is some text here.</s_Text></s>", ["Misc", "Text"]),
+        (
+            "<s><s_Misc> 1</s_Misc><s_Text>There is some text here.</s_Text></s>",
+            ["Misc", "Text"],
+        ),
         (
             "<s><s_List><s_List-item>Text here.</s_List-item><s_List><s_List-item>Final one",
             ["List", "List-item", "List", "List-item"],
@@ -245,3 +248,77 @@ def test_run_chipper_v2():
     tables = [el for el in elements if el.type == "Table"]
     assert all(table.text_as_html.startswith("<table>") for table in tables)
     assert all("<table>" not in table.text for table in tables)
+
+
+def test_image_checks():
+    model = get_model("chipper")
+    img = Image.open("sample-docs/easy_table.jpg")
+    assert model.largest_margin(img, [0, 0, 0, 0]) is None
+    assert model.largest_margin(img, [0, 1, 1, -1]) is None
+
+    input_bbox = [0, 1, 0, -1]
+    assert model.reduce_bbox_overlap(img, input_bbox) == [int(b) for b in input_bbox]
+    input_bbox = [0, 1, 1, -1]
+    assert model.reduce_bbox_overlap(img, input_bbox) == [int(b) for b in input_bbox]
+    input_bbox = [20, 10, 30, 40]
+    assert model.reduce_bbox_overlap(img, [20, 10, 30, 40]) == [20, 10, 30, 40]
+
+    input_bbox = [20, 10, 30, 40]
+    assert model.reduce_bbox_no_overlap(img, input_bbox) == input_bbox
+
+
+"""
+@pytest.mark.parametrize(
+    ("decoded_str", "expected_classes"),
+    [
+        (
+            "<s><s_Misc> 1</s_Misc><s_Text>There is some text here.</s_Text></s>",
+            ["Misc", "Text"],
+        ),
+        (
+            "<s><s_List><s_List-item>Text here.</s_List-item><s_List><s_List-item>Final one",
+            ["List", "List-item", "List", "List-item"],
+        ),
+    ],
+)
+"""
+
+
+def test_check_overlap():
+    model = get_model("chipper")
+
+    assert model.check_overlap([0, 50, 20, 80], [10, 10, 30, 30]) == (
+        "horizontal",
+        [10, 10, 30, 30],
+        [0, 50, 20, 80],
+        [0, 50, 20, 80],
+        [10, 10, 30, 30],
+        None,
+    )
+
+    assert model.check_overlap([10, 10, 30, 30], [40, 10, 60, 30]) == (
+        "vertical",
+        [40, 10, 60, 30],
+        [10, 10, 30, 30],
+        [10, 10, 30, 30],
+        [40, 10, 60, 30],
+        None,
+    )
+
+    assert model.check_overlap([10, 80, 30, 100], [40, 10, 60, 30]) == (
+        "none",
+        [40, 10, 60, 30],
+        [10, 80, 30, 100],
+        [10, 80, 30, 100],
+        [40, 10, 60, 30],
+        None,
+    )
+
+    assert model.check_overlap([40, 10, 60, 30], [10, 10, 30, 30]) == (
+        "vertical",
+        [10, 10, 30, 30],
+        [40, 10, 60, 30],
+        [10, 10, 30, 30],
+        [40, 10, 60, 30],
+        None,
+    )
