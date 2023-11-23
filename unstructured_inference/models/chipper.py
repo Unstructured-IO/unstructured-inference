@@ -85,14 +85,17 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.tokenizer = self.processor.tokenizer
         self.logits_processor = [
             NoRepeatNGramLogitsProcessor(
-                no_repeat_ngram_size,
-                get_table_token_ids(self.processor),
+                ngram_size=no_repeat_ngram_size,
+                context_length=(no_repeat_ngram_size * 4) + 1,
+                # context_length=100,
+                skip_tokens=get_table_token_ids(self.processor),
             ),
         ]
 
         self.stopping_criteria = [
             NGramRepetitonStoppingCriteria(
-                repetition_window=30,
+                ngram_size=5,
+                context_length=21,
                 skip_tokens=get_table_token_ids(self.processor),
             ),
         ]
@@ -107,7 +110,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     )[0],
                 ),
             )
-
+            """
             self.logits_processor.append(
                 NoRepeatGroupNGramLogitsProcessor(
                     ngram_size=5,
@@ -117,6 +120,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     ),
                 ),
             )
+            """
 
         self.model = VisionEncoderDecoderModel.from_pretrained(
             pre_trained_model_repo,
@@ -235,6 +239,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     and outputs["sequences"][0][-1]
                     != self.processor.tokenizer.eos_token_id
                 ):
+                    print(outputs["sequences"][0])
+                    print("Jump to beam search size == 3")
                     outputs = self.model.generate(
                         encoder_outputs=encoder_outputs,
                         input_ids=self.input_ids,
@@ -525,12 +531,18 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 # Inspired on
 # https://github.com/huggingface/transformers/blob/8e3980a290acc6d2f8ea76dba111b9ef0ef00309/src/transformers/generation/logits_process.py#L706
 class NoRepeatNGramLogitsProcessor(LogitsProcessor):
-    def __init__(self, ngram_size: int, skip_tokens: Optional[Sequence[int]] = None):
+    def __init__(
+        self,
+        ngram_size: int,
+        context_length: int,
+        skip_tokens: Optional[Sequence[int]] = None,
+    ):
         if not isinstance(ngram_size, int) or ngram_size <= 0:
             raise ValueError(
                 f"`ngram_size` has to be a strictly positive integer, but is {ngram_size}",
             )
         self.ngram_size = ngram_size
+        self.context_length = context_length
         self.skip_tokens = skip_tokens
 
     def __call__(
@@ -555,9 +567,12 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         """
         num_batch_hypotheses = scores.shape[0]
         cur_len = input_ids.shape[-1]
+        new_input_ids = input_ids[:, slice(-self.context_length, cur_len)]
+        new_cur_len = new_input_ids.shape[-1]
+
         return _no_repeat_ngram_logits(
-            input_ids,
-            cur_len,
+            input_ids[:, slice(-self.context_length, cur_len)],
+            new_cur_len,
             scores,
             batch_size=num_batch_hypotheses,
             no_repeat_ngram_size=self.ngram_size,
@@ -602,7 +617,7 @@ class NoRepeatGroupNGramLogitsProcessor(LogitsProcessor):
 
         for num_batch in range(num_batch_hypotheses):
             if all(
-                input_ids[num_batch, -len(self.token_group_list) :]
+                input_ids[num_batch, slice(-len(self.token_group_list), cur_len)]
                 == self.token_group_list,
             ):
                 for token_id in self.token_group:
@@ -612,8 +627,9 @@ class NoRepeatGroupNGramLogitsProcessor(LogitsProcessor):
 
 
 class NGramRepetitonStoppingCriteria(StoppingCriteria):
-    def __init__(self, repetition_window: int, skip_tokens: set = set()):
-        self.repetition_window = repetition_window
+    def __init__(self, ngram_size: int, context_length: int, skip_tokens: set = set()):
+        self.ngram_size = ngram_size
+        self.context_length = context_length
         self.skip_tokens = skip_tokens
 
     def __call__(
@@ -644,11 +660,14 @@ class NGramRepetitonStoppingCriteria(StoppingCriteria):
         num_batch_hypotheses = input_ids.shape[0]
         cur_len = input_ids.shape[-1]
 
+        new_input_ids = input_ids[:, slice(-self.context_length, cur_len)]
+        new_cur_len = new_input_ids.shape[-1]
+
         for banned_tokens in _calc_banned_tokens(
-            input_ids,
+            new_input_ids,
             num_batch_hypotheses,
-            self.repetition_window,
-            cur_len,
+            self.ngram_size,
+            new_cur_len,
         ):
             for token in banned_tokens:
                 if token not in self.skip_tokens:
@@ -660,7 +679,7 @@ class NGramRepetitonStoppingCriteria(StoppingCriteria):
 class TargetTokenIdStoppingCriterion(StoppingCriteria):
     def __init__(self, target_token_id):
         super().__init__()
-        print(target_token_id)
+        # print(target_token_id)
         self.target_token_id = target_token_id
 
     def __call__(
@@ -677,7 +696,7 @@ class TargetTokenIdStoppingCriterion(StoppingCriteria):
 
 
 def _no_repeat_ngram_logits(
-    input_ids: torch.LongTensor,
+    input_ids: torch.Tensor,
     cur_len: int,
     logits: torch.FloatTensor,
     batch_size: int = 1,
@@ -695,6 +714,7 @@ def _no_repeat_ngram_logits(
             cur_len,
         )
         for batch_idx in range(batch_size):
+            # print(banned_tokens[batch_idx])
             if skip_tokens is not None:
                 logits[
                     batch_idx,
@@ -711,7 +731,7 @@ def _no_repeat_ngram_logits(
 
 
 def _calc_banned_tokens(
-    prev_input_ids: torch.LongTensor,
+    prev_input_ids: torch.Tensor,
     num_hypos: int,
     no_repeat_ngram_size: int,
     cur_len: int,
