@@ -1,7 +1,9 @@
 import copy
 import os
 import platform
+from collections import Counter
 from contextlib import nullcontext
+from difflib import SequenceMatcher as SM
 from typing import ContextManager, Dict, List, Optional, Sequence, TextIO, Tuple, Union
 
 import cv2
@@ -93,13 +95,13 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         self.stopping_criteria = [
             NGramRepetitonStoppingCriteria(
-                ngram_size=5,
-                context_length=21,
+                ngram_size=30,
+                context_length=61,
                 skip_tokens=get_table_token_ids(self.processor),
             ),
         ]
 
-        # This check is needed to since Chipperv1 does not handle tables
+        # This check is needed to since Chipperv1 does not processes tables
         if self.source == Source.CHIPPER:
             self.stopping_criteria.append(
                 TargetTokenIdStoppingCriterion(
@@ -165,9 +167,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             if k.startswith(start_token_prefix) and v not in self.input_ids
         ]
         self.end_tokens = [
-            v
-            for k, v in self.processor.tokenizer.get_added_vocab().items()
-            if k.startswith("</s_")
+            v for k, v in self.processor.tokenizer.get_added_vocab().items() if k.startswith("</s_")
         ]
         self.tokens_stop = [self.tokenizer.eos_token_id, self.tokenizer.pad_token_id]
 
@@ -181,7 +181,70 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         elements = self.format_table_elements(
             self.postprocess(image, tokens, decoder_cross_attentions),
         )
+
+        elements = self.clean_elements(elements)
+
         return elements
+
+    def clean_elements(cls, elements):
+        elements = cls.remove_empty_table_elements(elements)
+        elements = cls.remove_repeated_picture_elements(elements)
+        elements = cls.remove_repeated_elements(elements)
+        return elements
+
+    @staticmethod
+    def remove_repeated_elements(elements):
+        """
+        Removal of repeated elements. The iou and text similarity has to be large enough.
+        The first occurrence is kept since the following ones might be affected by the
+        logit processors
+        """
+        repeated_elements = []
+
+        for i, e1 in enumerate(elements):
+            if e1 not in repeated_elements:
+                for j in range(i + 1, len(elements)):
+                    e2 = elements[j]
+                    if e1 != e2:
+                        elements_iou = iou(e1, e2)
+                        ratio = SM(None, e1.text, e2.text).ratio()
+                        if elements_iou > 0.75 and ratio > 0.99:
+                            repeated_elements.append(e2)
+
+        elements = [element for element in elements if element not in repeated_elements]
+
+        return elements
+
+    @staticmethod
+    def remove_repeated_picture_elements(elements):
+        """
+        remove empty repeated picture elements
+        """
+        picture_text_to_remove = [
+            k
+            for k, v in Counter(
+                [element.text for element in elements if element.type == "Picture"],
+            ).items()
+            if v > 3
+        ]
+
+        return [
+            element
+            for element in elements
+            if not (element.type == "Picture" and element.text in picture_text_to_remove)
+        ]
+
+    @staticmethod
+    def remove_empty_table_elements(elements):
+        """
+        remove empty tables might be created by Chipper. It relies on running
+        format_table_elements first
+        """
+        return [
+            element
+            for element in elements
+            if not (element.type == "Table" and len(element.text) == 0)
+        ]
 
     @staticmethod
     def format_table_elements(elements):
@@ -206,11 +269,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             amp: Union[TextIO, ContextManager[None]] = (
                 torch.cuda.amp.autocast()
                 if self.device == "cuda"
-                else (
-                    torch.cpu.amp.autocast()
-                    if platform.machine() == "x86_64"
-                    else nullcontext()
-                )
+                else (torch.cpu.amp.autocast() if platform.machine() == "x86_64" else nullcontext())
             )
             with amp:
                 encoder_outputs = self.model.encoder(
@@ -234,11 +293,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                 if (
                     len(outputs["sequences"][0]) < self.max_length
-                    and outputs["sequences"][0][-1]
-                    != self.processor.tokenizer.eos_token_id
+                    and outputs["sequences"][0][-1] != self.processor.tokenizer.eos_token_id
                 ):
-                    print(outputs["sequences"][0])
-                    print("Jump to beam search size == 3")
                     outputs = self.model.generate(
                         encoder_outputs=encoder_outputs,
                         input_ids=self.input_ids,
@@ -246,6 +302,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         do_sample=True,
                         no_repeat_ngram_size=0,
                         num_beams=3,
+                        num_return_sequences=1,
                         return_dict_in_generate=True,
                         output_attentions=True,
                         output_scores=True,
@@ -264,9 +321,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     len(outputs["cross_attentions"][token_id - offset]),
                 ):
                     token_attentions.append(
-                        outputs["cross_attentions"][token_id - offset][
-                            decoder_layer_id
-                        ][outputs["beam_indices"][0][token_id]].unsqueeze(0),
+                        outputs["cross_attentions"][token_id - offset][decoder_layer_id][
+                            outputs["beam_indices"][0][token_id]
+                        ].unsqueeze(0),
                     )
 
                 decoder_cross_attentions.append(token_attentions)
@@ -408,9 +465,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
         """For chipper, remove elements from other sources."""
-        return [
-            el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)
-        ]
+        return [el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)]
 
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
@@ -585,8 +640,8 @@ class NoRepeatGroupNGramLogitsProcessor(LogitsProcessor):
                 f"`ngram_size` has to be a strictly positive integer, but is {ngram_size}",
             )
         self.ngram_size = ngram_size
-        self.token_group = token_group
         self.token_group_list = torch.tensor(token_group * ngram_size)
+        self.token_group = token_group
 
     def __call__(
         self,
@@ -677,7 +732,6 @@ class NGramRepetitonStoppingCriteria(StoppingCriteria):
 class TargetTokenIdStoppingCriterion(StoppingCriteria):
     def __init__(self, target_token_id):
         super().__init__()
-        # print(target_token_id)
         self.target_token_id = target_token_id
 
     def __call__(
@@ -688,8 +742,7 @@ class TargetTokenIdStoppingCriterion(StoppingCriteria):
     ) -> bool:
         # Check if the already generated tokens contain the target token_id
         output = self.target_token_id in input_ids
-        if output:
-            print("Table found")
+
         return output  # self.target_token_id in input_ids
 
 
@@ -712,15 +765,10 @@ def _no_repeat_ngram_logits(
             cur_len,
         )
         for batch_idx in range(batch_size):
-            # print(banned_tokens[batch_idx])
             if skip_tokens is not None:
                 logits[
                     batch_idx,
-                    [
-                        token
-                        for token in banned_tokens[batch_idx]
-                        if int(token) not in skip_tokens
-                    ],
+                    [token for token in banned_tokens[batch_idx] if int(token) not in skip_tokens],
                 ] = -float("inf")
             else:
                 logits[batch_idx, banned_tokens[batch_idx]] = -float("inf")
@@ -738,9 +786,7 @@ def _calc_banned_tokens(
     if cur_len + 1 < no_repeat_ngram_size:
         # return no banned tokens if we haven't generated no_repeat_ngram_size tokens yet
         return [() for _ in range(num_hypos)]
-    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [
-        {} for _ in range(num_hypos)
-    ]
+    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [{} for _ in range(num_hypos)]
     for idx in range(num_hypos):
         gen_tokens = prev_input_ids[idx].tolist()
         generated_ngram = generated_ngrams[idx]
@@ -777,3 +823,21 @@ def get_table_token_ids(processor):
         if token.startswith("<t") or token.startswith("</t")
     }
     return skip_tokens
+
+
+def iou(element1, element2):
+    bbox1 = element1.bbox
+    bbox2 = element2.bbox
+    intersection_area = max(0, min(bbox1.x2, bbox2.x2) - max(bbox1.x1, bbox2.x1)) * max(
+        0,
+        min(bbox1.y2, bbox2.y2) - max(bbox1.y1, bbox2.y1),
+    )
+
+    bbox1_area = (bbox1.x2 - bbox1.x1) * (bbox1.y2 - bbox1.y1)
+    bbox2_area = (bbox2.x2 - bbox2.x1) * (bbox2.y2 - bbox2.y1)
+
+    union_area = (bbox1_area) + (bbox2_area) - intersection_area
+
+    iou = intersection_area / union_area
+
+    return iou
