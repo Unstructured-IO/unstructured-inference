@@ -87,7 +87,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             NoRepeatNGramLogitsProcessor(
                 ngram_size=no_repeat_ngram_size,
                 context_length=(no_repeat_ngram_size * 4) + 1,
-                # context_length=100,
                 skip_tokens=get_table_token_ids(self.processor),
             ),
         ]
@@ -110,7 +109,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     )[0],
                 ),
             )
-            """
+
             self.logits_processor.append(
                 NoRepeatGroupNGramLogitsProcessor(
                     ngram_size=5,
@@ -120,7 +119,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     ),
                 ),
             )
-            """
 
         self.model = VisionEncoderDecoderModel.from_pretrained(
             pre_trained_model_repo,
