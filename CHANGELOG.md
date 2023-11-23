@@ -1,5 +1,20 @@
-## 0.7.13-dev0
+## 0.7.16
 
+* bug: Allow supplied ONNX models to use label_map dictionary from json file
+
+## 0.7.15
+
+* enhancement: Enable env variables for model definition
+
+## 0.7.14
+
+* enhancement: Remove Super-Gradients Dependency and Allow General Onnx Models Instead
+
+## 0.7.13
+
+* refactor: add a class `ElementType` for the element type constants and use the constants to replace element type strings
+* enhancement: support extracting elements with types `Picture` and `Figure`
+* fix: update logger in table initalization where the logger info was not showing
 * chore: supress UserWarning about specified model providers
 
 ## 0.7.12

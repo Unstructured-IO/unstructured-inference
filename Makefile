@@ -19,10 +19,10 @@ install-base: install-base-pip-packages
 
 ## install:                 installs all test, dev, and experimental requirements
 .PHONY: install
-install: install-base-pip-packages install-dev install-sg install-detectron2
+install: install-base-pip-packages install-dev install-detectron2
 
 .PHONY: install-ci
-install-ci: install-base-pip-packages install-test install-sg install-paddleocr
+install-ci: install-base-pip-packages install-test install-paddleocr
 
 .PHONY: install-base-pip-packages
 install-base-pip-packages:
@@ -46,10 +46,6 @@ install-test: install-base
 install-dev: install-test
 	pip install -r requirements/dev.txt
 
-.PHONY: install-sg
-install-sg: install-base
-	pip install -r requirements/sg.txt
-
 ## pip-compile:             compiles all base/dev/test requirements
 .PHONY: pip-compile
 pip-compile:
@@ -60,8 +56,6 @@ pip-compile:
 	sed 's/^detectron2 @/# detectron2 @/g' requirements/base.txt
 	pip-compile --upgrade requirements/test.in
 	pip-compile --upgrade requirements/dev.in
-	pip-compile --upgrade requirements/sg.in
-
 
 #################
 # Test and Lint #
@@ -85,7 +79,7 @@ check: check-src check-tests check-version
 ## check-src:               runs linters (source only, no tests)
 .PHONY: check-src
 check-src:
-	ruff . --line-length 100 --select I,UP015,UP032,UP034,UP018,COM,C4,PT,SIM,PLR0402 --ignore PT011,PT012,SIM117
+	ruff ${PACKAGE_NAME} --line-length 100 --select C4,COM,E,F,I,PLR0402,PT,SIM,UP015,UP018,UP032,UP034 --ignore COM812,PT011,PT012,SIM117
 	black --line-length 100 ${PACKAGE_NAME} --check
 	flake8 ${PACKAGE_NAME}
 	mypy ${PACKAGE_NAME} --ignore-missing-imports
@@ -112,7 +106,7 @@ check-version:
 ## tidy:                    run black
 .PHONY: tidy
 tidy:
-	ruff . --fix --line-length 100 --select I,UP015,UP032,UP034,UP018,COM,C4,PT,SIM,PLR0402 --ignore PT011,PT012,SIM117
+	ruff ${PACKAGE_NAME} --fix --line-length 100 --select C4,COM,E,F,I,PLR0402,PT,SIM,UP015,UP018,UP032,UP034 --ignore COM812,PT011,PT012,SIM117
 	black --line-length 100 ${PACKAGE_NAME}
 	black --line-length 100 test_${PACKAGE_NAME}
 

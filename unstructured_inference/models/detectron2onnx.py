@@ -31,7 +31,7 @@ DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
 
 # NOTE(alan): Entries are implemented as LazyDicts so that models aren't downloaded until they are
 # needed.
-MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
+MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
     "detectron2_onnx": LazyDict(
         model_path=LazyEvaluateInfo(
             hf_hub_download,
@@ -124,7 +124,8 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
 
     def preprocess(self, image: Image.Image) -> Dict[str, np.ndarray]:
         """Process input image into required format for ingestion into the Detectron2 ONNX binary.
-        This involves resizing to a fixed shape and converting to a specific numpy format."""
+        This involves resizing to a fixed shape and converting to a specific numpy format.
+        """
         # TODO (benjamin): check other shapes for inference
         img = np.array(image)
         # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model

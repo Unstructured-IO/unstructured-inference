@@ -1,4 +1,6 @@
-from typing import Dict, Optional
+import json
+import os
+from typing import Dict, Optional, Type
 
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
 from unstructured_inference.models.chipper import UnstructuredChipperModel
@@ -29,8 +31,16 @@ DEFAULT_MODEL = "yolox"
 
 models: Dict[str, UnstructuredModel] = {}
 
+model_class_map: Dict[str, Type[UnstructuredModel]] = {
+    **{name: UnstructuredDetectronModel for name in DETECTRON2_MODEL_TYPES},
+    **{name: UnstructuredDetectronONNXModel for name in DETECTRON2_ONNX_MODEL_TYPES},
+    **{name: UnstructuredYoloXModel for name in YOLOX_MODEL_TYPES},
+    **{name: UnstructuredChipperModel for name in CHIPPER_MODEL_TYPES},
+    "super_gradients": UnstructuredSuperGradients,
+}
 
-def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
+
+def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     """Gets the model object by model name."""
     # TODO(alan): These cases are similar enough that we can probably do them all together with
     # importlib
@@ -38,28 +48,30 @@ def get_model(model_name: Optional[str] = None, **kwargs) -> UnstructuredModel:
     global models
 
     if model_name is None:
-        model_name = DEFAULT_MODEL
+        default_name_from_env = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_NAME")
+        model_name = default_name_from_env if default_name_from_env is not None else DEFAULT_MODEL
 
     if model_name in models:
         return models[model_name]
 
-    if model_name in DETECTRON2_MODEL_TYPES:
-        model: UnstructuredModel = UnstructuredDetectronModel()
-        initialize_params = {**DETECTRON2_MODEL_TYPES[model_name], **kwargs}
-    elif model_name in DETECTRON2_ONNX_MODEL_TYPES:
-        model = UnstructuredDetectronONNXModel()
-        initialize_params = {**DETECTRON2_ONNX_MODEL_TYPES[model_name], **kwargs}
-    elif model_name in YOLOX_MODEL_TYPES:
-        model = UnstructuredYoloXModel()
-        initialize_params = {**YOLOX_MODEL_TYPES[model_name], **kwargs}
-    elif model_name in CHIPPER_MODEL_TYPES:
-        model = UnstructuredChipperModel()
-        initialize_params = {**CHIPPER_MODEL_TYPES[model_name], **kwargs}
-    elif model_name == "super_gradients":
-        model = UnstructuredSuperGradients()
-        initialize_params = {**kwargs}
+    initialize_param_json = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH")
+    if initialize_param_json is not None:
+        with open(initialize_param_json) as fp:
+            initialize_params = json.load(fp)
     else:
-        raise UnknownModelException(f"Unknown model type: {model_name}")
+        if model_name in DETECTRON2_MODEL_TYPES:
+            initialize_params = DETECTRON2_MODEL_TYPES[model_name]
+        elif model_name in DETECTRON2_ONNX_MODEL_TYPES:
+            initialize_params = DETECTRON2_ONNX_MODEL_TYPES[model_name]
+        elif model_name in YOLOX_MODEL_TYPES:
+            initialize_params = YOLOX_MODEL_TYPES[model_name]
+        elif model_name in CHIPPER_MODEL_TYPES:
+            initialize_params = CHIPPER_MODEL_TYPES[model_name]
+        else:
+            raise UnknownModelException(f"Unknown model type: {model_name}")
+
+    model: UnstructuredModel = model_class_map[model_name]()
+
     model.initialize(**initialize_params)
     models[model_name] = model
     return model

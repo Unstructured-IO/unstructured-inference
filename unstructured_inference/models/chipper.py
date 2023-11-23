@@ -25,7 +25,7 @@ from unstructured_inference.models.unstructuredmodel import (
 )
 from unstructured_inference.utils import LazyDict, strip_tags
 
-MODEL_TYPES: Dict[Optional[str], Union[LazyDict, dict]] = {
+MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
     "chipperv1": {
         "pre_trained_model_repo": "unstructuredio/ved-fine-tuning",
         "swap_head": False,
