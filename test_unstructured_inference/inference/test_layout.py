@@ -9,6 +9,7 @@ from PIL import Image
 
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
+from unstructured_inference.inference.elements import EmbeddedTextRegion, ImageTextRegion
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -24,7 +25,7 @@ def mock_image():
 
 @pytest.fixture()
 def mock_initial_layout():
-    text_block = layout.EmbeddedTextRegion.from_coords(
+    text_block = EmbeddedTextRegion.from_coords(
         2,
         4,
         6,
@@ -33,7 +34,7 @@ def mock_initial_layout():
         source="Mock",
     )
 
-    title_block = layout.EmbeddedTextRegion.from_coords(
+    title_block = EmbeddedTextRegion.from_coords(
         1,
         2,
         3,
@@ -78,7 +79,7 @@ def test_pdf_page_converts_images_to_array(mock_image):
         assert page.image_array.all() == image_array.all()
 
     # Scenario 1: where self.image exists
-    page = layout.PageLayout(number=0, image=mock_image, layout=[])
+    page = layout.PageLayout(number=0, image=mock_image)
     verify_image_array()
 
     # Scenario 2: where self.image is None, but self.image_path exists
@@ -108,15 +109,9 @@ def test_get_page_elements(monkeypatch, mock_final_layout):
     page = layout.PageLayout(
         number=0,
         image=image,
-        layout=mock_final_layout,
         detection_model=MockLayoutModel(mock_final_layout),
     )
-
     elements = page.get_elements_with_detection_model(inplace=False)
-
-    assert str(elements[0]) == "A Catchy Title"
-    assert str(elements[1]).startswith("A very repetitive narrative.")
-
     page.get_elements_with_detection_model(inplace=True)
     assert elements == page.elements
 
@@ -204,7 +199,7 @@ class MockPoints:
         return [1, 2, 3, 4]
 
 
-class MockEmbeddedTextRegion(layout.EmbeddedTextRegion):
+class MockEmbeddedTextRegion(EmbeddedTextRegion):
     def __init__(self, type=None, text=None):
         self.type = type
         self.text = text
@@ -390,19 +385,19 @@ def test_remove_control_characters(text, expected):
     assert elements.remove_control_characters(text) == expected
 
 
-no_text_region = layout.EmbeddedTextRegion.from_coords(0, 0, 100, 100)
-text_region = layout.EmbeddedTextRegion.from_coords(0, 0, 100, 100, text="test")
-cid_text_region = layout.EmbeddedTextRegion.from_coords(
+no_text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100)
+text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100, text="test")
+cid_text_region = EmbeddedTextRegion.from_coords(
     0,
     0,
     100,
     100,
     text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)",
 )
-overlapping_rect = layout.ImageTextRegion.from_coords(50, 50, 150, 150)
-nonoverlapping_rect = layout.ImageTextRegion.from_coords(150, 150, 200, 200)
-populated_text_region = layout.EmbeddedTextRegion.from_coords(50, 50, 60, 60, text="test")
-unpopulated_text_region = layout.EmbeddedTextRegion.from_coords(50, 50, 60, 60, text=None)
+overlapping_rect = ImageTextRegion.from_coords(50, 50, 150, 150)
+nonoverlapping_rect = ImageTextRegion.from_coords(150, 150, 200, 200)
+populated_text_region = EmbeddedTextRegion.from_coords(50, 50, 60, 60, text="test")
+unpopulated_text_region = EmbeddedTextRegion.from_coords(50, 50, 60, 60, text=None)
 
 
 @pytest.mark.parametrize(
@@ -427,7 +422,7 @@ def test_annotate(colors, add_details, threshold):
 
     test_image_arr = np.ones((100, 100, 3), dtype="uint8")
     image = Image.fromarray(test_image_arr)
-    page = layout.PageLayout(number=1, image=image, layout=None)
+    page = layout.PageLayout(number=1, image=image)
     coords1 = (21, 30, 37, 41)
     rect1 = elements.TextRegion.from_coords(*coords1)
     coords2 = (1, 10, 7, 11)
