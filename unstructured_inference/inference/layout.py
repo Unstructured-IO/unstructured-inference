@@ -3,32 +3,24 @@ from __future__ import annotations
 import os
 import tempfile
 from pathlib import PurePath
-from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
+from typing import BinaryIO, Collection, List, Optional, Union, cast
 
 import numpy as np
 import pdf2image
 from pdfminer import psparser
-from pdfminer.high_level import extract_pages
 from PIL import Image, ImageSequence
 
-from unstructured_inference.constants import ElementType, Source
+from unstructured_inference.constants import ElementType
 from unstructured_inference.inference.elements import (
-    EmbeddedTextRegion,
-    ImageTextRegion,
     TextRegion,
 )
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
-    merge_inferred_layout_with_extracted_layout,
 )
 from unstructured_inference.inference.ordering import order_layout
-from unstructured_inference.inference.pdf import get_images_from_pdf_element
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.chipper import UnstructuredChipperModel
-from unstructured_inference.models.detectron2onnx import (
-    UnstructuredDetectronONNXModel,
-)
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -137,7 +129,6 @@ class DocumentLayout:
                 number=i,
                 detection_model=detection_model,
                 element_extraction_model=element_extraction_model,
-                layout=None,
                 fixed_layout=fixed_layout,
                 extract_tables=extract_tables,
                 **kwargs,
@@ -237,6 +228,7 @@ class PageLayout:
     def get_elements_from_layout(
         self,
         layout: List[TextRegion],
+        pdf_objects: Optional[List[TextRegion]] = None,
         order_elements: bool = True,
     ) -> List[LayoutElement]:
         """Uses the given Layout to separate the page text into elements, either extracting the
@@ -247,7 +239,7 @@ class PageLayout:
             get_element_from_block(
                 block=e,
                 image=self.image,
-                pdf_objects=self.layout,
+                pdf_objects=pdf_objects,
                 extract_tables=self.extract_tables,
             )
             for e in layout
