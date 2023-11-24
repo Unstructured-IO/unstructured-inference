@@ -1,7 +1,6 @@
 import os
 import os.path
 import tempfile
-from functools import partial
 from unittest.mock import ANY, mock_open, patch
 
 import numpy as np
@@ -9,9 +8,7 @@ import pytest
 from PIL import Image
 
 import unstructured_inference.models.base as models
-from unstructured_inference.constants import Source
 from unstructured_inference.inference import elements, layout, layoutelement
-from unstructured_inference.models import detectron2
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,

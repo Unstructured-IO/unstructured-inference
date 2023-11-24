@@ -214,7 +214,9 @@ class PageLayout:
         # elements, as they are already ordered
         order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
         if order_elements:
-            inferred_layout = order_layout(inferred_layout)
+            inferred_layout = cast(
+                List[LayoutElement], order_layout(layout=cast(List[TextRegion], inferred_layout))
+            )
 
         if self.analysis:
             self.inferred_layout = inferred_layout
