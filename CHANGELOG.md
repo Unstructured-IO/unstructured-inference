@@ -1,3 +1,7 @@
+## 0.7.17-dev0
+
+* refactor: remove all `pdfminer` related code
+
 ## 0.7.16
 
 * bug: Allow supplied ONNX models to use label_map dictionary from json file
