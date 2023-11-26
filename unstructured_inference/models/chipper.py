@@ -861,6 +861,9 @@ def iou(element1, element2):
 
     union_area = (bbox1_area) + (bbox2_area) - intersection_area
 
+    if union_area == 0.0:
+        return 0.0
+
     iou = intersection_area / union_area
 
     return iou
