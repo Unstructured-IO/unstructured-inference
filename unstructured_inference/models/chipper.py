@@ -167,9 +167,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             if k.startswith(start_token_prefix) and v not in self.input_ids
         ]
         self.end_tokens = [
-            v
-            for k, v in self.processor.tokenizer.get_added_vocab().items()
-            if k.startswith("</s_")
+            v for k, v in self.processor.tokenizer.get_added_vocab().items() if k.startswith("</s_")
         ]
         self.tokens_stop = [self.tokenizer.eos_token_id, self.tokenizer.pad_token_id]
 
@@ -236,9 +234,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         return [
             element
             for element in elements
-            if not (
-                element.type == "Picture" and element.text in picture_text_to_remove
-            )
+            if not (element.type == "Picture" and element.text in picture_text_to_remove)
         ]
 
     @staticmethod
@@ -276,11 +272,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             amp: Union[TextIO, ContextManager[None]] = (
                 torch.cuda.amp.autocast()
                 if self.device == "cuda"
-                else (
-                    torch.cpu.amp.autocast()
-                    if platform.machine() == "x86_64"
-                    else nullcontext()
-                )
+                else (torch.cpu.amp.autocast() if platform.machine() == "x86_64" else nullcontext())
             )
             with amp:
                 encoder_outputs = self.model.encoder(
@@ -304,8 +296,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
                 if (
                     len(outputs["sequences"][0]) < self.max_length
-                    and outputs["sequences"][0][-1]
-                    != self.processor.tokenizer.eos_token_id
+                    and outputs["sequences"][0][-1] != self.processor.tokenizer.eos_token_id
                 ):
                     outputs = self.model.generate(
                         encoder_outputs=encoder_outputs,
@@ -333,9 +324,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     len(outputs["cross_attentions"][token_id - offset]),
                 ):
                     token_attentions.append(
-                        outputs["cross_attentions"][token_id - offset][
-                            decoder_layer_id
-                        ][outputs["beam_indices"][0][token_id]].unsqueeze(0),
+                        outputs["cross_attentions"][token_id - offset][decoder_layer_id][
+                            outputs["beam_indices"][0][token_id]
+                        ].unsqueeze(0),
                     )
 
                 decoder_cross_attentions.append(token_attentions)
@@ -477,9 +468,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
         """For chipper, remove elements from other sources."""
-        return [
-            el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)
-        ]
+        return [el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)]
 
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
@@ -784,11 +773,7 @@ def _no_repeat_ngram_logits(
             if skip_tokens is not None:
                 logits[
                     batch_idx,
-                    [
-                        token
-                        for token in banned_tokens[batch_idx]
-                        if int(token) not in skip_tokens
-                    ],
+                    [token for token in banned_tokens[batch_idx] if int(token) not in skip_tokens],
                 ] = -float("inf")
             else:
                 logits[batch_idx, banned_tokens[batch_idx]] = -float("inf")
@@ -806,9 +791,7 @@ def _calc_banned_tokens(
     if cur_len + 1 < no_repeat_ngram_size:
         # return no banned tokens if we haven't generated no_repeat_ngram_size tokens yet
         return [() for _ in range(num_hypos)]
-    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [
-        {} for _ in range(num_hypos)
-    ]
+    generated_ngrams: List[Dict[Tuple[int, ...], List[int]]] = [{} for _ in range(num_hypos)]
     for idx in range(num_hypos):
         gen_tokens = prev_input_ids[idx].tolist()
         generated_ngram = generated_ngrams[idx]
@@ -853,6 +836,10 @@ def iou(element1, element2):
     """
     bbox1 = element1.bbox
     bbox2 = element2.bbox
+
+    if element1.bbox is None or element2.bbox is None:
+        return 0.0
+
     intersection_area = max(0, min(bbox1.x2, bbox2.x2) - max(bbox1.x1, bbox2.x1)) * max(
         0,
         min(bbox1.y2, bbox2.y2) - max(bbox1.y1, bbox2.y1),
