@@ -544,8 +544,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             cv2.RETR_EXTERNAL,
             cv2.CHAIN_APPROX_SIMPLE,
         )
-        contours = contours[0] if len(contours) == 2 else contours[1]
-        bboxes = [cv2.boundingRect(ctr) for ctr in contours]
+        contours_selection = contours[0] if len(contours) == 2 else contours[1]
+        bboxes = [cv2.boundingRect(ctr) for ctr in contours_selection]
         # return box with max area
         x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])
 
