@@ -182,8 +182,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             self.postprocess(image, tokens, decoder_cross_attentions),
         )
 
-        elements = self.clean_elements(elements)
-
         return elements
 
     def clean_elements(cls, elements):
@@ -456,6 +454,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             element.bbox = Rectangle(*bbox_coords)
 
             self.update_parent_bbox(element)
+
+        elements = self.clean_elements(elements)
 
         return elements
 
