@@ -599,7 +599,11 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """
         input_bbox = [int(b) for b in input_bbox]
 
-        if input_bbox[2] * input_bbox[3] <= 0:
+        if (
+            (input_bbox[2] * input_bbox[3] <= 0)
+            or (input_bbox[2] < input_bbox[0])
+            or (input_bbox[3] < input_bbox[1])
+        ):
             return input_bbox
 
         nimage = np.array(image.crop(input_bbox))
@@ -644,7 +648,11 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """
         input_bbox = [int(b) for b in input_bbox]
 
-        if input_bbox[2] * input_bbox[3] <= 0:
+        if (
+            (input_bbox[2] * input_bbox[3] <= 0)
+            or (input_bbox[2] < input_bbox[0])
+            or (input_bbox[3] < input_bbox[1])
+        ):
             return input_bbox
 
         nimage = np.array(image.crop(input_bbox))
@@ -744,7 +752,11 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """
         Find the largest region with no text
         """
-        if int(input_bbox[2]) * int(input_bbox[3]) <= 0:
+        if (
+            (input_bbox[2] * input_bbox[3] <= 0)
+            or (input_bbox[2] < input_bbox[0])
+            or (input_bbox[3] < input_bbox[1])
+        ):
             return None
 
         nimage = np.array(image.crop(input_bbox))
