@@ -210,14 +210,6 @@ class PageLayout:
             inferred_layout,
         )
 
-        # If the model is a chipper model, we don't want to order the
-        # elements, as they are already ordered
-        order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
-        if order_elements:
-            inferred_layout = cast(
-                List[LayoutElement], order_layout(layout=cast(List[TextRegion], inferred_layout))
-            )
-
         if self.analysis:
             self.inferred_layout = inferred_layout
 
@@ -231,12 +223,16 @@ class PageLayout:
         self,
         layout: List[TextRegion],
         pdf_objects: Optional[List[TextRegion]] = None,
-        order_elements: bool = True,
     ) -> List[LayoutElement]:
         """Uses the given Layout to separate the page text into elements, either extracting the
         text from the discovered layout blocks."""
+
+        # If the model is a chipper model, we don't want to order the
+        # elements, as they are already ordered
+        order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
         if order_elements:
             layout = order_layout(layout)
+
         elements = [
             get_element_from_block(
                 block=e,
