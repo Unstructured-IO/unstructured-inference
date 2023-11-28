@@ -23,7 +23,6 @@ def run(f_path, scope):
     doc = process_file_with_model(
         f_path,
         model_name=None,
-        analysis=True,
     )
 
     for idx, page in enumerate(doc.pages):

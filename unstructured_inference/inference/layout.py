@@ -150,7 +150,6 @@ class PageLayout:
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         extract_tables: bool = False,
-        analysis: bool = False,
     ):
         if detection_model is not None and element_extraction_model is not None:
             raise ValueError("Only one of detection_model and extraction_model should be passed.")
@@ -166,11 +165,9 @@ class PageLayout:
         self.element_extraction_model = element_extraction_model
         self.elements: Collection[LayoutElement] = []
         self.extract_tables = extract_tables
-        self.analysis = analysis
         # NOTE(alan): Dropped LocationlessLayoutElement that was created for chipper - chipper has
         # locations now and if we need to support LayoutElements without bounding boxes we can make
         # the bbox property optional
-        self.inferred_layout: Optional[List[LayoutElement]] = None
 
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
@@ -209,9 +206,6 @@ class PageLayout:
         inferred_layout = self.detection_model.deduplicate_detected_elements(
             inferred_layout,
         )
-
-        if self.analysis:
-            self.inferred_layout = inferred_layout
 
         if inplace:
             self.elements = inferred_layout
@@ -366,7 +360,6 @@ class PageLayout:
         fixed_layout: Optional[List[TextRegion]] = None,
         extract_images_in_pdf: bool = False,
         image_output_dir_path: Optional[str] = None,
-        analysis: bool = False,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
 
@@ -376,7 +369,6 @@ class PageLayout:
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
             extract_tables=extract_tables,
-            analysis=analysis,
         )
         if page.element_extraction_model is not None:
             page.get_elements_using_image_extraction()
