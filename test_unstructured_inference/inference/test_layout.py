@@ -214,15 +214,16 @@ class MockPageLayout(layout.PageLayout):
         self,
         number=1,
         image=None,
-        layout=None,
         model=None,
         extract_tables=False,
+        detection_model=None,
     ):
         self.image = image
         self.layout = layout
         self.model = model
         self.extract_tables = extract_tables
         self.number = number
+        self.detection_model = detection_model
 
 
 @pytest.mark.parametrize(
@@ -334,7 +335,7 @@ def test_from_image_file_raises_isadirectoryerror_with_dir():
 
 @pytest.mark.parametrize("idx", range(2))
 def test_get_elements_from_layout(mock_initial_layout, idx):
-    page = MockPageLayout(layout=mock_initial_layout)
+    page = MockPageLayout()
     block = mock_initial_layout[idx]
     block.bbox.pad(3)
     fixed_layout = [block]
