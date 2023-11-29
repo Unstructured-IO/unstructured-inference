@@ -7,7 +7,6 @@ from typing import BinaryIO, Collection, List, Optional, Union, cast
 
 import numpy as np
 import pdf2image
-from pdfminer import psparser
 from PIL import Image, ImageSequence
 
 from unstructured_inference.constants import ElementType
