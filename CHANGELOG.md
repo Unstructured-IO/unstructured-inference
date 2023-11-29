@@ -1,3 +1,7 @@
+## 0.7.16-dev1
+
+* enhancement: improved Chipper bounding boxes
+
 ## 0.7.16
 
 * bug: Allow supplied ONNX models to use label_map dictionary from json file

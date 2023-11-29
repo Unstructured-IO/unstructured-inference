@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import torch
 import transformers
+from cv2.typing import MatLike
 from huggingface_hub import hf_hub_download
 from PIL.Image import Image
 from transformers import DonutProcessor, VisionEncoderDecoderModel
@@ -78,7 +79,10 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.heatmap_h = heatmap_h
         self.heatmap_w = heatmap_w
         self.source = source
-        self.processor = DonutProcessor.from_pretrained(pre_trained_model_repo, token=auth_token)
+        self.processor = DonutProcessor.from_pretrained(
+            pre_trained_model_repo,
+            token=auth_token,
+        )
         self.tokenizer = self.processor.tokenizer
         self.logits_processor = [
             NoRepeatNGramLogitsProcessor(
@@ -97,7 +101,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.model = VisionEncoderDecoderModel.from_pretrained(
             pre_trained_model_repo,
             ignore_mismatched_sizes=True,
-            use_auth_token=auth_token,
+            token=auth_token,
         )
         if swap_head:
             lm_head_file = hf_hub_download(
@@ -107,9 +111,17 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             )
             rank = swap_head_hidden_layer_size
             self.model.decoder.lm_head = torch.nn.Sequential(
-                torch.nn.Linear(self.model.decoder.lm_head.weight.shape[1], rank, bias=False),
+                torch.nn.Linear(
+                    self.model.decoder.lm_head.weight.shape[1],
+                    rank,
+                    bias=False,
+                ),
                 torch.nn.Linear(rank, rank, bias=False),
-                torch.nn.Linear(rank, self.model.decoder.lm_head.weight.shape[0], bias=True),
+                torch.nn.Linear(
+                    rank,
+                    self.model.decoder.lm_head.weight.shape[0],
+                    bias=True,
+                ),
             )
             self.model.decoder.lm_head.load_state_dict(torch.load(lm_head_file))
         else:
@@ -166,6 +178,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
     ) -> Tuple[List[int], Sequence[Sequence[torch.Tensor]]]:
         """Predict tokens from image."""
         transformers.set_seed(42)
+
         with torch.no_grad():
             amp: Union[TextIO, ContextManager[None]] = (
                 torch.cuda.amp.autocast()
@@ -209,24 +222,31 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         output_hidden_states=False,
                     )
 
-        if "beam_indices" in outputs:
-            offset = len(outputs["beam_indices"][0]) - len(outputs["cross_attentions"])
+        offset = len(self.input_ids)
 
+        if "beam_indices" in outputs:
             decoder_cross_attentions = [[torch.Tensor(0)]] * offset
 
             for token_id in range(0, len(outputs["beam_indices"][0])):
+                if outputs["beam_indices"][0][token_id] == -1:
+                    break
+
                 token_attentions = []
 
-                for decoder_layer_id in range(len(outputs["cross_attentions"][token_id - offset])):
+                for decoder_layer_id in range(
+                    len(outputs["cross_attentions"][token_id]),
+                ):
                     token_attentions.append(
-                        outputs["cross_attentions"][token_id - offset][decoder_layer_id][
+                        outputs["cross_attentions"][token_id][decoder_layer_id][
                             outputs["beam_indices"][0][token_id]
                         ].unsqueeze(0),
                     )
 
                 decoder_cross_attentions.append(token_attentions)
         else:
-            decoder_cross_attentions = outputs["cross_attentions"]
+            decoder_cross_attentions = [[torch.Tensor(0)]] * offset + list(
+                outputs["cross_attentions"],
+            )
 
         tokens = outputs["sequences"][0]
 
@@ -300,7 +320,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     element.text = string
                     bbox_coords = self.get_bounding_box(
                         decoder_cross_attentions=decoder_cross_attentions,
-                        tkn_indexes=list(range(start - 1, end)),
+                        tkn_indexes=list(range(start, end + 1)),
                         final_w=self.processor.image_processor.size["width"],
                         final_h=self.processor.image_processor.size["height"],
                         heatmap_w=self.heatmap_w,
@@ -336,7 +356,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
             bbox_coords = self.get_bounding_box(
                 decoder_cross_attentions=decoder_cross_attentions,
-                tkn_indexes=list(range(start - 1, end)),
+                tkn_indexes=list(range(start, end + 1)),
                 final_w=self.processor.image_processor.size["width"],
                 final_h=self.processor.image_processor.size["height"],
                 heatmap_w=self.heatmap_w,
@@ -354,6 +374,13 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             element.bbox = Rectangle(*bbox_coords)
 
             self.update_parent_bbox(element)
+
+        # Reduce bounding boxes
+        for element in elements:
+            self.reduce_element_bbox(image, elements, element)
+
+        # Solve overlaps
+        self.resolve_bbox_overlaps(image, elements)
 
         return elements
 
@@ -394,15 +421,19 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 
         for tidx in tkn_indexes:
             hmaps = torch.stack(list(decoder_cross_attentions[tidx]), dim=0)
-            # shape [4, 1, 16, 1, 1200]->[4, 16, 1200]
+            # shape [4, 1, 16, 1, 1200] -> [1, 4, 16, 1200]
             hmaps = hmaps.permute(1, 3, 0, 2, 4).squeeze(0)
+            # shape [4, 1, 16, 1, 1200]->[4, 16, 1200]
             hmaps = hmaps[-1]
             # change shape [4, 16, 1200]->[4, 16, 40, 30] assuming (heatmap_h, heatmap_w) = (40, 30)
             hmaps = hmaps.view(4, 16, heatmap_h, heatmap_w)
-            # fusing 16 decoder attention heads i.e. [4, 16, 40, 30]-> [16, 40, 30]
+            hmaps = torch.where(hmaps > 0.65, hmaps, 0.0)
+            # fusing 16 decoder attention heads i.e. [4, 16, 40, 30]-> [4, 40, 30]
             hmaps = torch.max(hmaps, dim=1)[0]
-            # fusing 4 decoder layers from BART i.e. [16, 40, 30]-> [40, 30]
+            # hmaps = torch.mean(hmaps, dim=1)
+            # fusing 4 decoder layers from BART i.e. [4, 40, 30]-> [4, 40, 30]
             hmap = torch.max(hmaps, dim=0)[0]
+            # hmap = torch.mean(hmaps, dim=0)
 
             # dropping discard ratio activations
             flat = hmap.view(heatmap_h * heatmap_w)
@@ -416,26 +447,492 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             # (40, 30, 1) uint8
             # fuse heatmaps for different tokens by taking the max
             agg_heatmap = np.max(
-                np.asarray([agg_heatmap, cv2.resize(hmap, (final_w, final_h))]),
+                np.asarray(
+                    [
+                        agg_heatmap,
+                        cv2.resize(
+                            hmap,
+                            (final_w, final_h),
+                            interpolation=cv2.INTER_LINEAR_EXACT,  # cv2.INTER_CUBIC
+                        ),
+                    ],
+                ),
                 axis=0,
             ).astype(np.uint8)
 
         # threshold to remove small attention pockets
-        thres_heatmap = cv2.threshold(agg_heatmap, 200, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        thres_heatmap = cv2.threshold(
+            agg_heatmap,
+            200,
+            255,
+            cv2.THRESH_BINARY + cv2.THRESH_OTSU,
+        )[1]
 
-        kernel = np.ones((1, 50), np.uint8)
-        thres_heatmap = cv2.dilate(thres_heatmap, kernel, iterations=1)
+        # kernel = np.ones((1, 20), np.uint8)
+        # thres_heatmap = cv2.dilate(thres_heatmap, kernel, iterations=2)
+
+        """
         kernel = np.ones((5, 1), np.uint8)
         thres_heatmap = cv2.erode(thres_heatmap, kernel, iterations=1)
-
+        """
         # Find contours
-        contour_groups = cv2.findContours(thres_heatmap, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours = contour_groups[0] if len(contour_groups) == 2 else contour_groups[1]
-        bboxes = [cv2.boundingRect(ctr) for ctr in contours]
-        # return box with max area
-        x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])
+        contours = cv2.findContours(
+            thres_heatmap,
+            cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_SIMPLE,
+        )
+        contours_selection = contours[0] if len(contours) == 2 else contours[1]
 
-        return [x, y, x + w, y + h]
+        bboxes = [cv2.boundingRect(ctr) for ctr in contours_selection]
+
+        if len(bboxes) > 1:
+            kernel = np.ones((1, 50), np.uint8)
+            thres_heatmap = cv2.dilate(thres_heatmap, kernel, iterations=1)
+
+            contours = cv2.findContours(
+                thres_heatmap,
+                cv2.RETR_EXTERNAL,
+                cv2.CHAIN_APPROX_SIMPLE,
+            )
+            contours_selection = contours[0] if len(contours) == 2 else contours[1]
+
+            bboxes = [cv2.boundingRect(ctr) for ctr in contours_selection]
+
+        try:
+            # return box with max area
+            x, y, w, h = max(bboxes, key=lambda box: box[2] * box[3])
+
+            return [x, y, x + w, y + h]
+        except ValueError:
+            return [0, 0, 1, 1]
+
+    def reduce_element_bbox(
+        self,
+        image: Image,
+        elements: List[LayoutElement],
+        element: LayoutElement,
+    ):
+        """
+        Given a LayoutElement element, reduce the size of the bounding box,
+        depending on existing elements
+        """
+        bbox = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
+
+        if not self.element_overlap(elements, element):
+            element.bbox = Rectangle(*self.reduce_bbox_no_overlap(image, bbox))
+        else:
+            element.bbox = Rectangle(*self.reduce_bbox_overlap(image, bbox))
+
+    def bbox_overlap(
+        self,
+        bboxa: List[float],
+        bboxb: List[float],
+    ) -> bool:
+        """
+        Check if bounding boxes bboxa and bboxb overlap
+        """
+        x1_a, y1_a, x2_a, y2_a = bboxa
+        x1_b, y1_b, x2_b, y2_b = bboxb
+
+        return bool(x1_a <= x2_b and x1_b <= x2_a and y1_a <= y2_b and y1_b <= y2_a)
+
+    def element_overlap(
+        self,
+        elements: List[LayoutElement],
+        element: LayoutElement,
+    ) -> bool:
+        """
+        Check if an element overlaps with existing elements
+        """
+        bboxb = [
+            element.bbox.x1,
+            element.bbox.y1,
+            element.bbox.x2,
+            max(element.bbox.y1, element.bbox.y2),
+        ]
+
+        for check_element in elements:
+            if check_element == element:
+                continue
+
+            if self.bbox_overlap(
+                [
+                    check_element.bbox.x1,
+                    check_element.bbox.y1,
+                    check_element.bbox.x2,
+                    max(check_element.bbox.y1, check_element.bbox.y2),
+                ],
+                bboxb,
+            ):
+                return True
+
+        return False
+
+    def remove_horizontal_lines(
+        self,
+        img_dst: MatLike,
+    ) -> MatLike:
+        """
+        Remove horizontal lines in an image
+        """
+        gray_dst = cv2.cvtColor(img_dst, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray_dst, 50, 150, apertureSize=5)
+        horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 1))
+
+        # Using morph open to get lines inside the drawing
+        opening = cv2.morphologyEx(edges, cv2.MORPH_OPEN, horizontal_kernel)
+        cnts = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts_selection = cnts[0] if len(cnts) == 2 else cnts[1]
+        mask = np.zeros(gray_dst.shape, np.uint8)
+        for c in cnts_selection:
+            cv2.drawContours(mask, [c], -1, (255, 255, 255), 6)
+
+        return cv2.inpaint(img_dst, mask, 3, cv2.INPAINT_TELEA)
+
+    def reduce_bbox_no_overlap(
+        self,
+        image: Image,
+        input_bbox: List[float],
+    ) -> List[float]:
+        """
+        If an element does not overlap with other elements, remove any empty space around it
+        """
+        input_bbox = [int(b) for b in input_bbox]
+
+        if (
+            (input_bbox[2] * input_bbox[3] <= 0)
+            or (input_bbox[2] < input_bbox[0])
+            or (input_bbox[3] < input_bbox[1])
+        ):
+            return input_bbox
+
+        nimage = np.array(image.crop(input_bbox))
+
+        nimage = self.remove_horizontal_lines(nimage)
+
+        # Convert the image to grayscale
+        gray = cv2.bitwise_not(cv2.cvtColor(nimage, cv2.COLOR_BGR2GRAY))
+
+        # Apply Canny edge detection
+        edges = cv2.Canny(gray, 50, 150)
+
+        # Find the contours in the edge image
+        contours, _ = cv2.findContours(
+            edges,
+            cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_SIMPLE,
+        )
+
+        try:
+            largest_contour = np.vstack(contours)
+            x, y, w, h = cv2.boundingRect(largest_contour)
+
+        except ValueError:
+            return input_bbox
+
+        return [
+            input_bbox[0] + x,
+            input_bbox[1] + y,
+            input_bbox[0] + x + w,
+            input_bbox[1] + y + h,
+        ]
+
+    def reduce_bbox_overlap(
+        self,
+        image: Image,
+        input_bbox: List[float],
+    ) -> List[float]:
+        """
+        If an element does overlap with other elements, reduce bouding box by selecting the largest
+        bbox after blurring existing text
+        """
+        input_bbox = [int(b) for b in input_bbox]
+
+        if (
+            (input_bbox[2] * input_bbox[3] <= 0)
+            or (input_bbox[2] < input_bbox[0])
+            or (input_bbox[3] < input_bbox[1])
+        ):
+            return input_bbox
+
+        nimage = np.array(image.crop(input_bbox))
+
+        nimage = self.remove_horizontal_lines(nimage)
+
+        center_h = nimage.shape[0] / 2
+        center_w = nimage.shape[1] / 2
+
+        gray = cv2.bitwise_not(cv2.cvtColor(nimage, cv2.COLOR_BGR2GRAY))
+        edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+
+        nim = cv2.threshold(edges, 1, 255, cv2.THRESH_BINARY)[1]
+        binary_mask = cv2.threshold(nim, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+
+        if center_h > center_w:
+            kernel = np.ones((1, 80), np.uint8)
+            binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
+
+            kernel = np.ones((40, 1), np.uint8)
+            binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
+        else:
+            # kernel = np.ones((8, 1), np.uint8)
+            # binary_mask = cv2.erode(binary_mask, kernel, iterations=1)
+
+            kernel = np.ones((1, 80), np.uint8)
+            binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
+
+            kernel = np.ones((30, 1), np.uint8)
+            binary_mask = cv2.dilate(binary_mask, kernel, iterations=1)
+
+        contours = cv2.findContours(
+            binary_mask,
+            cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_NONE,
+        )
+
+        contours_selection = contours[0] if len(contours) == 2 else contours[1]
+
+        bboxes = [cv2.boundingRect(ctr) for ctr in contours_selection]
+
+        nbboxes = [
+            bbox
+            for bbox in bboxes
+            if bbox[2] * bbox[3] > 1
+            and (bbox[0] < center_w and bbox[0] + bbox[2] > center_w)
+            and (bbox[1] < center_h and bbox[1] + bbox[3] > center_h)
+        ]
+
+        if len(nbboxes) == 0:
+            nbboxes = [bbox for bbox in bboxes if bbox[2] * bbox[3] > 1]
+
+        if len(nbboxes) == 0:
+            return input_bbox
+
+        x, y, w, h = max(nbboxes, key=lambda box: box[2] * box[3])
+
+        return [
+            input_bbox[0] + x,
+            input_bbox[1] + y,
+            input_bbox[0] + x + w,
+            input_bbox[1] + y + h,
+        ]
+
+    def separation_margins(
+        self,
+        mapping: MatLike,
+    ) -> Optional[List[Tuple[int, int, int]]]:
+        """
+        Find intervals with no content
+        """
+        current_start = None
+
+        margins = []
+
+        for i, value in enumerate(mapping):
+            if value[0] == 0:
+                if current_start is None:
+                    current_start = i
+            else:
+                if current_start is not None:
+                    if current_start > 0:
+                        margins.append((current_start, i, i - current_start))
+                    current_start = None
+
+        if current_start is not None:
+            margins.append((current_start, i, i - current_start))
+
+        return margins
+
+    def largest_margin(
+        self,
+        image: Image,
+        input_bbox: Tuple[float, float, float, float],
+        transpose: bool = False,
+    ) -> Optional[Tuple[int, int, int]]:
+        """
+        Find the largest region with no text
+        """
+        if (
+            (input_bbox[2] * input_bbox[3] <= 0)
+            or (input_bbox[2] < input_bbox[0])
+            or (input_bbox[3] < input_bbox[1])
+        ):
+            return None
+
+        nimage = np.array(image.crop(input_bbox))
+
+        if nimage.shape[0] * nimage.shape[1] == 0:
+            return None
+
+        if transpose:
+            nimage = np.swapaxes(nimage, 0, 1)
+
+        nimage = self.remove_horizontal_lines(nimage)
+
+        gray = cv2.bitwise_not(cv2.cvtColor(nimage, cv2.COLOR_BGR2GRAY))
+
+        edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+
+        mapping = cv2.reduce(edges, 1, cv2.REDUCE_MAX)
+
+        margins = self.separation_margins(mapping)
+
+        if margins is None or len(margins) == 0:
+            return None
+
+        largest_margin = sorted(margins, key=lambda x: x[2], reverse=True)[0]
+
+        return largest_margin
+
+    def check_overlap(
+        self,
+        box1: List[float],
+        box2: List[float],
+    ) -> Tuple[
+        str,
+        List[float],
+        List[float],
+        List[float],
+        List[float],
+        Optional[Tuple[float, float, float, float]],
+    ]:
+        """
+        Check the overlap between two bounding boxes, return properties of the overlap and
+        the bbox of the overlapped region
+        """
+        # Get the coordinates of the two boxes
+        x1, y1, x11, y11 = box1
+        x2, y2, x21, y21 = box2
+
+        w1 = x11 - x1
+        h1 = y11 - y1
+        w2 = x21 - x2
+        h2 = y21 - y2
+
+        # Check for horizontal overlap
+        horizontal_overlap = bool(x1 <= x2 + w2 and x1 + w1 >= x2)
+
+        # Check for vertical overlap
+        vertical_overlap = bool(y1 <= y2 + h2 and y1 + h1 >= y2)
+
+        # Check for both horizontal and vertical overlap
+        if horizontal_overlap and vertical_overlap:
+            overlap_type = "both"
+            intersection_x1 = max(x1, x2)
+            intersection_y1 = max(y1, y2)
+            intersection_x2 = min(x1 + w1, x2 + w2)
+            intersection_y2 = min(y1 + h1, y2 + h2)
+            overlapping_bbox = (
+                intersection_x1,
+                intersection_y1,
+                intersection_x2,
+                intersection_y2,
+            )
+        elif horizontal_overlap and not vertical_overlap:
+            overlap_type = "horizontal"
+            overlapping_bbox = None
+        elif not horizontal_overlap and vertical_overlap:
+            overlap_type = "vertical"
+            overlapping_bbox = None
+        else:
+            overlap_type = "none"
+            overlapping_bbox = None
+
+        # Check which box is on top and/or left
+        if y1 < y2:
+            top_box = box1
+            bottom_box = box2
+        else:
+            top_box = box2
+            bottom_box = box1
+
+        if x1 < x2:
+            left_box = box1
+            right_box = box2
+        else:
+            left_box = box2
+            right_box = box1
+
+        return overlap_type, top_box, bottom_box, left_box, right_box, overlapping_bbox
+
+    def resolve_bbox_overlaps(
+        self,
+        image: Image,
+        elements: List[LayoutElement],
+    ):
+        """
+        Resolve overlapping bounding boxes
+        """
+        for element in elements:
+            if element.parent is not None:
+                continue
+
+            ebbox1 = element.bbox
+            bbox1 = [ebbox1.x1, ebbox1.y1, ebbox1.x2, max(ebbox1.y1, ebbox1.y2)]
+
+            for celement in elements:
+                if element == celement or celement.parent is not None:
+                    continue
+
+                ebbox2 = celement.bbox
+                bbox2 = [ebbox2.x1, ebbox2.y1, ebbox2.x2, max(ebbox2.y1, ebbox2.y2)]
+
+                if self.bbox_overlap(bbox1, bbox2):
+                    check = self.check_overlap(bbox1, bbox2)
+
+                    # For resolution, we should be sure that the overlap in the other dimension
+                    # is large
+                    if (
+                        check[-1]
+                        and check[-1][0] > 0
+                        # and (check[0] == "vertical" or check[0] == "both")
+                        and (bbox1[2] - bbox1[0]) / check[-1][0] > 0.9
+                        and (bbox2[2] - bbox2[0]) / check[-1][0] > 0.9
+                    ):
+                        margin = self.largest_margin(image, check[-1])
+
+                        if margin:
+                            # Check with box is on top
+                            if bbox1 == check[1]:
+                                bbox1[3] -= margin[0]
+                                bbox2[1] += margin[1]
+                            else:
+                                bbox2[3] -= margin[0]
+                                bbox1[1] += margin[1]
+
+                            element.bbox = Rectangle(*bbox1)
+                            celement.bbox = Rectangle(*bbox2)
+
+                        check = self.check_overlap(bbox1, bbox2)
+
+                        # We need to identify cases with horizontal alignment after
+                        # vertical resolution. This is commented out for now.
+                        """
+                        # For resolution, we should be sure that the overlap in the other dimension
+                        # is large
+                        if (
+                            check[-1]
+                            and check[-1][0] > 0
+                            and (bbox1[3] - bbox1[1]) / check[-1][1] > 0.9
+                            and (bbox2[3] - bbox2[1]) / check[-1][1] > 0.9
+                        ):
+                            margin = self.largest_margin(
+                                image,
+                                check[-1],
+                                transpose=True,
+                            )
+                            if margin:
+                                # Check with box is on top
+                                if bbox1 == check[3]:
+                                    bbox1[2] -= margin[0]
+                                    bbox2[0] += margin[1]
+                                else:
+                                    bbox2[2] -= margin[0]
+                                    bbox1[0] += margin[1]
+
+                                element.bbox = Rectangle(*bbox1)
+                                celement.bbox = Rectangle(*bbox2)
+                        """
 
     def image_padding(self, input_size, target_size):
         """
@@ -481,7 +978,11 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         self.ngram_size = ngram_size
         self.skip_tokens = skip_tokens
 
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
+    def __call__(
+        self,
+        input_ids: torch.LongTensor,
+        scores: torch.FloatTensor,
+    ) -> torch.FloatTensor:
         """
         Args:
             input_ids (`torch.LongTensor` of shape `(batch_size, sequence_length)`):
@@ -514,7 +1015,12 @@ class NGramRepetitonStoppingCriteria(StoppingCriteria):
         self.repetition_window = repetition_window
         self.skip_tokens = skip_tokens
 
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+    def __call__(
+        self,
+        input_ids: torch.LongTensor,
+        scores: torch.FloatTensor,
+        **kwargs,
+    ) -> bool:
         """
         Args:
             input_ids (`torch.LongTensor` of shape `(batch_size, sequence_length)`):
@@ -562,7 +1068,12 @@ def _no_repeat_ngram_logits(
         # calculate a list of banned tokens to prevent repetitively generating the same ngrams
         # from fairseq:
         # https://github.com/pytorch/fairseq/blob/a07cb6f40480928c9e0548b737aadd36ee66ac76/fairseq/sequence_generator.py#L345
-        banned_tokens = _calc_banned_tokens(input_ids, batch_size, no_repeat_ngram_size, cur_len)
+        banned_tokens = _calc_banned_tokens(
+            input_ids,
+            batch_size,
+            no_repeat_ngram_size,
+            cur_len,
+        )
         for batch_idx in range(batch_size):
             if skip_tokens is not None:
                 logits[
@@ -591,7 +1102,10 @@ def _calc_banned_tokens(
         generated_ngram = generated_ngrams[idx]
         for ngram in zip(*[gen_tokens[i:] for i in range(no_repeat_ngram_size)]):
             prev_ngram_tuple = tuple(ngram[:-1])
-            generated_ngram[prev_ngram_tuple] = generated_ngram.get(prev_ngram_tuple, []) + [
+            generated_ngram[prev_ngram_tuple] = generated_ngram.get(
+                prev_ngram_tuple,
+                [],
+            ) + [
                 ngram[-1],
             ]
 
