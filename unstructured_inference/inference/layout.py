@@ -25,15 +25,8 @@ from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
 )
-from unstructured_inference.patches.pdfminer import parse_keyword
 from unstructured_inference.utils import write_image
 from unstructured_inference.visualize import draw_bbox
-
-# NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
-# the bug: https://github.com/pdfminer/pdfminer.six/pull/885
-psparser.PSBaseParser._parse_keyword = parse_keyword  # type: ignore
-
-import pdfplumber  # noqa
 
 
 class DocumentLayout:
