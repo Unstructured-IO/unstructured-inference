@@ -1,6 +1,7 @@
-## 0.7.17-dev0
+## 0.7.17-dev1
 
 * refactor: remove all `pdfminer` related code
+* enhancement: improved Chipper bounding boxes
 
 ## 0.7.16
 
