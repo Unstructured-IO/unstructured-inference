@@ -1,6 +1,7 @@
-## 0.7.16-dev
+## 0.7.16-dev2
 
 * Revised repetitions for Chipper
+* enhancement: improved Chipper bounding boxes
 
 ## 0.7.16
 
