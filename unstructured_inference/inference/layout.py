@@ -23,7 +23,6 @@ from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
 )
-from unstructured_inference.utils import write_image
 from unstructured_inference.visualize import draw_bbox
 
 
