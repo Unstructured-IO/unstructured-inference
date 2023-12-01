@@ -1,3 +1,0 @@
-unstructured-inference
-pymupdf
-pypdf2
