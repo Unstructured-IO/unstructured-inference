@@ -9,7 +9,6 @@ import numpy as np
 import pdf2image
 from PIL import Image, ImageSequence
 
-from unstructured_inference.constants import ElementType
 from unstructured_inference.inference.elements import (
     TextRegion,
 )
@@ -230,34 +229,6 @@ class PageLayout:
         ]
         return elements
 
-    def extract_images(self, output_dir_path: Optional[str] = None):
-        """
-        Extract and save images from the page. This method iterates through the layout elements
-        of the page, identifies image regions, and extracts and saves them as separate image files.
-        """
-
-        if not output_dir_path:
-            output_dir_path = os.path.join(os.getcwd(), "figures")
-        os.makedirs(output_dir_path, exist_ok=True)
-
-        figure_number = 0
-        image_element_types = [ElementType.IMAGE, ElementType.PICTURE, ElementType.FIGURE]
-        for el in self.elements:
-            if (el.bbox is None) or (el.type not in image_element_types):
-                continue
-
-            figure_number += 1
-            try:
-                output_f_path = os.path.join(
-                    output_dir_path,
-                    f"figure-{self.number}-{figure_number}.jpg",
-                )
-                cropped_image = self.image.crop((el.bbox.x1, el.bbox.y1, el.bbox.x2, el.bbox.y2))
-                write_image(cropped_image, output_f_path)
-                el.image_path = output_f_path
-            except (ValueError, IOError):
-                logger.warning("Image Extraction Error: Skipping the failed image", exc_info=True)
-
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
         if self.image_array is None:
@@ -350,8 +321,6 @@ class PageLayout:
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
-        extract_images_in_pdf: bool = False,
-        image_output_dir_path: Optional[str] = None,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
 
@@ -377,9 +346,6 @@ class PageLayout:
         }
         page.image_path = os.path.abspath(image_path) if image_path else None
         page.document_filename = os.path.abspath(document_filename) if document_filename else None
-
-        if extract_images_in_pdf:
-            page.extract_images(image_output_dir_path)
 
         # Clear the image to save memory
         page.image = None
@@ -413,8 +379,6 @@ def process_file_with_model(
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     extract_tables: bool = False,
     pdf_image_dpi: int = 200,
-    extract_images_in_pdf: bool = False,
-    image_output_dir_path: Optional[str] = None,
     **kwargs,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
@@ -445,8 +409,6 @@ def process_file_with_model(
             fixed_layouts=fixed_layouts,
             extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
-            extract_images_in_pdf=extract_images_in_pdf,
-            image_output_dir_path=image_output_dir_path,
             **kwargs,
         )
     )
