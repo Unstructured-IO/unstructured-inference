@@ -38,7 +38,6 @@ def run(f_path, file_type):
             is_image=is_image,
             model_name=None,
             supplement_with_ocr_elements=action,
-            analysis=True,
         )
 
         annotate_layout_elements(doc, annotation_data_map, output_dir_path, f_basename, AnnotationResult.IMAGE)

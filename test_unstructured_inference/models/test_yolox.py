@@ -83,8 +83,6 @@ def test_layout_yolox_local_parsing_image_soft():
 def test_layout_yolox_local_parsing_pdf_soft():
     filename = os.path.join("sample-docs", "loremipsum.pdf")
     document_layout = process_file_with_model(filename, model_name="yolox_tiny")
-    content = str(document_layout)
-    assert "libero fringilla" in content
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) Soft version of the test, run make test-long in order to run with full model
     assert len(document_layout.pages[0].elements) > 0
@@ -92,9 +90,6 @@ def test_layout_yolox_local_parsing_pdf_soft():
         document_layout.pages[0].elements[0],
         "prob",
     )  # NOTE(pravin) New Assertion to Make Sure LayoutElement has probabilities
-    assert (
-        document_layout.pages[0].elements[0].prob is None
-    )  # NOTE(pravin) New Assertion to Make Sure Uncategorized Text has None Probability
 
 
 def test_layout_yolox_local_parsing_empty_pdf_soft():

@@ -4,8 +4,15 @@ from unittest.mock import PropertyMock, patch
 
 import pytest
 
+from unstructured_inference.constants import ElementType
 from unstructured_inference.inference import elements
-from unstructured_inference.inference.layoutelement import partition_groups_from_regions, separate
+from unstructured_inference.inference.elements import TextRegion
+from unstructured_inference.inference.layoutelement import (
+    partition_groups_from_regions,
+    separate,
+    merge_inferred_layout_with_extracted_layout,
+    LayoutElement,
+)
 
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
@@ -228,3 +235,25 @@ def test_separate(rect1, rect2):
     separate(rect1, rect2)
 
     # assert not rect1.intersects(rect2) #TODO: fix this test
+
+
+def test_merge_inferred_layout_with_extracted_layout():
+    inferred_layout = [
+        LayoutElement.from_coords(453, 322, 1258, 408, text=None, type=ElementType.SECTION_HEADER),
+        LayoutElement.from_coords(387, 477, 1320, 537, text=None, type=ElementType.TEXT),
+    ]
+
+    extracted_layout = [
+        TextRegion.from_coords(438, 318, 1272, 407, text="Example Section Header"),
+        TextRegion.from_coords(377, 469, 1335, 535, text="Example Title"),
+    ]
+
+    merged_layout = merge_inferred_layout_with_extracted_layout(
+        inferred_layout=inferred_layout,
+        extracted_layout=extracted_layout,
+        page_image_size=(1700, 2200),
+    )
+    assert merged_layout[0].type == ElementType.SECTION_HEADER
+    assert merged_layout[0].text == "Example Section Header"
+    assert merged_layout[1].type == ElementType.TEXT
+    assert merged_layout[1].text == "Example Title"
