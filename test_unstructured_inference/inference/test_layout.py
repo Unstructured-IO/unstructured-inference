@@ -1,7 +1,7 @@
 import os
 import os.path
 import tempfile
-from unittest.mock import ANY, mock_open, patch
+from unittest.mock import mock_open, patch
 
 import numpy as np
 import pytest
