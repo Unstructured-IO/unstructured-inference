@@ -1,4 +1,4 @@
-## 0.7.18-dev0
+## 0.7.18
 
 * refactor: remove all image extraction related code
 
