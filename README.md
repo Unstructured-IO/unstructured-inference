@@ -43,7 +43,7 @@ to `paddle` if you wish to use paddle for table processing instead of default `t
 PaddleOCR may be with installed with:
 
 ```shell
-pip install paddepaddle
+pip install paddlepaddle
 pip install "unstructured.PaddleOCR"
 ```
 
