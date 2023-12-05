@@ -1,3 +1,7 @@
+## 0.7.18
+
+* refactor: remove all image extraction related code
+
 ## 0.7.17
 
 * refactor: remove all `pdfminer` related code
