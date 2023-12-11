@@ -38,5 +38,8 @@ class ElementType:
 
 FULL_PAGE_REGION_THRESHOLD = 0.99
 
+# 2 ** 31 - 1
+TESSERACT_MAX_SIZE = 2147483647
+
 # this field is defined by pytesseract/unstructured.pytesseract
 TESSERACT_TEXT_HEIGHT = "height"

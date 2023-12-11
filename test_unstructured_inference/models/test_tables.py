@@ -714,3 +714,11 @@ def test_padded_results_has_right_dimensions(table_transformer, example_image):
         x1, y1, x2, y2 = obj["bbox"]
         assert max(x1, x2) < width + pad
         assert max(y1, y2) < height + pad
+
+
+def test_auto_zoom_not_exceed_tesseract_limit(monkeypatch, example_image):
+    monkeypatch.setenv("TESSERACT_MIN_TEXT_HEIGHT", "10000")
+    monkeypatch.setenv("TESSERACT_OPTIMUM_TEXT_HEIGHT", "100000")
+    model = tables.UnstructuredTableTransformerModel()
+    model.initialize("microsoft/table-transformer-structure-recognition")
+    assert model.get_tokens(example_image)

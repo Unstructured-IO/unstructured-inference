@@ -16,6 +16,7 @@ from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.constants import (
+    TESSERACT_MAX_SIZE,
     TESSERACT_TEXT_HEIGHT,
 )
 from unstructured_inference.inference.layoutelement import table_cells_to_dataframe
@@ -118,9 +119,13 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
                 text_height < inference_config.TESSERACT_MIN_TEXT_HEIGHT
                 or text_height > inference_config.TESSERACT_MAX_TEXT_HEIGHT
             ):
+                max_zoom = max(0, np.round(np.sqrt(TESSERACT_MAX_SIZE / np.prod(x.size) / 32), 1))
                 # rounding avoids unnecessary precision and potential numerical issues assocaited
                 # with numbers very close to 1 inside cv2 image processing
-                zoom = np.round(inference_config.TESSERACT_OPTIMUM_TEXT_HEIGHT / text_height, 1)
+                zoom = min(
+                    np.round(inference_config.TESSERACT_OPTIMUM_TEXT_HEIGHT / text_height, 1),
+                    max_zoom,
+                )
                 ocr_df = pytesseract.image_to_data(
                     zoom_image(x, zoom),
                     output_type="data.frame",
