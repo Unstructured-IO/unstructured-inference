@@ -1,3 +1,7 @@
+## 0.7.19-dev0
+
+* fix: fix a bug where an image may be scaled beyond the limit for tesseract to process
+
 ## 0.7.18
 
 * refactor: remove all image extraction related code
