@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -344,7 +343,7 @@ def test_align_rows(rows, bbox, output):
     assert postprocess.align_rows(rows, bbox) == output
 
 
-def test_table_prediction_tesseract(table_transformer, example_image):
+def test_table_prediction(table_transformer, example_image):
     prediction = table_transformer.predict(example_image)
     # assert rows spans two rows are detected
     assert '<table><thead><th rowspan="2">' in prediction
@@ -392,7 +391,6 @@ def test_table_prediction_output_format(
         "get_structure",
         return_value=None,
     )
-    mocker.patch.object(tables.UnstructuredTableTransformerModel, "get_tokens", return_value=None)
     if output_format:
         result = table_transformer.run_prediction(example_image, result_format=output_format)
     else:
@@ -409,7 +407,7 @@ def test_table_prediction_output_format(
         assert expectation in result
 
 
-def test_table_prediction_tesseract_with_ocr_tokens(table_transformer, example_image):
+def test_table_prediction_with_ocr_tokens(table_transformer, example_image):
     ocr_tokens = [
         {
             # bounding box should match table structure
@@ -422,27 +420,6 @@ def test_table_prediction_tesseract_with_ocr_tokens(table_transformer, example_i
     ]
     prediction = table_transformer.predict(example_image, ocr_tokens=ocr_tokens)
     assert prediction == "<table><tr><td>Blind</td></tr></table>"
-
-
-@pytest.mark.skipif(skip_outside_ci, reason="Skipping paddle test run outside of CI")
-def test_table_prediction_paddle(monkeypatch, example_image):
-    monkeypatch.setenv("TABLE_OCR", "paddle")
-    table_model = tables.UnstructuredTableTransformerModel()
-
-    table_model.initialize(model="microsoft/table-transformer-structure-recognition")
-    prediction = table_model.predict(example_image)
-    # Note(yuming): lossen paddle table prediction output test since performance issue
-    # and results are different in different platforms (i.e., gpu vs cpu)
-    assert len(prediction)
-
-
-def test_table_prediction_invalid_table_ocr(monkeypatch, example_image):
-    monkeypatch.setenv("TABLE_OCR", "invalid_table_ocr")
-    with pytest.raises(ValueError):
-        table_model = tables.UnstructuredTableTransformerModel()
-
-        table_model.initialize(model="microsoft/table-transformer-structure-recognition")
-        _ = table_model.predict(example_image)
 
 
 def test_intersect():
@@ -651,21 +628,6 @@ def test_cells_to_html():
         "cols</td></tr><tr><td></td><td>sub cell 1</td><td>sub cell 2</td></tr></table>"
     )
     assert tables.cells_to_html(cells) == expected
-
-
-def test_auto_zoom(mocker):
-    spy = mocker.spy(tables, "zoom_image")
-    model = tables.UnstructuredTableTransformerModel()
-    model.initialize("microsoft/table-transformer-structure-recognition")
-    image = Image.open(
-        Path(os.path.dirname(os.path.abspath(__file__)))
-        / ".."
-        / ".."
-        / "sample-docs"
-        / "layout-parser-paper-fast.jpg",
-    )
-    model.get_tokens(image)
-    assert spy.call_count == 1
 
 
 @pytest.mark.parametrize("zoom", [1, 0.1, 5, -1, 0])
