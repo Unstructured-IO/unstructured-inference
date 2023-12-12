@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Collection, Optional, Union
 
 import numpy as np
-from PIL import Image
 
 from unstructured_inference.constants import Source
 from unstructured_inference.math import safe_division
@@ -180,8 +179,6 @@ class TextRegion:
     def extract_text(
         self,
         objects: Optional[Collection[TextRegion]],
-        image: Optional[Image.Image] = None,
-        extract_tables: bool = False,
     ) -> str:
         """Extracts text contained in region."""
         if self.text is not None:
@@ -215,8 +212,6 @@ class EmbeddedTextRegion(TextRegion):
     def extract_text(
         self,
         objects: Optional[Collection[TextRegion]],
-        image: Optional[Image.Image] = None,
-        extract_tables: bool = False,
     ) -> str:
         """Extracts text contained in region."""
         if self.text is None:
@@ -229,14 +224,12 @@ class ImageTextRegion(TextRegion):
     def extract_text(
         self,
         objects: Optional[Collection[TextRegion]],
-        image: Optional[Image.Image] = None,
-        extract_tables: bool = False,
     ) -> str:
         """Extracts text contained in region."""
         if self.text is None:
             return ""
         else:
-            return super().extract_text(objects, extract_tables)
+            return super().extract_text(objects)
 
 
 def aggregate_by_block(
