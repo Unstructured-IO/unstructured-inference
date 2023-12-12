@@ -1,4 +1,4 @@
-## 0.7.19-dev0
+## 0.7.19
 
 * fix: fix a bug where an image may be scaled beyond the limit for tesseract to process
 
