@@ -22,7 +22,7 @@ install-base: install-base-pip-packages
 install: install-base-pip-packages install-dev install-detectron2
 
 .PHONY: install-ci
-install-ci: install-base-pip-packages install-test install-paddleocr
+install-ci: install-base-pip-packages install-test
 
 .PHONY: install-base-pip-packages
 install-base-pip-packages:
@@ -31,12 +31,6 @@ install-base-pip-packages:
 .PHONY: install-detectron2
 install-detectron2:
 	pip install "detectron2@git+https://github.com/facebookresearch/detectron2.git@57bdb21249d5418c130d54e2ebdc94dda7a4c01a"
-
-.PHONY: install-paddleocr
-install-paddleocr:
-	pip install --no-cache-dir paddlepaddle
-	pip install --no-cache-dir paddlepaddle-gpu
-	pip install --no-cache-dir "unstructured.PaddleOCR"
 
 .PHONY: install-test
 install-test: install-base
