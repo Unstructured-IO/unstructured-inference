@@ -26,6 +26,20 @@ def example_image():
     return Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
 
 
+@pytest.fixture()
+def mocked_ocr_tokens():
+    return [
+        {
+            # bounding box should match table structure
+            "bbox": [70.0, 245.0, 127.0, 266.0],
+            "block_num": 0,
+            "line_num": 0,
+            "span_num": 0,
+            "text": "Blind",
+        },
+    ]
+
+
 @pytest.mark.parametrize(
     "model_path",
     [
@@ -367,6 +381,7 @@ def test_table_prediction_output_format(
     example_image,
     mocker,
     example_table_cells,
+    mocked_ocr_tokens,
 ):
     mocker.patch.object(tables, "recognize", return_value=example_table_cells)
     mocker.patch.object(
@@ -375,9 +390,11 @@ def test_table_prediction_output_format(
         return_value=None,
     )
     if output_format:
-        result = table_transformer.run_prediction(example_image, result_format=output_format)
+        result = table_transformer.run_prediction(
+            example_image, result_format=output_format, ocr_tokens=mocked_ocr_tokens
+        )
     else:
-        result = table_transformer.run_prediction(example_image)
+        result = table_transformer.run_prediction(example_image, ocr_tokens=mocked_ocr_tokens)
 
     if output_format == "dataframe":
         assert expectation in result.values
@@ -390,18 +407,8 @@ def test_table_prediction_output_format(
         assert expectation in result
 
 
-def test_table_prediction_with_ocr_tokens(table_transformer, example_image):
-    ocr_tokens = [
-        {
-            # bounding box should match table structure
-            "bbox": [70.0, 245.0, 127.0, 266.0],
-            "block_num": 0,
-            "line_num": 0,
-            "span_num": 0,
-            "text": "Blind",
-        },
-    ]
-    prediction = table_transformer.predict(example_image, ocr_tokens=ocr_tokens)
+def test_table_prediction_with_ocr_tokens(table_transformer, example_image, mocked_ocr_tokens):
+    prediction = table_transformer.predict(example_image, ocr_tokens=mocked_ocr_tokens)
     assert prediction == "<table><tr><td>Blind</td></tr></table>"
 
 
