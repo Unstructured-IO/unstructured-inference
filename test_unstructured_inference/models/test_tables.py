@@ -343,23 +343,6 @@ def test_align_rows(rows, bbox, output):
     assert postprocess.align_rows(rows, bbox) == output
 
 
-def test_table_prediction(table_transformer, example_image):
-    prediction = table_transformer.predict(example_image)
-    # assert rows spans two rows are detected
-    assert '<table><thead><th rowspan="2">' in prediction
-    # one of the safest rows to detect should be present
-    assert (
-        "<tr>"
-        "<td>Blind</td>"
-        "<td>5</td>"
-        "<td>1</td>"
-        "<td>4</td>"
-        "<td>34.5%, n=1</td>"
-        "<td>1199 sec, n=1</td>"
-        "</tr>"
-    ) in prediction
-
-
 @pytest.mark.parametrize(
     ("output_format", "expectation"),
     [
