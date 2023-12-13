@@ -16,9 +16,12 @@ skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
 @pytest.fixture()
 def table_transformer():
-    table_model = tables.UnstructuredTableTransformerModel()
-    table_model.initialize(model="microsoft/table-transformer-structure-recognition")
-    return table_model
+    tables.load_agent()
+    return tables.tables_agent
+
+
+def test_load_agent(table_transformer):
+    assert hasattr(table_transformer, "model")
 
 
 @pytest.fixture()
