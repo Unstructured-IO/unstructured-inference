@@ -95,7 +95,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         """Predict table structure"""
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
         if ocr_tokens is None:
-            raise ValueError("Cannot predict table structure with no OCR tokens")
+            logger.warning("Received None OCR tokens for table structure")
         prediction = recognize(outputs_structure, x, tokens=ocr_tokens)[0]
         if result_format == "html":
             # Convert cells to HTML
