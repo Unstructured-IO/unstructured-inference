@@ -411,6 +411,9 @@ def test_table_prediction_with_ocr_tokens(table_transformer, example_image, mock
     prediction = table_transformer.predict(example_image, ocr_tokens=mocked_ocr_tokens)
     assert prediction == "<table><tr><td>Blind</td></tr></table>"
 
+def test_table_prediction_with_no_ocr_tokens(table_transformer, example_image):
+    with pytest.raises(ValueError):
+        table_transformer.predict(example_image)
 
 def test_intersect():
     a = postprocess.Rect()
