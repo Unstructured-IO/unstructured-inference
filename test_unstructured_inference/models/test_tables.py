@@ -567,6 +567,18 @@ def test_load_table_model_raises_when_not_available(model_path):
 
 
 @pytest.mark.parametrize(
+    "bbox1, bbox2, expected_result",
+    [
+        ((0, 0, 5, 5), (2, 2, 7, 7), 0.36),
+        ((0, 0, 0, 0), (6, 6, 10, 10), 0),
+    ],
+)
+def test_iob(bbox1, bbox2, expected_result):
+    result = tables.iob(bbox1, bbox2)
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
     "model_path",
     [
         "microsoft/table-transformer-structure-recognition",
@@ -1185,3 +1197,19 @@ def test_padded_results_has_right_dimensions(table_transformer, example_image):
         x1, y1, x2, y2 = obj["bbox"]
         assert max(x1, x2) < width + pad
         assert max(y1, y2) < height + pad
+
+
+def test_zero_division_error_handling(monkeypatch, mocked_ocr_tokens):
+    # add test coverage for except ZeroDivisionError in structure_to_cells
+    table_structure = {"columns": [], "rows": [], "spanning cells":[]}
+    def mock_slot_into_containers(*args, **kwargs):
+        return None, None, []
+
+    monkeypatch.setattr(
+        postprocess,
+        "slot_into_containers",
+        mock_slot_into_containers,
+    )
+
+    with pytest.raises(TypeError):
+        tables.structure_to_cells(table_structure, mocked_ocr_tokens)
