@@ -1201,7 +1201,8 @@ def test_padded_results_has_right_dimensions(table_transformer, example_image):
 
 def test_zero_division_error_handling(monkeypatch, mocked_ocr_tokens):
     # add test coverage for except ZeroDivisionError in structure_to_cells
-    table_structure = {"columns": [], "rows": [], "spanning cells":[]}
+    table_structure = {"columns": [], "rows": [], "spanning cells": []}
+
     def mock_slot_into_containers(*args, **kwargs):
         return None, None, []
 
