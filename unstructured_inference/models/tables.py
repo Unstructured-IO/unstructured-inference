@@ -406,6 +406,10 @@ def align_headers(headers, rows):
 
 
 def compute_confidence_score(cell_match_scores):
+    """
+    Compute a confidence score based on how well the page tokens
+    slot into the cells reported by the model
+    """
     try:
         mean_match_score = sum(cell_match_scores) / len(cell_match_scores)
         min_match_score = min(cell_match_scores)
@@ -492,8 +496,6 @@ def structure_to_cells(table_structure, tokens):
             }
             cells.append(cell)
 
-    # Compute a confidence score based on how well the page tokens
-    # slot into the cells reported by the model
     _, _, cell_match_scores = postprocess.slot_into_containers(cells, tokens)
     confidence_score = compute_confidence_score(cell_match_scores)
 
