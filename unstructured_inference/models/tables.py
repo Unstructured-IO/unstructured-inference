@@ -405,6 +405,16 @@ def align_headers(headers, rows):
     return aligned_headers
 
 
+def compute_confidence_score(cell_match_scores):
+    try:
+        mean_match_score = sum(cell_match_scores) / len(cell_match_scores)
+        min_match_score = min(cell_match_scores)
+        confidence_score = (mean_match_score + min_match_score) / 2
+    except ZeroDivisionError:
+        confidence_score = 0
+    return confidence_score
+
+
 def structure_to_cells(table_structure, tokens):
     """
     Assuming the row, column, spanning cell, and header bounding boxes have
@@ -485,12 +495,7 @@ def structure_to_cells(table_structure, tokens):
     # Compute a confidence score based on how well the page tokens
     # slot into the cells reported by the model
     _, _, cell_match_scores = postprocess.slot_into_containers(cells, tokens)
-    try:
-        mean_match_score = sum(cell_match_scores) / len(cell_match_scores)
-        min_match_score = min(cell_match_scores)
-        confidence_score = (mean_match_score + min_match_score) / 2
-    except ZeroDivisionError:
-        confidence_score = 0
+    confidence_score = compute_confidence_score(cell_match_scores)
 
     # Dilate rows and columns before final extraction
     # dilated_columns = fill_column_gaps(columns, table_bbox)

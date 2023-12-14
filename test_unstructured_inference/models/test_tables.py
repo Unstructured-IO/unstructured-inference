@@ -1199,18 +1199,5 @@ def test_padded_results_has_right_dimensions(table_transformer, example_image):
         assert max(y1, y2) < height + pad
 
 
-def test_zero_division_error_handling(monkeypatch, mocked_ocr_tokens):
-    # add test coverage for except ZeroDivisionError in structure_to_cells
-    table_structure = {"columns": [], "rows": [], "spanning cells": []}
-
-    def mock_slot_into_containers(*args, **kwargs):
-        return None, None, []
-
-    monkeypatch.setattr(
-        postprocess,
-        "slot_into_containers",
-        mock_slot_into_containers,
-    )
-
-    with pytest.raises(TypeError):
-        tables.structure_to_cells(table_structure, mocked_ocr_tokens)
+def test_compute_confidence_score_zero_division_error_handling():
+    assert tables.compute_confidence_score([]) == 0
