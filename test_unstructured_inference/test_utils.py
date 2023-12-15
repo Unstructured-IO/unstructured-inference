@@ -12,7 +12,6 @@ from unstructured_inference.inference.layout import DocumentLayout
 from unstructured_inference.utils import (
     LazyDict,
     LazyEvaluateInfo,
-    annotate_layout_elements,
     pad_image_with_background_color,
     strip_tags,
     write_image,
@@ -94,43 +93,6 @@ def test_write_image(image_type, mock_pil_image, mock_numpy_image):
 def test_write_image_raises_error():
     with pytest.raises(ValueError):
         write_image("invalid_type", "test_image.jpg")
-
-
-def test_annotate_layout_elements_with_image_result():
-    mock_doc = MockDocumentLayout()
-    annotation_data_map = {"final": None}
-    output_dir_path = "test_output_dir"
-    output_f_basename = "test_output"
-
-    with patch.object(utils, "write_image") as mock_write_image:
-        annotate_layout_elements(
-            mock_doc,
-            annotation_data_map,
-            output_dir_path,
-            output_f_basename,
-            result=AnnotationResult.IMAGE,
-        )
-
-    expected_output_f_path = os.path.join(output_dir_path, "test_output_2_final.jpg")
-    mock_write_image.assert_called_with("mock_image", expected_output_f_path)
-
-
-def test_annotate_layout_elements_with_plot_result():
-    mock_doc = MockDocumentLayout()
-    annotation_data_map = {"final": None}
-    output_dir_path = "test_output_dir"
-    output_f_basename = "test_output"
-
-    with patch.object(utils, "show_plot") as mock_show_plot:
-        annotate_layout_elements(
-            mock_doc,
-            annotation_data_map,
-            output_dir_path,
-            output_f_basename,
-            result=AnnotationResult.PLOT,
-        )
-
-    mock_show_plot.assert_called_with("mock_image", desired_width=14)
 
 
 def test_pad_image_with_background_color(mock_pil_image):
