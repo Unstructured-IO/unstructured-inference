@@ -55,30 +55,6 @@ class LazyDict(Mapping):
         return len(self._raw_dict)
 
 
-def write_image(image: Union[Image.Image, np.ndarray], output_image_path: str):
-    """
-    Write an image to a specified file path, supporting both PIL Image and numpy ndarray formats.
-
-    Parameters:
-    - image (Union[Image.Image, np.ndarray]): The image to be written, which can be in PIL Image
-      format or a numpy ndarray format.
-    - output_image_path (str): The path to which the image will be written.
-
-    Raises:
-    - ValueError: If the provided image type is neither PIL Image nor numpy ndarray.
-
-    Returns:
-    - None: The function writes the image to the specified path but does not return any value.
-    """
-
-    if isinstance(image, Image.Image):
-        image.save(output_image_path)
-    elif isinstance(image, np.ndarray):
-        cv2.imwrite(output_image_path, image)
-    else:
-        raise ValueError("Unsupported Image Type")
-
-
 def tag(elements: Iterable[LayoutElement]):
     """Asign an numeric id to the elements in the list.
     Useful for debugging"""

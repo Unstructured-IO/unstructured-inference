@@ -72,29 +72,6 @@ def test_caches(cache, expected):
     assert called == expected
 
 
-@pytest.mark.parametrize("image_type", ["pil", "numpy_array"])
-def test_write_image(image_type, mock_pil_image, mock_numpy_image):
-    image_map = {
-        "pil": mock_pil_image,
-        "numpy_array": mock_numpy_image,
-    }
-    image = image_map[image_type]
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        output_image_path = os.path.join(tmpdir, "test_image.jpg")
-        write_image(image, output_image_path)
-        assert os.path.exists(output_image_path)
-
-        # Additional check to see if the written image can be read
-        read_image = Image.open(output_image_path)
-        assert read_image is not None
-
-
-def test_write_image_raises_error():
-    with pytest.raises(ValueError):
-        write_image("invalid_type", "test_image.jpg")
-
-
 def test_pad_image_with_background_color(mock_pil_image):
     pad = 10
     height, width = mock_pil_image.size
