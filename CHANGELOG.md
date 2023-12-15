@@ -1,3 +1,7 @@
+## 0.7.19
+
+* refactor: remove all OCR related code
+
 ## 0.7.18
 
 * refactor: remove all image extraction related code
