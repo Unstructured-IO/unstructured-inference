@@ -29,15 +29,6 @@ class InferenceConfig:
         return default_value
 
     @property
-    def TABLE_IMAGE_CROP_PAD(self) -> int:
-        """extra image content to add around an identified table region; measured in pixels
-
-        The padding adds image data around an identified table bounding box for downstream table
-        structure detection model use as input
-        """
-        return self._get_int("TABLE_IMAGE_CROP_PAD", 12)
-
-    @property
     def TABLE_IMAGE_BACKGROUND_PAD(self) -> int:
         """number of pixels to pad around an table image with a white background color
 
@@ -45,34 +36,6 @@ class InferenceConfig:
         background around the image
         """
         return self._get_int("TABLE_IMAGE_BACKGROUND_PAD", 20)
-
-    @property
-    def TESSERACT_MIN_TEXT_HEIGHT(self) -> int:
-        """minimum text height acceptable from tesseract OCR results
-
-        if estimated text height from tesseract OCR results is lower than this value the image is
-        scaled up to be processed again
-        """
-        return self._get_int("TESSERACT_MIN_TEXT_HEIGHT", 12)
-
-    @property
-    def TESSERACT_MAX_TEXT_HEIGHT(self) -> int:
-        """maximum text height acceptable from tesseract OCR results
-
-        if estimated text height from tesseract OCR results is higher than this value the image is
-        scaled down to be processed again
-        """
-        return self._get_int("TESSERACT_MAX_TEXT_HEIGHT", 100)
-
-    @property
-    def TESSERACT_OPTIMUM_TEXT_HEIGHT(self) -> int:
-        """optimum text height for tesseract OCR"""
-        return self._get_int("TESSERACT_OPTIMUM_TEXT_HEIGHT", 20)
-
-    @property
-    def TESSERACT_TEXT_HEIGHT_QUANTILE(self) -> float:
-        """the quantile to check for text height"""
-        return self._get_float("TESSERACT_TEXT_HEIGHT_QUANTILE", 0.5)
 
     @property
     def TT_TABLE_CONF(self) -> float:
