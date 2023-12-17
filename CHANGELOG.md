@@ -1,3 +1,7 @@
+## 0.7.19-dev
+
+* chipper-v3: improved table prediction
+
 ## 0.7.18
 
 * refactor: remove all image extraction related code
