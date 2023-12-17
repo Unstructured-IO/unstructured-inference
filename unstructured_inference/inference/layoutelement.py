@@ -94,7 +94,9 @@ def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
     if tables.tables_agent is None:
         raise RuntimeError("Unable to load table extraction agent.")
     padded_block = text_block.bbox.pad(inference_config.TABLE_IMAGE_CROP_PAD)
-    cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
+    cropped_image = image.crop(
+        (padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2)
+    )
     return tables.tables_agent.predict(cropped_image)
 
 
@@ -126,7 +128,11 @@ def merge_inferred_layout_with_extracted_layout(
                 continue
         region_matched = False
         for inferred_region in inferred_layout:
-            if inferred_region.source in (Source.CHIPPER, Source.CHIPPERV1):
+            if inferred_region.source in (
+                Source.CHIPPER,
+                Source.CHIPPERV1,
+                Source.CHIPPERV3,
+            ):
                 continue
 
             if inferred_region.bbox.intersects(extracted_region.bbox):
@@ -135,9 +141,11 @@ def merge_inferred_layout_with_extracted_layout(
                     extracted_region.bbox,
                     same_region_threshold,
                 )
-                inferred_is_subregion_of_extracted = inferred_region.bbox.is_almost_subregion_of(
-                    extracted_region.bbox,
-                    subregion_threshold=subregion_threshold,
+                inferred_is_subregion_of_extracted = (
+                    inferred_region.bbox.is_almost_subregion_of(
+                        extracted_region.bbox,
+                        subregion_threshold=subregion_threshold,
+                    )
                 )
                 inferred_is_text = inferred_region.type not in (
                     ElementType.FIGURE,
@@ -145,12 +153,15 @@ def merge_inferred_layout_with_extracted_layout(
                     ElementType.PAGE_BREAK,
                     ElementType.TABLE,
                 )
-                extracted_is_subregion_of_inferred = extracted_region.bbox.is_almost_subregion_of(
-                    inferred_region.bbox,
-                    subregion_threshold=subregion_threshold,
+                extracted_is_subregion_of_inferred = (
+                    extracted_region.bbox.is_almost_subregion_of(
+                        inferred_region.bbox,
+                        subregion_threshold=subregion_threshold,
+                    )
                 )
                 either_region_is_subregion_of_other = (
-                    inferred_is_subregion_of_extracted or extracted_is_subregion_of_inferred
+                    inferred_is_subregion_of_extracted
+                    or extracted_is_subregion_of_inferred
                 )
                 if same_bbox:
                     # Looks like these represent the same region
@@ -159,7 +170,9 @@ def merge_inferred_layout_with_extracted_layout(
                         inferred_regions_to_remove.append(inferred_region)
                     else:
                         # keep inferred region, remove extracted region
-                        grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
+                        grow_region_to_match_region(
+                            inferred_region.bbox, extracted_region.bbox
+                        )
                         inferred_region.text = extracted_region.text
                         region_matched = True
                 elif extracted_is_subregion_of_inferred and inferred_is_text:
@@ -168,7 +181,9 @@ def merge_inferred_layout_with_extracted_layout(
                         region_matched = False
                     else:
                         # keep inferred region, remove extracted region
-                        grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
+                        grow_region_to_match_region(
+                            inferred_region.bbox, extracted_region.bbox
+                        )
                         region_matched = True
                 elif (
                     either_region_is_subregion_of_other
@@ -239,14 +254,18 @@ def separate(region_a: Rectangle, region_b: Rectangle):
             reduce(keep=region_b, reduce=region_a)
 
 
-def table_cells_to_dataframe(cells: dict, nrows: int = 1, ncols: int = 1, header=None) -> DataFrame:
+def table_cells_to_dataframe(
+    cells: dict, nrows: int = 1, ncols: int = 1, header=None
+) -> DataFrame:
     """convert table-transformer's cells data into a pandas dataframe"""
     arr = np.empty((nrows, ncols), dtype=object)
     for cell in cells:
         rows = cell["row_nums"]
         cols = cell["column_nums"]
         if rows[0] >= nrows or cols[0] >= ncols:
-            new_arr = np.empty((max(rows[0] + 1, nrows), max(cols[0] + 1, ncols)), dtype=object)
+            new_arr = np.empty(
+                (max(rows[0] + 1, nrows), max(cols[0] + 1, ncols)), dtype=object
+            )
             new_arr[:nrows, :ncols] = arr
             arr = new_arr
             nrows, ncols = arr.shape
@@ -255,7 +274,9 @@ def table_cells_to_dataframe(cells: dict, nrows: int = 1, ncols: int = 1, header
     return DataFrame(arr, columns=header)
 
 
-def partition_groups_from_regions(regions: Collection[TextRegion]) -> List[List[TextRegion]]:
+def partition_groups_from_regions(
+    regions: Collection[TextRegion],
+) -> List[List[TextRegion]]:
     """Partitions regions into groups of regions based on proximity. Returns list of lists of
     regions, each list corresponding with a group"""
     if len(regions) == 0:

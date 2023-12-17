@@ -13,6 +13,7 @@ class Source(Enum):
     CHIPPER = "chipper"
     CHIPPERV1 = "chipperv1"
     CHIPPERV2 = "chipperv2"
+    CHIPPERV3 = "chipperv3"
     MERGED = "merged"
     SUPER_GRADIENTS = "super-gradients"
 
