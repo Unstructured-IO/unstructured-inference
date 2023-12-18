@@ -1,3 +1,7 @@
+## 0.7.20
+
+* refactor: remove layout analysis related code
+
 ## 0.7.19
 
 * refactor: remove all OCR related code

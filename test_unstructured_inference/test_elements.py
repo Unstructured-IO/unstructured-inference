@@ -6,7 +6,7 @@ import pytest
 
 from unstructured_inference.constants import ElementType
 from unstructured_inference.inference import elements
-from unstructured_inference.inference.elements import TextRegion
+from unstructured_inference.inference.elements import TextRegion, ImageTextRegion
 from unstructured_inference.inference.layoutelement import (
     partition_groups_from_regions,
     separate,
@@ -105,6 +105,10 @@ def test_partition_groups_from_regions(mock_embedded_text_regions):
     sorted_groups = sorted(groups, key=lambda group: group[0].bbox.y1)
     text = "".join([el.text for el in sorted_groups[-1]])
     assert text.startswith("Layout")
+
+    words = []
+    groups = partition_groups_from_regions(words)
+    assert len(groups) == 0
 
 
 def test_rectangle_area(monkeypatch):
@@ -248,6 +252,10 @@ def test_merge_inferred_layout_with_extracted_layout():
         TextRegion.from_coords(377, 469, 1335, 535, text="Example Title"),
     ]
 
+    extracted_layout_with_full_page_image = [
+        ImageTextRegion.from_coords(0, 0, 1700, 2200, text="Example Section Header"),
+    ]
+
     merged_layout = merge_inferred_layout_with_extracted_layout(
         inferred_layout=inferred_layout,
         extracted_layout=extracted_layout,
@@ -257,3 +265,11 @@ def test_merge_inferred_layout_with_extracted_layout():
     assert merged_layout[0].text == "Example Section Header"
     assert merged_layout[1].type == ElementType.TEXT
     assert merged_layout[1].text == "Example Title"
+
+    # case: extracted layout with a full page image
+    merged_layout = merge_inferred_layout_with_extracted_layout(
+        inferred_layout=inferred_layout,
+        extracted_layout=extracted_layout_with_full_page_image,
+        page_image_size=(1700, 2200),
+    )
+    assert merged_layout == inferred_layout
