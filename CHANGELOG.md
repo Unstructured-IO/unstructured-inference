@@ -1,4 +1,4 @@
-## 0.7.20-dev
+## 0.7.20
 
 * chipper-v3: improved table prediction
 
