@@ -106,6 +106,10 @@ def test_partition_groups_from_regions(mock_embedded_text_regions):
     text = "".join([el.text for el in sorted_groups[-1]])
     assert text.startswith("Layout")
 
+    words = []
+    groups = partition_groups_from_regions(words)
+    assert len(groups) == 0
+
 
 def test_rectangle_area(monkeypatch):
     for _ in range(1000):
