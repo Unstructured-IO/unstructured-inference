@@ -1,20 +1,12 @@
-import os
-import tempfile
-from unittest.mock import patch
-
 import numpy as np
 import pytest
-from PIL import Image
 
-from unstructured_inference import utils
-from unstructured_inference.constants import AnnotationResult
 from unstructured_inference.inference.layout import DocumentLayout
 from unstructured_inference.utils import (
     LazyDict,
     LazyEvaluateInfo,
     pad_image_with_background_color,
     strip_tags,
-    write_image,
 )
 
 

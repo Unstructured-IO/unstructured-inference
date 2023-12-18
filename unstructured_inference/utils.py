@@ -1,19 +1,14 @@
-import os
 from collections.abc import Mapping
 from html.parser import HTMLParser
 from io import StringIO
 from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterable, Iterator, Union
 
-import cv2
-import numpy as np
 from PIL import Image
 
-from unstructured_inference.constants import AnnotationResult
 from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.visualize import show_plot
 
 if TYPE_CHECKING:
-    from unstructured_inference.inference.layout import DocumentLayout
+    pass
 
 
 class LazyEvaluateInfo:
