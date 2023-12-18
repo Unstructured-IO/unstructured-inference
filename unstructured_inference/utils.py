@@ -1,14 +1,11 @@
 from collections.abc import Mapping
 from html.parser import HTMLParser
 from io import StringIO
-from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterable, Iterator, Union
+from typing import Any, Callable, Hashable, Iterable, Iterator, Union
 
 from PIL import Image
 
 from unstructured_inference.inference.layoutelement import LayoutElement
-
-if TYPE_CHECKING:
-    pass
 
 
 class LazyEvaluateInfo:
