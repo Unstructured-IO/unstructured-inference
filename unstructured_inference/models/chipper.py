@@ -15,7 +15,7 @@ from transformers import DonutProcessor, VisionEncoderDecoderModel
 from transformers.generation.logits_process import LogitsProcessor
 from transformers.generation.stopping_criteria import StoppingCriteria
 
-from unstructured_inference.constants import Source
+from unstructured_inference.constants import CHIPPER_VERSIONS, Source
 from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
@@ -401,11 +401,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
         """For chipper, remove elements from other sources."""
-        return [
-            el
-            for el in elements
-            if el.source in (Source.CHIPPER, Source.CHIPPERV1, Source.CHIPPERV3)
-        ]
+        return [el for el in elements if el.source in CHIPPER_VERSIONS]
 
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""

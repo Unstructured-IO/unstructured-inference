@@ -18,6 +18,14 @@ class Source(Enum):
     SUPER_GRADIENTS = "super-gradients"
 
 
+CHIPPER_VERSIONS = (
+    Source.CHIPPER,
+    Source.CHIPPERV1,
+    Source.CHIPPERV2,
+    Source.CHIPPERV3,
+)
+
+
 class ElementType:
     IMAGE = "Image"
     FIGURE = "Figure"
@@ -38,3 +46,6 @@ class ElementType:
 
 
 FULL_PAGE_REGION_THRESHOLD = 0.99
+
+# this field is defined by pytesseract/unstructured.pytesseract
+TESSERACT_TEXT_HEIGHT = "height"
