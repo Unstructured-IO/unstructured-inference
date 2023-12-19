@@ -255,6 +255,19 @@ def test_postprocess_bbox(decoded_str, expected_classes):
         assert out[i].type == expected_classes[i]
 
 
+def test_predict_tokens_beam_indices():
+    model = get_model("chipper")
+    model.stopping_criteria = [
+        chipper.NGramRepetitonStoppingCriteria(
+            repetition_window=1,
+            skip_tokens={},
+        ),
+    ]
+    img = Image.open("sample-docs/easy_table.jpg")
+    output = model.predict_tokens(image=img)
+    assert len(output) > 0
+
+
 def test_largest_margin_edge():
     model = get_model("chipper")
     img = Image.open("sample-docs/easy_table.jpg")
@@ -279,6 +292,11 @@ def test_deduplicate_detected_elements():
     output = model.deduplicate_detected_elements(elements)
 
     assert len(output) == 2
+
+
+def test_norepeatnGramlogitsprocessor_exception():
+    with pytest.raises(ValueError):
+        chipper.NoRepeatNGramLogitsProcessor(ngram_size="")
 
 
 def test_run_chipper_v3():
