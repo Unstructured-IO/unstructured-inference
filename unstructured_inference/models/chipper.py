@@ -59,7 +59,7 @@ MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
     },
 }
 
-MODEL_TYPES["chipper"] = MODEL_TYPES["chipperv2"]
+MODEL_TYPES["chipper"] = MODEL_TYPES["chipperv3"]
 
 
 class UnstructuredChipperModel(UnstructuredElementExtractionModel):
