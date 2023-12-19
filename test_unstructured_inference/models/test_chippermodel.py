@@ -189,7 +189,7 @@ def test_no_repeat_ngram_logits():
     )
 
 
-def test_nGram_repetiton_stopping_criteria():
+def test_ngram_repetiton_stopping_criteria():
     input_ids = torch.tensor([[1, 2, 3, 4, 0, 1, 2, 3, 4]])
     logits = torch.tensor([[0.1, -0.3, -0.5, 0, 1.0, -0.9]])
 
@@ -253,6 +253,22 @@ def test_postprocess_bbox(decoded_str, expected_classes):
     for i in range(len(out)):
         assert out[i].bbox is not None
         assert out[i].type == expected_classes[i]
+
+
+def test_largest_margin_edge():
+    model = get_model("chipper")
+    img = Image.open("sample-docs/easy_table.jpg")
+    output = model.largest_margin(image=img, input_bbox=[0, 1, 0, 0], transpose=False)
+
+    assert output is None
+
+    output = model.largest_margin(img, [1, 1, 1, 1], False)
+
+    assert output is None
+
+    output = model.largest_margin(img, [2, 1, 3, 10], True)
+
+    assert output == (0, 0, 0)
 
 
 def test_deduplicate_detected_elements():
