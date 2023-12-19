@@ -44,7 +44,7 @@ MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
         "max_length": 1536,
         "heatmap_h": 40,
         "heatmap_w": 30,
-        "source": Source.CHIPPER,
+        "source": Source.CHIPPERV2,
     },
     "chipperv3": {
         "pre_trained_model_repo": "unstructuredio/chipper-v3",
@@ -55,7 +55,7 @@ MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
         "max_length": 1536,
         "heatmap_h": 40,
         "heatmap_w": 30,
-        "source": Source.CHIPPERV3,
+        "source": Source.CHIPPER,
     },
 }
 
