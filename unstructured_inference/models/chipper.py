@@ -527,12 +527,13 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         Given a LayoutElement element, reduce the size of the bounding box,
         depending on existing elements
         """
-        bbox = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
+        if element.bbox:
+            bbox = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
 
-        if not self.element_overlap(elements, element):
-            element.bbox = Rectangle(*self.reduce_bbox_no_overlap(image, bbox))
-        else:
-            element.bbox = Rectangle(*self.reduce_bbox_overlap(image, bbox))
+            if not self.element_overlap(elements, element):
+                element.bbox = Rectangle(*self.reduce_bbox_no_overlap(image, bbox))
+            else:
+                element.bbox = Rectangle(*self.reduce_bbox_overlap(image, bbox))
 
     def bbox_overlap(
         self,
