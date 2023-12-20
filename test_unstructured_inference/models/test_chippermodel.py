@@ -139,7 +139,7 @@ def test_no_repeat_ngram_logits():
 
     no_repeat_ngram_size = 2
 
-    logitsProcessor = chipper.NoRepeatNGramLogitsProcessor(ngram_size=2, context_length=10)
+    logitsProcessor = chipper.NoRepeatNGramLogitsProcessor(ngram_size=2)
     output = logitsProcessor(input_ids=input_ids, scores=logits)
 
     assert (
@@ -194,7 +194,7 @@ def test_ngram_repetiton_stopping_criteria():
     logits = torch.tensor([[0.1, -0.3, -0.5, 0, 1.0, -0.9]])
 
     stoppingCriteria = chipper.NGramRepetitonStoppingCriteria(
-        ngram_size=2, context_length=10, skip_tokens={0, 1, 2, 3, 4}
+        repetition_window=2, skip_tokens={0, 1, 2, 3, 4}
     )
 
     output = stoppingCriteria(input_ids=input_ids, scores=logits)
@@ -202,38 +202,9 @@ def test_ngram_repetiton_stopping_criteria():
     assert output is False
 
     stoppingCriteria = chipper.NGramRepetitonStoppingCriteria(
-        ngram_size=2, context_length=10, skip_tokens={1, 2, 3, 4}
+        repetition_window=2, skip_tokens={1, 2, 3, 4}
     )
     output = stoppingCriteria(input_ids=input_ids, scores=logits)
-    assert output is True
-
-
-def test_no_repeat_group_ngram_logits_processor():
-    input_ids = torch.tensor([[1, 2, 3, 4, 0, 1, 2, 3, 4]])
-    logits = torch.tensor([[0.1, -0.3, -0.5, 0, 1.0, -0.9]])
-
-    logitsProcessor = chipper.NoRepeatGroupNGramLogitsProcessor(ngram_size=3, token_group=[1, 2])
-
-    output = logitsProcessor(input_ids=input_ids, scores=logits)
-
-    assert (
-        int(
-            torch.sum(
-                output == torch.tensor([[0.1000, -0.3000, -0.5000, 0.0000, 1.0000, -0.9000]]),
-            ),
-        )
-        == 6
-    )
-
-
-def test_target_token_id_stopping_criterion():
-    input_ids = torch.tensor([1, 2, 3])
-    logits = torch.tensor([0.1, 0.2, 0.3])
-
-    stoppingCriterion = chipper.TargetTokenIdStoppingCriterion(1)
-
-    output = stoppingCriterion(input_ids=input_ids, scores=logits)
-
     assert output is True
 
 
@@ -288,8 +259,7 @@ def test_predict_tokens_beam_indices():
     model = get_model("chipper")
     model.stopping_criteria = [
         chipper.NGramRepetitonStoppingCriteria(
-            ngram_size=1,
-            context_length=10,
+            repetition_window=1,
             skip_tokens={},
         ),
     ]
@@ -326,7 +296,7 @@ def test_deduplicate_detected_elements():
 
 def test_norepeatnGramlogitsprocessor_exception():
     with pytest.raises(ValueError):
-        chipper.NoRepeatNGramLogitsProcessor(ngram_size="", context_length=10)
+        chipper.NoRepeatNGramLogitsProcessor(ngram_size="")
 
 
 def test_run_chipper_v3():
