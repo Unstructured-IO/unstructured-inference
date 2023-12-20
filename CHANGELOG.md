@@ -1,4 +1,4 @@
-## 0.7.21-dev
+## 0.7.21
 
 * Revised repetitions for Chipper
 
