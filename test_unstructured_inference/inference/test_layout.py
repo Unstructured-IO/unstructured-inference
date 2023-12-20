@@ -1,17 +1,15 @@
 import os
 import os.path
 import tempfile
-from functools import partial
-from unittest.mock import ANY, mock_open, patch
+from unittest.mock import mock_open, patch
 
 import numpy as np
 import pytest
 from PIL import Image
 
 import unstructured_inference.models.base as models
-from unstructured_inference.constants import Source
 from unstructured_inference.inference import elements, layout, layoutelement
-from unstructured_inference.models import detectron2
+from unstructured_inference.inference.elements import EmbeddedTextRegion, ImageTextRegion
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -27,7 +25,7 @@ def mock_image():
 
 @pytest.fixture()
 def mock_initial_layout():
-    text_block = layout.EmbeddedTextRegion.from_coords(
+    text_block = EmbeddedTextRegion.from_coords(
         2,
         4,
         6,
@@ -36,7 +34,7 @@ def mock_initial_layout():
         source="Mock",
     )
 
-    title_block = layout.EmbeddedTextRegion.from_coords(
+    title_block = EmbeddedTextRegion.from_coords(
         1,
         2,
         3,
@@ -81,7 +79,7 @@ def test_pdf_page_converts_images_to_array(mock_image):
         assert page.image_array.all() == image_array.all()
 
     # Scenario 1: where self.image exists
-    page = layout.PageLayout(number=0, image=mock_image, layout=[])
+    page = layout.PageLayout(number=0, image=mock_image)
     verify_image_array()
 
     # Scenario 2: where self.image is None, but self.image_path exists
@@ -111,15 +109,9 @@ def test_get_page_elements(monkeypatch, mock_final_layout):
     page = layout.PageLayout(
         number=0,
         image=image,
-        layout=mock_final_layout,
         detection_model=MockLayoutModel(mock_final_layout),
     )
-
     elements = page.get_elements_with_detection_model(inplace=False)
-
-    assert str(elements[0]) == "A Catchy Title"
-    assert str(elements[1]).startswith("A very repetitive narrative.")
-
     page.get_elements_with_detection_model(inplace=True)
     assert elements == page.elements
 
@@ -133,35 +125,6 @@ class MockPool:
 
     def join(self):
         pass
-
-
-def test_read_pdf(monkeypatch, mock_initial_layout, mock_final_layout, mock_image):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        image_path1 = os.path.join(tmpdir, "mock1.jpg")
-        image_path2 = os.path.join(tmpdir, "mock2.jpg")
-        mock_image.save(image_path1)
-        mock_image.save(image_path2)
-        image_paths = [image_path1, image_path2]
-
-        layouts = [mock_initial_layout, mock_initial_layout]
-
-        monkeypatch.setattr(detectron2, "is_detectron2_available", lambda *args: True)
-
-        with patch.object(layout, "load_pdf", return_value=(layouts, image_paths)), patch.dict(
-            models.model_class_map,
-            {"detectron2_lp": partial(MockLayoutModel, layout=mock_final_layout)},
-        ):
-            model = layout.get_model("detectron2_lp")
-            doc = layout.DocumentLayout.from_file("fake-file.pdf", detection_model=model)
-
-            assert str(doc).startswith("A Catchy Title")
-            assert str(doc).count("A Catchy Title") == 2  # Once for each page
-            assert str(doc).endswith("A very repetitive narrative. ")
-
-            assert doc.pages[0].elements[0].to_dict()["text"] == "A Catchy Title"
-
-            pages = doc.pages
-            assert str(doc) == "\n\n".join([str(page) for page in pages])
 
 
 @pytest.mark.parametrize("model_name", [None, "checkbox", "fake"])
@@ -236,7 +199,7 @@ class MockPoints:
         return [1, 2, 3, 4]
 
 
-class MockEmbeddedTextRegion(layout.EmbeddedTextRegion):
+class MockEmbeddedTextRegion(EmbeddedTextRegion):
     def __init__(self, type=None, text=None):
         self.type = type
         self.text = text
@@ -251,15 +214,14 @@ class MockPageLayout(layout.PageLayout):
         self,
         number=1,
         image=None,
-        layout=None,
         model=None,
-        extract_tables=False,
+        detection_model=None,
     ):
         self.image = image
         self.layout = layout
         self.model = model
-        self.extract_tables = extract_tables
         self.number = number
+        self.detection_model = detection_model
 
 
 @pytest.mark.parametrize(
@@ -349,8 +311,8 @@ def test_from_file(monkeypatch, mock_final_layout):
 
         with patch.object(
             layout,
-            "load_pdf",
-            lambda *args, **kwargs: ([[]], [image_path]),
+            "convert_pdf_to_image",
+            lambda *args, **kwargs: ([image_path]),
         ):
             doc = layout.DocumentLayout.from_file("fake-file.pdf")
             page = doc.pages[0]
@@ -369,16 +331,9 @@ def test_from_image_file_raises_isadirectoryerror_with_dir():
         layout.DocumentLayout.from_image_file(tempdir)
 
 
-def test_from_file_raises_on_length_mismatch(monkeypatch):
-    monkeypatch.setattr(layout, "load_pdf", lambda *args, **kwargs: ([None, None], []))
-    with pytest.raises(RuntimeError) as e:
-        layout.DocumentLayout.from_file("fake_file")
-    assert "images" in str(e).lower()
-
-
 @pytest.mark.parametrize("idx", range(2))
 def test_get_elements_from_layout(mock_initial_layout, idx):
-    page = MockPageLayout(layout=mock_initial_layout)
+    page = MockPageLayout()
     block = mock_initial_layout[idx]
     block.bbox.pad(3)
     fixed_layout = [block]
@@ -429,74 +384,19 @@ def test_remove_control_characters(text, expected):
     assert elements.remove_control_characters(text) == expected
 
 
-no_text_region = layout.EmbeddedTextRegion.from_coords(0, 0, 100, 100)
-text_region = layout.EmbeddedTextRegion.from_coords(0, 0, 100, 100, text="test")
-cid_text_region = layout.EmbeddedTextRegion.from_coords(
+no_text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100)
+text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100, text="test")
+cid_text_region = EmbeddedTextRegion.from_coords(
     0,
     0,
     100,
     100,
     text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)",
 )
-overlapping_rect = layout.ImageTextRegion.from_coords(50, 50, 150, 150)
-nonoverlapping_rect = layout.ImageTextRegion.from_coords(150, 150, 200, 200)
-populated_text_region = layout.EmbeddedTextRegion.from_coords(50, 50, 60, 60, text="test")
-unpopulated_text_region = layout.EmbeddedTextRegion.from_coords(50, 50, 60, 60, text=None)
-
-
-@pytest.mark.parametrize("filename", ["loremipsum.pdf", "IRS-form-1987.pdf"])
-def test_load_pdf(filename):
-    layouts, images = layout.load_pdf(f"sample-docs/{filename}")
-    assert Source.PDFMINER in {e.source for e in layouts[0]}
-    assert len(layouts)
-    for lo in layouts:
-        assert len(lo)
-    assert len(images)
-    assert len(layouts) == len(images)
-
-
-def test_load_pdf_with_images():
-    layouts, _ = layout.load_pdf("sample-docs/loremipsum-flat.pdf")
-    first_page_layout = layouts[0]
-    assert any(isinstance(obj, layout.ImageTextRegion) for obj in first_page_layout)
-
-
-def test_load_pdf_image_placement():
-    layouts, images = layout.load_pdf("sample-docs/layout-parser-paper.pdf")
-    page_layout = layouts[5]
-    image_regions = [region for region in page_layout if isinstance(region, layout.ImageTextRegion)]
-    image_region = image_regions[0]
-    # Image is in top half of the page, so that should be reflected in the pixel coordinates
-    assert image_region.bbox.y1 < images[5].height / 2
-    assert image_region.bbox.y2 < images[5].height / 2
-
-
-def test_load_pdf_raises_with_path_only_no_output_folder():
-    with pytest.raises(ValueError):
-        layout.load_pdf(
-            "sample-docs/loremipsum-flat.pdf",
-            path_only=True,
-        )
-
-
-@pytest.mark.skip("Temporarily removed multicolumn to fix ordering")
-def test_load_pdf_with_multicolumn_layout(filename="sample-docs/design-thinking.pdf"):
-    layouts, images = layout.load_pdf(filename)
-    doc = layout.process_file_with_model(filename=filename, model_name=None)
-    test_snippets = [
-        "Key to design thinking",
-        "Design thinking also",
-        "But in recent years",
-    ]
-
-    test_elements = []
-    for element in doc.pages[0].elements:
-        for snippet in test_snippets:
-            if element.text.startswith(snippet):
-                test_elements.append(element)
-
-    for i, element in enumerate(test_elements):
-        assert element.text.startswith(test_snippets[i])
+overlapping_rect = ImageTextRegion.from_coords(50, 50, 150, 150)
+nonoverlapping_rect = ImageTextRegion.from_coords(150, 150, 200, 200)
+populated_text_region = EmbeddedTextRegion.from_coords(50, 50, 60, 60, text="test")
+unpopulated_text_region = EmbeddedTextRegion.from_coords(50, 50, 60, 60, text=None)
 
 
 @pytest.mark.parametrize(
@@ -521,7 +421,7 @@ def test_annotate(colors, add_details, threshold):
 
     test_image_arr = np.ones((100, 100, 3), dtype="uint8")
     image = Image.fromarray(test_image_arr)
-    page = layout.PageLayout(number=1, image=image, layout=None)
+    page = layout.PageLayout(number=1, image=image)
     coords1 = (21, 30, 37, 41)
     rect1 = elements.TextRegion.from_coords(*coords1)
     coords2 = (1, 10, 7, 11)
@@ -571,8 +471,8 @@ def test_layout_order(mock_image):
         mock_image.save(mock_image_path)
         with patch.object(layout, "get_model", lambda: MockDetectionModel()), patch.object(
             layout,
-            "load_pdf",
-            lambda *args, **kwargs: ([[]], [mock_image_path]),
+            "convert_pdf_to_image",
+            lambda *args, **kwargs: ([mock_image_path]),
         ):
             doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
             page = doc.pages[0]
@@ -655,22 +555,6 @@ def test_from_image(
         assert mock_detection.called == detection_model_called
 
 
-def test_extract_images(mock_pil_image):
-    page = MockPageLayout(image=mock_pil_image)
-    page.elements = [
-        layoutelement.LayoutElement.from_coords(1, 1, 10, 10, text=None, type="Image"),
-        layoutelement.LayoutElement.from_coords(11, 11, 20, 20, text=None, type="Image"),
-    ]
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        page.extract_images(output_dir_path=str(tmpdir))
-
-        for i, el in enumerate(page.elements):
-            expected_image_path = os.path.join(str(tmpdir), f"figure-{page.number}-{i + 1}.jpg")
-            assert os.path.isfile(el.image_path)
-            assert el.image_path == expected_image_path
-
-
 class MockUnstructuredElementExtractionModel(UnstructuredElementExtractionModel):
     def initialize(self, *args, **kwargs):
         return super().initialize(*args, **kwargs)
@@ -710,10 +594,7 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
             fixed_layouts=None,
-            extract_tables=False,
             pdf_image_dpi=200,
-            extract_images_in_pdf=ANY,
-            image_output_dir_path=ANY,
         )
 
 

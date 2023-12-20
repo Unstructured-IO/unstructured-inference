@@ -1,6 +1,22 @@
-## 0.7.16-dev2
+## 0.7.21-dev
 
 * Revised repetitions for Chipper
+
+## 0.7.20
+
+* chipper-v3: improved table prediction
+
+## 0.7.19
+
+* refactor: remove all OCR related code
+
+## 0.7.18
+
+* refactor: remove all image extraction related code
+
+## 0.7.17
+
+* refactor: remove all `pdfminer` related code
 * enhancement: improved Chipper bounding boxes
 
 ## 0.7.16

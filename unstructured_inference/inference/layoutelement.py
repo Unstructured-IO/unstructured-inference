@@ -6,11 +6,11 @@ from typing import Collection, List, Optional
 import numpy as np
 from layoutparser.elements.layout import TextBlock
 from pandas import DataFrame
-from PIL import Image
 from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.constants import (
+    CHIPPER_VERSIONS,
     FULL_PAGE_REGION_THRESHOLD,
     ElementType,
     Source,
@@ -35,16 +35,11 @@ class LayoutElement(TextRegion):
     def extract_text(
         self,
         objects: Optional[Collection[TextRegion]],
-        image: Optional[Image.Image] = None,
-        extract_tables: bool = False,
     ):
         """Extracts text contained in region"""
         text = super().extract_text(
             objects=objects,
-            extract_tables=extract_tables,
         )
-        if extract_tables and self.type == ElementType.TABLE:
-            self.text_as_html = interpret_table_block(self, image)
         return text
 
     def to_dict(self) -> dict:
@@ -86,18 +81,6 @@ class LayoutElement(TextRegion):
         )
 
 
-def interpret_table_block(text_block: TextRegion, image: Image.Image) -> str:
-    """Extract the contents of a table."""
-    from unstructured_inference.models import tables
-
-    tables.load_agent()
-    if tables.tables_agent is None:
-        raise RuntimeError("Unable to load table extraction agent.")
-    padded_block = text_block.bbox.pad(inference_config.TABLE_IMAGE_CROP_PAD)
-    cropped_image = image.crop((padded_block.x1, padded_block.y1, padded_block.x2, padded_block.y2))
-    return tables.tables_agent.predict(cropped_image)
-
-
 def merge_inferred_layout_with_extracted_layout(
     inferred_layout: Collection[LayoutElement],
     extracted_layout: Collection[TextRegion],
@@ -126,7 +109,7 @@ def merge_inferred_layout_with_extracted_layout(
                 continue
         region_matched = False
         for inferred_region in inferred_layout:
-            if inferred_region.source in (Source.CHIPPER, Source.CHIPPERV1):
+            if inferred_region.source in CHIPPER_VERSIONS:
                 continue
 
             if inferred_region.bbox.intersects(extracted_region.bbox):

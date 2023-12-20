@@ -17,7 +17,7 @@ from transformers import DonutProcessor, VisionEncoderDecoderModel
 from transformers.generation.logits_process import LogitsProcessor
 from transformers.generation.stopping_criteria import StoppingCriteria
 
-from unstructured_inference.constants import Source
+from unstructured_inference.constants import CHIPPER_VERSIONS, Source
 from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
@@ -46,11 +46,22 @@ MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
         "max_length": 1536,
         "heatmap_h": 40,
         "heatmap_w": 30,
+        "source": Source.CHIPPERV2,
+    },
+    "chipperv3": {
+        "pre_trained_model_repo": "unstructuredio/chipper-v3",
+        "swap_head": True,
+        "swap_head_hidden_layer_size": 128,
+        "start_token_prefix": "<s_",
+        "prompt": "<s><s_hierarchical>",
+        "max_length": 1536,
+        "heatmap_h": 40,
+        "heatmap_w": 30,
         "source": Source.CHIPPER,
     },
 }
 
-MODEL_TYPES["chipper"] = MODEL_TYPES["chipperv2"]
+MODEL_TYPES["chipper"] = MODEL_TYPES["chipperv3"]
 
 
 class UnstructuredChipperModel(UnstructuredElementExtractionModel):
@@ -482,7 +493,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
         """For chipper, remove elements from other sources."""
-        return [el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)]
+        return [el for el in elements if el.source in CHIPPER_VERSIONS]
 
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
@@ -608,12 +619,13 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         Given a LayoutElement element, reduce the size of the bounding box,
         depending on existing elements
         """
-        bbox = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
+        if element.bbox:
+            bbox = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
 
-        if not self.element_overlap(elements, element):
-            element.bbox = Rectangle(*self.reduce_bbox_no_overlap(image, bbox))
-        else:
-            element.bbox = Rectangle(*self.reduce_bbox_overlap(image, bbox))
+            if not self.element_overlap(elements, element):
+                element.bbox = Rectangle(*self.reduce_bbox_no_overlap(image, bbox))
+            else:
+                element.bbox = Rectangle(*self.reduce_bbox_overlap(image, bbox))
 
     def bbox_overlap(
         self,

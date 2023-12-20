@@ -1,6 +1,5 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
-import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
@@ -8,16 +7,11 @@ from typing import Dict, List, Optional, Union
 
 import cv2
 import numpy as np
-import pandas as pd
-import pytesseract
 import torch
 from PIL import Image
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 
 from unstructured_inference.config import inference_config
-from unstructured_inference.constants import (
-    TESSERACT_TEXT_HEIGHT,
-)
 from unstructured_inference.inference.layoutelement import table_cells_to_dataframe
 from unstructured_inference.logger import logger
 from unstructured_inference.models.table_postprocess import Rect
@@ -74,86 +68,6 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             )
         self.model.to(device)
 
-    def get_tokens(self, x: Image):
-        """Get OCR tokens from either paddleocr or tesseract"""
-        table_ocr = os.getenv("TABLE_OCR", "tesseract").lower()
-        if table_ocr not in ["paddle", "tesseract"]:
-            raise ValueError(
-                "Environment variable TABLE_OCR must be set to 'tesseract' or 'paddle'.",
-            )
-        if table_ocr == "paddle":
-            logger.info("Processing table OCR with paddleocr...")
-            from unstructured_inference.models import paddle_ocr
-
-            paddle_result = paddle_ocr.load_agent().ocr(np.array(x), cls=True)
-
-            tokens = []
-            for idx in range(len(paddle_result)):
-                res = paddle_result[idx]
-                for line in res:
-                    xmin = min([i[0] for i in line[0]])
-                    ymin = min([i[1] for i in line[0]])
-                    xmax = max([i[0] for i in line[0]])
-                    ymax = max([i[1] for i in line[0]])
-                    tokens.append({"bbox": [xmin, ymin, xmax, ymax], "text": line[1][0]})
-        else:
-            zoom = 1
-
-            logger.info("Processing table OCR with tesseract...")
-            ocr_df: pd.DataFrame = pytesseract.image_to_data(
-                x,
-                output_type="data.frame",
-            )
-            ocr_df = ocr_df.dropna()
-
-            # tesseract performance degrades when the text height is out of the preferred zone so we
-            # zoom the image (in or out depending on estimated text height) for optimum OCR results
-            # but this needs to be evaluated based on actual use case as the optimum scaling also
-            # depend on type of characters (font, language, etc); be careful about this
-            # functionality
-            text_height = ocr_df[TESSERACT_TEXT_HEIGHT].quantile(
-                inference_config.TESSERACT_TEXT_HEIGHT_QUANTILE,
-            )
-            if (
-                text_height < inference_config.TESSERACT_MIN_TEXT_HEIGHT
-                or text_height > inference_config.TESSERACT_MAX_TEXT_HEIGHT
-            ):
-                # rounding avoids unnecessary precision and potential numerical issues assocaited
-                # with numbers very close to 1 inside cv2 image processing
-                zoom = np.round(inference_config.TESSERACT_OPTIMUM_TEXT_HEIGHT / text_height, 1)
-                ocr_df = pytesseract.image_to_data(
-                    zoom_image(x, zoom),
-                    output_type="data.frame",
-                )
-                ocr_df = ocr_df.dropna()
-
-            tokens = []
-            for idtx in ocr_df.itertuples():
-                tokens.append(
-                    {
-                        "bbox": [
-                            idtx.left / zoom,
-                            idtx.top / zoom,
-                            (idtx.left + idtx.width) / zoom,
-                            (idtx.top + idtx.height) / zoom,
-                        ],
-                        "text": idtx.text,
-                    },
-                )
-
-        # 'tokens' is a list of tokens
-        # Need to be in a relative reading order
-        # If no order is provided, use current order
-        for idx, token in enumerate(tokens):
-            if "span_num" not in token:
-                token["span_num"] = idx
-            if "line_num" not in token:
-                token["line_num"] = 0
-            if "block_num" not in token:
-                token["block_num"] = 0
-
-        return tokens
-
     def get_structure(
         self,
         x: Image,
@@ -181,12 +95,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         """Predict table structure"""
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
         if ocr_tokens is None:
-            logger.warning(
-                "Table OCR from get_tokens method will be deprecated. "
-                "In the future the OCR tokens are expected to be passed in.",
-            )
-            ocr_tokens = self.get_tokens(x=x)
-
+            raise ValueError("Cannot predict table structure with no OCR tokens")
         prediction = recognize(outputs_structure, x, tokens=ocr_tokens)[0]
         if result_format == "html":
             # Convert cells to HTML
@@ -200,11 +109,11 @@ tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerMo
 
 
 def load_agent():
-    """Loads the Tesseract OCR agent as a global variable to ensure that we only load it once."""
+    """Loads the Table agent as a global variable to ensure that we only load it once."""
     global tables_agent
 
     if not hasattr(tables_agent, "model"):
-        logger.info("Loading the Tesseract OCR agent ...")
+        logger.info("Loading the Table agent ...")
         tables_agent.initialize("microsoft/table-transformer-structure-recognition")
 
     return
@@ -496,6 +405,20 @@ def align_headers(headers, rows):
     return aligned_headers
 
 
+def compute_confidence_score(cell_match_scores):
+    """
+    Compute a confidence score based on how well the page tokens
+    slot into the cells reported by the model
+    """
+    try:
+        mean_match_score = sum(cell_match_scores) / len(cell_match_scores)
+        min_match_score = min(cell_match_scores)
+        confidence_score = (mean_match_score + min_match_score) / 2
+    except ZeroDivisionError:
+        confidence_score = 0
+    return confidence_score
+
+
 def structure_to_cells(table_structure, tokens):
     """
     Assuming the row, column, spanning cell, and header bounding boxes have
@@ -573,15 +496,8 @@ def structure_to_cells(table_structure, tokens):
             }
             cells.append(cell)
 
-    # Compute a confidence score based on how well the page tokens
-    # slot into the cells reported by the model
     _, _, cell_match_scores = postprocess.slot_into_containers(cells, tokens)
-    try:
-        mean_match_score = sum(cell_match_scores) / len(cell_match_scores)
-        min_match_score = min(cell_match_scores)
-        confidence_score = (mean_match_score + min_match_score) / 2
-    except ZeroDivisionError:
-        confidence_score = 0
+    confidence_score = compute_confidence_score(cell_match_scores)
 
     # Dilate rows and columns before final extraction
     # dilated_columns = fill_column_gaps(columns, table_bbox)

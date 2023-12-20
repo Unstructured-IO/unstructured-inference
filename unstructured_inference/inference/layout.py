@@ -3,45 +3,27 @@ from __future__ import annotations
 import os
 import tempfile
 from pathlib import PurePath
-from typing import BinaryIO, Collection, List, Optional, Tuple, Union, cast
+from typing import BinaryIO, Collection, List, Optional, Union, cast
 
 import numpy as np
 import pdf2image
-from pdfminer import psparser
-from pdfminer.high_level import extract_pages
 from PIL import Image, ImageSequence
 
-from unstructured_inference.constants import ElementType, Source
 from unstructured_inference.inference.elements import (
-    EmbeddedTextRegion,
-    ImageTextRegion,
     TextRegion,
 )
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
-    merge_inferred_layout_with_extracted_layout,
 )
 from unstructured_inference.inference.ordering import order_layout
-from unstructured_inference.inference.pdf import get_images_from_pdf_element
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.chipper import UnstructuredChipperModel
-from unstructured_inference.models.detectron2onnx import (
-    UnstructuredDetectronONNXModel,
-)
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
 )
-from unstructured_inference.patches.pdfminer import parse_keyword
-from unstructured_inference.utils import write_image
 from unstructured_inference.visualize import draw_bbox
-
-# NOTE(alan): Patching this to fix a bug in pdfminer.six. Submitted this PR into pdfminer.six to fix
-# the bug: https://github.com/pdfminer/pdfminer.six/pull/885
-psparser.PSBaseParser._parse_keyword = parse_keyword  # type: ignore
-
-import pdfplumber  # noqa
 
 
 class DocumentLayout:
@@ -79,26 +61,18 @@ class DocumentLayout:
         logger.info(f"Reading PDF for file: {filename} ...")
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            layouts, _image_paths = load_pdf(
+            _image_paths = convert_pdf_to_image(
                 filename,
                 pdf_image_dpi,
                 output_folder=temp_dir,
                 path_only=True,
             )
             image_paths = cast(List[str], _image_paths)
-            if len(layouts) > len(image_paths):
-                raise RuntimeError(
-                    "Some images were not loaded. "
-                    f"Number of extracted images ({len(image_paths)}) does not match number of "
-                    f"extracted page layouts ({len(layouts)})",
-                )
-
+            number_of_pages = len(image_paths)
             pages: List[PageLayout] = []
             if fixed_layouts is None:
-                fixed_layouts = [None for _ in layouts]
-            for i, (image_path, layout, fixed_layout) in enumerate(
-                zip(image_paths, layouts, fixed_layouts),
-            ):
+                fixed_layouts = [None for _ in range(0, number_of_pages)]
+            for i, (image_path, fixed_layout) in enumerate(zip(image_paths, fixed_layouts)):
                 # NOTE(robinson) - In the future, maybe we detect the page number and default
                 # to the index if it is not detected
                 with Image.open(image_path) as image:
@@ -106,7 +80,6 @@ class DocumentLayout:
                         image,
                         number=i + 1,
                         document_filename=filename,
-                        layout=layout,
                         fixed_layout=fixed_layout,
                         **kwargs,
                     )
@@ -120,7 +93,6 @@ class DocumentLayout:
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         fixed_layout: Optional[List[TextRegion]] = None,
-        extract_tables: bool = False,
         **kwargs,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from an image file."""
@@ -146,9 +118,7 @@ class DocumentLayout:
                 number=i,
                 detection_model=detection_model,
                 element_extraction_model=element_extraction_model,
-                layout=None,
                 fixed_layout=fixed_layout,
-                extract_tables=extract_tables,
                 **kwargs,
             )
             pages.append(page)
@@ -162,14 +132,11 @@ class PageLayout:
         self,
         number: int,
         image: Image.Image,
-        layout: Optional[List[TextRegion]],
         image_metadata: Optional[dict] = None,
         image_path: Optional[Union[str, PurePath]] = None,  # TODO: Deprecate
         document_filename: Optional[Union[str, PurePath]] = None,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
-        extract_tables: bool = False,
-        analysis: bool = False,
     ):
         if detection_model is not None and element_extraction_model is not None:
             raise ValueError("Only one of detection_model and extraction_model should be passed.")
@@ -180,17 +147,13 @@ class PageLayout:
         self.image_path = image_path
         self.image_array: Union[np.ndarray, None] = None
         self.document_filename = document_filename
-        self.layout = layout
         self.number = number
         self.detection_model = detection_model
         self.element_extraction_model = element_extraction_model
         self.elements: Collection[LayoutElement] = []
-        self.extract_tables = extract_tables
-        self.analysis = analysis
         # NOTE(alan): Dropped LocationlessLayoutElement that was created for chipper - chipper has
         # locations now and if we need to support LayoutElements without bounding boxes we can make
         # the bbox property optional
-        self.inferred_layout: Optional[List[LayoutElement]] = None
 
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
@@ -230,88 +193,34 @@ class PageLayout:
             inferred_layout,
         )
 
-        if self.layout is not None:
-            threshold_kwargs = {}
-            # NOTE(Benjamin): With this the thresholds are only changed for detextron2_mask_rcnn
-            # In other case the default values for the functions are used
-            if (
-                isinstance(self.detection_model, UnstructuredDetectronONNXModel)
-                and "R_50" not in self.detection_model.model_path
-            ):
-                threshold_kwargs = {"same_region_threshold": 0.5, "subregion_threshold": 0.5}
-            merged_layout = merge_inferred_layout_with_extracted_layout(
-                inferred_layout=inferred_layout,
-                extracted_layout=self.layout,
-                page_image_size=self.image.size,
-                **threshold_kwargs,
-            )
-
-        else:
-            merged_layout = inferred_layout
-        # If the model is a chipper model, we don't want to order the
-        # elements, as they are already ordered
-        order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
-        elements = self.get_elements_from_layout(
-            cast(List[TextRegion], merged_layout),
-            order_elements=order_elements,
-        )
-
-        if self.analysis:
-            self.inferred_layout = inferred_layout
-
         if inplace:
-            self.elements = elements
+            self.elements = inferred_layout
             return None
 
-        return elements
+        return inferred_layout
 
     def get_elements_from_layout(
         self,
         layout: List[TextRegion],
-        order_elements: bool = True,
+        pdf_objects: Optional[List[TextRegion]] = None,
     ) -> List[LayoutElement]:
         """Uses the given Layout to separate the page text into elements, either extracting the
         text from the discovered layout blocks."""
+
+        # If the model is a chipper model, we don't want to order the
+        # elements, as they are already ordered
+        order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
         if order_elements:
             layout = order_layout(layout)
+
         elements = [
             get_element_from_block(
                 block=e,
-                image=self.image,
-                pdf_objects=self.layout,
-                extract_tables=self.extract_tables,
+                pdf_objects=pdf_objects,
             )
             for e in layout
         ]
         return elements
-
-    def extract_images(self, output_dir_path: Optional[str] = None):
-        """
-        Extract and save images from the page. This method iterates through the layout elements
-        of the page, identifies image regions, and extracts and saves them as separate image files.
-        """
-
-        if not output_dir_path:
-            output_dir_path = os.path.join(os.getcwd(), "figures")
-        os.makedirs(output_dir_path, exist_ok=True)
-
-        figure_number = 0
-        image_element_types = [ElementType.IMAGE, ElementType.PICTURE, ElementType.FIGURE]
-        for el in self.elements:
-            if (el.bbox is None) or (el.type not in image_element_types):
-                continue
-
-            figure_number += 1
-            try:
-                output_f_path = os.path.join(
-                    output_dir_path,
-                    f"figure-{self.number}-{figure_number}.jpg",
-                )
-                cropped_image = self.image.crop((el.bbox.x1, el.bbox.y1, el.bbox.x2, el.bbox.y2))
-                write_image(cropped_image, output_f_path)
-                el.image_path = output_f_path
-            except (ValueError, IOError):
-                logger.warning("Image Extraction Error: Skipping the failed image", exc_info=True)
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
@@ -403,23 +312,15 @@ class PageLayout:
         number: int = 1,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
-        layout: Optional[List[TextRegion]] = None,
-        extract_tables: bool = False,
         fixed_layout: Optional[List[TextRegion]] = None,
-        extract_images_in_pdf: bool = False,
-        image_output_dir_path: Optional[str] = None,
-        analysis: bool = False,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
 
         page = cls(
             number=number,
             image=image,
-            layout=layout,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
-            extract_tables=extract_tables,
-            analysis=analysis,
         )
         if page.element_extraction_model is not None:
             page.get_elements_using_image_extraction()
@@ -436,9 +337,6 @@ class PageLayout:
         }
         page.image_path = os.path.abspath(image_path) if image_path else None
         page.document_filename = os.path.abspath(document_filename) if document_filename else None
-
-        if extract_images_in_pdf:
-            page.extract_images(image_output_dir_path)
 
         # Clear the image to save memory
         page.image = None
@@ -470,10 +368,7 @@ def process_file_with_model(
     model_name: Optional[str],
     is_image: bool = False,
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
-    extract_tables: bool = False,
     pdf_image_dpi: int = 200,
-    extract_images_in_pdf: bool = False,
-    image_output_dir_path: Optional[str] = None,
     **kwargs,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
@@ -493,7 +388,6 @@ def process_file_with_model(
             filename,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
-            extract_tables=extract_tables,
             **kwargs,
         )
         if is_image
@@ -502,10 +396,7 @@ def process_file_with_model(
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
             fixed_layouts=fixed_layouts,
-            extract_tables=extract_tables,
             pdf_image_dpi=pdf_image_dpi,
-            extract_images_in_pdf=extract_images_in_pdf,
-            image_output_dir_path=image_output_dir_path,
             **kwargs,
         )
     )
@@ -514,66 +405,24 @@ def process_file_with_model(
 
 def get_element_from_block(
     block: TextRegion,
-    image: Optional[Image.Image] = None,
     pdf_objects: Optional[List[TextRegion]] = None,
-    extract_tables: bool = False,
 ) -> LayoutElement:
     """Creates a LayoutElement from a given layout or image by finding all the text that lies within
     a given block."""
     element = block if isinstance(block, LayoutElement) else LayoutElement.from_region(block)
     element.text = element.extract_text(
         objects=pdf_objects,
-        image=image,
-        extract_tables=extract_tables,
     )
     return element
 
 
-def load_pdf(
+def convert_pdf_to_image(
     filename: str,
     dpi: int = 200,
     output_folder: Optional[Union[str, PurePath]] = None,
     path_only: bool = False,
-) -> Tuple[List[List[TextRegion]], Union[List[Image.Image], List[str]]]:
-    """Loads the image and word objects from a pdf using pdfplumber and the image renderings of the
-    pdf pages using pdf2image"""
-
-    layouts = []
-    for page in extract_pages(filename):
-        layout: List[TextRegion] = []
-        height = page.height
-        for element in page:
-            x1, y2, x2, y1 = element.bbox
-            y1 = height - y1
-            y2 = height - y2
-            # Coefficient to rescale bounding box to be compatible with images
-            coef = dpi / 72
-
-            if hasattr(element, "get_text"):
-                _text = element.get_text()
-                element_class = EmbeddedTextRegion  # type: ignore
-            else:
-                embedded_images = get_images_from_pdf_element(element)
-                if len(embedded_images) > 0:
-                    _text = None
-                    element_class = ImageTextRegion  # type: ignore
-                else:
-                    continue
-
-            text_region = element_class.from_coords(
-                x1 * coef,
-                y1 * coef,
-                x2 * coef,
-                y2 * coef,
-                text=_text,
-                source=Source.PDFMINER,
-            )
-
-            if text_region.bbox is not None and text_region.bbox.area > 0:
-                layout.append(text_region)
-
-        layout = order_layout(layout)
-        layouts.append(layout)
+) -> Union[List[Image.Image], List[str]]:
+    """Get the image renderings of the pdf pages using pdf2image"""
 
     if path_only and not output_folder:
         raise ValueError("output_folder must be specified if path_only is true")
@@ -592,4 +441,4 @@ def load_pdf(
             paths_only=path_only,
         )
 
-    return layouts, images
+    return images
