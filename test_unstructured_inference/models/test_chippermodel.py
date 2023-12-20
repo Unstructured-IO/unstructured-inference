@@ -212,7 +212,7 @@ def test_no_repeat_group_ngram_logits_processor():
     input_ids = torch.tensor([[1, 2, 3, 4, 0, 1, 2, 3, 4]])
     logits = torch.tensor([[0.1, -0.3, -0.5, 0, 1.0, -0.9]])
 
-    logitsProcessor = chipper.NoRepeatGroupNGramLogitsProcessor(ngram_size=10, token_group=[1, 2])
+    logitsProcessor = chipper.NoRepeatGroupNGramLogitsProcessor(ngram_size=3, token_group=[1, 2])
 
     output = logitsProcessor(input_ids=input_ids, scores=logits)
 
