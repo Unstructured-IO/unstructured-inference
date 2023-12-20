@@ -220,7 +220,9 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             if e1 not in repeated_elements:
                 for j in range(i + 1, len(elements)):
                     e2 = elements[j]
-                    if e1 != e2:
+                    if e1 != e2 and not (
+                        (e2.parent and e1 == e2.parent) or (e1.parent and e2 == e1.parent)
+                    ):
                         elements_iou = iou(e1, e2)
                         ratio = SM(None, e1.text, e2.text).ratio()
                         if elements_iou > 0.75 and ratio > 0.99:
