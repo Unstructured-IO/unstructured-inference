@@ -1,9 +1,7 @@
 import copy
 import os
 import platform
-from collections import Counter
 from contextlib import nullcontext
-from difflib import SequenceMatcher as SM
 from typing import ContextManager, Dict, List, Optional, Sequence, TextIO, Tuple, Union
 
 import cv2
@@ -99,40 +97,17 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.tokenizer = self.processor.tokenizer
         self.logits_processor = [
             NoRepeatNGramLogitsProcessor(
-                ngram_size=no_repeat_ngram_size,
-                context_length=(no_repeat_ngram_size * 4) + 1,
-                skip_tokens=get_table_token_ids(self.processor),
+                no_repeat_ngram_size,
+                get_table_token_ids(self.processor),
             ),
         ]
 
         self.stopping_criteria = [
             NGramRepetitonStoppingCriteria(
-                ngram_size=30,
-                context_length=61,
+                repetition_window=30,
                 skip_tokens=get_table_token_ids(self.processor),
             ),
         ]
-
-        # This check is needed to since Chipperv1 does not processes tables
-        if self.source in (Source.CHIPPERV2, Source.CHIPPERV3, Source.CHIPPER):
-            self.stopping_criteria.append(
-                TargetTokenIdStoppingCriterion(
-                    target_token_id=self.processor.tokenizer.encode(
-                        "<s_Table>",
-                        add_special_tokens=False,
-                    )[0],
-                ),
-            )
-
-            self.logits_processor.append(
-                NoRepeatGroupNGramLogitsProcessor(
-                    ngram_size=5,
-                    token_group=self.processor.tokenizer.encode(
-                        "<td></td>",
-                        add_special_tokens=False,
-                    ),
-                ),
-            )
 
         self.model = VisionEncoderDecoderModel.from_pretrained(
             pre_trained_model_repo,
@@ -193,75 +168,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         elements = self.format_table_elements(
             self.postprocess(image, tokens, decoder_cross_attentions),
         )
-
-        elements = self.clean_elements(elements)
-
         return elements
-
-    def clean_elements(cls, elements):
-        """
-        Perform cleaning of empty tables and repeater elements
-        """
-        elements = cls.remove_empty_table_elements(elements)
-        elements = cls.remove_repeated_picture_elements(elements)
-        elements = cls.remove_repeated_elements(elements)
-        return elements
-
-    @staticmethod
-    def remove_repeated_elements(elements):
-        """
-        Removal of repeated elements. The iou and text similarity has to be large enough.
-        The first occurrence is kept since the following ones might be affected by the
-        logit processors
-        """
-        repeated_elements = []
-
-        for i, e1 in enumerate(elements):
-            if e1 not in repeated_elements:
-                for j in range(i + 1, len(elements)):
-                    e2 = elements[j]
-                    if e1 != e2 and not (
-                        (e2.parent and e1 == e2.parent) or (e1.parent and e2 == e1.parent)
-                    ):
-                        elements_iou = iou(e1, e2)
-                        ratio = SM(None, e1.text, e2.text).ratio()
-                        if elements_iou > 0.75 and ratio > 0.99:
-                            repeated_elements.append(e2)
-
-        elements = [element for element in elements if element not in repeated_elements]
-
-        return elements
-
-    @staticmethod
-    def remove_repeated_picture_elements(elements):
-        """
-        remove empty repeated picture elements
-        """
-        picture_text_to_remove = [
-            k
-            for k, v in Counter(
-                [element.text for element in elements if element.type == "Picture"],
-            ).items()
-            if v > 3
-        ]
-
-        return [
-            element
-            for element in elements
-            if not (element.type == "Picture" and element.text in picture_text_to_remove)
-        ]
-
-    @staticmethod
-    def remove_empty_table_elements(elements):
-        """
-        remove empty tables might be created by Chipper. It relies on running
-        format_table_elements first
-        """
-        return [
-            element
-            for element in elements
-            if not (element.type == "Table" and len(element.text) == 0)
-        ]
 
     @staticmethod
     def format_table_elements(elements):
@@ -320,7 +227,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                         do_sample=True,
                         no_repeat_ngram_size=0,
                         num_beams=3,
-                        num_return_sequences=1,
                         return_dict_in_generate=True,
                         output_attentions=True,
                         output_scores=True,
@@ -1076,18 +982,12 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
 # Inspired on
 # https://github.com/huggingface/transformers/blob/8e3980a290acc6d2f8ea76dba111b9ef0ef00309/src/transformers/generation/logits_process.py#L706
 class NoRepeatNGramLogitsProcessor(LogitsProcessor):
-    def __init__(
-        self,
-        ngram_size: int,
-        context_length: int,
-        skip_tokens: Optional[Sequence[int]] = None,
-    ):
+    def __init__(self, ngram_size: int, skip_tokens: Optional[Sequence[int]] = None):
         if not isinstance(ngram_size, int) or ngram_size <= 0:
             raise ValueError(
                 f"`ngram_size` has to be a strictly positive integer, but is {ngram_size}",
             )
         self.ngram_size = ngram_size
-        self.context_length = context_length
         self.skip_tokens = skip_tokens
 
     def __call__(
@@ -1112,12 +1012,9 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         """
         num_batch_hypotheses = scores.shape[0]
         cur_len = input_ids.shape[-1]
-        new_input_ids = input_ids[:, slice(-self.context_length, cur_len)]
-        new_cur_len = new_input_ids.shape[-1]
-
         return _no_repeat_ngram_logits(
-            input_ids[:, slice(-self.context_length, cur_len)],
-            new_cur_len,
+            input_ids,
+            cur_len,
             scores,
             batch_size=num_batch_hypotheses,
             no_repeat_ngram_size=self.ngram_size,
@@ -1125,56 +1022,9 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         )
 
 
-class NoRepeatGroupNGramLogitsProcessor(LogitsProcessor):
-    def __init__(self, ngram_size: int, token_group: List[int]):
-        if not isinstance(ngram_size, int) or ngram_size <= 0:
-            raise ValueError(
-                f"`ngram_size` has to be a strictly positive integer, but is {ngram_size}",
-            )
-        self.ngram_size = ngram_size
-        self.token_group_list = torch.tensor(token_group * ngram_size)
-        self.token_group = token_group
-
-    def __call__(
-        self,
-        input_ids: torch.LongTensor,
-        scores: torch.FloatTensor,
-    ) -> torch.FloatTensor:
-        """
-        Args:
-            input_ids (`torch.LongTensor` of shape `(batch_size, sequence_length)`):
-                Indices of input sequence tokens in the vocabulary.
-                [What are input IDs?](../glossary#input-ids)
-            scores (`torch.FloatTensor` of shape `(batch_size, config.vocab_size)`):
-                Prediction scores of a language modeling head. These can be logits
-                for each vocabulary when not using beam search or log softmax for
-                each vocabulary token when using beam search
-
-        Return:
-            `torch.FloatTensor` of shape `(batch_size, config.vocab_size)`: The
-            processed prediction scores.
-
-        """
-        num_batch_hypotheses = scores.shape[0]
-        cur_len = input_ids.shape[-1]
-        if cur_len < len(self.token_group_list):
-            return scores
-
-        for num_batch in range(num_batch_hypotheses):
-            if all(
-                input_ids[num_batch, slice(-len(self.token_group_list), cur_len)].to("cpu")
-                == self.token_group_list,
-            ):
-                for token_id in self.token_group:
-                    scores[num_batch][token_id] = -float("inf")
-
-        return scores
-
-
 class NGramRepetitonStoppingCriteria(StoppingCriteria):
-    def __init__(self, ngram_size: int, context_length: int, skip_tokens: set = set()):
-        self.ngram_size = ngram_size
-        self.context_length = context_length
+    def __init__(self, repetition_window: int, skip_tokens: set = set()):
+        self.repetition_window = repetition_window
         self.skip_tokens = skip_tokens
 
     def __call__(
@@ -1205,14 +1055,11 @@ class NGramRepetitonStoppingCriteria(StoppingCriteria):
         num_batch_hypotheses = input_ids.shape[0]
         cur_len = input_ids.shape[-1]
 
-        new_input_ids = input_ids[:, slice(-self.context_length, cur_len)]
-        new_cur_len = new_input_ids.shape[-1]
-
         for banned_tokens in _calc_banned_tokens(
-            new_input_ids,
+            input_ids,
             num_batch_hypotheses,
-            self.ngram_size,
-            new_cur_len,
+            self.repetition_window,
+            cur_len,
         ):
             for token in banned_tokens:
                 if token not in self.skip_tokens:
@@ -1221,27 +1068,8 @@ class NGramRepetitonStoppingCriteria(StoppingCriteria):
         return False
 
 
-class TargetTokenIdStoppingCriterion(StoppingCriteria):
-    def __init__(self, target_token_id):
-        super().__init__()
-        self.target_token_id = target_token_id
-
-    def __call__(
-        self,
-        input_ids: torch.LongTensor,
-        scores: torch.FloatTensor,
-        **kwargs,
-    ) -> bool:
-        """
-        Check if the already generated tokens contain the target token_id
-        """
-        output = self.target_token_id in input_ids
-
-        return output  # self.target_token_id in input_ids
-
-
 def _no_repeat_ngram_logits(
-    input_ids: torch.Tensor,
+    input_ids: torch.LongTensor,
     cur_len: int,
     logits: torch.FloatTensor,
     batch_size: int = 1,
@@ -1271,7 +1099,7 @@ def _no_repeat_ngram_logits(
 
 
 def _calc_banned_tokens(
-    prev_input_ids: torch.Tensor,
+    prev_input_ids: torch.LongTensor,
     num_hypos: int,
     no_repeat_ngram_size: int,
     cur_len: int,
@@ -1317,31 +1145,3 @@ def get_table_token_ids(processor):
         if token.startswith("<t") or token.startswith("</t")
     }
     return skip_tokens
-
-
-def iou(element1, element2):
-    """
-    Calculate iou (intersection over union) for two elements
-    """
-    bbox1 = element1.bbox
-    bbox2 = element2.bbox
-
-    if element1.bbox is None or element2.bbox is None:
-        return 0.0
-
-    intersection_area = max(0, min(bbox1.x2, bbox2.x2) - max(bbox1.x1, bbox2.x1)) * max(
-        0,
-        min(bbox1.y2, bbox2.y2) - max(bbox1.y1, bbox2.y1),
-    )
-
-    bbox1_area = (bbox1.x2 - bbox1.x1) * (bbox1.y2 - bbox1.y1)
-    bbox2_area = (bbox2.x2 - bbox2.x1) * (bbox2.y2 - bbox2.y1)
-
-    union_area = (bbox1_area) + (bbox2_area) - intersection_area
-
-    if union_area == 0.0:
-        return 0.0
-
-    iou = intersection_area / union_area
-
-    return iou
