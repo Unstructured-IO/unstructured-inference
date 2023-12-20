@@ -1,3 +1,7 @@
+## 0.7.20
+
+* chipper-v3: improved table prediction
+
 ## 0.7.19
 
 * refactor: remove all OCR related code
