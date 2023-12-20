@@ -1160,7 +1160,7 @@ class NoRepeatGroupNGramLogitsProcessor(LogitsProcessor):
 
         for num_batch in range(num_batch_hypotheses):
             if all(
-                input_ids[num_batch, slice(-len(self.token_group_list), cur_len)]
+                input_ids[num_batch, slice(-len(self.token_group_list), cur_len)].to("cpu")
                 == self.token_group_list,
             ):
                 for token_id in self.token_group:
