@@ -9,7 +9,10 @@ from PIL import Image
 
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
-from unstructured_inference.inference.elements import EmbeddedTextRegion, ImageTextRegion
+from unstructured_inference.inference.elements import (
+    EmbeddedTextRegion,
+    ImageTextRegion,
+)
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -271,12 +274,14 @@ class MockLayout:
         return MockLayout()
 
 
+@pytest.mark.parametrize("element_extraction_model", [None, "foo"])
 @pytest.mark.parametrize("filetype", ["png", "jpg", "tiff"])
-def test_from_image_file(monkeypatch, mock_final_layout, filetype):
+def test_from_image_file(monkeypatch, mock_final_layout, filetype, element_extraction_model):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_final_layout]
 
     monkeypatch.setattr(layout.PageLayout, "get_elements_with_detection_model", mock_get_elements)
+    monkeypatch.setattr(layout.PageLayout, "get_elements_using_image_extraction", mock_get_elements)
     filename = f"sample-docs/loremipsum.{filetype}"
     image = Image.open(filename)
     image_metadata = {
@@ -285,7 +290,10 @@ def test_from_image_file(monkeypatch, mock_final_layout, filetype):
         "height": image.height,
     }
 
-    doc = layout.DocumentLayout.from_image_file(filename)
+    doc = layout.DocumentLayout.from_image_file(
+        filename,
+        element_extraction_model=element_extraction_model,
+    )
     page = doc.pages[0]
     assert page.elements[0] == mock_final_layout
     assert page.image is None
