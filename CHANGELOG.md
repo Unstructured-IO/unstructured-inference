@@ -1,3 +1,7 @@
+## 0.7.21
+
+* Revised repetitions for Chipper
+
 ## 0.7.20
 
 * chipper-v3: improved table prediction
