@@ -114,7 +114,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ]
 
         # This check is needed to since Chipperv1 does not processes tables
-        if self.source == Source.CHIPPER:
+        if self.source == Source.CHIPPERV2 or self.source == Source.CHIPPERV3:
             self.stopping_criteria.append(
                 TargetTokenIdStoppingCriterion(
                     target_token_id=self.processor.tokenizer.encode(
