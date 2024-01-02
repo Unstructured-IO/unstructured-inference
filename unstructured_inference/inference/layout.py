@@ -322,10 +322,10 @@ class PageLayout:
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
         )
+        # FIXME (yao): refactor the other methods so they all return elements like the third route
         if page.element_extraction_model is not None:
             page.get_elements_using_image_extraction()
-            return page
-        if fixed_layout is None:
+        elif fixed_layout is None:
             page.get_elements_with_detection_model()
         else:
             page.elements = page.get_elements_from_layout(fixed_layout)
