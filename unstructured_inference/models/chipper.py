@@ -207,8 +207,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         elements = cls.remove_repeated_elements(elements)
         return elements
 
-    @staticmethod
-    def remove_repeated_elements(elements):
+    def remove_repeated_elements(cls, elements):
         """
         Removal of repeated elements. The iou and text similarity has to be large enough.
         The first occurrence is kept since the following ones might be affected by the
@@ -216,16 +215,22 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         """
         repeated_elements = []
 
+        # Get list of parents, parents should not be removed
+        parents = [e.parent for e in elements if e.parent]
+
         for i, e1 in enumerate(elements):
             if e1 not in repeated_elements:
                 for j in range(i + 1, len(elements)):
                     e2 = elements[j]
-                    if e1 != e2 and not (
-                        (e2.parent and e1 == e2.parent) or (e1.parent and e2 == e1.parent)
-                    ):
+                    if e1 != e2:
                         elements_iou = iou(e1, e2)
                         ratio = SM(None, e1.text, e2.text).ratio()
-                        if elements_iou > 0.75 and ratio > 0.99:
+                        if (
+                            e1.type != e2.type
+                            and elements_iou > 0.75
+                            and ratio > 0.99
+                            and e2 not in parents
+                        ):
                             repeated_elements.append(e2)
 
         elements = [element for element in elements if element not in repeated_elements]

@@ -324,9 +324,12 @@ def test_deduplicate_detected_elements():
     assert len(output) == 2
 
 
-def test_norepeatnGramlogitsprocessor_exception():
+def test_logitsprocessor_exception():
     with pytest.raises(ValueError):
         chipper.NoRepeatNGramLogitsProcessor(ngram_size="", context_length=10)
+
+    with pytest.raises(ValueError):
+        chipper.NoRepeatGroupNGramLogitsProcessor(ngram_size="", token_group={})
 
 
 def test_run_chipper_v3():
