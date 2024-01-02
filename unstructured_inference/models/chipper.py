@@ -663,7 +663,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ]
 
         for check_element in elements:
-            if check_element == element:
+            if check_element == element or not check_element.bbox:
                 continue
 
             if self.bbox_overlap(
@@ -979,6 +979,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 continue
 
             ebbox1 = element.bbox
+            if not ebbox1:
+                continue
             bbox1 = [ebbox1.x1, ebbox1.y1, ebbox1.x2, max(ebbox1.y1, ebbox1.y2)]
 
             for celement in elements:
@@ -986,6 +988,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     continue
 
                 ebbox2 = celement.bbox
+                if not ebbox2:
+                    continue
                 bbox2 = [ebbox2.x1, ebbox2.y1, ebbox2.x2, max(ebbox2.y1, ebbox2.y2)]
 
                 if self.bbox_overlap(bbox1, bbox2):
