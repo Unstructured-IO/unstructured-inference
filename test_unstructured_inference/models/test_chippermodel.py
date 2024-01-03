@@ -225,6 +225,21 @@ def test_no_repeat_group_ngram_logits_processor():
         == 6
     )
 
+    input_ids = torch.tensor([[1, 1, 2, 1, 2, 1, 2, 1, 2]])
+    logits = torch.tensor([[0.1, -0.3, -0.5, 0, 1.0, -0.9]])
+
+    output = logitsProcessor(input_ids=input_ids, scores=logits)
+
+    assert (
+        int(
+            torch.sum(
+                output
+                == torch.tensor([[0.1000, -float("inf"), -float("inf"), 0.0000, 1.0000, -0.9000]]),
+            ),
+        )
+        == 6
+    )
+
 
 def test_target_token_id_stopping_criterion():
     input_ids = torch.tensor([1, 2, 3])

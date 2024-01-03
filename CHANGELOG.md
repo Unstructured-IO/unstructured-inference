@@ -1,6 +1,9 @@
-## 0.7.21
+## 0.7.22
 
 * Revised repetitions for Chipper
+
+## 0.7.21
+
 * fix: fix a bug where chipper, or any element extraction model based `PageLayout` object, lack `image_metadata` and other attributes that are required for downstream processing; this fix also reduces the memory overhead of using chipper model
 
 ## 0.7.20

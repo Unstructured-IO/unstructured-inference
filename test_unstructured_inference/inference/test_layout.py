@@ -214,17 +214,14 @@ class MockEmbeddedTextRegion(EmbeddedTextRegion):
 
 class MockPageLayout(layout.PageLayout):
     def __init__(
-        self,
-        number=1,
-        image=None,
-        model=None,
-        detection_model=None,
+        self, number=1, image=None, model=None, detection_model=None, element_extraction_model=None
     ):
         self.image = image
         self.layout = layout
         self.model = model
         self.number = number
         self.detection_model = detection_model
+        self.element_extraction_model = element_extraction_model
 
 
 @pytest.mark.parametrize(
