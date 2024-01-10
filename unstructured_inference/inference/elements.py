@@ -67,6 +67,8 @@ class Rectangle:
 
     def intersects(self, other: Rectangle) -> bool:
         """Checks whether this rectangle intersects another rectangle."""
+        if self._has_none() or other._has_none():
+            return False
         return intersections(self, other)[0, 1]
 
     def is_in(self, other: Rectangle, error_margin: Optional[Union[int, float]] = None) -> bool:
@@ -81,6 +83,10 @@ class Rectangle:
             ],
         )
 
+    def _has_none(self) -> bool:
+        """return false when one of the coord is nan"""
+        return any((self.x1 is None, self.x2 is None, self.y1 is None, self.y2 is None))
+
     @property
     def coordinates(self):
         """Gets coordinates of the rectangle"""
@@ -89,6 +95,8 @@ class Rectangle:
     def intersection(self, other: Rectangle) -> Optional[Rectangle]:
         """Gives the rectangle that is the intersection of two rectangles, or None if the
         rectangles are disjoint."""
+        if self._has_none() or other._has_none():
+            return None
         x1 = max(self.x1, other.x1)
         x2 = min(self.x2, other.x2)
         y1 = max(self.y1, other.y1)
