@@ -8,6 +8,7 @@ from typing import BinaryIO, Collection, List, Optional, Union, cast
 import numpy as np
 import pdf2image
 from PIL import Image, ImageSequence
+from pillow_heif import register_heif_opener
 
 from unstructured_inference.inference.elements import (
     TextRegion,
@@ -75,6 +76,7 @@ class DocumentLayout:
             for i, (image_path, fixed_layout) in enumerate(zip(image_paths, fixed_layouts)):
                 # NOTE(robinson) - In the future, maybe we detect the page number and default
                 # to the index if it is not detected
+                register_heif_opener()
                 with Image.open(image_path) as image:
                     page = PageLayout.from_image(
                         image,
@@ -98,6 +100,7 @@ class DocumentLayout:
         """Creates a DocumentLayout from an image file."""
         logger.info(f"Reading image file: {filename} ...")
         try:
+            register_heif_opener()
             image = Image.open(filename)
             format = image.format
             images = []
@@ -228,6 +231,7 @@ class PageLayout:
             if self.image:
                 self.image_array = np.array(self.image)
             else:
+                register_heif_opener()
                 image = Image.open(self.image_path)
                 self.image_array = np.array(image)
         return self.image_array
@@ -258,6 +262,7 @@ class PageLayout:
         if self.image:
             img = self.image.copy()
         elif self.image_path:
+            register_heif_opener()
             img = Image.open(self.image_path)
         else:
             img = self._get_image(self.document_filename, self.number, image_dpi)
@@ -300,6 +305,7 @@ class PageLayout:
                     f"Page number {page_number} is greater than the number of pages in the PDF.",
                 )
 
+            register_heif_opener()
             with Image.open(image_paths[page_number - 1]) as image:
                 return image.copy()
 
