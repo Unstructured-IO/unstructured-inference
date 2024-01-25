@@ -275,7 +275,7 @@ class MockLayout:
 
 
 @pytest.mark.parametrize("element_extraction_model", [None, "foo"])
-@pytest.mark.parametrize("filetype", ["png", "jpg", "tiff"])
+@pytest.mark.parametrize("filetype", ["png", "jpg", "tiff", "heic"])
 def test_from_image_file(monkeypatch, mock_final_layout, filetype, element_extraction_model):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_final_layout]
