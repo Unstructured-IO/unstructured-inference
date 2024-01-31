@@ -624,7 +624,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         Given a LayoutElement element, reduce the size of the bounding box,
         depending on existing elements
         """
-        if element.bbox:
+        if not is_not_valid_bbox(element.bbox):
             bbox = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
 
             if not self.element_overlap(elements, element):
@@ -661,7 +661,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ]
 
         for check_element in elements:
-            if check_element == element or not check_element.bbox:
+            if check_element == element or is_not_valid_bbox(check_element.bbox):
                 continue
 
             if self.bbox_overlap(
@@ -977,7 +977,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 continue
 
             ebbox1 = element.bbox
-            if not ebbox1:
+            if is_not_valid_bbox(ebbox1):
                 continue
             bbox1 = [ebbox1.x1, ebbox1.y1, ebbox1.x2, max(ebbox1.y1, ebbox1.y2)]
 
@@ -986,7 +986,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     continue
 
                 ebbox2 = celement.bbox
-                if not ebbox2:
+                if is_not_valid_bbox(ebbox2):
                     continue
                 bbox2 = [ebbox2.x1, ebbox2.y1, ebbox2.x2, max(ebbox2.y1, ebbox2.y2)]
 
@@ -1123,7 +1123,7 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         new_cur_len = new_input_ids.shape[-1]
 
         return _no_repeat_ngram_logits(
-            input_ids[:, slice(-self.context_length, cur_len)],
+            new_input_ids,
             new_cur_len,
             scores,
             batch_size=num_batch_hypotheses,
@@ -1246,7 +1246,7 @@ class TargetTokenIdStoppingCriterion(StoppingCriteria):
 
 
 def _no_repeat_ngram_logits(
-    input_ids: torch.Tensor,
+    input_ids: torch.LongTensor,
     cur_len: int,
     logits: torch.FloatTensor,
     batch_size: int = 1,
@@ -1276,7 +1276,7 @@ def _no_repeat_ngram_logits(
 
 
 def _calc_banned_tokens(
-    prev_input_ids: torch.Tensor,
+    prev_input_ids: torch.LongTensor,
     num_hypos: int,
     no_repeat_ngram_size: int,
     cur_len: int,
@@ -1324,29 +1324,8 @@ def get_table_token_ids(processor):
     return skip_tokens
 
 
-def iou(element1, element2):
+def is_not_valid_bbox(bbox: Rectangle):
     """
-    Calculate iou (intersection over union) for two elements
+    Check if a bbox is not valid
     """
-    bbox1 = element1.bbox
-    bbox2 = element2.bbox
-
-    if element1.bbox is None or element2.bbox is None:
-        return 0.0
-
-    intersection_area = max(0, min(bbox1.x2, bbox2.x2) - max(bbox1.x1, bbox2.x1)) * max(
-        0,
-        min(bbox1.y2, bbox2.y2) - max(bbox1.y1, bbox2.y1),
-    )
-
-    bbox1_area = (bbox1.x2 - bbox1.x1) * (bbox1.y2 - bbox1.y1)
-    bbox2_area = (bbox2.x2 - bbox2.x1) * (bbox2.y2 - bbox2.y1)
-
-    union_area = (bbox1_area) + (bbox2_area) - intersection_area
-
-    if union_area == 0.0:
-        return 0.0
-
-    iou = intersection_area / union_area
-
-    return iou
+    return not bbox or any((bbox.x1 is None, bbox.x2 is None, bbox.y1 is None, bbox.y2 is None))
