@@ -218,20 +218,18 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         # Get list of parents, parents should not be removed
         parents = [e.parent for e in elements if e.parent]
 
+        n_elements = len(elements)
         for i, e1 in enumerate(elements):
-            if e1 not in repeated_elements:
-                for j in range(i + 1, len(elements)):
-                    e2 = elements[j]
-                    if e1 != e2:
-                        elements_iou = iou(e1, e2)
-                        ratio = SM(None, e1.text, e2.text).ratio()
-                        if (
-                            e1.type != e2.type
-                            and elements_iou > 0.75
-                            and ratio > 0.99
-                            and e2 not in parents
-                        ):
-                            repeated_elements.append(e2)
+            if e1 in repeated_elements:
+                continue
+            for j in range(i + 1, n_elements):
+                e2 = elements[j]
+                if e1 == e2 or e2 in parents or e1.type == e2.type:
+                    continue
+                elements_iou = e1.bbox.intersection_over_union(e2.bbox)
+                ratio = SM(None, e1.text, e2.text).ratio()
+                if elements_iou > 0.75 and ratio > 0.99:
+                    repeated_elements.append(e2)
 
         elements = [element for element in elements if element not in repeated_elements]
 
