@@ -932,6 +932,21 @@ def test_table_prediction_output_format(
         assert expectation in result
 
 
+def test_table_prediction_runs_with_empty_recognize(
+    table_transformer,
+    example_image,
+    mocker,
+    mocked_ocr_tokens,
+):
+    mocker.patch.object(tables, "recognize", return_value=[])
+    mocker.patch.object(
+        tables.UnstructuredTableTransformerModel,
+        "get_structure",
+        return_value=None,
+    )
+    assert table_transformer.run_prediction(example_image, ocr_tokens=mocked_ocr_tokens) == ""
+
+
 def test_table_prediction_with_ocr_tokens(table_transformer, example_image, mocked_ocr_tokens):
     prediction = table_transformer.predict(example_image, ocr_tokens=mocked_ocr_tokens)
     assert '<table><thead><th rowspan="2">' in prediction

@@ -1,6 +1,15 @@
-## 0.7.22
+## 0.7.24
 
 * Revised repetitions for Chipper
+
+## 0.7.23
+
+* fix: added handling in `UnstructuredTableTransformerModel` for if `recognize` returns an empty
+  list in `run_prediction`.
+
+## 0.7.22
+
+* fix: add logic to handle computation of intersections betwen 2 `Rectangle`s when a `Rectangle` has `None` value in its coordinates
 
 ## 0.7.21
 
