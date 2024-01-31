@@ -1244,9 +1244,7 @@ class TargetTokenIdStoppingCriterion(StoppingCriteria):
         """
         Check if the already generated tokens contain the target token_id
         """
-        output = self.target_token_id in input_ids
-
-        return output  # self.target_token_id in input_ids
+        return self.target_token_id in input_ids
 
 
 def _no_repeat_ngram_logits(
