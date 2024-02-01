@@ -1,7 +1,6 @@
 import copy
 import os
 import platform
-from collections import Counter
 from contextlib import nullcontext
 from difflib import SequenceMatcher as SM
 from typing import ContextManager, Dict, List, Optional, Sequence, TextIO, Tuple, Union
@@ -202,7 +201,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         Perform cleaning of empty tables and repeater elements
         """
         elements = cls.remove_empty_table_elements(elements)
-        elements = cls.remove_repeated_picture_elements(elements)
+        elements = cls.remove_elements_with_negative_coordinates(elements)
         elements = cls.remove_repeated_elements(elements)
         return elements
 
@@ -235,23 +234,12 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         return elements
 
     @staticmethod
-    def remove_repeated_picture_elements(elements):
+    def remove_elements_with_negative_coordinates(elements):
         """
-        remove empty repeated picture elements
+        remove elements with negative coordinates
+        it does not evaluate invalid bboxes
         """
-        picture_text_to_remove = [
-            k
-            for k, v in Counter(
-                [element.text for element in elements if element.type == "Picture"],
-            ).items()
-            if v > 3
-        ]
-
-        return [
-            element
-            for element in elements
-            if not (element.type == "Picture" and element.text in picture_text_to_remove)
-        ]
+        return [element for element in elements if not has_bbox_negative_coordinates(element.bbox)]
 
     @staticmethod
     def remove_empty_table_elements(elements):
@@ -1324,3 +1312,15 @@ def is_not_valid_bbox(bbox: Rectangle):
     Check if a bbox is not valid
     """
     return not bbox or any((bbox.x1 is None, bbox.x2 is None, bbox.y1 is None, bbox.y2 is None))
+
+
+def has_bbox_negative_coordinates(bbox: Rectangle):
+    """
+    Check if a bbox is not valid
+    """
+
+    # Do not evaluate invalid bboxes
+    if is_not_valid_bbox(bbox):
+        return False
+
+    return any((bbox.x1 < 0.0, bbox.x2 < 0.0, bbox.y1 < 0.0, bbox.y2 < 0.0))
