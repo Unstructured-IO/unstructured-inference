@@ -108,7 +108,6 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.stopping_criteria = [
             NGramRepetitonStoppingCriteria(
                 ngram_size=30,
-                context_length=61,
                 skip_tokens=get_table_token_ids(self.processor),
             ),
         ]
@@ -1119,7 +1118,7 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         """
         num_batch_hypotheses = scores.shape[0]
         cur_len = input_ids.shape[-1]
-        new_input_ids = input_ids[:, slice(-self.context_length, cur_len)]
+        new_input_ids = torch.LongTensor(input_ids[:, slice(-self.context_length, cur_len)])
         new_cur_len = new_input_ids.shape[-1]
 
         return _no_repeat_ngram_logits(
@@ -1179,9 +1178,8 @@ class NoRepeatGroupNGramLogitsProcessor(LogitsProcessor):
 
 
 class NGramRepetitonStoppingCriteria(StoppingCriteria):
-    def __init__(self, ngram_size: int, context_length: int, skip_tokens: set = set()):
+    def __init__(self, ngram_size: int, skip_tokens: set = set()):
         self.ngram_size = ngram_size
-        self.context_length = context_length
         self.skip_tokens = skip_tokens
 
     def __call__(
@@ -1212,14 +1210,11 @@ class NGramRepetitonStoppingCriteria(StoppingCriteria):
         num_batch_hypotheses = input_ids.shape[0]
         cur_len = input_ids.shape[-1]
 
-        new_input_ids = input_ids[:, slice(-self.context_length, cur_len)]
-        new_cur_len = new_input_ids.shape[-1]
-
         for banned_tokens in _calc_banned_tokens(
-            new_input_ids,
+            input_ids,
             num_batch_hypotheses,
             self.ngram_size,
-            new_cur_len,
+            cur_len,
         ):
             for token in banned_tokens:
                 if token not in self.skip_tokens:

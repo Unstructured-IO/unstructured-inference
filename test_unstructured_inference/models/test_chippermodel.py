@@ -194,7 +194,7 @@ def test_ngram_repetiton_stopping_criteria():
     logits = torch.tensor([[0.1, -0.3, -0.5, 0, 1.0, -0.9]])
 
     stoppingCriteria = chipper.NGramRepetitonStoppingCriteria(
-        ngram_size=2, context_length=10, skip_tokens={0, 1, 2, 3, 4}
+        ngram_size=2, skip_tokens={0, 1, 2, 3, 4}
     )
 
     output = stoppingCriteria(input_ids=input_ids, scores=logits)
@@ -202,7 +202,7 @@ def test_ngram_repetiton_stopping_criteria():
     assert output is False
 
     stoppingCriteria = chipper.NGramRepetitonStoppingCriteria(
-        ngram_size=2, context_length=10, skip_tokens={1, 2, 3, 4}
+        ngram_size=2, skip_tokens={1, 2, 3, 4}
     )
     output = stoppingCriteria(input_ids=input_ids, scores=logits)
     assert output is True
@@ -304,7 +304,6 @@ def test_predict_tokens_beam_indices():
     model.stopping_criteria = [
         chipper.NGramRepetitonStoppingCriteria(
             ngram_size=1,
-            context_length=10,
             skip_tokens={},
         ),
     ]
