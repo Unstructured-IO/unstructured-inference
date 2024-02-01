@@ -1,6 +1,7 @@
 import copy
 import os
 import platform
+from collections import Counter
 from contextlib import nullcontext
 from difflib import SequenceMatcher as SM
 from typing import ContextManager, Dict, List, Optional, Sequence, TextIO, Tuple, Union
@@ -99,7 +100,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         self.logits_processor = [
             NoRepeatNGramLogitsProcessor(
                 ngram_size=no_repeat_ngram_size,
-                context_length=(no_repeat_ngram_size * 4) + 1,
+                context_length=(no_repeat_ngram_size * 5) + 1,
                 skip_tokens=get_table_token_ids(self.processor),
             ),
         ]
@@ -201,7 +202,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         Perform cleaning of empty tables and repeater elements
         """
         elements = cls.remove_empty_table_elements(elements)
-        elements = cls.remove_elements_with_negative_coordinates(elements)
+        elements = cls.remove_repeated_elements_with_negative_coordinates(elements)
         elements = cls.remove_repeated_elements(elements)
         return elements
 
@@ -234,12 +235,28 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         return elements
 
     @staticmethod
-    def remove_elements_with_negative_coordinates(elements):
+    def remove_repeated_elements_with_negative_coordinates(elements):
         """
-        remove elements with negative coordinates
+        remove repeated elements with negative coordinates
         it does not evaluate invalid bboxes
         """
-        return [element for element in elements if not has_bbox_negative_coordinates(element.bbox)]
+        location_to_remove = [
+            k
+            for k, v in Counter(
+                [
+                    str(element.bbox)
+                    for element in elements
+                    if has_bbox_negative_coordinates(element.bbox)
+                ],
+            ).items()
+            if v > 3
+        ]
+
+        return [
+            element
+            for element in elements
+            if not (not is_not_valid_bbox(element.bbox) and str(element.bbox) in location_to_remove)
+        ]
 
     @staticmethod
     def remove_empty_table_elements(elements):
