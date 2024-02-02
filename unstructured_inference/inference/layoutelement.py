@@ -31,6 +31,7 @@ class LayoutElement(TextRegion):
     prob: Optional[float] = None
     image_path: Optional[str] = None
     parent: Optional[LayoutElement] = None
+    text_as_html: Optional[str] = None
 
     def extract_text(
         self,
