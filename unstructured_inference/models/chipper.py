@@ -1246,7 +1246,7 @@ class TargetTokenIdStoppingCriterion(StoppingCriteria):
 
 
 def _no_repeat_ngram_logits(
-    input_ids: torch.LongTensor,
+    input_ids: torch.Tensor,
     cur_len: int,
     logits: torch.FloatTensor,
     batch_size: int = 1,
@@ -1276,7 +1276,7 @@ def _no_repeat_ngram_logits(
 
 
 def _calc_banned_tokens(
-    prev_input_ids: torch.LongTensor,
+    prev_input_ids: torch.Tensor,
     num_hypos: int,
     no_repeat_ngram_size: int,
     cur_len: int,
