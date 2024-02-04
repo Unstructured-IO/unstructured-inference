@@ -1123,7 +1123,8 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         """
         num_batch_hypotheses = scores.shape[0]
         cur_len = input_ids.shape[-1]
-        new_input_ids = torch.LongTensor(input_ids[:, slice(-self.context_length, cur_len)])
+        #new_input_ids = torch.LongTensor(input_ids[:, slice(-self.context_length, cur_len)])
+        new_input_ids = torch.tensor(input_ids[:, slice(-self.context_length, cur_len)], dtype=torch.long)
         new_cur_len = new_input_ids.shape[-1]
 
         return _no_repeat_ngram_logits(
