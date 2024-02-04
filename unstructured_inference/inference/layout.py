@@ -209,7 +209,9 @@ class PageLayout:
 
         # If the model is a chipper model, we don't want to order the
         # elements, as they are already ordered
-        order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
+        order_elements = not isinstance(
+            self.element_extraction_model, UnstructuredChipperModel
+        ) and not isinstance(self.detection_model, UnstructuredChipperModel)
         if order_elements:
             layout = order_layout(layout)
 

@@ -1,3 +1,7 @@
+## 0.7.24
+
+* Revised repetitions for Chipper
+
 ## 0.7.23
 
 * fix: added handling in `UnstructuredTableTransformerModel` for if `recognize` returns an empty
