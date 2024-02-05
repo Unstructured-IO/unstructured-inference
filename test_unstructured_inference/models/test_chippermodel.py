@@ -426,7 +426,7 @@ def test_check_overlap(bbox1, bbox2, output):
 
 
 def test_format_table_elements():
-    table_html = "<table><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></table>"
+    table_html = "<table><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td></tr></table>"
     texts = [
         "Text",
         "  - List element",
@@ -440,7 +440,7 @@ def test_format_table_elements():
     assert text_attributes == [
         "Text",
         "  - List element",
-        "Cell 1Cell 2Cell 3Cell 4",
+        "Cell 1Cell 2Cell 3",
         None,
     ]
     assert text_as_html_attributes == [None, None, table_html, None]
