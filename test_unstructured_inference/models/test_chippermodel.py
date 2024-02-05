@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 import torch
 from PIL import Image
+from unstructured_inference.inference.layoutelement import LayoutElement
 
 from unstructured_inference.models import chipper
 from unstructured_inference.models.base import get_model
@@ -49,7 +50,9 @@ def mock_initialize(self, *arg, **kwargs):
 
 
 def test_predict_tokens():
-    with mock.patch.object(chipper.UnstructuredChipperModel, "initialize", mock_initialize):
+    with mock.patch.object(
+        chipper.UnstructuredChipperModel, "initialize", mock_initialize
+    ):
         model = chipper.UnstructuredChipperModel()
         model.initialize()
         with open("sample-docs/loremipsum.png", "rb") as fp:
@@ -95,7 +98,10 @@ def test_postprocess(decoded_str, expected_classes, expected_parent_ids):
 
     tokens = model.tokenizer.encode(decoded_str)
     cross_attentions = [
-        [torch.ones([1, 16, 2, 1200]) if j == 0 else torch.ones([1, 16, 1, 1200]) for i in range(4)]
+        [
+            torch.ones([1, 16, 2, 1200]) if j == 0 else torch.ones([1, 16, 1, 1200])
+            for i in range(4)
+        ]
         for j in range(550)
     ]
     with open("sample-docs/loremipsum.png", "rb") as fp:
@@ -145,7 +151,10 @@ def test_no_repeat_ngram_logits():
     assert (
         int(
             torch.sum(
-                output == torch.tensor([[0.1000, -0.3000, -0.5000, 0.0000, 1.0000, -float("inf")]]),
+                output
+                == torch.tensor(
+                    [[0.1000, -0.3000, -0.5000, 0.0000, 1.0000, -float("inf")]]
+                ),
             ),
         )
         == 6
@@ -238,7 +247,10 @@ def test_postprocess_bbox(decoded_str, expected_classes):
 
     tokens = model.tokenizer.encode(decoded_str)
     cross_attentions = [
-        [torch.ones([1, 16, 2, 1200]) if j == 0 else torch.ones([1, 16, 1, 1200]) for i in range(4)]
+        [
+            torch.ones([1, 16, 2, 1200]) if j == 0 else torch.ones([1, 16, 1, 1200])
+            for i in range(4)
+        ]
         for j in range(550)
     ]
     with open("sample-docs/loremipsum.png", "rb") as fp:
@@ -422,3 +434,26 @@ def test_check_overlap(bbox1, bbox2, output):
     model = get_model("chipper")
 
     assert model.check_overlap(bbox1, bbox2) == output
+
+
+def test_format_table_elements():
+    table_html = "<table><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></table>"
+    texts = [
+        "Text",
+        "  - List element",
+        table_html,
+        None,
+    ]
+    elements = [LayoutElement(bbox=mock.MagicMock(), text=text) for text in texts]
+    formatted_elements = chipper.UnstructuredChipperModel.format_table_elements(
+        elements
+    )
+    text_attributes = [fe.text for fe in formatted_elements]
+    text_as_html_attributes = [fe.text_as_html for fe in formatted_elements]
+    assert text_attributes == [
+        "Text",
+        "  - List element",
+        "Cell 1Cell 2Cell 3Cell 4",
+        None,
+    ]
+    assert text_as_html_attributes == [None, None, table_html, None]
