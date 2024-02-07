@@ -171,16 +171,18 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         return elements
 
     @staticmethod
-    def format_table_elements(elements):
-        """makes chipper table element return the same as other layout models
+    def format_table_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
+        """Makes chipper table element return the same as other layout models.
 
-        - copies the html representation to attribute text_as_html
-        - strip html tags from the attribute text
+        1. If `text` attribute is an html (has html tags in it), copies the `text`
+        attribute to `text_as_html` attribute.
+        2. Strips html tags from the `text` attribute.
         """
         for element in elements:
-            element.text_as_html = element.text
-            element.text = strip_tags(element.text)
-
+            text = strip_tags(element.text) if element.text is not None else element.text
+            if text != element.text:
+                element.text_as_html = element.text  # type: ignore[attr-defined]
+            element.text = text
         return elements
 
     def predict_tokens(

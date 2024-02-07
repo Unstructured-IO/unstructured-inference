@@ -1,3 +1,7 @@
+## 0.7.24
+
+* fix: assign value to `text_as_html` element attribute only if `text` attribute contains HTML tags.
+
 ## 0.7.23
 
 * fix: added handling in `UnstructuredTableTransformerModel` for if `recognize` returns an empty
