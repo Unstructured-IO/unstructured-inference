@@ -181,7 +181,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         for element in elements:
             text = strip_tags(element.text) if element.text is not None else element.text
             if text != element.text:
-                element.text_as_html = element.text
+                element.text_as_html = element.text  # type: ignore[attr-defined]
             element.text = text
         return elements
 
