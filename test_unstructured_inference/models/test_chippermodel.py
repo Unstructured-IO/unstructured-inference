@@ -436,7 +436,9 @@ def test_format_table_elements():
     elements = [LayoutElement(bbox=mock.MagicMock(), text=text) for text in texts]
     formatted_elements = chipper.UnstructuredChipperModel.format_table_elements(elements)
     text_attributes = [fe.text for fe in formatted_elements]
-    text_as_html_attributes = [fe.text_as_html for fe in formatted_elements]
+    text_as_html_attributes = [
+        fe.text_as_html if hasattr(fe, "text_as_html") else None for fe in formatted_elements
+    ]
     assert text_attributes == [
         "Text",
         "  - List element",
