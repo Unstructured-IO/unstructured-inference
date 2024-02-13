@@ -1,3 +1,7 @@
+## 0.7.25-dev0
+
+* chore: removes `install-detectron2` from the `Makefile`
+
 ## 0.7.24
 
 * fix: assign value to `text_as_html` element attribute only if `text` attribute contains HTML tags.
