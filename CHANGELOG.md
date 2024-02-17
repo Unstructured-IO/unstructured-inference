@@ -1,6 +1,7 @@
 ## 0.7.25-dev0
 
 * chore: removes `install-detectron2` from the `Makefile`
+# enhancement: allow table_agent to load from external parameter `UNSTRUCTURED_TABLE_AGENT_MODEL_PATH`
 
 ## 0.7.24
 
