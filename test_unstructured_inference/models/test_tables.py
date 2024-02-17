@@ -1,4 +1,5 @@
 import os
+from unittest import mock
 
 import numpy as np
 import pytest
@@ -14,14 +15,37 @@ from unstructured_inference.models import tables
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
 
+def test_load_agent_with_env_variable(monkeypatch):
+    with mock.patch(
+        "unstructured_inference.models.tables.tables_agent",
+        autospec=True,
+    ) as mock_tables_agent:
+        mock_tables_agent.initialize.return_value = None
+        monkeypatch.setenv("UNSTRUCTURED_TABLE_AGENT_MODEL_PATH", "fake_model_path")
+
+        tables.load_agent()
+
+        mock_tables_agent.initialize.assert_called_once_with("fake_model_path")
+
+
+def test_load_agent_without_env_variable(monkeypatch):
+    with mock.patch(
+        "unstructured_inference.models.tables.tables_agent",
+        autospec=True,
+    ) as mock_tables_agent:
+        mock_tables_agent.initialize.return_value = None
+
+        tables.load_agent()
+
+        mock_tables_agent.initialize.assert_called_once_with(
+            "microsoft/table-transformer-structure-recognition",
+        )
+
+
 @pytest.fixture()
 def table_transformer():
     tables.load_agent()
     return tables.tables_agent
-
-
-def test_load_agent(table_transformer):
-    assert hasattr(table_transformer, "model")
 
 
 @pytest.fixture()
@@ -567,7 +591,7 @@ def test_load_table_model_raises_when_not_available(model_path):
 
 
 @pytest.mark.parametrize(
-    "bbox1, bbox2, expected_result",
+    ("bbox1", "bbox2", "expected_result"),
     [
         ((0, 0, 5, 5), (2, 2, 7, 7), 0.36),
         ((0, 0, 0, 0), (6, 6, 10, 10), 0),
@@ -916,7 +940,9 @@ def test_table_prediction_output_format(
     )
     if output_format:
         result = table_transformer.run_prediction(
-            example_image, result_format=output_format, ocr_tokens=mocked_ocr_tokens
+            example_image,
+            result_format=output_format,
+            ocr_tokens=mocked_ocr_tokens,
         )
     else:
         result = table_transformer.run_prediction(example_image, ocr_tokens=mocked_ocr_tokens)
@@ -1154,10 +1180,30 @@ def test_cells_to_html():
     # |    rows  |sub cell 1|sub cell 2|
     # +----------+----------+----------+
     cells = [
-        {"row_nums": [0, 1], "column_nums": [0], "cell text": "two row", "column header": False},
-        {"row_nums": [0], "column_nums": [1, 2], "cell text": "two cols", "column header": False},
-        {"row_nums": [1], "column_nums": [1], "cell text": "sub cell 1", "column header": False},
-        {"row_nums": [1], "column_nums": [2], "cell text": "sub cell 2", "column header": False},
+        {
+            "row_nums": [0, 1],
+            "column_nums": [0],
+            "cell text": "two row",
+            "column header": False,
+        },
+        {
+            "row_nums": [0],
+            "column_nums": [1, 2],
+            "cell text": "two cols",
+            "column header": False,
+        },
+        {
+            "row_nums": [1],
+            "column_nums": [1],
+            "cell text": "sub cell 1",
+            "column header": False,
+        },
+        {
+            "row_nums": [1],
+            "column_nums": [2],
+            "cell text": "sub cell 2",
+            "column header": False,
+        },
     ]
     expected = (
         '<table><tr><td rowspan="2">two row</td><td colspan="2">two '
