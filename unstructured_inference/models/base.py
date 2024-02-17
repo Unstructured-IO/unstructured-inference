@@ -7,25 +7,15 @@ from unstructured_inference.models.chipper import UnstructuredChipperModel
 from unstructured_inference.models.detectron2 import (
     MODEL_TYPES as DETECTRON2_MODEL_TYPES,
 )
-from unstructured_inference.models.detectron2 import (
-    UnstructuredDetectronModel,
-)
+from unstructured_inference.models.detectron2 import UnstructuredDetectronModel
 from unstructured_inference.models.detectron2onnx import (
     MODEL_TYPES as DETECTRON2_ONNX_MODEL_TYPES,
 )
-from unstructured_inference.models.detectron2onnx import (
-    UnstructuredDetectronONNXModel,
-)
-from unstructured_inference.models.super_gradients import (
-    UnstructuredSuperGradients,
-)
+from unstructured_inference.models.detectron2onnx import UnstructuredDetectronONNXModel
+from unstructured_inference.models.super_gradients import UnstructuredSuperGradients
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
-from unstructured_inference.models.yolox import (
-    MODEL_TYPES as YOLOX_MODEL_TYPES,
-)
-from unstructured_inference.models.yolox import (
-    UnstructuredYoloXModel,
-)
+from unstructured_inference.models.yolox import MODEL_TYPES as YOLOX_MODEL_TYPES
+from unstructured_inference.models.yolox import UnstructuredYoloXModel
 
 DEFAULT_MODEL = "yolox"
 
@@ -58,6 +48,10 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     if initialize_param_json is not None:
         with open(initialize_param_json) as fp:
             initialize_params = json.load(fp)
+            label_map_int_keys = {
+                int(key): value for key, value in initialize_params["label_map"].items()
+            }
+            initialize_params["label_map"] = label_map_int_keys
     else:
         if model_name in DETECTRON2_MODEL_TYPES:
             initialize_params = DETECTRON2_MODEL_TYPES[model_name]
