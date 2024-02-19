@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+import random
 from pathlib import PurePath
 from typing import BinaryIO, Collection, List, Optional, Union, cast
 
@@ -351,11 +352,14 @@ def process_data_with_model(
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
-    with tempfile.NamedTemporaryFile() as tmp_file:
-        tmp_file.write(data.read())
-        tmp_file.flush()  # Make sure the file is written out
+    with tempfile.TemporaryDirectory() as td:
+        f_name = os.path.join(td, ''.join(random.choices("abcdefghijklmnopqrstuvwxyz0123456789_", k=8)))
+        with open(f_name, "wb") as tmp_file:
+            tmp_file.write(data.read() if hasattr(data, "read") else data)
+            tmp_file.flush()
+
         layout = process_file_with_model(
-            tmp_file.name,
+            f_name,
             model_name,
             **kwargs,
         )
