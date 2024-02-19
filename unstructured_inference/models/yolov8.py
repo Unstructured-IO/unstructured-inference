@@ -79,10 +79,10 @@ class UnstructuredYolov8Model(UnstructuredObjectDetectionModel):
 
         regions = sorted([
             LayoutElement.from_coords(
-                box.xyxy[0][0] / ratio[0],
-                box.xyxy[0][1] / ratio[1],
-                box.xyxy[0][2] / ratio[0],
-                box.xyxy[0][3] / ratio[1],
+                box.xyxy[0][0].item() / ratio[0],
+                box.xyxy[0][1].item() / ratio[1],
+                box.xyxy[0][2].item() / ratio[0],
+                box.xyxy[0][3].item() / ratio[1],
                 text=None,
                 type=self.layout_classes[int(box.cls.item())],
                 prob=box.conf.item(),
