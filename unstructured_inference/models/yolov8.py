@@ -91,7 +91,7 @@ class UnstructuredYolov8Model(UnstructuredObjectDetectionModel):
         ratio = np.array(input_shape) / np.array(image.size)
 
         # NMS
-        boxes = self.model(processed_image)[0].boxes
+        boxes = self.model(processed_image, verbose=False)[0].boxes
         valid_boxes = nms(boxes.xyxy, boxes.conf, 0.1)
         boxes = boxes[valid_boxes]
         boxes = boxes[boxes.conf > 0.3]
