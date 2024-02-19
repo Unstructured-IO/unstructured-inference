@@ -24,19 +24,6 @@ YOLOv8_LABEL_MAP = {
     9: ElementType.TEXT,
     10: ElementType.TITLE,
 }
-label_to_color = {
-    ElementType.CAPTION: "black",
-    ElementType.FOOTNOTE: "cyan",
-    ElementType.FORMULA: "black",
-    ElementType.LIST_ITEM: "green",
-    ElementType.PAGE_FOOTER: "blue",
-    ElementType.PAGE_HEADER: "yellow",
-    ElementType.PICTURE: "black",
-    ElementType.SECTION_HEADER: "purple",
-    ElementType.TABLE: "black",
-    ElementType.TEXT: "black",
-    ElementType.TITLE: "red",
-}
 
 model = YOLO('/home/joao/yolov8n/weights/best.pt')
 MODEL_TYPES = {
@@ -61,12 +48,12 @@ MODEL_TYPES = {
 
 class UnstructuredYolov8Model(UnstructuredObjectDetectionModel):
     def predict(self, x: Image):
-        """Predict using YoloX model."""
+        """Predict using Yolov8 model."""
         super().predict(x)
         return self.image_processing(x)
 
     def initialize(self, model_path: str, label_map: dict):
-        """Start inference session for YoloX model."""
+        """Start inference session for Yolov8 model."""
         self.model = YOLO(model=model_path)
         self.layout_classes = label_map
 
@@ -74,17 +61,11 @@ class UnstructuredYolov8Model(UnstructuredObjectDetectionModel):
         self,
         image: Image = None,
     ) -> List[LayoutElement]:
-        """Method runing YoloX for layout detection, returns a PageLayout
-        parameters
+        """Method runing Yolov8 for layout detection, returns a list of 
+        LayoutElement
         ----------
-        page
-            Path for image file with the image to process
-        origin_img
-            If specified, an Image object for process with YoloX model
-        page_number
-            Number asigned to the PageLayout returned
-        output_directory
-            Boolean indicating if result will be stored
+        image
+            Image to process
         """
         input_shape = (640, 640)
         processed_image = image.resize(input_shape, Image.BILINEAR)
