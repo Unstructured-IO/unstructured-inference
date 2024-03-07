@@ -1,5 +1,6 @@
-## 0.7.25-dev0
+## 0.7.25-dev1
 
+* bug: set the Chipper max_length variable
 * chore: removes `install-detectron2` from the `Makefile`
 
 ## 0.7.24
