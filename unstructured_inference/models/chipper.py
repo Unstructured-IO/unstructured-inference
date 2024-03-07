@@ -209,6 +209,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 outputs = self.model.generate(
                     encoder_outputs=encoder_outputs,
                     input_ids=self.input_ids,
+                    max_length=self.max_length,
                     no_repeat_ngram_size=0,
                     num_beams=1,
                     return_dict_in_generate=True,
@@ -225,6 +226,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     outputs = self.model.generate(
                         encoder_outputs=encoder_outputs,
                         input_ids=self.input_ids,
+                        max_length=self.max_length,
                         logits_processor=self.logits_processor,
                         do_sample=True,
                         no_repeat_ngram_size=0,
