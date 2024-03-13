@@ -1,5 +1,6 @@
-## 0.7.25-dev0
+## 0.7.25-dev1
 
+* bug: check for None in Chipper bounding box reduction
 * chore: removes `install-detectron2` from the `Makefile`
 
 ## 0.7.24
