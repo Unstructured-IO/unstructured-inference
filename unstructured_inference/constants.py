@@ -8,6 +8,7 @@ class AnnotationResult(Enum):
 
 class Source(Enum):
     YOLOX = "yolox"
+    YOLOv8 = "yolov8"
     DETECTRON2_ONNX = "detectron2_onnx"
     DETECTRON2_LP = "detectron2_lp"
     CHIPPER = "chipper"

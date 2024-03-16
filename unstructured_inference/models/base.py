@@ -26,6 +26,12 @@ from unstructured_inference.models.yolox import (
 from unstructured_inference.models.yolox import (
     UnstructuredYoloXModel,
 )
+from unstructured_inference.models.yolov8 import (
+    MODEL_TYPES as YOLOV8_MODEL_TYPES,
+)
+from unstructured_inference.models.yolov8 import (
+    UnstructuredYolov8Model,
+)
 
 DEFAULT_MODEL = "yolox"
 
@@ -35,6 +41,7 @@ model_class_map: Dict[str, Type[UnstructuredModel]] = {
     **{name: UnstructuredDetectronModel for name in DETECTRON2_MODEL_TYPES},
     **{name: UnstructuredDetectronONNXModel for name in DETECTRON2_ONNX_MODEL_TYPES},
     **{name: UnstructuredYoloXModel for name in YOLOX_MODEL_TYPES},
+    **{name: UnstructuredYolov8Model for name in YOLOV8_MODEL_TYPES},
     **{name: UnstructuredChipperModel for name in CHIPPER_MODEL_TYPES},
     "super_gradients": UnstructuredSuperGradients,
 }
@@ -65,6 +72,8 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
             initialize_params = DETECTRON2_ONNX_MODEL_TYPES[model_name]
         elif model_name in YOLOX_MODEL_TYPES:
             initialize_params = YOLOX_MODEL_TYPES[model_name]
+        elif model_name in YOLOV8_MODEL_TYPES:
+            initialize_params = YOLOV8_MODEL_TYPES[model_name]
         elif model_name in CHIPPER_MODEL_TYPES:
             initialize_params = CHIPPER_MODEL_TYPES[model_name]
         else:
