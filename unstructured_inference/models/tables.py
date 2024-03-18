@@ -1,5 +1,6 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
+import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
@@ -121,7 +122,11 @@ def load_agent():
 
     if not hasattr(tables_agent, "model"):
         logger.info("Loading the Table agent ...")
-        tables_agent.initialize("microsoft/table-transformer-structure-recognition")
+        table_agent_model_path = os.environ.get("UNSTRUCTURED_TABLE_AGENT_MODEL_PATH")
+        if table_agent_model_path is not None:
+            tables_agent.initialize(table_agent_model_path)
+        else:
+            tables_agent.initialize("microsoft/table-transformer-structure-recognition")
 
     return
 

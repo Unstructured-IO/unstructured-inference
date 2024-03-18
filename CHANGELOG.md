@@ -2,6 +2,7 @@
 
 * bug: check for None in Chipper bounding box reduction
 * chore: removes `install-detectron2` from the `Makefile`
+# enhancement: allow table_agent to load from external parameter `UNSTRUCTURED_TABLE_AGENT_MODEL_PATH`
 
 ## 0.7.24
 
