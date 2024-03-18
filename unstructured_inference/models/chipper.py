@@ -882,6 +882,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 continue
 
             ebbox1 = element.bbox
+            if ebbox1 is None:
+                continue
             bbox1 = [ebbox1.x1, ebbox1.y1, ebbox1.x2, max(ebbox1.y1, ebbox1.y2)]
 
             for celement in elements:
