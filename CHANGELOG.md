@@ -2,6 +2,7 @@
 
 * bug: check for None in Chipper bounding box reduction
 * chore: removes `install-detectron2` from the `Makefile`
+* fix: convert label_map keys read from os.environment `UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH` to int type
 
 ## 0.7.24
 
