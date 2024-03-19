@@ -12,7 +12,6 @@ from unstructured_inference.models.detectron2onnx import (
     MODEL_TYPES as DETECTRON2_ONNX_MODEL_TYPES,
 )
 from unstructured_inference.models.detectron2onnx import UnstructuredDetectronONNXModel
-from unstructured_inference.models.super_gradients import UnstructuredSuperGradients
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.models.yolox import MODEL_TYPES as YOLOX_MODEL_TYPES
 from unstructured_inference.models.yolox import UnstructuredYoloXModel
@@ -26,7 +25,6 @@ model_class_map: Dict[str, Type[UnstructuredModel]] = {
     **{name: UnstructuredDetectronONNXModel for name in DETECTRON2_ONNX_MODEL_TYPES},
     **{name: UnstructuredYoloXModel for name in YOLOX_MODEL_TYPES},
     **{name: UnstructuredChipperModel for name in CHIPPER_MODEL_TYPES},
-    "super_gradients": UnstructuredSuperGradients,
 }
 
 
