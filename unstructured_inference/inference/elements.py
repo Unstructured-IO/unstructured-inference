@@ -129,11 +129,7 @@ class Rectangle:
         min_area = min(self.area, other.area)
         return safe_division(intersection_area, min_area)
 
-    def is_almost_subregion_of(
-        self,
-        other: Rectangle,
-        subregion_threshold: float = inference_config.LAYOUT_SUBREGION_THRESHOLD,
-    ) -> bool:
+    def is_almost_subregion_of(self, other: Rectangle, subregion_threshold: float = 0.75) -> bool:
         """Returns whether this region is almost a subregion of other. This is determined by
         comparing the intersection area over self area to some threshold, and checking whether self
         is the smaller rectangle."""
@@ -246,13 +242,17 @@ class ImageTextRegion(TextRegion):
 
 
 def aggregate_by_block(
-    text_region: TextRegion,
+    target_region: TextRegion,
     pdf_objects: Collection[TextRegion],
 ) -> str:
     """Extracts the text aggregated from the elements of the given layout that lie within the given
     block."""
+
+    subregion_threshold = inference_config.EMBEDDED_TEXT_AGGREGATION_SUBREGION_THRESHOLD
     filtered_blocks = [
-        obj for obj in pdf_objects if obj.bbox.is_almost_subregion_of(text_region.bbox)
+        obj
+        for obj in pdf_objects
+        if obj.bbox.is_almost_subregion_of(target_region.bbox, subregion_threshold)
     ]
     text = " ".join([x.text for x in filtered_blocks if x.text])
     return text
@@ -288,7 +288,7 @@ def remove_control_characters(text: str) -> str:
 def region_bounding_boxes_are_almost_the_same(
     region1: Rectangle,
     region2: Rectangle,
-    same_region_threshold: float = inference_config.LAYOUT_SAME_REGION_THRESHOLD,
+    same_region_threshold: float = 0.75,
 ) -> bool:
     """Returns whether bounding boxes are almost the same. This is determined by checking if the
     intersection over union is above some threshold."""
