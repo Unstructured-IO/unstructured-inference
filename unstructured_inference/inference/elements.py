@@ -8,6 +8,7 @@ from typing import Collection, Optional, Union
 
 import numpy as np
 
+from unstructured_inference.config import inference_config
 from unstructured_inference.constants import Source
 from unstructured_inference.math import safe_division
 
@@ -246,8 +247,12 @@ def aggregate_by_block(
 ) -> str:
     """Extracts the text aggregated from the elements of the given layout that lie within the given
     block."""
+
+    subregion_threshold = inference_config.EMBEDDED_TEXT_AGGREGATION_SUBREGION_THRESHOLD
     filtered_blocks = [
-        obj for obj in pdf_objects if obj.bbox.is_in(text_region.bbox, error_margin=5)
+        obj
+        for obj in pdf_objects
+        if obj.bbox.is_almost_subregion_of(text_region.bbox, subregion_threshold)
     ]
     text = " ".join([x.text for x in filtered_blocks if x.text])
     return text
