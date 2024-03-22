@@ -242,7 +242,7 @@ class ImageTextRegion(TextRegion):
 
 
 def aggregate_by_block(
-    target_region: TextRegion,
+    text_region: TextRegion,
     pdf_objects: Collection[TextRegion],
 ) -> str:
     """Extracts the text aggregated from the elements of the given layout that lie within the given
@@ -252,7 +252,7 @@ def aggregate_by_block(
     filtered_blocks = [
         obj
         for obj in pdf_objects
-        if obj.bbox.is_almost_subregion_of(target_region.bbox, subregion_threshold)
+        if obj.bbox.is_almost_subregion_of(text_region.bbox, subregion_threshold)
     ]
     text = " ".join([x.text for x in filtered_blocks if x.text])
     return text
