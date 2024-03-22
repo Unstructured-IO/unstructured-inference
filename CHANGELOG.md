@@ -1,4 +1,4 @@
-## 0.7.25-dev3
+## 0.7.25
 
 * fix: replace `Rectangle.is_in()` with `Rectangle.is_almost_subregion_of()` when filling in an inferred element with embedded text
 * bug: check for None in Chipper bounding box reduction
