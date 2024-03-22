@@ -99,7 +99,7 @@ class InferenceConfig:
         When the intersection region area divided by self area is larger than this threshold self is
         considered a subregion of the other
         """
-        return self._get_float("EMBEDDED_TEXT_AGGREGATION_SUBREGION_THRESHOLD", 0.95)
+        return self._get_float("EMBEDDED_TEXT_AGGREGATION_SUBREGION_THRESHOLD", 0.99)
 
     @property
     def ELEMENTS_H_PADDING_COEF(self) -> float:
