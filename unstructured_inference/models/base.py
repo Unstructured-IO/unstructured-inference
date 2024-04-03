@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, Optional, Type
+from typing import Dict, Optional, Tuple, Type
 
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
 from unstructured_inference.models.chipper import UnstructuredChipperModel
@@ -20,12 +20,30 @@ DEFAULT_MODEL = "yolox"
 
 models: Dict[str, UnstructuredModel] = {}
 
-model_class_map: Dict[str, Type[UnstructuredModel]] = {
-    **{name: UnstructuredDetectronModel for name in DETECTRON2_MODEL_TYPES},
-    **{name: UnstructuredDetectronONNXModel for name in DETECTRON2_ONNX_MODEL_TYPES},
-    **{name: UnstructuredYoloXModel for name in YOLOX_MODEL_TYPES},
-    **{name: UnstructuredChipperModel for name in CHIPPER_MODEL_TYPES},
-}
+
+def get_default_model_mappings() -> Tuple[Dict[str, Type[UnstructuredModel]], Dict[str, dict]]:
+    """default model mappings for models that are in `unstructured_inference` repo"""
+    return {
+        **{name: UnstructuredDetectronModel for name in DETECTRON2_MODEL_TYPES},
+        **{name: UnstructuredDetectronONNXModel for name in DETECTRON2_ONNX_MODEL_TYPES},
+        **{name: UnstructuredYoloXModel for name in YOLOX_MODEL_TYPES},
+        **{name: UnstructuredChipperModel for name in CHIPPER_MODEL_TYPES},
+    }, {
+        **DETECTRON2_MODEL_TYPES,
+        **DETECTRON2_ONNX_MODEL_TYPES,
+        **YOLOX_MODEL_TYPES,
+        **CHIPPER_MODEL_TYPES,
+    }
+
+
+model_class_map, model_config_map = get_default_model_mappings()
+
+
+def register_new_model(model_config: dict, model_class: UnstructuredModel):
+    """registering a new model by updating the model_config_map and model_class_map with the new
+    model class information"""
+    model_config_map.update(model_config)
+    model_class_map.update({name: model_class for name in model_config})
 
 
 def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
@@ -51,14 +69,8 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
             }
             initialize_params["label_map"] = label_map_int_keys
     else:
-        if model_name in DETECTRON2_MODEL_TYPES:
-            initialize_params = DETECTRON2_MODEL_TYPES[model_name]
-        elif model_name in DETECTRON2_ONNX_MODEL_TYPES:
-            initialize_params = DETECTRON2_ONNX_MODEL_TYPES[model_name]
-        elif model_name in YOLOX_MODEL_TYPES:
-            initialize_params = YOLOX_MODEL_TYPES[model_name]
-        elif model_name in CHIPPER_MODEL_TYPES:
-            initialize_params = CHIPPER_MODEL_TYPES[model_name]
+        if model_name in model_config_map:
+            initialize_params = model_config_map[model_name]
         else:
             raise UnknownModelException(f"Unknown model type: {model_name}")
 
