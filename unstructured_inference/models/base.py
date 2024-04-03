@@ -15,13 +15,17 @@ from unstructured_inference.models.detectron2onnx import UnstructuredDetectronON
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.models.yolox import MODEL_TYPES as YOLOX_MODEL_TYPES
 from unstructured_inference.models.yolox import UnstructuredYoloXModel
+from unstructured_inference.utils import LazyDict
 
 DEFAULT_MODEL = "yolox"
 
 models: Dict[str, UnstructuredModel] = {}
 
 
-def get_default_model_mappings() -> Tuple[Dict[str, Type[UnstructuredModel]], Dict[str, dict]]:
+def get_default_model_mappings() -> Tuple[
+    Dict[str, Type[UnstructuredModel]],
+    Dict[str, dict | LazyDict],
+]:
     """default model mappings for models that are in `unstructured_inference` repo"""
     return {
         **{name: UnstructuredDetectronModel for name in DETECTRON2_MODEL_TYPES},
