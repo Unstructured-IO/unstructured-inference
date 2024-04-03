@@ -1,5 +1,7 @@
-## 0.7.26-dev0
+## 0.7.26
+
 * feat: add a set of new `ElementType`s to extend future element types recognition
+* feat: allow registering of new models for inference using `unstructured_inference.models.base.register_new_model` function
 
 ## 0.7.25
 
