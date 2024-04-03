@@ -1,3 +1,6 @@
+## 0.7.26-dev0
+* feat: add a set of new `ElementType`s to extend future element types recognition
+
 ## 0.7.25
 
 * fix: replace `Rectangle.is_in()` with `Rectangle.is_almost_subregion_of()` when filling in an inferred element with embedded text
