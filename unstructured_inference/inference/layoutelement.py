@@ -165,9 +165,11 @@ def merge_inferred_layout_with_extracted_layout(
     categorized_extracted_elements_to_add = [
         LayoutElement(
             text=el.text,
-            type=ElementType.IMAGE
-            if isinstance(el, ImageTextRegion)
-            else ElementType.UNCATEGORIZED_TEXT,
+            type=(
+                ElementType.IMAGE
+                if isinstance(el, ImageTextRegion)
+                else ElementType.UNCATEGORIZED_TEXT
+            ),
             source=el.source,
             bbox=el.bbox,
         )
