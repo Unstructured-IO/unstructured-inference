@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import json
 import os
-from typing import Dict, Optional, Tuple, Type, Union
+from typing import Dict, Optional, Tuple, Type
 
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
 from unstructured_inference.models.chipper import UnstructuredChipperModel
@@ -25,7 +27,7 @@ models: Dict[str, UnstructuredModel] = {}
 def get_default_model_mappings() -> (
     Tuple[
         Dict[str, Type[UnstructuredModel]],
-        Dict[str, Union[dict, LazyDict]],
+        Dict[str, dict | LazyDict],
     ]
 ):
     """default model mappings for models that are in `unstructured_inference` repo"""
