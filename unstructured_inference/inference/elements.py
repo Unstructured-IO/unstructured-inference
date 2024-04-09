@@ -307,3 +307,39 @@ def grow_region_to_match_region(region_to_grow: Rectangle, region_to_match: Rect
         new_x2,
         new_y2,
     )
+
+def regions_iou(
+    regions_a: Collection[TextRegion],
+    regions_b: Collection[TextRegion],
+    page_image_size: tuple[int, int],
+    show: bool = False,
+) -> float:
+    """Calculate intersection over union between two collections of regions."""
+    w, h = page_image_size
+    # numpy shape order is (height, width)
+    layout_a = np.zeros((h, w), dtype=np.uint8)
+    layout_b = layout_a.copy()
+    for regions, layout in ((regions_a, layout_a), (regions_b, layout_b)):
+        for region in regions:
+            x1 = int(region.bbox.x1)
+            x2 = int(region.bbox.x2)
+            y1 = int(region.bbox.y1)
+            y2 = int(region.bbox.y2)
+            # numpy shape order is (height, width)
+            layout[y1:y2,x1:x2] = 1
+    intersection = layout_a & layout_b
+    union = layout_a | layout_b
+    if show:
+        from PIL import Image
+        arrays = {
+            "layout_a": layout_a,
+            "layout_b": layout_b,
+            "intersection": intersection,
+            "union": union,
+        }
+        for title, array in arrays.items():
+            print(title)
+            Image.fromarray(array * 255).convert("RGB").show(title=title)
+    intersection_area = np.sum(intersection)
+    union_area = np.sum(union)
+    return (intersection_area / union_area).astype(float)

@@ -90,9 +90,15 @@ def merge_inferred_layout_with_extracted_layout(
 ) -> List[LayoutElement]:
     """Merge two layouts to produce a single layout."""
     extracted_elements_to_add: List[TextRegion] = []
-    inferred_regions_to_remove = []
+    inferred_regions_to_remove: List[LayoutElement] = []
     w, h = page_image_size
     full_page_region = Rectangle(0, 0, w, h)
+
+    from unstructured_inference.inference.elements import regions_iou
+    layouts_iou = regions_iou(extracted_layout, inferred_layout, page_image_size)
+    if layouts_iou < 0.75:
+        return list(inferred_layout)
+
     for extracted_region in extracted_layout:
         extracted_is_image = isinstance(extracted_region, ImageTextRegion)
         if extracted_is_image:
@@ -140,6 +146,7 @@ def merge_inferred_layout_with_extracted_layout(
                     if extracted_is_image:
                         # keep extracted region, remove inferred region
                         inferred_regions_to_remove.append(inferred_region)
+                        region_matched = False
                     else:
                         # keep inferred region, remove extracted region
                         grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
@@ -159,6 +166,7 @@ def merge_inferred_layout_with_extracted_layout(
                 ):
                     # keep extracted region, remove inferred region
                     inferred_regions_to_remove.append(inferred_region)
+                    region_matched = False
         if not region_matched:
             extracted_elements_to_add.append(extracted_region)
     # Need to classify the extracted layout elements we're keeping.
