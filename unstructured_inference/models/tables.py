@@ -27,7 +27,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def __init__(self):
         pass
 
-    def predict(self, x: Image, ocr_tokens: Optional[List[Dict]] = None, result_format='html'):
+    def predict(self, x: Image, ocr_tokens: Optional[List[Dict]] = None, result_format="html"):
         """Predict table structure deferring to run_prediction with ocr tokens
 
         Note:
@@ -113,8 +113,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             prediction = prediction
         else:
             raise ValueError(
-                f'result_format {result_format} is not a valid format. '
-                f'Valid formats are: "html", "dataframe", "cells"')
+                f"result_format {result_format} is not a valid format. "
+                f'Valid formats are: "html", "dataframe", "cells"'
+            )
 
         return prediction
 
