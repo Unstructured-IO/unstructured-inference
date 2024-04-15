@@ -27,7 +27,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def __init__(self):
         pass
 
-    def predict(self, x: Image, ocr_tokens: Optional[List[Dict]] = None):
+    def predict(self, x: Image, ocr_tokens: Optional[List[Dict]] = None, result_format='html'):
         """Predict table structure deferring to run_prediction with ocr tokens
 
         Note:
@@ -44,7 +44,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         FIXME: refactor token data into a dataclass so we have clear expectations of the fields
         """
         super().predict(x)
-        return self.run_prediction(x, ocr_tokens=ocr_tokens)
+        return self.run_prediction(x, ocr_tokens=ocr_tokens, result_format=result_format)
 
     def initialize(
         self,
@@ -109,6 +109,13 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             prediction = cells_to_html(prediction) or ""
         elif result_format == "dataframe":
             prediction = table_cells_to_dataframe(prediction)
+        elif result_format == "cells":
+            prediction = prediction
+        else:
+            raise ValueError(
+                f'result_format {result_format} is not a valid format. '
+                f'Valid formats are: "html", "dataframe", "cells"')
+
         return prediction
 
 
