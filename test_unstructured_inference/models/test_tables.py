@@ -932,6 +932,25 @@ def test_table_prediction_output_format(
         assert expectation in result
 
 
+def test_table_prediction_output_format_when_wrong_type_then_value_error(
+    table_transformer,
+    example_image,
+    mocker,
+    example_table_cells,
+    mocked_ocr_tokens,
+):
+    mocker.patch.object(tables, "recognize", return_value=example_table_cells)
+    mocker.patch.object(
+        tables.UnstructuredTableTransformerModel,
+        "get_structure",
+        return_value=None,
+    )
+    with pytest.raises(ValueError):
+        table_transformer.run_prediction(
+            example_image, result_format="Wrong format", ocr_tokens=mocked_ocr_tokens
+        )
+
+
 def test_table_prediction_runs_with_empty_recognize(
     table_transformer,
     example_image,
