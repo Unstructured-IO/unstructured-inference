@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 import torch
-from PIL import Image
+from PIL import Image as PILImage
 from transformers import (
     DonutProcessor,
     VisionEncoderDecoderConfig,
@@ -16,7 +16,7 @@ from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 class UnstructuredDonutModel(UnstructuredModel):
     """Unstructured model wrapper for Donut image transformer."""
 
-    def predict(self, x: Image):
+    def predict(self, x: PILImage.Image):
         """Make prediction using donut model"""
         super().predict(x)
         return self.run_prediction(x)
@@ -50,7 +50,7 @@ class UnstructuredDonutModel(UnstructuredModel):
             raise ImportError("Review the parameters to initialize a UnstructuredDonutModel obj")
         self.model.to(device)
 
-    def run_prediction(self, x: Image):
+    def run_prediction(self, x: PILImage.Image):
         """Internal prediction method."""
         pixel_values = self.processor(x, return_tensors="pt").pixel_values
         decoder_input_ids = self.processor.tokenizer(

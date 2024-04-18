@@ -10,7 +10,7 @@ import numpy as np
 import onnxruntime
 from huggingface_hub import hf_hub_download
 from onnxruntime.capi import _pybind_state as C
-from PIL import Image
+from PIL import Image as PILImage
 
 from unstructured_inference.constants import ElementType, Source
 from unstructured_inference.inference.layoutelement import LayoutElement
@@ -60,7 +60,7 @@ MODEL_TYPES = {
 
 
 class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
-    def predict(self, x: Image):
+    def predict(self, x: PILImage.Image):
         """Predict using YoloX model."""
         super().predict(x)
         return self.image_processing(x)
@@ -86,7 +86,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
     def image_processing(
         self,
-        image: Image = None,
+        image: PILImage.Image,
     ) -> List[LayoutElement]:
         """Method runing YoloX for layout detection, returns a PageLayout
         parameters
