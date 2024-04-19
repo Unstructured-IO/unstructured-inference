@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any, Dict, Final, List, Optional, Union
 
@@ -7,7 +9,7 @@ from layoutparser.models.detectron2.layoutmodel import (
     is_detectron2_available,
 )
 from layoutparser.models.model_config import LayoutModelConfig
-from PIL import Image
+from PIL import Image as PILImage
 
 from unstructured_inference.constants import ElementType
 from unstructured_inference.inference.layoutelement import LayoutElement
@@ -65,7 +67,7 @@ MODEL_TYPES = {
 class UnstructuredDetectronModel(UnstructuredObjectDetectionModel):
     """Unstructured model wrapper for Detectron2LayoutModel."""
 
-    def predict(self, x: Image):
+    def predict(self, x: PILImage.Image):
         """Makes a prediction using detectron2 model."""
         super().predict(x)
         prediction = self.model.detect(x)

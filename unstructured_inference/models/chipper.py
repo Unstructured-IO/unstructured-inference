@@ -463,7 +463,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 np.asarray(
                     [
                         agg_heatmap,
-                        cv2.resize(
+                        cv2.resize(  # type: ignore
                             hmap,
                             (final_w, final_h),
                             interpolation=cv2.INTER_LINEAR_EXACT,  # cv2.INTER_CUBIC
@@ -620,7 +620,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ):
             return input_bbox
 
-        nimage = np.array(image.crop(input_bbox))
+        nimage = np.array(image.crop(input_bbox))  # type: ignore
 
         nimage = self.remove_horizontal_lines(nimage)
 
@@ -669,7 +669,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ):
             return input_bbox
 
-        nimage = np.array(image.crop(input_bbox))
+        nimage = np.array(image.crop(input_bbox))  # type: ignore
 
         nimage = self.remove_horizontal_lines(nimage)
 
@@ -773,7 +773,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ):
             return None
 
-        nimage = np.array(image.crop(input_bbox))
+        nimage = np.array(image.crop(input_bbox))  # type: ignore
 
         if nimage.shape[0] * nimage.shape[1] == 0:
             return None

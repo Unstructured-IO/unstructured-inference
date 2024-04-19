@@ -1,3 +1,7 @@
+## 0.7.27
+
+* fix: remove pin from `onnxruntime` dependency.
+
 ## 0.7.26
 
 * feat: add a set of new `ElementType`s to extend future element types recognition

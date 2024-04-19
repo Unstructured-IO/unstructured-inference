@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Union
 import cv2
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image as PILImage
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 
 from unstructured_inference.config import inference_config
@@ -27,7 +27,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def __init__(self):
         pass
 
-    def predict(self, x: Image, ocr_tokens: Optional[List[Dict]] = None):
+    def predict(self, x: PILImage.Image, ocr_tokens: Optional[List[Dict]] = None):
         """Predict table structure deferring to run_prediction with ocr tokens
 
         Note:
@@ -70,7 +70,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def get_structure(
         self,
-        x: Image,
+        x: PILImage.Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
     ) -> dict:
         """get the table structure as a dictionary contaning different types of elements as
@@ -87,7 +87,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def run_prediction(
         self,
-        x: Image,
+        x: PILImage.Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
         ocr_tokens: Optional[List[Dict]] = None,
         result_format: Optional[str] = "html",
@@ -155,7 +155,7 @@ structure_class_thresholds = {
 }
 
 
-def recognize(outputs: dict, img: Image, tokens: list):
+def recognize(outputs: dict, img: PILImage.Image, tokens: list):
     """Recognize table elements."""
     str_class_name2idx = get_class_map("structure")
     str_class_idx2name = {v: k for k, v in str_class_name2idx.items()}
@@ -655,7 +655,7 @@ def cells_to_html(cells):
     return str(ET.tostring(table, encoding="unicode", short_empty_elements=False))
 
 
-def zoom_image(image: Image, zoom: float) -> Image:
+def zoom_image(image: PILImage.Image, zoom: float) -> PILImage.Image:
     """scale an image based on the zoom factor using cv2; the scaled image is post processed by
     dilation then erosion to improve edge sharpness for OCR tasks"""
     if zoom <= 0:
@@ -673,4 +673,4 @@ def zoom_image(image: Image, zoom: float) -> Image:
     new_image = cv2.dilate(new_image, kernel, iterations=1)
     new_image = cv2.erode(new_image, kernel, iterations=1)
 
-    return Image.fromarray(new_image)
+    return PILImage.fromarray(new_image)
