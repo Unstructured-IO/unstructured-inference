@@ -6,13 +6,9 @@ from typing import Dict, Optional, Tuple, Type
 
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
 from unstructured_inference.models.chipper import UnstructuredChipperModel
-from unstructured_inference.models.detectron2 import (
-    MODEL_TYPES as DETECTRON2_MODEL_TYPES,
-)
+from unstructured_inference.models.detectron2 import MODEL_TYPES as DETECTRON2_MODEL_TYPES
 from unstructured_inference.models.detectron2 import UnstructuredDetectronModel
-from unstructured_inference.models.detectron2onnx import (
-    MODEL_TYPES as DETECTRON2_ONNX_MODEL_TYPES,
-)
+from unstructured_inference.models.detectron2onnx import MODEL_TYPES as DETECTRON2_ONNX_MODEL_TYPES
 from unstructured_inference.models.detectron2onnx import UnstructuredDetectronONNXModel
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.models.yolox import MODEL_TYPES as YOLOX_MODEL_TYPES
@@ -24,12 +20,10 @@ DEFAULT_MODEL = "yolox"
 models: Dict[str, UnstructuredModel] = {}
 
 
-def get_default_model_mappings() -> (
-    Tuple[
-        Dict[str, Type[UnstructuredModel]],
-        Dict[str, dict | LazyDict],
-    ]
-):
+def get_default_model_mappings() -> Tuple[
+    Dict[str, Type[UnstructuredModel]],
+    Dict[str, dict | LazyDict],
+]:
     """default model mappings for models that are in `unstructured_inference` repo"""
     return {
         **{name: UnstructuredDetectronModel for name in DETECTRON2_MODEL_TYPES},
@@ -48,8 +42,10 @@ model_class_map, model_config_map = get_default_model_mappings()
 
 
 def register_new_model(model_config: dict, model_class: UnstructuredModel):
-    """registering a new model by updating the model_config_map and model_class_map with the new
-    model class information"""
+    """Register this model in model_config_map and model_class_map.
+
+    Those maps are updated with the with the new model class information.
+    """
     model_config_map.update(model_config)
     model_class_map.update({name: model_class for name in model_config})
 
@@ -90,6 +86,6 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
 
 
 class UnknownModelException(Exception):
-    """Exception for the case where a model is called for with an unrecognized identifier."""
+    """A model was requested with an unrecognized identifier."""
 
     pass
