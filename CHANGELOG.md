@@ -1,3 +1,7 @@
+## 0.7.28
+
+* feat: allow table transformer agent to return table prediction in not parsed format
+
 ## 0.7.27
 
 * fix: remove pin from `onnxruntime` dependency.
@@ -6,7 +10,7 @@
 
 * feat: add a set of new `ElementType`s to extend future element types recognition
 * feat: allow registering of new models for inference using `unstructured_inference.models.base.register_new_model` function
-* feat: allow table transformer agent to return table prediction in not parsed format 
+
 ## 0.7.25
 
 * fix: replace `Rectangle.is_in()` with `Rectangle.is_almost_subregion_of()` when filling in an inferred element with embedded text
