@@ -27,7 +27,12 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def __init__(self):
         pass
 
-    def predict(self, x: PILImage.Image, ocr_tokens: Optional[List[Dict]] = None, result_format: str = "html"):
+    def predict(
+        self,
+        x: PILImage.Image,
+        ocr_tokens: Optional[List[Dict]] = None,
+        result_format: str = "html",
+    ):
         """Predict table structure deferring to run_prediction with ocr tokens
 
         Note:
