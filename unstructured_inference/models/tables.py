@@ -222,6 +222,25 @@ def outputs_to_objects(
 def apply_thresholds_on_objects(
     objects: Sequence[Mapping[str, Any]], thresholds: Mapping[str, float]
 ) -> Sequence[Mapping[str, Any]]:
+    """
+    Filters predicted objects which the confidence scores below the thresholds
+
+    Args:
+        objects: Sequence of mappings for example:
+        [
+            {
+                "label": "table row",
+                "score": 0.55,
+                "bbox": [...],
+            },
+            ...,
+        ]
+        thresholds: Mapping from labels to thresholds
+
+    Returns:
+        Filtered list of objects
+
+    """
     objects = [obj for obj in objects if obj["score"] >= thresholds[obj["label"]]]
     return objects
 
