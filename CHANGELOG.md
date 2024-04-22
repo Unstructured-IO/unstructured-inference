@@ -1,3 +1,7 @@
+## 0.7.28
+
+* feat: allow table transformer agent to return table prediction in not parsed format
+
 ## 0.7.27
 
 * fix: remove pin from `onnxruntime` dependency.
