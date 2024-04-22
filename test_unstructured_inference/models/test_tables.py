@@ -1023,7 +1023,7 @@ def test_objects_filtering_when_missing_threshold():
     class_name = "class_name"
     objects = [{"label": class_name, "score": 0.2}]
     thresholds = {"1": 0.5}
-    with pytest.raises(KeyError, match=class_name) as exc_info:
+    with pytest.raises(KeyError, match=class_name):
         apply_thresholds_on_objects(objects, thresholds)
 
 
