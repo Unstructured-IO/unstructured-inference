@@ -20,10 +20,12 @@ DEFAULT_MODEL = "yolox"
 models: Dict[str, UnstructuredModel] = {}
 
 
-def get_default_model_mappings() -> Tuple[
-    Dict[str, Type[UnstructuredModel]],
-    Dict[str, dict | LazyDict],
-]:
+def get_default_model_mappings() -> (
+    Tuple[
+        Dict[str, Type[UnstructuredModel]],
+        Dict[str, dict | LazyDict],
+    ]
+):
     """default model mappings for models that are in `unstructured_inference` repo"""
     return {
         **{name: UnstructuredDetectronModel for name in DETECTRON2_MODEL_TYPES},

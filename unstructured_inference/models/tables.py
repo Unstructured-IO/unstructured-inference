@@ -3,13 +3,16 @@
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
 
 import cv2
 import numpy as np
 import torch
 from PIL import Image as PILImage
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
+from transformers.models.table_transformer.modeling_table_transformer import (
+    TableTransformerObjectDetectionOutput,
+)
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.inference.layoutelement import table_cells_to_dataframe
@@ -172,18 +175,22 @@ def recognize(outputs: dict, img: PILImage.Image, tokens: list):
     """Recognize table elements."""
     str_class_name2idx = get_class_map("structure")
     str_class_idx2name = {v: k for k, v in str_class_name2idx.items()}
-    str_class_thresholds = structure_class_thresholds
+    class_thresholds = structure_class_thresholds
 
     # Post-process detected objects, assign class labels
     objects = outputs_to_objects(outputs, img.size, str_class_idx2name)
-
+    high_confidence_objects = apply_thresholds_on_objects(objects, class_thresholds)
     # Further process the detected objects so they correspond to a consistent table
-    tables_structure = objects_to_structures(objects, tokens, str_class_thresholds)
+    tables_structure = objects_to_structures(high_confidence_objects, tokens, class_thresholds)
     # Enumerate all table cells: grid cells and spanning cells
     return [structure_to_cells(structure, tokens)[0] for structure in tables_structure]
 
 
-def outputs_to_objects(outputs, img_size, class_idx2name):
+def outputs_to_objects(
+    outputs: TableTransformerObjectDetectionOutput,
+    img_size: tuple[int, int],
+    class_idx2name: Mapping[int, str],
+):
     """Output table element types."""
     m = outputs["logits"].softmax(-1).max(-1)
     pred_labels = list(m.indices.detach().cpu().numpy())[0]
@@ -209,6 +216,13 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
                 },
             )
 
+    return objects
+
+
+def apply_thresholds_on_objects(
+    objects: Sequence[Mapping[str, Any]], thresholds: Mapping[str, float]
+) -> Sequence[Mapping[str, Any]]:
+    objects = [obj for obj in objects if obj["score"] >= thresholds[obj["label"]]]
     return objects
 
 
