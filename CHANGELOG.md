@@ -1,3 +1,8 @@
+## 0.7.29
+
+* fix: table transformer predictions are now removed if confidence is below threshold
+
+
 ## 0.7.28
 
 * feat: allow table transformer agent to return table prediction in not parsed format

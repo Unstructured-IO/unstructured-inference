@@ -10,6 +10,7 @@ from transformers.models.table_transformer.modeling_table_transformer import (
 
 import unstructured_inference.models.table_postprocess as postprocess
 from unstructured_inference.models import tables
+from unstructured_inference.models.tables import apply_thresholds_on_objects
 
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
@@ -975,6 +976,55 @@ def test_table_prediction_with_ocr_tokens(table_transformer, example_image, mock
 def test_table_prediction_with_no_ocr_tokens(table_transformer, example_image):
     with pytest.raises(ValueError):
         table_transformer.predict(example_image)
+
+
+@pytest.mark.parametrize(
+    ("thresholds", "expected_object_number"),
+    [
+        ({"0": 0.5}, 1),
+        ({"0": 0.1}, 3),
+        ({"0": 0.9}, 0),
+    ],
+)
+def test_objects_are_filtered_based_on_class_thresholds_when_correct_prediction_and_threshold(
+    thresholds, expected_object_number
+):
+    objects = [
+        {"label": "0", "score": 0.2},
+        {"label": "0", "score": 0.4},
+        {"label": "0", "score": 0.55},
+    ]
+    assert len(apply_thresholds_on_objects(objects, thresholds)) == expected_object_number
+
+
+@pytest.mark.parametrize(
+    ("thresholds", "expected_object_number"),
+    [
+        ({"0": 0.5, "1": 0.1}, 4),
+        ({"0": 0.1, "1": 0.9}, 3),
+        ({"0": 0.9, "1": 0.5}, 1),
+    ],
+)
+def test_objects_are_filtered_based_on_class_thresholds_when_two_classes(
+    thresholds, expected_object_number
+):
+    objects = [
+        {"label": "0", "score": 0.2},
+        {"label": "0", "score": 0.4},
+        {"label": "0", "score": 0.55},
+        {"label": "1", "score": 0.2},
+        {"label": "1", "score": 0.4},
+        {"label": "1", "score": 0.55},
+    ]
+    assert len(apply_thresholds_on_objects(objects, thresholds)) == expected_object_number
+
+
+def test_objects_filtering_when_missing_threshold():
+    class_name = "class_name"
+    objects = [{"label": class_name, "score": 0.2}]
+    thresholds = {"1": 0.5}
+    with pytest.raises(KeyError, match=class_name):
+        apply_thresholds_on_objects(objects, thresholds)
 
 
 def test_intersect():
