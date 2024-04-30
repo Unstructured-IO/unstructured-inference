@@ -484,6 +484,8 @@ def structure_to_cells(table_structure, tokens):
     columns = table_structure["columns"]
     rows = table_structure["rows"]
     spanning_cells = table_structure["spanning cells"]
+    spanning_cells = sorted(spanning_cells, reverse=True, key=lambda cell: cell["score"])
+
     cells = []
     subcells = []
     # Identify complete cells and subcells
@@ -507,6 +509,7 @@ def structure_to_cells(table_structure, tokens):
                     spanning_cell_rect.intersect(cell_rect).get_area() / cell_rect.get_area()
                 ) > inference_config.TABLE_IOB_THRESHOLD:
                     cell["subcell"] = True
+                    cell["is_merged"] = False
                     break
 
             if cell["subcell"]:
@@ -528,7 +531,7 @@ def structure_to_cells(table_structure, tokens):
             subcell_rect_area = subcell_rect.get_area()
             if (
                 subcell_rect.intersect(spanning_cell_rect).get_area() / subcell_rect_area
-            ) > inference_config.TABLE_IOB_THRESHOLD:
+            ) > inference_config.TABLE_IOB_THRESHOLD and subcell["is_merged"] is False:
                 if cell_rect is None:
                     cell_rect = Rect(list(subcell["bbox"]))
                 else:
@@ -539,6 +542,8 @@ def structure_to_cells(table_structure, tokens):
                 # as header cells for a spanning cell to be classified as a header cell;
                 # otherwise, this could lead to a non-rectangular header region
                 header = header and "column header" in subcell and subcell["column header"]
+                subcell["is_merged"] = True
+
         if len(cell_rows) > 0 and len(cell_columns) > 0:
             cell = {
                 "bbox": cell_rect.get_bbox(),
