@@ -36,7 +36,7 @@ MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
         "source": Source.CHIPPERV1,
     },
     "chipperv2": {
-        "pre_trained_model_repo": "unstructuredio/chipper-fast-fine-tuning",
+        "pre_trained_model_repo": "unstructuredio/aftc-model-training",
         "swap_head": True,
         "swap_head_hidden_layer_size": 128,
         "start_token_prefix": "<s_",
@@ -134,7 +134,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     bias=True,
                 ),
             )
-            self.model.decoder.lm_head.load_state_dict(torch.load(lm_head_file))
+            self.model.decoder.lm_head.load_state_dict(torch.load(lm_head_file, map_location=torch.device('cpu')))
         else:
             if swap_head_hidden_layer_size is not None:
                 logger.warning(
