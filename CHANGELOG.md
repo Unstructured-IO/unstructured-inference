@@ -1,3 +1,7 @@
+## 0.7.30
+
+* fix: table transformer doesn't return multiple cells with same coordinates 
+* 
 ## 0.7.29
 
 * fix: table transformer predictions are now removed if confidence is below threshold
