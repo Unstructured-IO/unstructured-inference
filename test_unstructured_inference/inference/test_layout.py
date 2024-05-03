@@ -227,33 +227,6 @@ class MockPageLayout(layout.PageLayout):
         self.detection_model = detection_model
 
 
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [
-        ("base", 0.0),
-        ("", 0.0),
-        ("(cid:2)", 1.0),
-        ("(cid:1)a", 0.5),
-        ("c(cid:1)ab", 0.25),
-    ],
-)
-def test_cid_ratio(text, expected):
-    assert elements.cid_ratio(text) == expected
-
-
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [
-        ("base", False),
-        ("(cid:2)", True),
-        ("(cid:1234567890)", True),
-        ("jkl;(cid:12)asdf", True),
-    ],
-)
-def test_is_cid_present(text, expected):
-    assert elements.is_cid_present(text) == expected
-
-
 class MockLayout:
     def __init__(self, *elements):
         self.elements = elements
@@ -394,13 +367,6 @@ def test_remove_control_characters(text, expected):
 
 no_text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100)
 text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100, text="test")
-cid_text_region = EmbeddedTextRegion.from_coords(
-    0,
-    0,
-    100,
-    100,
-    text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)",
-)
 overlapping_rect = ImageTextRegion.from_coords(50, 50, 150, 150)
 nonoverlapping_rect = ImageTextRegion.from_coords(150, 150, 200, 200)
 populated_text_region = EmbeddedTextRegion.from_coords(50, 50, 60, 60, text="test")
