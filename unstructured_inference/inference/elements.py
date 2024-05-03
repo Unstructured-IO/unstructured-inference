@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import unicodedata
 from copy import deepcopy
 from dataclasses import dataclass
