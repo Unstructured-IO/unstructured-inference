@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import unicodedata
 from copy import deepcopy
 from dataclasses import dataclass
@@ -256,23 +255,6 @@ def aggregate_by_block(
     ]
     text = " ".join([x.text for x in filtered_blocks if x.text])
     return text
-
-
-def cid_ratio(text: str) -> float:
-    """Gets ratio of unknown 'cid' characters extracted from text to all characters."""
-    if not is_cid_present(text):
-        return 0.0
-    cid_pattern = r"\(cid\:(\d+)\)"
-    unmatched, n_cid = re.subn(cid_pattern, "", text)
-    total = n_cid + len(unmatched)
-    return n_cid / total
-
-
-def is_cid_present(text: str) -> bool:
-    """Checks if a cid code is present in a text selection."""
-    if len(text) < len("(cid:x)"):
-        return False
-    return text.find("(cid:") != -1
 
 
 def remove_control_characters(text: str) -> str:

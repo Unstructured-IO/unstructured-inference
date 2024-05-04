@@ -1,3 +1,7 @@
+## 0.7.31-dev0
+
+* refactor: remove all `cid` related code that was originally added to filter out invalid `pdfminer` text 
+
 ## 0.7.30
 
 * fix: table transformer doesn't return multiple cells with same coordinates 

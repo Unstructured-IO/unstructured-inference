@@ -3,7 +3,7 @@
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 import cv2
 import numpy as np
@@ -188,7 +188,7 @@ def recognize(outputs: dict, img: PILImage.Image, tokens: list):
 
 def outputs_to_objects(
     outputs: TableTransformerObjectDetectionOutput,
-    img_size: tuple[int, int],
+    img_size: Tuple[int, int],
     class_idx2name: Mapping[int, str],
 ):
     """Output table element types."""
