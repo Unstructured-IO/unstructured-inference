@@ -115,7 +115,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         )
         if swap_head:
             lm_head_file = download_if_needed_and_get_local_path(
-                repo_id=pre_trained_model_repo,
+                path_or_repo=pre_trained_model_repo,
                 filename="lm_head.pth",
                 token=auth_token,
             )
