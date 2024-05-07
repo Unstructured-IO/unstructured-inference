@@ -647,37 +647,9 @@ def structure_to_cells(table_structure, tokens):
     return cells, confidence_score
 
 
-def fill_cells(cells: List[dict]) -> List[dict]:
-    """add empty cells to pad cells that spans multiple rows for html conversion
-
-    For example if a cell takes row 0 and 1 and column 0, we add a new empty cell at row 1 and
-    column 0. This padding ensures the structure of the output table is intact. In this example the
-    cell data is {"row_nums": [0, 1], "column_nums": [0], ...}
-
-    A cell contains the following keys relevent to the html conversion:
-    row_nums: List[int]
-        the row numbers this cell belongs to; for cells spanning multiple rows there are more than
-        one numbers
-    column_nums: List[int]
-        the columns numbers this cell belongs to; for cells spanning multiple columns there are more
-        than one numbers
-    cell text: str
-        the text in this cell
-
-    """
-    new_cells = cells.copy()
-    for cell in cells:
-        for extra_row in sorted(cell["row_nums"][1:]):
-            new_cell = cell.copy()
-            new_cell["row_nums"] = [extra_row]
-            new_cell["cell text"] = ""
-            new_cells.append(new_cell)
-    return new_cells
-
-
 def cells_to_html(cells):
     """Convert table structure to html format."""
-    cells = sorted(fill_cells(cells), key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
+    cells = sorted(cells, key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
 
     table = ET.Element("table")
     current_row = -1
@@ -692,14 +664,13 @@ def cells_to_html(cells):
         rowspan = len(cell["row_nums"])
         if rowspan > 1:
             attrib["rowspan"] = str(rowspan)
+
         if this_row > current_row:
             current_row = this_row
-            if cell["column header"]:
-                cell_tag = "th"
-                row = ET.SubElement(table, "thead")
-            else:
-                cell_tag = "td"
-                row = ET.SubElement(table, "tr")
+            row = ET.SubElement(table, "tr")
+
+        cell_tag = "th" if cell["column header"] else "td"
+
         tcell = ET.SubElement(row, cell_tag, attrib=attrib)
         tcell.text = cell["cell text"]
 
