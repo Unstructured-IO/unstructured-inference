@@ -9,7 +9,6 @@ import numpy as np
 import torch
 import transformers
 from cv2.typing import MatLike
-from huggingface_hub import hf_hub_download
 from PIL.Image import Image
 from transformers import DonutProcessor, VisionEncoderDecoderModel
 from transformers.generation.logits_process import LogitsProcessor
@@ -22,7 +21,7 @@ from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
 )
-from unstructured_inference.utils import LazyDict, strip_tags
+from unstructured_inference.utils import LazyDict, strip_tags, download_if_needed_and_get_local_path
 
 MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
     "chipperv1": {
@@ -115,7 +114,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             token=auth_token,
         )
         if swap_head:
-            lm_head_file = hf_hub_download(
+            lm_head_file = download_if_needed_and_get_local_path(
                 repo_id=pre_trained_model_repo,
                 filename="lm_head.pth",
                 token=auth_token,
