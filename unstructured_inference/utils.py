@@ -188,7 +188,8 @@ def strip_tags(html: str) -> str:
 def download_if_needed_and_get_local_path(path_or_repo: str, filename: str, **kwargs) -> str:
     """Returns path to local file if it exists, otherwise treats it as a huggingface repo and
     attempts to download."""
-    if os.path.exists(path_or_repo):
-        return path_or_repo
+    full_path = os.path.join(path_or_repo, filename)
+    if os.path.exists(full_path):
+        return full_path
     else:
         return hf_hub_download(path_or_repo, filename, **kwargs)
