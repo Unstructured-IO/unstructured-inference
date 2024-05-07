@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Final, List, Optional, Union
 
-from huggingface_hub import hf_hub_download
 from layoutparser.models.detectron2.layoutmodel import (
     Detectron2LayoutModel,
     is_detectron2_available,
@@ -17,7 +16,11 @@ from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
-from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
+from unstructured_inference.utils import (
+    LazyDict,
+    LazyEvaluateInfo,
+    download_if_needed_and_get_local_path,
+)
 
 DETECTRON_CONFIG: Final = "lp://PubLayNet/faster_rcnn_R_50_FPN_3x/config"
 DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
@@ -35,12 +38,12 @@ DEFAULT_EXTRA_CONFIG: Final[List[Any]] = ["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0
 MODEL_TYPES = {
     "detectron2_lp": LazyDict(
         model_path=LazyEvaluateInfo(
-            hf_hub_download,
+            download_if_needed_and_get_local_path,
             "layoutparser/detectron2",
             "PubLayNet/faster_rcnn_R_50_FPN_3x/model_final.pth",
         ),
         config_path=LazyEvaluateInfo(
-            hf_hub_download,
+            download_if_needed_and_get_local_path,
             "layoutparser/detectron2",
             "PubLayNet/faster_rcnn_R_50_FPN_3x/config.yml",
         ),
@@ -49,12 +52,12 @@ MODEL_TYPES = {
     ),
     "checkbox": LazyDict(
         model_path=LazyEvaluateInfo(
-            hf_hub_download,
+            download_if_needed_and_get_local_path,
             "unstructuredio/oer-checkbox",
             "detectron2_finetuned_oer_checkbox.pth",
         ),
         config_path=LazyEvaluateInfo(
-            hf_hub_download,
+            download_if_needed_and_get_local_path,
             "unstructuredio/oer-checkbox",
             "detectron2_oer_checkbox.json",
         ),
