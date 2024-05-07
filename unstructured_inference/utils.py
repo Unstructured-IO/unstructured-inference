@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterable, Iterator, U
 import cv2
 import numpy as np
 from PIL import Image
+from huggingface_hub import hf_hub_download
 
 from unstructured_inference.constants import AnnotationResult
 from unstructured_inference.inference.layoutelement import LayoutElement
@@ -182,3 +183,12 @@ def strip_tags(html: str) -> str:
     s = MLStripper()
     s.feed(html)
     return s.get_data()
+
+
+def download_if_needed_and_get_local_path(path_or_repo: str, filename: str, **kwargs) -> str:
+    """Returns path to local file if it exists, otherwise treats it as a huggingface repo and
+    attempts to download."""
+    if os.path.exists(path_or_repo):
+        return path_or_repo
+    else:
+        return hf_hub_download(path_or_repo, filename, **kwargs)
