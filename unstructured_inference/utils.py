@@ -5,8 +5,8 @@ from io import StringIO
 from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterable, Iterator, Union
 
 import cv2
-from huggingface_hub import hf_hub_download
 import numpy as np
+from huggingface_hub import hf_hub_download
 from PIL import Image
 
 from unstructured_inference.constants import AnnotationResult
