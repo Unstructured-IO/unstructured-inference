@@ -21,7 +21,7 @@ from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
 )
-from unstructured_inference.utils import LazyDict, strip_tags, download_if_needed_and_get_local_path
+from unstructured_inference.utils import LazyDict, download_if_needed_and_get_local_path, strip_tags
 
 MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
     "chipperv1": {
