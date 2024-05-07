@@ -1,4 +1,4 @@
-## 0.7.31-dev1
+## 0.7.31
 
 * refactor: remove all `cid` related code that was originally added to filter out invalid `pdfminer` text 
 * enhancement: Wrapped hf_hub_download with a function that checks for local file before checking HF
