@@ -3,13 +3,16 @@
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 import cv2
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image as PILImage
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
+from transformers.models.table_transformer.modeling_table_transformer import (
+    TableTransformerObjectDetectionOutput,
+)
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.inference.layoutelement import table_cells_to_dataframe
@@ -27,7 +30,12 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def __init__(self):
         pass
 
-    def predict(self, x: Image, ocr_tokens: Optional[List[Dict]] = None):
+    def predict(
+        self,
+        x: PILImage.Image,
+        ocr_tokens: Optional[List[Dict]] = None,
+        result_format: str = "html",
+    ):
         """Predict table structure deferring to run_prediction with ocr tokens
 
         Note:
@@ -44,7 +52,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         FIXME: refactor token data into a dataclass so we have clear expectations of the fields
         """
         super().predict(x)
-        return self.run_prediction(x, ocr_tokens=ocr_tokens)
+        return self.run_prediction(x, ocr_tokens=ocr_tokens, result_format=result_format)
 
     def initialize(
         self,
@@ -70,7 +78,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def get_structure(
         self,
-        x: Image,
+        x: PILImage.Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
     ) -> dict:
         """get the table structure as a dictionary contaning different types of elements as
@@ -87,7 +95,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def run_prediction(
         self,
-        x: Image,
+        x: PILImage.Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
         ocr_tokens: Optional[List[Dict]] = None,
         result_format: Optional[str] = "html",
@@ -109,6 +117,14 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             prediction = cells_to_html(prediction) or ""
         elif result_format == "dataframe":
             prediction = table_cells_to_dataframe(prediction)
+        elif result_format == "cells":
+            prediction = prediction
+        else:
+            raise ValueError(
+                f"result_format {result_format} is not a valid format. "
+                f'Valid formats are: "html", "dataframe", "cells"'
+            )
+
         return prediction
 
 
@@ -155,22 +171,26 @@ structure_class_thresholds = {
 }
 
 
-def recognize(outputs: dict, img: Image, tokens: list):
+def recognize(outputs: dict, img: PILImage.Image, tokens: list):
     """Recognize table elements."""
     str_class_name2idx = get_class_map("structure")
     str_class_idx2name = {v: k for k, v in str_class_name2idx.items()}
-    str_class_thresholds = structure_class_thresholds
+    class_thresholds = structure_class_thresholds
 
     # Post-process detected objects, assign class labels
     objects = outputs_to_objects(outputs, img.size, str_class_idx2name)
-
+    high_confidence_objects = apply_thresholds_on_objects(objects, class_thresholds)
     # Further process the detected objects so they correspond to a consistent table
-    tables_structure = objects_to_structures(objects, tokens, str_class_thresholds)
+    tables_structure = objects_to_structures(high_confidence_objects, tokens, class_thresholds)
     # Enumerate all table cells: grid cells and spanning cells
     return [structure_to_cells(structure, tokens)[0] for structure in tables_structure]
 
 
-def outputs_to_objects(outputs, img_size, class_idx2name):
+def outputs_to_objects(
+    outputs: TableTransformerObjectDetectionOutput,
+    img_size: Tuple[int, int],
+    class_idx2name: Mapping[int, str],
+):
     """Output table element types."""
     m = outputs["logits"].softmax(-1).max(-1)
     pred_labels = list(m.indices.detach().cpu().numpy())[0]
@@ -196,6 +216,32 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
                 },
             )
 
+    return objects
+
+
+def apply_thresholds_on_objects(
+    objects: Sequence[Mapping[str, Any]], thresholds: Mapping[str, float]
+) -> Sequence[Mapping[str, Any]]:
+    """
+    Filters predicted objects which the confidence scores below the thresholds
+
+    Args:
+        objects: Sequence of mappings for example:
+        [
+            {
+                "label": "table row",
+                "score": 0.55,
+                "bbox": [...],
+            },
+            ...,
+        ]
+        thresholds: Mapping from labels to thresholds
+
+    Returns:
+        Filtered list of objects
+
+    """
+    objects = [obj for obj in objects if obj["score"] >= thresholds[obj["label"]]]
     return objects
 
 
@@ -438,6 +484,8 @@ def structure_to_cells(table_structure, tokens):
     columns = table_structure["columns"]
     rows = table_structure["rows"]
     spanning_cells = table_structure["spanning cells"]
+    spanning_cells = sorted(spanning_cells, reverse=True, key=lambda cell: cell["score"])
+
     cells = []
     subcells = []
     # Identify complete cells and subcells
@@ -461,6 +509,7 @@ def structure_to_cells(table_structure, tokens):
                     spanning_cell_rect.intersect(cell_rect).get_area() / cell_rect.get_area()
                 ) > inference_config.TABLE_IOB_THRESHOLD:
                     cell["subcell"] = True
+                    cell["is_merged"] = False
                     break
 
             if cell["subcell"]:
@@ -482,7 +531,7 @@ def structure_to_cells(table_structure, tokens):
             subcell_rect_area = subcell_rect.get_area()
             if (
                 subcell_rect.intersect(spanning_cell_rect).get_area() / subcell_rect_area
-            ) > inference_config.TABLE_IOB_THRESHOLD:
+            ) > inference_config.TABLE_IOB_THRESHOLD and subcell["is_merged"] is False:
                 if cell_rect is None:
                     cell_rect = Rect(list(subcell["bbox"]))
                 else:
@@ -493,6 +542,8 @@ def structure_to_cells(table_structure, tokens):
                 # as header cells for a spanning cell to be classified as a header cell;
                 # otherwise, this could lead to a non-rectangular header region
                 header = header and "column header" in subcell and subcell["column header"]
+                subcell["is_merged"] = True
+
         if len(cell_rows) > 0 and len(cell_columns) > 0:
             cell = {
                 "bbox": cell_rect.get_bbox(),
@@ -655,7 +706,7 @@ def cells_to_html(cells):
     return str(ET.tostring(table, encoding="unicode", short_empty_elements=False))
 
 
-def zoom_image(image: Image, zoom: float) -> Image:
+def zoom_image(image: PILImage.Image, zoom: float) -> PILImage.Image:
     """scale an image based on the zoom factor using cv2; the scaled image is post processed by
     dilation then erosion to improve edge sharpness for OCR tasks"""
     if zoom <= 0:
@@ -673,4 +724,4 @@ def zoom_image(image: Image, zoom: float) -> Image:
     new_image = cv2.dilate(new_image, kernel, iterations=1)
     new_image = cv2.erode(new_image, kernel, iterations=1)
 
-    return Image.fromarray(new_image)
+    return PILImage.fromarray(new_image)

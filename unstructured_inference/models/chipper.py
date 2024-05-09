@@ -9,7 +9,6 @@ import numpy as np
 import torch
 import transformers
 from cv2.typing import MatLike
-from huggingface_hub import hf_hub_download
 from PIL.Image import Image
 from transformers import DonutProcessor, VisionEncoderDecoderModel
 from transformers.generation.logits_process import LogitsProcessor
@@ -22,7 +21,7 @@ from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
 )
-from unstructured_inference.utils import LazyDict, strip_tags
+from unstructured_inference.utils import LazyDict, download_if_needed_and_get_local_path, strip_tags
 
 MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
     "chipperv1": {
@@ -115,8 +114,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             token=auth_token,
         )
         if swap_head:
-            lm_head_file = hf_hub_download(
-                repo_id=pre_trained_model_repo,
+            lm_head_file = download_if_needed_and_get_local_path(
+                path_or_repo=pre_trained_model_repo,
                 filename="lm_head.pth",
                 token=auth_token,
             )
@@ -465,7 +464,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 np.asarray(
                     [
                         agg_heatmap,
-                        cv2.resize(
+                        cv2.resize(  # type: ignore
                             hmap,
                             (final_w, final_h),
                             interpolation=cv2.INTER_LINEAR_EXACT,  # cv2.INTER_CUBIC
@@ -622,7 +621,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ):
             return input_bbox
 
-        nimage = np.array(image.crop(input_bbox))
+        nimage = np.array(image.crop(input_bbox))  # type: ignore
 
         nimage = self.remove_horizontal_lines(nimage)
 
@@ -671,7 +670,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ):
             return input_bbox
 
-        nimage = np.array(image.crop(input_bbox))
+        nimage = np.array(image.crop(input_bbox))  # type: ignore
 
         nimage = self.remove_horizontal_lines(nimage)
 
@@ -775,7 +774,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ):
             return None
 
-        nimage = np.array(image.crop(input_bbox))
+        nimage = np.array(image.crop(input_bbox))  # type: ignore
 
         if nimage.shape[0] * nimage.shape[1] == 0:
             return None
@@ -884,6 +883,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 continue
 
             ebbox1 = element.bbox
+            if ebbox1 is None:
+                continue
             bbox1 = [ebbox1.x1, ebbox1.y1, ebbox1.x2, max(ebbox1.y1, ebbox1.y2)]
 
             for celement in elements:
