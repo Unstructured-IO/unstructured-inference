@@ -1,3 +1,7 @@
+## 0.7.32-dev1
+
+* bug: set the Chipper max_length variable
+
 ## 0.7.31
 
 * refactor: remove all `cid` related code that was originally added to filter out invalid `pdfminer` text 
