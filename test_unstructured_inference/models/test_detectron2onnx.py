@@ -37,11 +37,18 @@ def test_load_default_model(monkeypatch):
 
 @pytest.mark.parametrize(("model_path", "label_map"), [("asdf", "diufs"), ("dfaw", "hfhfhfh")])
 def test_load_model(model_path, label_map):
-    with patch.object(detectron2.onnxruntime, "InferenceSession", return_value=True):
+    session_options_dict = {"intra_op_num_threads": 1, "inter_op_num_threads": 1}
+    with patch.object(detectron2.onnxruntime, "InferenceSession") as mock_session:
         model = detectron2.UnstructuredDetectronONNXModel()
-        model.initialize(model_path=model_path, label_map=label_map)
-        args, _ = detectron2.onnxruntime.InferenceSession.call_args
-        assert args == (model_path,)
+        model.initialize(
+            model_path=model_path,
+            label_map=label_map,
+            session_options_dict=session_options_dict
+        )
+        args, kwargs = mock_session.call_args
+        assert args[0] == model_path
+        assert kwargs['sess_options'].intra_op_num_threads == 1
+        assert kwargs['sess_options'].inter_op_num_threads == 1
     assert label_map == model.label_map
 
 
