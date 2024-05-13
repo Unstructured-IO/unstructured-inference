@@ -99,6 +99,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         model_path: str,
         label_map: Dict[int, str],
         confidence_threshold: Optional[float] = None,
+        session_options_dict: Optional[Dict[str, Union[int, bool, str]]] = None,
     ):
         """Loads the detectron2 model using the specified parameters"""
         if not os.path.exists(model_path) and "detectron2_quantized" in model_path:
@@ -115,8 +116,14 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         ]
         providers = [provider for provider in ordered_providers if provider in available_providers]
 
+        session_options = onnxruntime.SessionOptions()
+        if session_options_dict:
+            for option_name, option_value in session_options_dict.items():
+                setattr(session_options, option_name, option_value)
+
         self.model = onnxruntime.InferenceSession(
             model_path,
+            sess_options=session_options,
             providers=providers,
         )
         self.model_path = model_path
