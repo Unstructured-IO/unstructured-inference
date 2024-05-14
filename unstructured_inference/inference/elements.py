@@ -184,21 +184,6 @@ class TextRegion:
     def __str__(self) -> str:
         return str(self.text)
 
-    def extract_text(
-        self,
-        objects: Optional[Collection[TextRegion]],
-    ) -> str:
-        """Extracts text contained in region."""
-        if self.text is not None:
-            # If block text is already populated, we'll assume it's correct
-            text = self.text
-        elif objects is not None:
-            text = aggregate_by_block(self, objects)
-        else:
-            text = ""
-        cleaned_text = remove_control_characters(text)
-        return cleaned_text
-
     @classmethod
     def from_coords(
         cls,
@@ -238,23 +223,6 @@ class ImageTextRegion(TextRegion):
             return ""
         else:
             return super().extract_text(objects)
-
-
-def aggregate_by_block(
-    text_region: TextRegion,
-    pdf_objects: Collection[TextRegion],
-) -> str:
-    """Extracts the text aggregated from the elements of the given layout that lie within the given
-    block."""
-
-    subregion_threshold = inference_config.EMBEDDED_TEXT_AGGREGATION_SUBREGION_THRESHOLD
-    filtered_blocks = [
-        obj
-        for obj in pdf_objects
-        if obj.bbox.is_almost_subregion_of(text_region.bbox, subregion_threshold)
-    ]
-    text = " ".join([x.text for x in filtered_blocks if x.text])
-    return text
 
 
 def remove_control_characters(text: str) -> str:
