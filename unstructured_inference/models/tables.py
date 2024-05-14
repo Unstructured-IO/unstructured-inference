@@ -35,6 +35,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         x: PILImage.Image,
         ocr_tokens: Optional[List[Dict]] = None,
         result_format: str = "html",
+        filename=None
     ):
         """Predict table structure deferring to run_prediction with ocr tokens
 
@@ -52,7 +53,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         FIXME: refactor token data into a dataclass so we have clear expectations of the fields
         """
         super().predict(x)
-        return self.run_prediction(x, ocr_tokens=ocr_tokens, result_format=result_format)
+        return self.run_prediction(x, ocr_tokens=ocr_tokens, result_format=result_format, filename=filename)
 
     def initialize(
         self,
@@ -99,8 +100,13 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
         ocr_tokens: Optional[List[Dict]] = None,
         result_format: Optional[str] = "html",
+        filename=None
     ):
         """Predict table structure"""
+        save_dir = Path("/home/kamil/git/core-product/od_tables") / Path(filename).parent.stem
+        save_dir.mkdir(exist_ok=True, parents=True)
+        save_file_path = save_dir / Path(filename).name
+        x.save(str(save_file_path))
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
         if ocr_tokens is None:
             raise ValueError("Cannot predict table structure with no OCR tokens")
