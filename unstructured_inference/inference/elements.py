@@ -225,16 +225,6 @@ class ImageTextRegion(TextRegion):
             return super().extract_text(objects)
 
 
-def remove_control_characters(text: str) -> str:
-    """Removes control characters from text."""
-
-    # Replace newline character with a space
-    text = text.replace("\n", " ")
-    # Remove other control characters
-    out_text = "".join(c for c in text if unicodedata.category(c)[0] != "C")
-    return out_text
-
-
 def region_bounding_boxes_are_almost_the_same(
     region1: Rectangle,
     region2: Rectangle,
