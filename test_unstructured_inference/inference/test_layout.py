@@ -409,6 +409,12 @@ def test_annotate(colors, add_details, threshold):
         check_annotated_image()
 
 
+@pytest.mark.parametrize(("text", "expected"), [("asdf", "asdf"), (None, "")])
+def test_embedded_text_region(text, expected):
+    etr = elements.EmbeddedTextRegion.from_coords(0, 0, 24, 24, text=text)
+    assert etr.extract_text(objects=None) == expected
+
+
 class MockDetectionModel(layout.UnstructuredObjectDetectionModel):
     def initialize(self, *args, **kwargs):
         pass
