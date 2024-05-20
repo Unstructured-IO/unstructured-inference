@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import unicodedata
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Collection, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 
-from unstructured_inference.config import inference_config
 from unstructured_inference.constants import Source
 from unstructured_inference.math import safe_division
 
