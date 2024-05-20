@@ -7,12 +7,25 @@ in bytes). Constants should go into `./constants.py`
 """
 
 import os
+import tempfile
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
+
+
+@lru_cache(maxsize=1)
+def get_tempdir(dir: str) -> str:
+    tempdir = Path(dir) / f"tmp/{os.getpgid(0)}"
+    return str(tempdir)
 
 
 @dataclass
 class InferenceConfig:
     """class for configuring inference parameters"""
+
+    def ___post_init__(self):
+        if self.INFERENCE_GLOBAL_WORKING_DIR_ENABLED:
+            self._setup_tmpdir(self.INFERENCE_GLOBAL_WORKING_PROCESS_DIR)
 
     def _get_string(self, var: str, default_value: str = "") -> str:
         """attempt to get the value of var from the os environment; if not present return the
@@ -28,6 +41,15 @@ class InferenceConfig:
         if value := self._get_string(var):
             return float(value)
         return default_value
+
+    def _get_bool(self, var: str, default_value: bool) -> bool:
+        if value := self._get_string(var):
+            return value.lower() in ("true", "1", "t")
+        return default_value
+
+    def _setup_tmpdir(self, tmpdir: str) -> None:
+        Path(tmpdir).mkdir(parents=True, exist_ok=True)
+        tempfile.tempdir = tmpdir
 
     @property
     def TABLE_IMAGE_BACKGROUND_PAD(self) -> int:
@@ -115,6 +137,31 @@ class InferenceConfig:
     def ELEMENTS_V_PADDING_COEF(self) -> float:
         """Same as ELEMENTS_H_PADDING_COEF but the vertical extension."""
         return self._get_float("ELEMENTS_V_PADDING_COEF", 0.3)
+
+    @property
+    def INFERENCE_GLOBAL_WORKING_DIR_ENABLED(self) -> bool:
+        """Enable usage of INFERENCE_GLOBAL_WORKING_DIR and INFERENCE_GLOBAL_WORKING_PROCESS_DIR."""
+        return self._get_bool("INFERENCE_GLOBAL_WORKING_DIR_ENABLED", False)
+
+    @property
+    def INFERENCE_GLOBAL_WORKING_DIR(self) -> str:
+        """Path to Unstructured cache directory."""
+        return self._get_string(
+            "INFERENCE_GLOBAL_WORKING_DIR", str(Path.home() / ".cache/unstructured")
+        )
+
+    @property
+    def INFERENCE_GLOBAL_WORKING_PROCESS_DIR(self) -> str:
+        """Path to Unstructured cache tempdir. Overrides TMPDIR, TEMP and TMP.
+        Defaults to '{INFERENCE_GLOBAL_WORKING_DIR}/tmp/{os.getpgid(0)}'.
+        """
+        default_tmpdir = get_tempdir(dir=self.INFERENCE_GLOBAL_WORKING_DIR)
+        tmpdir = self._get_string("INFERENCE_GLOBAL_WORKING_PROCESS_DIR", default_tmpdir)
+        if tmpdir == "":
+            tmpdir = default_tmpdir
+        if self.INFERENCE_GLOBAL_WORKING_DIR_ENABLED:
+            self._setup_tmpdir(tmpdir)
+        return tmpdir
 
 
 inference_config = InferenceConfig()

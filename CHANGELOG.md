@@ -1,6 +1,7 @@
-## 0.7.32-dev1
+## 0.7.32-dev2
 
 * bug: set the Chipper max_length variable
+* feat: add INFERENCE_GLOBAL_WORKING_DIR and INFERENCE_GLOBAL_WOKRING_PROCESS_DIR configuration parameters to control temporary storage
 
 ## 0.7.31
 
