@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 @lru_cache(maxsize=1)
-def get_tempdir(dir: str) -> str:
+def _get_tempdir(dir: str) -> str:
     tempdir = Path(dir) / f"tmp/{os.getpgid(0)}"
     return str(tempdir)
 
@@ -155,7 +155,7 @@ class InferenceConfig:
         """Path to Unstructured cache tempdir. Overrides TMPDIR, TEMP and TMP.
         Defaults to '{INFERENCE_GLOBAL_WORKING_DIR}/tmp/{os.getpgid(0)}'.
         """
-        default_tmpdir = get_tempdir(dir=self.INFERENCE_GLOBAL_WORKING_DIR)
+        default_tmpdir = _get_tempdir(dir=self.INFERENCE_GLOBAL_WORKING_DIR)
         tmpdir = self._get_string("INFERENCE_GLOBAL_WORKING_PROCESS_DIR", default_tmpdir)
         if tmpdir == "":
             tmpdir = default_tmpdir
