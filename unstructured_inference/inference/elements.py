@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import re
 import unicodedata
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Collection, Optional, Union
 
 import numpy as np
-from PIL import Image
 
+from unstructured_inference.config import inference_config
 from unstructured_inference.constants import Source
 from unstructured_inference.math import safe_division
 
@@ -68,6 +67,8 @@ class Rectangle:
 
     def intersects(self, other: Rectangle) -> bool:
         """Checks whether this rectangle intersects another rectangle."""
+        if self._has_none() or other._has_none():
+            return False
         return intersections(self, other)[0, 1]
 
     def is_in(self, other: Rectangle, error_margin: Optional[Union[int, float]] = None) -> bool:
@@ -82,6 +83,10 @@ class Rectangle:
             ],
         )
 
+    def _has_none(self) -> bool:
+        """return false when one of the coord is nan"""
+        return any((self.x1 is None, self.x2 is None, self.y1 is None, self.y2 is None))
+
     @property
     def coordinates(self):
         """Gets coordinates of the rectangle"""
@@ -90,6 +95,8 @@ class Rectangle:
     def intersection(self, other: Rectangle) -> Optional[Rectangle]:
         """Gives the rectangle that is the intersection of two rectangles, or None if the
         rectangles are disjoint."""
+        if self._has_none() or other._has_none():
+            return None
         x1 = max(self.x1, other.x1)
         x2 = min(self.x2, other.x2)
         y1 = max(self.y1, other.y1)
@@ -177,23 +184,6 @@ class TextRegion:
     def __str__(self) -> str:
         return str(self.text)
 
-    def extract_text(
-        self,
-        objects: Optional[Collection[TextRegion]],
-        image: Optional[Image.Image] = None,
-        extract_tables: bool = False,
-    ) -> str:
-        """Extracts text contained in region."""
-        if self.text is not None:
-            # If block text is already populated, we'll assume it's correct
-            text = self.text
-        elif objects is not None:
-            text = aggregate_by_block(self, objects)
-        else:
-            text = ""
-        cleaned_text = remove_control_characters(text)
-        return cleaned_text
-
     @classmethod
     def from_coords(
         cls,
@@ -215,8 +205,6 @@ class EmbeddedTextRegion(TextRegion):
     def extract_text(
         self,
         objects: Optional[Collection[TextRegion]],
-        image: Optional[Image.Image] = None,
-        extract_tables: bool = False,
     ) -> str:
         """Extracts text contained in region."""
         if self.text is None:
@@ -229,44 +217,12 @@ class ImageTextRegion(TextRegion):
     def extract_text(
         self,
         objects: Optional[Collection[TextRegion]],
-        image: Optional[Image.Image] = None,
-        extract_tables: bool = False,
     ) -> str:
         """Extracts text contained in region."""
         if self.text is None:
             return ""
         else:
-            return super().extract_text(objects, extract_tables)
-
-
-def aggregate_by_block(
-    text_region: TextRegion,
-    pdf_objects: Collection[TextRegion],
-) -> str:
-    """Extracts the text aggregated from the elements of the given layout that lie within the given
-    block."""
-    filtered_blocks = [
-        obj for obj in pdf_objects if obj.bbox.is_in(text_region.bbox, error_margin=5)
-    ]
-    text = " ".join([x.text for x in filtered_blocks if x.text])
-    return text
-
-
-def cid_ratio(text: str) -> float:
-    """Gets ratio of unknown 'cid' characters extracted from text to all characters."""
-    if not is_cid_present(text):
-        return 0.0
-    cid_pattern = r"\(cid\:(\d+)\)"
-    unmatched, n_cid = re.subn(cid_pattern, "", text)
-    total = n_cid + len(unmatched)
-    return n_cid / total
-
-
-def is_cid_present(text: str) -> bool:
-    """Checks if a cid code is present in a text selection."""
-    if len(text) < len("(cid:x)"):
-        return False
-    return text.find("(cid:") != -1
+            return super().extract_text(objects)
 
 
 def remove_control_characters(text: str) -> str:

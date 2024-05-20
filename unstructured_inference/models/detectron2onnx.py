@@ -4,7 +4,6 @@ from typing import Dict, Final, List, Optional, Union, cast
 import cv2
 import numpy as np
 import onnxruntime
-from huggingface_hub import hf_hub_download
 from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
 from onnxruntime.capi import _pybind_state as C
 from onnxruntime.quantization import QuantType, quantize_dynamic
@@ -16,7 +15,11 @@ from unstructured_inference.logger import logger, logger_onnx
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
-from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
+from unstructured_inference.utils import (
+    LazyDict,
+    LazyEvaluateInfo,
+    download_if_needed_and_get_local_path,
+)
 
 onnxruntime.set_default_logger_severity(logger_onnx.getEffectiveLevel())
 
@@ -34,7 +37,7 @@ DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
 MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
     "detectron2_onnx": LazyDict(
         model_path=LazyEvaluateInfo(
-            hf_hub_download,
+            download_if_needed_and_get_local_path,
             "unstructuredio/detectron2_faster_rcnn_R_50_FPN_3x",
             "model.onnx",
         ),
@@ -52,7 +55,7 @@ MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
     },
     "detectron2_mask_rcnn": LazyDict(
         model_path=LazyEvaluateInfo(
-            hf_hub_download,
+            download_if_needed_and_get_local_path,
             "unstructuredio/detectron2_mask_rcnn_X_101_32x8d_FPN_3x",
             "model.onnx",
         ),

@@ -6,12 +6,12 @@ import pytest
 
 from unstructured_inference.constants import ElementType
 from unstructured_inference.inference import elements
-from unstructured_inference.inference.elements import TextRegion
+from unstructured_inference.inference.elements import Rectangle, TextRegion
 from unstructured_inference.inference.layoutelement import (
+    LayoutElement,
+    merge_inferred_layout_with_extracted_layout,
     partition_groups_from_regions,
     separate,
-    merge_inferred_layout_with_extracted_layout,
-    LayoutElement,
 )
 
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
@@ -29,6 +29,18 @@ def rand_rect(size=10):
     x1 = randint(0, 30 - size)
     y1 = randint(0, 30 - size)
     return elements.Rectangle(x1, y1, x1 + size, y1 + size)
+
+
+@pytest.mark.parametrize(
+    ("rect1", "rect2", "expected"),
+    [
+        (Rectangle(0, 0, 1, 1), Rectangle(0, 0, None, None), None),
+        (Rectangle(0, 0, None, None), Rectangle(0, 0, 1, 1), None),
+    ],
+)
+def test_unhappy_intersection(rect1, rect2, expected):
+    assert rect1.intersection(rect2) == expected
+    assert not rect1.intersects(rect2)
 
 
 @pytest.mark.parametrize("second_size", [10, 20])
@@ -198,7 +210,10 @@ def test_intersection_over_min(
 
 
 def test_grow_region_to_match_region():
-    from unstructured_inference.inference.elements import Rectangle, grow_region_to_match_region
+    from unstructured_inference.inference.elements import (
+        Rectangle,
+        grow_region_to_match_region,
+    )
 
     a = Rectangle(1, 1, 2, 2)
     b = Rectangle(1, 1, 5, 5)
@@ -257,3 +272,16 @@ def test_merge_inferred_layout_with_extracted_layout():
     assert merged_layout[0].text == "Example Section Header"
     assert merged_layout[1].type == ElementType.TEXT
     assert merged_layout[1].text == "Example Title"
+
+
+def test_aggregate_by_block():
+    expected = "Inside region1 Inside region2"
+    embedded_regions = [
+        TextRegion.from_coords(0, 0, 20, 20, "Inside region1"),
+        TextRegion.from_coords(50, 50, 150, 150, "Inside region2"),
+        TextRegion.from_coords(250, 250, 350, 350, "Outside region"),
+    ]
+    target_region = TextRegion.from_coords(0, 0, 300, 300)
+
+    text = elements.aggregate_by_block(target_region, embedded_regions)
+    assert text == expected

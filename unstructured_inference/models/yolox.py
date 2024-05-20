@@ -8,14 +8,17 @@ from typing import List, cast
 import cv2
 import numpy as np
 import onnxruntime
-from huggingface_hub import hf_hub_download
 from onnxruntime.capi import _pybind_state as C
-from PIL import Image
+from PIL import Image as PILImage
 
 from unstructured_inference.constants import ElementType, Source
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
-from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
+from unstructured_inference.utils import (
+    LazyDict,
+    LazyEvaluateInfo,
+    download_if_needed_and_get_local_path,
+)
 
 YOLOX_LABEL_MAP = {
     0: ElementType.CAPTION,
@@ -34,7 +37,7 @@ YOLOX_LABEL_MAP = {
 MODEL_TYPES = {
     "yolox": LazyDict(
         model_path=LazyEvaluateInfo(
-            hf_hub_download,
+            download_if_needed_and_get_local_path,
             "unstructuredio/yolo_x_layout",
             "yolox_l0.05.onnx",
         ),
@@ -42,7 +45,7 @@ MODEL_TYPES = {
     ),
     "yolox_tiny": LazyDict(
         model_path=LazyEvaluateInfo(
-            hf_hub_download,
+            download_if_needed_and_get_local_path,
             "unstructuredio/yolo_x_layout",
             "yolox_tiny.onnx",
         ),
@@ -50,7 +53,7 @@ MODEL_TYPES = {
     ),
     "yolox_quantized": LazyDict(
         model_path=LazyEvaluateInfo(
-            hf_hub_download,
+            download_if_needed_and_get_local_path,
             "unstructuredio/yolo_x_layout",
             "yolox_l0.05_quantized.onnx",
         ),
@@ -60,7 +63,7 @@ MODEL_TYPES = {
 
 
 class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
-    def predict(self, x: Image):
+    def predict(self, x: PILImage.Image):
         """Predict using YoloX model."""
         super().predict(x)
         return self.image_processing(x)
@@ -86,7 +89,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
     def image_processing(
         self,
-        image: Image = None,
+        image: PILImage.Image,
     ) -> List[LayoutElement]:
         """Method runing YoloX for layout detection, returns a PageLayout
         parameters

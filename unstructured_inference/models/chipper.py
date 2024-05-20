@@ -9,20 +9,19 @@ import numpy as np
 import torch
 import transformers
 from cv2.typing import MatLike
-from huggingface_hub import hf_hub_download
 from PIL.Image import Image
 from transformers import DonutProcessor, VisionEncoderDecoderModel
 from transformers.generation.logits_process import LogitsProcessor
 from transformers.generation.stopping_criteria import StoppingCriteria
 
-from unstructured_inference.constants import Source
+from unstructured_inference.constants import CHIPPER_VERSIONS, Source
 from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
 )
-from unstructured_inference.utils import LazyDict, strip_tags
+from unstructured_inference.utils import LazyDict, download_if_needed_and_get_local_path, strip_tags
 
 MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
     "chipperv1": {
@@ -44,11 +43,22 @@ MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
         "max_length": 1536,
         "heatmap_h": 40,
         "heatmap_w": 30,
+        "source": Source.CHIPPERV2,
+    },
+    "chipperv3": {
+        "pre_trained_model_repo": "unstructuredio/chipper-v3",
+        "swap_head": True,
+        "swap_head_hidden_layer_size": 128,
+        "start_token_prefix": "<s_",
+        "prompt": "<s><s_hierarchical>",
+        "max_length": 1536,
+        "heatmap_h": 40,
+        "heatmap_w": 30,
         "source": Source.CHIPPER,
     },
 }
 
-MODEL_TYPES["chipper"] = MODEL_TYPES["chipperv2"]
+MODEL_TYPES["chipper"] = MODEL_TYPES["chipperv3"]
 
 
 class UnstructuredChipperModel(UnstructuredElementExtractionModel):
@@ -104,8 +114,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
             token=auth_token,
         )
         if swap_head:
-            lm_head_file = hf_hub_download(
-                repo_id=pre_trained_model_repo,
+            lm_head_file = download_if_needed_and_get_local_path(
+                path_or_repo=pre_trained_model_repo,
                 filename="lm_head.pth",
                 token=auth_token,
             )
@@ -160,16 +170,18 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         return elements
 
     @staticmethod
-    def format_table_elements(elements):
-        """makes chipper table element return the same as other layout models
+    def format_table_elements(elements: List[LayoutElement]) -> List[LayoutElement]:
+        """Makes chipper table element return the same as other layout models.
 
-        - copies the html representation to attribute text_as_html
-        - strip html tags from the attribute text
+        1. If `text` attribute is an html (has html tags in it), copies the `text`
+        attribute to `text_as_html` attribute.
+        2. Strips html tags from the `text` attribute.
         """
         for element in elements:
-            element.text_as_html = element.text
-            element.text = strip_tags(element.text)
-
+            text = strip_tags(element.text) if element.text is not None else element.text
+            if text != element.text:
+                element.text_as_html = element.text  # type: ignore[attr-defined]
+            element.text = text
         return elements
 
     def predict_tokens(
@@ -196,6 +208,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 outputs = self.model.generate(
                     encoder_outputs=encoder_outputs,
                     input_ids=self.input_ids,
+                    max_length=self.max_length,
                     no_repeat_ngram_size=0,
                     num_beams=1,
                     return_dict_in_generate=True,
@@ -212,6 +225,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                     outputs = self.model.generate(
                         encoder_outputs=encoder_outputs,
                         input_ids=self.input_ids,
+                        max_length=self.max_length,
                         logits_processor=self.logits_processor,
                         do_sample=True,
                         no_repeat_ngram_size=0,
@@ -390,7 +404,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         min_text_size: int = 15,
     ) -> List[LayoutElement]:
         """For chipper, remove elements from other sources."""
-        return [el for el in elements if el.source in (Source.CHIPPER, Source.CHIPPERV1)]
+        return [el for el in elements if el.source in CHIPPER_VERSIONS]
 
     def adjust_bbox(self, bbox, x_offset, y_offset, ratio, target_size):
         """Translate bbox by (x_offset, y_offset) and shrink by ratio."""
@@ -450,7 +464,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 np.asarray(
                     [
                         agg_heatmap,
-                        cv2.resize(
+                        cv2.resize(  # type: ignore
                             hmap,
                             (final_w, final_h),
                             interpolation=cv2.INTER_LINEAR_EXACT,  # cv2.INTER_CUBIC
@@ -516,12 +530,13 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         Given a LayoutElement element, reduce the size of the bounding box,
         depending on existing elements
         """
-        bbox = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
+        if element.bbox:
+            bbox = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
 
-        if not self.element_overlap(elements, element):
-            element.bbox = Rectangle(*self.reduce_bbox_no_overlap(image, bbox))
-        else:
-            element.bbox = Rectangle(*self.reduce_bbox_overlap(image, bbox))
+            if not self.element_overlap(elements, element):
+                element.bbox = Rectangle(*self.reduce_bbox_no_overlap(image, bbox))
+            else:
+                element.bbox = Rectangle(*self.reduce_bbox_overlap(image, bbox))
 
     def bbox_overlap(
         self,
@@ -606,7 +621,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ):
             return input_bbox
 
-        nimage = np.array(image.crop(input_bbox))
+        nimage = np.array(image.crop(input_bbox))  # type: ignore
 
         nimage = self.remove_horizontal_lines(nimage)
 
@@ -655,7 +670,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ):
             return input_bbox
 
-        nimage = np.array(image.crop(input_bbox))
+        nimage = np.array(image.crop(input_bbox))  # type: ignore
 
         nimage = self.remove_horizontal_lines(nimage)
 
@@ -759,7 +774,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ):
             return None
 
-        nimage = np.array(image.crop(input_bbox))
+        nimage = np.array(image.crop(input_bbox))  # type: ignore
 
         if nimage.shape[0] * nimage.shape[1] == 0:
             return None
@@ -868,6 +883,8 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
                 continue
 
             ebbox1 = element.bbox
+            if ebbox1 is None:
+                continue
             bbox1 = [ebbox1.x1, ebbox1.y1, ebbox1.x2, max(ebbox1.y1, ebbox1.y2)]
 
             for celement in elements:

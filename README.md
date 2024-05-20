@@ -34,24 +34,6 @@ Windows is not officially supported by Detectron2, but some users are able to in
 See discussion [here](https://layout-parser.github.io/tutorials/installation#for-windows-users) for 
 tips on installing Detectron2 on Windows.
 
-### PaddleOCR
-
-[PaddleOCR](https://github.com/Unstructured-IO/unstructured.PaddleOCR) is suggested for table processing. Please set
-environment variable `TABLE_OCR`
-to `paddle` if you wish to use paddle for table processing instead of default `tesseract`.
-
-PaddleOCR may be with installed with:
-
-```shell
-pip install paddepaddle
-pip install "unstructured.PaddleOCR"
-```
-
-We suggest that you install paddlepaddle-gpu with `pip install paddepaddle-gpu` if you have gpu devices available for better OCR performance.
-
-Please note that **paddlepaddle does not work on MacOS with Apple Silicon**. So if you want it running on Apple M1/M2 chip, we have a custom wheel of paddlepaddle for aarch64 architecture, you can install it with `pip install unstructured.paddlepaddle`, and run it inside a docker container.
-
-
 ### Repository
 
 To install the repository for development, clone the repo and run `make install` to install dependencies.

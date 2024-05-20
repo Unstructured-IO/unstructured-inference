@@ -9,7 +9,10 @@ from PIL import Image
 
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
-from unstructured_inference.inference.elements import EmbeddedTextRegion, ImageTextRegion
+from unstructured_inference.inference.elements import (
+    EmbeddedTextRegion,
+    ImageTextRegion,
+)
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -215,42 +218,13 @@ class MockPageLayout(layout.PageLayout):
         number=1,
         image=None,
         model=None,
-        extract_tables=False,
         detection_model=None,
     ):
         self.image = image
         self.layout = layout
         self.model = model
-        self.extract_tables = extract_tables
         self.number = number
         self.detection_model = detection_model
-
-
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [
-        ("base", 0.0),
-        ("", 0.0),
-        ("(cid:2)", 1.0),
-        ("(cid:1)a", 0.5),
-        ("c(cid:1)ab", 0.25),
-    ],
-)
-def test_cid_ratio(text, expected):
-    assert elements.cid_ratio(text) == expected
-
-
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [
-        ("base", False),
-        ("(cid:2)", True),
-        ("(cid:1234567890)", True),
-        ("jkl;(cid:12)asdf", True),
-    ],
-)
-def test_is_cid_present(text, expected):
-    assert elements.is_cid_present(text) == expected
 
 
 class MockLayout:
@@ -273,12 +247,14 @@ class MockLayout:
         return MockLayout()
 
 
+@pytest.mark.parametrize("element_extraction_model", [None, "foo"])
 @pytest.mark.parametrize("filetype", ["png", "jpg", "tiff"])
-def test_from_image_file(monkeypatch, mock_final_layout, filetype):
+def test_from_image_file(monkeypatch, mock_final_layout, filetype, element_extraction_model):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_final_layout]
 
     monkeypatch.setattr(layout.PageLayout, "get_elements_with_detection_model", mock_get_elements)
+    monkeypatch.setattr(layout.PageLayout, "get_elements_using_image_extraction", mock_get_elements)
     filename = f"sample-docs/loremipsum.{filetype}"
     image = Image.open(filename)
     image_metadata = {
@@ -287,7 +263,10 @@ def test_from_image_file(monkeypatch, mock_final_layout, filetype):
         "height": image.height,
     }
 
-    doc = layout.DocumentLayout.from_image_file(filename)
+    doc = layout.DocumentLayout.from_image_file(
+        filename,
+        element_extraction_model=element_extraction_model,
+    )
     page = doc.pages[0]
     assert page.elements[0] == mock_final_layout
     assert page.image is None
@@ -388,13 +367,6 @@ def test_remove_control_characters(text, expected):
 
 no_text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100)
 text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100, text="test")
-cid_text_region = EmbeddedTextRegion.from_coords(
-    0,
-    0,
-    100,
-    100,
-    text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)",
-)
 overlapping_rect = ImageTextRegion.from_coords(50, 50, 150, 150)
 nonoverlapping_rect = ImageTextRegion.from_coords(150, 150, 200, 200)
 populated_text_region = EmbeddedTextRegion.from_coords(50, 50, 60, 60, text="test")
@@ -596,7 +568,6 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
             fixed_layouts=None,
-            extract_tables=False,
             pdf_image_dpi=200,
         )
 
