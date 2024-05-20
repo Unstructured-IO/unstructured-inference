@@ -202,27 +202,11 @@ class TextRegion:
 
 
 class EmbeddedTextRegion(TextRegion):
-    def extract_text(
-        self,
-        objects: Optional[Collection[TextRegion]],
-    ) -> str:
-        """Extracts text contained in region."""
-        if self.text is None:
-            return ""
-        else:
-            return self.text
+    pass
 
 
 class ImageTextRegion(TextRegion):
-    def extract_text(
-        self,
-        objects: Optional[Collection[TextRegion]],
-    ) -> str:
-        """Extracts text contained in region."""
-        if self.text is None:
-            return ""
-        else:
-            return super().extract_text(objects)
+    pass
 
 
 def region_bounding_boxes_are_almost_the_same(
