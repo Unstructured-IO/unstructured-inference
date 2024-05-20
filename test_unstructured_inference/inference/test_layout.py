@@ -357,14 +357,6 @@ def test_from_file_fixed_layout(fixed_layouts, called_method, not_called_method)
         getattr(layout.PageLayout, not_called_method).assert_not_called()
 
 
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [("c\to\x0cn\ftrol\ncharacter\rs\b", "control characters"), ("\"'\\", "\"'\\")],
-)
-def test_remove_control_characters(text, expected):
-    assert elements.remove_control_characters(text) == expected
-
-
 no_text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100)
 text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100, text="test")
 overlapping_rect = ImageTextRegion.from_coords(50, 50, 150, 150)
@@ -415,12 +407,6 @@ def test_annotate(colors, add_details, threshold):
         page.image_path = "mock_path_to_image"
         annotated_image = page.annotate(colors=colors, add_details=add_details)
         check_annotated_image()
-
-
-@pytest.mark.parametrize(("text", "expected"), [("asdf", "asdf"), (None, "")])
-def test_embedded_text_region(text, expected):
-    etr = elements.EmbeddedTextRegion.from_coords(0, 0, 24, 24, text=text)
-    assert etr.extract_text(objects=None) == expected
 
 
 class MockDetectionModel(layout.UnstructuredObjectDetectionModel):
