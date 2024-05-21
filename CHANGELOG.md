@@ -1,5 +1,6 @@
-## 0.7.32-dev1
+## 0.7.32
 
+* refactor: remove all code related to filling inferred elements text from embedded text (pdfminer). 
 * bug: set the Chipper max_length variable
 
 ## 0.7.31
