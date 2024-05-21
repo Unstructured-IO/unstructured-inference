@@ -272,16 +272,3 @@ def test_merge_inferred_layout_with_extracted_layout():
     assert merged_layout[0].text == "Example Section Header"
     assert merged_layout[1].type == ElementType.TEXT
     assert merged_layout[1].text == "Example Title"
-
-
-def test_aggregate_by_block():
-    expected = "Inside region1 Inside region2"
-    embedded_regions = [
-        TextRegion.from_coords(0, 0, 20, 20, "Inside region1"),
-        TextRegion.from_coords(50, 50, 150, 150, "Inside region2"),
-        TextRegion.from_coords(250, 250, 350, 350, "Outside region"),
-    ]
-    target_region = TextRegion.from_coords(0, 0, 300, 300)
-
-    text = elements.aggregate_by_block(target_region, embedded_regions)
-    assert text == expected
