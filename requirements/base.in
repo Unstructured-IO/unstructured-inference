@@ -1,5 +1,5 @@
 -c constraints.in
-layoutparser[layoutmodels,tesseract]
+layoutparser
 python-multipart
 huggingface-hub
 opencv-python!=4.7.0.68
