@@ -36,6 +36,7 @@ fsspec==2024.5.0
 huggingface-hub==0.23.1
     # via
     #   -r requirements/base.in
+    #   timm
     #   tokenizers
     #   transformers
 humanfriendly==10.0
@@ -70,6 +71,7 @@ numpy==1.26.4
     #   opencv-python
     #   pandas
     #   scipy
+    #   torchvision
     #   transformers
 onnx==1.16.0
     # via -r requirements/base.in
@@ -99,6 +101,7 @@ pillow==10.3.0
     #   matplotlib
     #   pdf2image
     #   pdfplumber
+    #   torchvision
 portalocker==2.8.2
     # via iopath
 protobuf==5.26.1
@@ -123,6 +126,7 @@ pyyaml==6.0.1
     # via
     #   huggingface-hub
     #   layoutparser
+    #   timm
     #   transformers
 rapidfuzz==3.9.1
     # via -r requirements/base.in
@@ -133,7 +137,9 @@ requests==2.32.2
     #   huggingface-hub
     #   transformers
 safetensors==0.4.3
-    # via transformers
+    # via
+    #   timm
+    #   transformers
 scipy==1.13.0
     # via layoutparser
 six==1.16.0
@@ -142,10 +148,17 @@ sympy==1.12
     # via
     #   onnxruntime
     #   torch
+timm==1.0.3
+    # via -r requirements/base.in
 tokenizers==0.19.1
     # via transformers
 torch==2.3.0
-    # via -r requirements/base.in
+    # via
+    #   -r requirements/base.in
+    #   timm
+    #   torchvision
+torchvision==0.18.0
+    # via timm
 tqdm==4.66.4
     # via
     #   huggingface-hub
