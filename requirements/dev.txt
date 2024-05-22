@@ -138,6 +138,7 @@ jedi==0.19.1
     # via ipython
 jinja2==3.1.4
     # via
+    #   -c requirements/base.txt
     #   jupyter-server
     #   jupyterlab
     #   jupyterlab-server
@@ -204,6 +205,7 @@ kiwisolver==1.4.5
     #   matplotlib
 markupsafe==2.1.5
     # via
+    #   -c requirements/base.txt
     #   jinja2
     #   nbconvert
 matplotlib==3.9.0
