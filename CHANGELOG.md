@@ -1,5 +1,6 @@
 ## 0.7.33-dev0
 
+* BREAKING CHANGE: removes legacy detectron2 model
 * deps: remove layoutparser optional dependencies
 
 ## 0.7.32
