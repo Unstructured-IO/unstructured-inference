@@ -58,9 +58,13 @@ comm==0.2.2
     #   ipykernel
     #   ipywidgets
 contourpy==1.2.1
-    # via matplotlib
+    # via
+    #   -c requirements/base.txt
+    #   matplotlib
 cycler==0.12.1
-    # via matplotlib
+    # via
+    #   -c requirements/base.txt
+    #   matplotlib
 debugpy==1.8.1
     # via ipykernel
 decorator==5.1.1
@@ -77,7 +81,9 @@ executing==2.0.1
 fastjsonschema==2.19.1
     # via nbformat
 fonttools==4.51.0
-    # via matplotlib
+    # via
+    #   -c requirements/base.txt
+    #   matplotlib
 fqdn==1.5.1
     # via jsonschema
 h11==0.14.0
@@ -109,7 +115,9 @@ importlib-metadata==7.1.0
     #   jupyterlab-server
     #   nbconvert
 importlib-resources==6.4.0
-    # via matplotlib
+    # via
+    #   -c requirements/base.txt
+    #   matplotlib
 ipykernel==6.29.4
     # via
     #   jupyter
@@ -191,13 +199,17 @@ jupyterlab-server==2.27.1
 jupyterlab-widgets==3.0.10
     # via ipywidgets
 kiwisolver==1.4.5
-    # via matplotlib
+    # via
+    #   -c requirements/base.txt
+    #   matplotlib
 markupsafe==2.1.5
     # via
     #   jinja2
     #   nbconvert
 matplotlib==3.9.0
-    # via -r requirements/dev.in
+    # via
+    #   -c requirements/base.txt
+    #   -r requirements/dev.in
 matplotlib-inline==0.1.7
     # via
     #   ipykernel
@@ -285,7 +297,9 @@ pygments==2.18.0
     #   nbconvert
     #   qtconsole
 pyparsing==3.1.2
-    # via matplotlib
+    # via
+    #   -c requirements/base.txt
+    #   matplotlib
 pyproject-hooks==1.1.0
     # via
     #   build
@@ -423,6 +437,7 @@ widgetsnbextension==4.0.10
     # via ipywidgets
 zipp==3.18.2
     # via
+    #   -c requirements/base.txt
     #   importlib-metadata
     #   importlib-resources
 
