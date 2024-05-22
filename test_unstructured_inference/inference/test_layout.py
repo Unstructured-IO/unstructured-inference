@@ -159,7 +159,7 @@ def test_process_data_with_model_raises_on_invalid_model_name():
         layout.process_data_with_model(fp, model_name="fake")
 
 
-@pytest.mark.parametrize("model_name", [None, "checkbox"])
+@pytest.mark.parametrize("model_name", [None, "yolox"])
 def test_process_file_with_model(monkeypatch, mock_final_layout, model_name):
     def mock_initialize(self, *args, **kwargs):
         self.model = MockLayoutModel(mock_final_layout)
@@ -169,7 +169,7 @@ def test_process_file_with_model(monkeypatch, mock_final_layout, model_name):
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
-    monkeypatch.setattr(models.UnstructuredDetectronModel, "initialize", mock_initialize)
+    monkeypatch.setattr(models.UnstructuredDetectronONNXModel, "initialize", mock_initialize)
     filename = ""
     assert layout.process_file_with_model(filename, model_name=model_name)
 
@@ -183,7 +183,7 @@ def test_process_file_no_warnings(monkeypatch, mock_final_layout, recwarn):
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
-    monkeypatch.setattr(models.UnstructuredDetectronModel, "initialize", mock_initialize)
+    monkeypatch.setattr(models.UnstructuredDetectronONNXModel, "initialize", mock_initialize)
     filename = ""
     layout.process_file_with_model(filename, model_name=None)
     # There should be no UserWarning, but if there is one it should not have the following message
