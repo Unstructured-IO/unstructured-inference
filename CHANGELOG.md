@@ -1,3 +1,7 @@
+## 0.7.34
+
+* Reduce excessive logging
+
 ## 0.7.33
 
 * BREAKING CHANGE: removes legacy detectron2 model
