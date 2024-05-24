@@ -177,7 +177,6 @@ class PageLayout:
         inplace: bool = True,
     ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
-        logger.info("Detecting page elements ...")
         if self.detection_model is None:
             model = get_model()
             if isinstance(model, UnstructuredObjectDetectionModel):
