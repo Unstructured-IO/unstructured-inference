@@ -35,8 +35,8 @@ MOCK_MODEL_TYPES = {
 
 def test_get_model(monkeypatch):
     monkeypatch.setattr(models, "models", {})
-    with mock.patch.dict(models.model_class_map, {"checkbox": MockModel}):
-        assert isinstance(models.get_model("checkbox"), MockModel)
+    with mock.patch.dict(models.model_class_map, {"yolox": MockModel}):
+        assert isinstance(models.get_model("yolox"), MockModel)
 
 
 def test_register_new_model():
@@ -62,7 +62,7 @@ def test_raises_invalid_model():
 
 def test_raises_uninitialized():
     with pytest.raises(ModelNotInitializedError):
-        models.UnstructuredDetectronModel().predict(None)
+        models.UnstructuredDetectronONNXModel().predict(None)
 
 
 def test_model_initializes_once():
@@ -170,8 +170,8 @@ def test_env_variables_override_default_model(monkeypatch):
     monkeypatch.setattr(models, "models", {})
     with mock.patch.dict(
         models.os.environ,
-        {"UNSTRUCTURED_DEFAULT_MODEL_NAME": "checkbox"},
-    ), mock.patch.dict(models.model_class_map, {"checkbox": MockModel}):
+        {"UNSTRUCTURED_DEFAULT_MODEL_NAME": "yolox"},
+    ), mock.patch.dict(models.model_class_map, {"yolox": MockModel}):
         model = models.get_model()
     assert isinstance(model, MockModel)
 

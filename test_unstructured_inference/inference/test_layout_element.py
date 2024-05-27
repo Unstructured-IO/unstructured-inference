@@ -5,18 +5,6 @@ from unstructured_inference.constants import Source
 from unstructured_inference.inference.layoutelement import LayoutElement, TextRegion
 
 
-def test_layout_element_extract_text(
-    mock_layout_element,
-    mock_text_region,
-):
-    extracted_text = mock_layout_element.extract_text(
-        objects=[mock_text_region],
-    )
-
-    assert isinstance(extracted_text, str)
-    assert "Sample text" in extracted_text
-
-
 def test_layout_element_do_dict(mock_layout_element):
     expected = {
         "coordinates": ((100, 100), (100, 300), (300, 300), (300, 100)),

@@ -1,17 +1,30 @@
-## 0.7.32-dev2
+## 0.7.35-dev1
 
-* bug: set the Chipper max_length variable
 * feat: add INFERENCE_GLOBAL_WORKING_DIR and INFERENCE_GLOBAL_WOKRING_PROCESS_DIR configuration parameters to control temporary storage
+
+## 0.7.34
+
+* Reduce excessive logging
+
+## 0.7.33
+
+* BREAKING CHANGE: removes legacy detectron2 model
+* deps: remove layoutparser optional dependencies
+
+## 0.7.32
+
+* refactor: remove all code related to filling inferred elements text from embedded text (pdfminer).
+* bug: set the Chipper max_length variable
 
 ## 0.7.31
 
-* refactor: remove all `cid` related code that was originally added to filter out invalid `pdfminer` text 
+* refactor: remove all `cid` related code that was originally added to filter out invalid `pdfminer` text
 * enhancement: Wrapped hf_hub_download with a function that checks for local file before checking HF
 
 ## 0.7.30
 
-* fix: table transformer doesn't return multiple cells with same coordinates 
-* 
+* fix: table transformer doesn't return multiple cells with same coordinates
+*
 ## 0.7.29
 
 * fix: table transformer predictions are now removed if confidence is below threshold

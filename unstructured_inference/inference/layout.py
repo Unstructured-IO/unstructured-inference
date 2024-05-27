@@ -15,10 +15,8 @@ from unstructured_inference.inference.elements import (
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
 )
-from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
-from unstructured_inference.models.chipper import UnstructuredChipperModel
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -179,7 +177,6 @@ class PageLayout:
         inplace: bool = True,
     ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
-        logger.info("Detecting page elements ...")
         if self.detection_model is None:
             model = get_model()
             if isinstance(model, UnstructuredObjectDetectionModel):
@@ -200,29 +197,6 @@ class PageLayout:
             return None
 
         return inferred_layout
-
-    def get_elements_from_layout(
-        self,
-        layout: List[TextRegion],
-        pdf_objects: Optional[List[TextRegion]] = None,
-    ) -> List[LayoutElement]:
-        """Uses the given Layout to separate the page text into elements, either extracting the
-        text from the discovered layout blocks."""
-
-        # If the model is a chipper model, we don't want to order the
-        # elements, as they are already ordered
-        order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
-        if order_elements:
-            layout = order_layout(layout)
-
-        elements = [
-            get_element_from_block(
-                block=e,
-                pdf_objects=pdf_objects,
-            )
-            for e in layout
-        ]
-        return elements
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
@@ -330,7 +304,7 @@ class PageLayout:
         elif fixed_layout is None:
             page.get_elements_with_detection_model()
         else:
-            page.elements = page.get_elements_from_layout(fixed_layout)
+            page.elements = []
 
         page.image_metadata = {
             "format": page.image.format if page.image else None,
@@ -403,19 +377,6 @@ def process_file_with_model(
         )
     )
     return layout
-
-
-def get_element_from_block(
-    block: TextRegion,
-    pdf_objects: Optional[List[TextRegion]] = None,
-) -> LayoutElement:
-    """Creates a LayoutElement from a given layout or image by finding all the text that lies within
-    a given block."""
-    element = block if isinstance(block, LayoutElement) else LayoutElement.from_region(block)
-    element.text = element.extract_text(
-        objects=pdf_objects,
-    )
-    return element
 
 
 def convert_pdf_to_image(

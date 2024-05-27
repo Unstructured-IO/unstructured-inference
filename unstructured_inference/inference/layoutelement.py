@@ -32,16 +32,6 @@ class LayoutElement(TextRegion):
     image_path: Optional[str] = None
     parent: Optional[LayoutElement] = None
 
-    def extract_text(
-        self,
-        objects: Optional[Collection[TextRegion]],
-    ):
-        """Extracts text contained in region"""
-        text = super().extract_text(
-            objects=objects,
-        )
-        return text
-
     def to_dict(self) -> dict:
         """Converts the class instance to dictionary form."""
         out_dict = {
