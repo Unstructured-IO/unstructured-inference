@@ -1,3 +1,7 @@
+## 0.7.35-dev1
+
+* feat: add INFERENCE_GLOBAL_WORKING_DIR and INFERENCE_GLOBAL_WOKRING_PROCESS_DIR configuration parameters to control temporary storage
+
 ## 0.7.34
 
 * Reduce excessive logging
