@@ -970,7 +970,7 @@ def test_table_prediction_runs_with_empty_recognize(
 
 def test_table_prediction_with_ocr_tokens(table_transformer, example_image, mocked_ocr_tokens):
     prediction = table_transformer.predict(example_image, ocr_tokens=mocked_ocr_tokens)
-    assert '<table><thead><th rowspan="2">' in prediction
+    assert '<table><thead><tr><th rowspan="2">' in prediction
     assert "<tr><td>Blind</td><td>5</td><td>1</td><td>4</td><td>34.5%, n=1</td>" in prediction
 
 
@@ -1426,7 +1426,7 @@ def test_zoom_image(example_image, zoom):
             ],
             (
                 '<table><tbody><tr><td rowspan="2">two row</td><td colspan="2">two '
-                "cols</td></tr><tr><td></td><td>sub cell 1</td><td>sub cell 2</td></tr>"
+                "cols</td></tr><tr><td>sub cell 1</td><td>sub cell 2</td></tr>"
                 "</tbody></table>"
             ),
             id="various spans, no headers",
