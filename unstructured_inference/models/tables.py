@@ -664,23 +664,23 @@ def fill_cells(cells: List[dict]) -> List[dict]:
         whether this cell is a column header
 
     """
-    table_rows_no = max(set([row for cell in cells for row in cell["row_nums"]]))
-    table_cols_no = max(set([col for cell in cells for col in cell["column_nums"]]))
+    table_rows_no = max({row for cell in cells for row in cell["row_nums"]})
+    table_cols_no = max({col for cell in cells for col in cell["column_nums"]})
     filled = np.zeros((table_rows_no + 1, table_cols_no + 1), dtype=bool)
     for cell in cells:
         for row in cell["row_nums"]:
             for col in cell["column_nums"]:
                 filled[row, col] = True
     # add cells for which filled is false
-    header_rows = set([row for cell in cells if cell["column header"] for row in cell["row_nums"]])
+    header_rows = {row for cell in cells if cell["column header"] for row in cell["row_nums"]}
     new_cells = cells.copy()
-    not_filled_idx = np.where(filled == False)
+    not_filled_idx = np.where(filled == False)  # noqa: E712
     for row, col in zip(not_filled_idx[0], not_filled_idx[1]):
         new_cell = {
             "row_nums": [row],
             "column_nums": [col],
             "cell text": "",
-            "column header": row in header_rows
+            "column header": row in header_rows,
         }
         new_cells.append(new_cell)
     return new_cells
@@ -702,7 +702,6 @@ def cells_to_html(cells: List[dict]) -> str:
         str: HTML table string
     """
     cells = sorted(fill_cells(cells), key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
-    # cells = sorted(cells, key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
 
     table = ET.Element("table")
     current_row = -1
@@ -713,10 +712,8 @@ def cells_to_html(cells: List[dict]) -> str:
         table_header = ET.SubElement(table, "thead")
 
     table_body = ET.SubElement(table, "tbody")
-    table_subelement = None
     for cell in cells:
         this_row = min(cell["row_nums"])
-
         attrib = {}
         colspan = len(cell["column_nums"])
         if colspan > 1:
@@ -730,9 +727,9 @@ def cells_to_html(cells: List[dict]) -> str:
                 table_subelement = table_header
                 cell_tag = "th"
             else:
-                cell_tag = "td"
                 table_subelement = table_body
-            row = ET.SubElement(table_subelement, "tr")
+                cell_tag = "td"
+            row = ET.SubElement(table_subelement, "tr")  # type: ignore
         tcell = ET.SubElement(row, cell_tag, attrib=attrib)
         tcell.text = cell["cell text"]
 
