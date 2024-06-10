@@ -648,11 +648,8 @@ def structure_to_cells(table_structure, tokens):
 
 
 def fill_cells(cells: List[dict]) -> List[dict]:
-    """add empty cells to pad cells that spans multiple rows for html conversion
-
-    For example if a cell takes row 0 and 1 and column 0, we add a new empty cell at row 1 and
-    column 0. This padding ensures the structure of the output table is intact. In this example the
-    cell data is {"row_nums": [0, 1], "column_nums": [0], ...}
+    """fills the missing cells in the table by adding a cells with empty text
+    where there are no cells detected by the model.
 
     A cell contains the following keys relevent to the html conversion:
     row_nums: List[int]
@@ -663,25 +660,60 @@ def fill_cells(cells: List[dict]) -> List[dict]:
         than one numbers
     cell text: str
         the text in this cell
+    column header: bool
+        whether this cell is a column header
 
     """
-    new_cells = cells.copy()
+    table_rows_no = max(set([row for cell in cells for row in cell["row_nums"]]))
+    table_cols_no = max(set([col for cell in cells for col in cell["column_nums"]]))
+    filled = np.zeros((table_rows_no + 1, table_cols_no + 1), dtype=bool)
     for cell in cells:
-        for extra_row in sorted(cell["row_nums"][1:]):
-            new_cell = cell.copy()
-            new_cell["row_nums"] = [extra_row]
-            new_cell["cell text"] = ""
-            new_cells.append(new_cell)
+        for row in cell["row_nums"]:
+            for col in cell["column_nums"]:
+                filled[row, col] = True
+    # add cells for which filled is false
+    header_rows = set([row for cell in cells if cell["column header"] for row in cell["row_nums"]])
+    new_cells = cells.copy()
+    not_filled_idx = np.where(filled == False)
+    for row, col in zip(not_filled_idx[0], not_filled_idx[1]):
+        new_cell = {
+            "row_nums": [row],
+            "column_nums": [col],
+            "cell text": "",
+            "column header": row in header_rows
+        }
+        new_cells.append(new_cell)
     return new_cells
 
 
-def cells_to_html(cells):
-    """Convert table structure to html format."""
+def cells_to_html(cells: List[dict]) -> str:
+    """Convert table structure to html format.
+
+    Args:
+        cells: List of dictionaries representing table cells, where each dictionary has the
+            following format:
+            {
+                "row_nums": List[int],
+                "column_nums": List[int],
+                "cell text": str,
+                "column header": bool,
+            }
+    Returns:
+        str: HTML table string
+    """
     cells = sorted(fill_cells(cells), key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
+    # cells = sorted(cells, key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
 
     table = ET.Element("table")
     current_row = -1
 
+    table_header = None
+    table_has_header = any(cell["column header"] for cell in cells)
+    if table_has_header:
+        table_header = ET.SubElement(table, "thead")
+
+    table_body = ET.SubElement(table, "tbody")
+    table_subelement = None
     for cell in cells:
         this_row = min(cell["row_nums"])
 
@@ -695,11 +727,12 @@ def cells_to_html(cells):
         if this_row > current_row:
             current_row = this_row
             if cell["column header"]:
+                table_subelement = table_header
                 cell_tag = "th"
-                row = ET.SubElement(table, "thead")
             else:
                 cell_tag = "td"
-                row = ET.SubElement(table, "tr")
+                table_subelement = table_body
+            row = ET.SubElement(table_subelement, "tr")
         tcell = ET.SubElement(row, cell_tag, attrib=attrib)
         tcell.text = cell["cell text"]
 
