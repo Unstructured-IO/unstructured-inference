@@ -596,40 +596,40 @@ def test_load_donut_model(model_path):
     ("input_test", "output_test"),
     [
         (
-            [
-                {
-                    "label": "table column header",
-                    "score": 0.9349299073219299,
-                    "bbox": [
-                        47.83147430419922,
-                        116.8877944946289,
-                        2557.79296875,
-                        216.98883056640625,
-                    ],
-                },
-                {
-                    "label": "table column header",
-                    "score": 0.934,
-                    "bbox": [
-                        47.83147430419922,
-                        116.8877944946289,
-                        2557.79296875,
-                        216.98883056640625,
-                    ],
-                },
-            ],
-            [
-                {
-                    "label": "table column header",
-                    "score": 0.9349299073219299,
-                    "bbox": [
-                        47.83147430419922,
-                        116.8877944946289,
-                        2557.79296875,
-                        216.98883056640625,
-                    ],
-                },
-            ],
+                [
+                    {
+                        "label": "table column header",
+                        "score": 0.9349299073219299,
+                        "bbox": [
+                            47.83147430419922,
+                            116.8877944946289,
+                            2557.79296875,
+                            216.98883056640625,
+                        ],
+                    },
+                    {
+                        "label": "table column header",
+                        "score": 0.934,
+                        "bbox": [
+                            47.83147430419922,
+                            116.8877944946289,
+                            2557.79296875,
+                            216.98883056640625,
+                        ],
+                    },
+                ],
+                [
+                    {
+                        "label": "table column header",
+                        "score": 0.9349299073219299,
+                        "bbox": [
+                            47.83147430419922,
+                            116.8877944946289,
+                            2557.79296875,
+                            216.98883056640625,
+                        ],
+                    },
+                ],
         ),
         ([], []),
     ],
@@ -644,124 +644,124 @@ def test_nms(input_test, output_test):
     ("supercell1", "supercell2"),
     [
         (
-            {
-                "label": "table spanning cell",
-                "score": 0.526617169380188,
-                "bbox": [
-                    1446.2801513671875,
-                    1023.817138671875,
-                    2114.3525390625,
-                    1099.20166015625,
-                ],
-                "projected row header": False,
-                "header": False,
-                "row_numbers": [3, 4],
-                "column_numbers": [0, 4],
-            },
-            {
-                "label": "table spanning cell",
-                "score": 0.5199193954467773,
-                "bbox": [
-                    98.92312622070312,
-                    676.1566772460938,
-                    751.0982666015625,
-                    938.5986938476562,
-                ],
-                "projected row header": False,
-                "header": False,
-                "row_numbers": [3, 4, 6],
-                "column_numbers": [0, 4],
-            },
+                {
+                    "label": "table spanning cell",
+                    "score": 0.526617169380188,
+                    "bbox": [
+                        1446.2801513671875,
+                        1023.817138671875,
+                        2114.3525390625,
+                        1099.20166015625,
+                    ],
+                    "projected row header": False,
+                    "header": False,
+                    "row_numbers": [3, 4],
+                    "column_numbers": [0, 4],
+                },
+                {
+                    "label": "table spanning cell",
+                    "score": 0.5199193954467773,
+                    "bbox": [
+                        98.92312622070312,
+                        676.1566772460938,
+                        751.0982666015625,
+                        938.5986938476562,
+                    ],
+                    "projected row header": False,
+                    "header": False,
+                    "row_numbers": [3, 4, 6],
+                    "column_numbers": [0, 4],
+                },
         ),
         (
-            {
-                "label": "table spanning cell",
-                "score": 0.526617169380188,
-                "bbox": [
-                    1446.2801513671875,
-                    1023.817138671875,
-                    2114.3525390625,
-                    1099.20166015625,
-                ],
-                "projected row header": False,
-                "header": False,
-                "row_numbers": [3, 4],
-                "column_numbers": [0, 4],
-            },
-            {
-                "label": "table spanning cell",
-                "score": 0.5199193954467773,
-                "bbox": [
-                    98.92312622070312,
-                    676.1566772460938,
-                    751.0982666015625,
-                    938.5986938476562,
-                ],
-                "projected row header": False,
-                "header": False,
-                "row_numbers": [4],
-                "column_numbers": [0, 4, 6],
-            },
+                {
+                    "label": "table spanning cell",
+                    "score": 0.526617169380188,
+                    "bbox": [
+                        1446.2801513671875,
+                        1023.817138671875,
+                        2114.3525390625,
+                        1099.20166015625,
+                    ],
+                    "projected row header": False,
+                    "header": False,
+                    "row_numbers": [3, 4],
+                    "column_numbers": [0, 4],
+                },
+                {
+                    "label": "table spanning cell",
+                    "score": 0.5199193954467773,
+                    "bbox": [
+                        98.92312622070312,
+                        676.1566772460938,
+                        751.0982666015625,
+                        938.5986938476562,
+                    ],
+                    "projected row header": False,
+                    "header": False,
+                    "row_numbers": [4],
+                    "column_numbers": [0, 4, 6],
+                },
         ),
         (
-            {
-                "label": "table spanning cell",
-                "score": 0.526617169380188,
-                "bbox": [
-                    1446.2801513671875,
-                    1023.817138671875,
-                    2114.3525390625,
-                    1099.20166015625,
-                ],
-                "projected row header": False,
-                "header": False,
-                "row_numbers": [3, 4],
-                "column_numbers": [1, 4],
-            },
-            {
-                "label": "table spanning cell",
-                "score": 0.5199193954467773,
-                "bbox": [
-                    98.92312622070312,
-                    676.1566772460938,
-                    751.0982666015625,
-                    938.5986938476562,
-                ],
-                "projected row header": False,
-                "header": False,
-                "row_numbers": [4],
-                "column_numbers": [0, 4, 6],
-            },
+                {
+                    "label": "table spanning cell",
+                    "score": 0.526617169380188,
+                    "bbox": [
+                        1446.2801513671875,
+                        1023.817138671875,
+                        2114.3525390625,
+                        1099.20166015625,
+                    ],
+                    "projected row header": False,
+                    "header": False,
+                    "row_numbers": [3, 4],
+                    "column_numbers": [1, 4],
+                },
+                {
+                    "label": "table spanning cell",
+                    "score": 0.5199193954467773,
+                    "bbox": [
+                        98.92312622070312,
+                        676.1566772460938,
+                        751.0982666015625,
+                        938.5986938476562,
+                    ],
+                    "projected row header": False,
+                    "header": False,
+                    "row_numbers": [4],
+                    "column_numbers": [0, 4, 6],
+                },
         ),
         (
-            {
-                "label": "table spanning cell",
-                "score": 0.526617169380188,
-                "bbox": [
-                    1446.2801513671875,
-                    1023.817138671875,
-                    2114.3525390625,
-                    1099.20166015625,
-                ],
-                "projected row header": False,
-                "header": False,
-                "row_numbers": [3, 4],
-                "column_numbers": [1, 4],
-            },
-            {
-                "label": "table spanning cell",
-                "score": 0.5199193954467773,
-                "bbox": [
-                    98.92312622070312,
-                    676.1566772460938,
-                    751.0982666015625,
-                    938.5986938476562,
-                ],
-                "projected row header": False,
-                "header": False,
-                "row_numbers": [2, 4, 5, 6, 7, 8],
-                "column_numbers": [0, 4, 6],
-            },
+                {
+                    "label": "table spanning cell",
+                    "score": 0.526617169380188,
+                    "bbox": [
+                        1446.2801513671875,
+                        1023.817138671875,
+                        2114.3525390625,
+                        1099.20166015625,
+                    ],
+                    "projected row header": False,
+                    "header": False,
+                    "row_numbers": [3, 4],
+                    "column_numbers": [1, 4],
+                },
+                {
+                    "label": "table spanning cell",
+                    "score": 0.5199193954467773,
+                    "bbox": [
+                        98.92312622070312,
+                        676.1566772460938,
+                        751.0982666015625,
+                        938.5986938476562,
+                    ],
+                    "projected row header": False,
+                    "header": False,
+                    "row_numbers": [2, 4, 5, 6, 7, 8],
+                    "column_numbers": [0, 4, 6],
+                },
         ),
     ],
 )
@@ -773,105 +773,105 @@ def test_remove_supercell_overlap(supercell1, supercell2):
     ("supercells", "rows", "columns", "output_test"),
     [
         (
-            [
-                {
-                    "label": "table spanning cell",
-                    "score": 0.9,
-                    "bbox": [
-                        98.92312622070312,
-                        143.11549377441406,
-                        2115.197265625,
-                        1238.27587890625,
-                    ],
-                    "projected row header": True,
-                    "header": True,
-                    "span": True,
-                },
-            ],
-            [
-                {
-                    "label": "table row",
-                    "score": 0.9299452900886536,
-                    "bbox": [0, 0, 10, 10],
-                    "column header": True,
-                    "header": True,
-                },
-                {
-                    "label": "table row",
-                    "score": 0.9299452900886536,
-                    "bbox": [
-                        98.92312622070312,
-                        143.11549377441406,
-                        2114.3525390625,
-                        193.67681884765625,
-                    ],
-                    "column header": True,
-                    "header": True,
-                },
-                {
-                    "label": "table row",
-                    "score": 0.9299452900886536,
-                    "bbox": [
-                        98.92312622070312,
-                        143.11549377441406,
-                        2114.3525390625,
-                        193.67681884765625,
-                    ],
-                    "column header": True,
-                    "header": True,
-                },
-            ],
-            [
-                {
-                    "label": "table column",
-                    "score": 0.9996132254600525,
-                    "bbox": [
-                        98.92312622070312,
-                        143.11549377441406,
-                        517.6508178710938,
-                        1616.48779296875,
-                    ],
-                },
-                {
-                    "label": "table column",
-                    "score": 0.9935646653175354,
-                    "bbox": [
-                        520.0474853515625,
-                        143.11549377441406,
-                        751.0982666015625,
-                        1616.48779296875,
-                    ],
-                },
-            ],
-            [
-                {
-                    "label": "table spanning cell",
-                    "score": 0.9,
-                    "bbox": [
-                        98.92312622070312,
-                        143.11549377441406,
-                        751.0982666015625,
-                        193.67681884765625,
-                    ],
-                    "projected row header": True,
-                    "header": True,
-                    "span": True,
-                    "row_numbers": [1, 2],
-                    "column_numbers": [0, 1],
-                },
-                {
-                    "row_numbers": [0],
-                    "column_numbers": [0, 1],
-                    "score": 0.9,
-                    "propagated": True,
-                    "bbox": [
-                        98.92312622070312,
-                        143.11549377441406,
-                        751.0982666015625,
-                        193.67681884765625,
-                    ],
-                },
-            ],
+                [
+                    {
+                        "label": "table spanning cell",
+                        "score": 0.9,
+                        "bbox": [
+                            98.92312622070312,
+                            143.11549377441406,
+                            2115.197265625,
+                            1238.27587890625,
+                        ],
+                        "projected row header": True,
+                        "header": True,
+                        "span": True,
+                    },
+                ],
+                [
+                    {
+                        "label": "table row",
+                        "score": 0.9299452900886536,
+                        "bbox": [0, 0, 10, 10],
+                        "column header": True,
+                        "header": True,
+                    },
+                    {
+                        "label": "table row",
+                        "score": 0.9299452900886536,
+                        "bbox": [
+                            98.92312622070312,
+                            143.11549377441406,
+                            2114.3525390625,
+                            193.67681884765625,
+                        ],
+                        "column header": True,
+                        "header": True,
+                    },
+                    {
+                        "label": "table row",
+                        "score": 0.9299452900886536,
+                        "bbox": [
+                            98.92312622070312,
+                            143.11549377441406,
+                            2114.3525390625,
+                            193.67681884765625,
+                        ],
+                        "column header": True,
+                        "header": True,
+                    },
+                ],
+                [
+                    {
+                        "label": "table column",
+                        "score": 0.9996132254600525,
+                        "bbox": [
+                            98.92312622070312,
+                            143.11549377441406,
+                            517.6508178710938,
+                            1616.48779296875,
+                        ],
+                    },
+                    {
+                        "label": "table column",
+                        "score": 0.9935646653175354,
+                        "bbox": [
+                            520.0474853515625,
+                            143.11549377441406,
+                            751.0982666015625,
+                            1616.48779296875,
+                        ],
+                    },
+                ],
+                [
+                    {
+                        "label": "table spanning cell",
+                        "score": 0.9,
+                        "bbox": [
+                            98.92312622070312,
+                            143.11549377441406,
+                            751.0982666015625,
+                            193.67681884765625,
+                        ],
+                        "projected row header": True,
+                        "header": True,
+                        "span": True,
+                        "row_numbers": [1, 2],
+                        "column_numbers": [0, 1],
+                    },
+                    {
+                        "row_numbers": [0],
+                        "column_numbers": [0, 1],
+                        "score": 0.9,
+                        "propagated": True,
+                        "bbox": [
+                            98.92312622070312,
+                            143.11549377441406,
+                            751.0982666015625,
+                            193.67681884765625,
+                        ],
+                    },
+                ],
         ),
     ],
 )
@@ -889,26 +889,26 @@ def test_align_rows(rows, bbox, output):
     [
         ("html", "<tr><td>Blind</td><td>5</td><td>1</td><td>4</td><td>34.5%, n=1</td>"),
         (
-            "cells",
-            {
-                "column_nums": [0],
-                "row_nums": [2],
-                "column header": False,
-                "cell text": "Blind",
-            },
+                "cells",
+                {
+                    "column_nums": [0],
+                    "row_nums": [2],
+                    "column header": False,
+                    "cell text": "Blind",
+                },
         ),
         ("dataframe", ["Blind", "5", "1", "4", "34.5%, n=1", "1199 sec, n=1"]),
         (None, "<tr><td>Blind</td><td>5</td><td>1</td><td>4</td><td>34.5%, n=1</td>"),
     ],
 )
 def test_table_prediction_output_format(
-    output_format,
-    expectation,
-    table_transformer,
-    example_image,
-    mocker,
-    example_table_cells,
-    mocked_ocr_tokens,
+        output_format,
+        expectation,
+        table_transformer,
+        example_image,
+        mocker,
+        example_table_cells,
+        mocked_ocr_tokens,
 ):
     mocker.patch.object(tables, "recognize", return_value=example_table_cells)
     mocker.patch.object(
@@ -935,11 +935,11 @@ def test_table_prediction_output_format(
 
 
 def test_table_prediction_output_format_when_wrong_type_then_value_error(
-    table_transformer,
-    example_image,
-    mocker,
-    example_table_cells,
-    mocked_ocr_tokens,
+        table_transformer,
+        example_image,
+        mocker,
+        example_table_cells,
+        mocked_ocr_tokens,
 ):
     mocker.patch.object(tables, "recognize", return_value=example_table_cells)
     mocker.patch.object(
@@ -954,10 +954,10 @@ def test_table_prediction_output_format_when_wrong_type_then_value_error(
 
 
 def test_table_prediction_runs_with_empty_recognize(
-    table_transformer,
-    example_image,
-    mocker,
-    mocked_ocr_tokens,
+        table_transformer,
+        example_image,
+        mocker,
+        mocked_ocr_tokens,
 ):
     mocker.patch.object(tables, "recognize", return_value=[])
     mocker.patch.object(
@@ -988,7 +988,7 @@ def test_table_prediction_with_no_ocr_tokens(table_transformer, example_image):
     ],
 )
 def test_objects_are_filtered_based_on_class_thresholds_when_correct_prediction_and_threshold(
-    thresholds, expected_object_number
+        thresholds, expected_object_number
 ):
     objects = [
         {"label": "0", "score": 0.2},
@@ -1007,7 +1007,7 @@ def test_objects_are_filtered_based_on_class_thresholds_when_correct_prediction_
     ],
 )
 def test_objects_are_filtered_based_on_class_thresholds_when_two_classes(
-    thresholds, expected_object_number
+        thresholds, expected_object_number
 ):
     objects = [
         {"label": "0", "score": 0.2},
@@ -1043,98 +1043,98 @@ def test_include_rect():
     ("spans", "join_with_space", "expected"),
     [
         (
-            [
-                {
-                    "flags": 2**0,
-                    "text": "5",
-                    "superscript": False,
-                    "span_num": 0,
-                    "line_num": 0,
-                    "block_num": 0,
-                },
-            ],
-            True,
-            "",
+                [
+                    {
+                        "flags": 2 ** 0,
+                        "text": "5",
+                        "superscript": False,
+                        "span_num": 0,
+                        "line_num": 0,
+                        "block_num": 0,
+                    },
+                ],
+                True,
+                "",
         ),
         (
-            [
-                {
-                    "flags": 2**0,
-                    "text": "p",
-                    "superscript": False,
-                    "span_num": 0,
-                    "line_num": 0,
-                    "block_num": 0,
-                },
-            ],
-            True,
-            "p",
+                [
+                    {
+                        "flags": 2 ** 0,
+                        "text": "p",
+                        "superscript": False,
+                        "span_num": 0,
+                        "line_num": 0,
+                        "block_num": 0,
+                    },
+                ],
+                True,
+                "p",
         ),
         (
-            [
-                {
-                    "flags": 2**0,
-                    "text": "p",
-                    "superscript": False,
-                    "span_num": 0,
-                    "line_num": 0,
-                    "block_num": 0,
-                },
-                {
-                    "flags": 2**0,
-                    "text": "p",
-                    "superscript": False,
-                    "span_num": 0,
-                    "line_num": 0,
-                    "block_num": 0,
-                },
-            ],
-            True,
-            "p p",
+                [
+                    {
+                        "flags": 2 ** 0,
+                        "text": "p",
+                        "superscript": False,
+                        "span_num": 0,
+                        "line_num": 0,
+                        "block_num": 0,
+                    },
+                    {
+                        "flags": 2 ** 0,
+                        "text": "p",
+                        "superscript": False,
+                        "span_num": 0,
+                        "line_num": 0,
+                        "block_num": 0,
+                    },
+                ],
+                True,
+                "p p",
         ),
         (
-            [
-                {
-                    "flags": 2**0,
-                    "text": "p",
-                    "superscript": False,
-                    "span_num": 0,
-                    "line_num": 0,
-                    "block_num": 0,
-                },
-                {
-                    "flags": 2**0,
-                    "text": "p",
-                    "superscript": False,
-                    "span_num": 0,
-                    "line_num": 0,
-                    "block_num": 1,
-                },
-            ],
-            True,
-            "p p",
+                [
+                    {
+                        "flags": 2 ** 0,
+                        "text": "p",
+                        "superscript": False,
+                        "span_num": 0,
+                        "line_num": 0,
+                        "block_num": 0,
+                    },
+                    {
+                        "flags": 2 ** 0,
+                        "text": "p",
+                        "superscript": False,
+                        "span_num": 0,
+                        "line_num": 0,
+                        "block_num": 1,
+                    },
+                ],
+                True,
+                "p p",
         ),
         (
-            [
-                {
-                    "flags": 2**0,
-                    "text": "p",
-                    "superscript": False,
-                    "span_num": 0,
-                    "line_num": 0,
-                    "block_num": 0,
-                },
-                {
-                    "flags": 2**0,
-                    "text": "p",
-                    "superscript": False,
-                    "span_num": 0,
-                    "line_num": 0,
-                    "block_num": 1,
-                },
-            ],
-            False,
-            "p p",
+                [
+                    {
+                        "flags": 2 ** 0,
+                        "text": "p",
+                        "superscript": False,
+                        "span_num": 0,
+                        "line_num": 0,
+                        "block_num": 0,
+                    },
+                    {
+                        "flags": 2 ** 0,
+                        "text": "p",
+                        "superscript": False,
+                        "span_num": 0,
+                        "line_num": 0,
+                        "block_num": 1,
+                    },
+                ],
+                False,
+                "p p",
         ),
     ],
 )
@@ -1152,88 +1152,68 @@ def test_extract_text_from_spans(spans, join_with_space, expected):
     [
         ([{"header": "hi", "row_numbers": [0, 1, 2], "score": 0.9}], 1),
         (
-            [
-                {
-                    "header": "hi",
-                    "row_numbers": [0],
-                    "column_numbers": [1, 2, 3],
-                    "score": 0.9,
-                },
-                {
-                    "header": "hi",
-                    "row_numbers": [1],
-                    "column_numbers": [1],
-                    "score": 0.9,
-                },
-                {
-                    "header": "hi",
-                    "row_numbers": [1],
-                    "column_numbers": [2],
-                    "score": 0.9,
-                },
-                {
-                    "header": "hi",
-                    "row_numbers": [1],
-                    "column_numbers": [3],
-                    "score": 0.9,
-                },
-            ],
-            4,
+                [
+                    {
+                        "header": "hi",
+                        "row_numbers": [0],
+                        "column_numbers": [1, 2, 3],
+                        "score": 0.9,
+                    },
+                    {
+                        "header": "hi",
+                        "row_numbers": [1],
+                        "column_numbers": [1],
+                        "score": 0.9,
+                    },
+                    {
+                        "header": "hi",
+                        "row_numbers": [1],
+                        "column_numbers": [2],
+                        "score": 0.9,
+                    },
+                    {
+                        "header": "hi",
+                        "row_numbers": [1],
+                        "column_numbers": [3],
+                        "score": 0.9,
+                    },
+                ],
+                4,
         ),
         (
-            [
-                {
-                    "header": "hi",
-                    "row_numbers": [0],
-                    "column_numbers": [0],
-                    "score": 0.9,
-                },
-                {
-                    "header": "hi",
-                    "row_numbers": [1],
-                    "column_numbers": [0],
-                    "score": 0.9,
-                },
-                {
-                    "header": "hi",
-                    "row_numbers": [1, 2],
-                    "column_numbers": [0],
-                    "score": 0.9,
-                },
-                {
-                    "header": "hi",
-                    "row_numbers": [3],
-                    "column_numbers": [0],
-                    "score": 0.9,
-                },
-            ],
-            3,
+                [
+                    {
+                        "header": "hi",
+                        "row_numbers": [0],
+                        "column_numbers": [0],
+                        "score": 0.9,
+                    },
+                    {
+                        "header": "hi",
+                        "row_numbers": [1],
+                        "column_numbers": [0],
+                        "score": 0.9,
+                    },
+                    {
+                        "header": "hi",
+                        "row_numbers": [1, 2],
+                        "column_numbers": [0],
+                        "score": 0.9,
+                    },
+                    {
+                        "header": "hi",
+                        "row_numbers": [3],
+                        "column_numbers": [0],
+                        "score": 0.9,
+                    },
+                ],
+                3,
         ),
     ],
 )
 def test_header_supercell_tree(supercells, expected_len):
     postprocess.header_supercell_tree(supercells)
     assert len(supercells) == expected_len
-
-
-def test_cells_to_html():
-    # example table
-    # +----------+---------------------+
-    # |    two   |   two columns       |
-    # |          |----------+----------|
-    # |    rows  |sub cell 1|sub cell 2|
-    # +----------+----------+----------+
-    cells = [
-        {"row_nums": [0, 1], "column_nums": [0], "cell text": "two row", "column header": False},
-        {"row_nums": [0], "column_nums": [1, 2], "cell text": "two cols", "column header": False},
-        {"row_nums": [1], "column_nums": [1], "cell text": "sub cell 1", "column header": False},
-        {"row_nums": [1], "column_nums": [2], "cell text": "sub cell 2", "column header": False},
-    ]
-    expected = (
-        '<table><tr><td rowspan="2">two row</td><td colspan="2">two '
-        "cols</td></tr><tr><td></td><td>sub cell 1</td><td>sub cell 2</td></tr></table>"
-    )
-    assert tables.cells_to_html(cells) == expected
 
 
 @pytest.mark.parametrize("zoom", [1, 0.1, 5, -1, 0])
@@ -1245,6 +1225,214 @@ def test_zoom_image(example_image, zoom):
         zoom = 1
     assert new_w == np.round(width * zoom, 0)
     assert new_h == np.round(height * zoom, 0)
+
+
+@pytest.mark.parametrize(
+    ("input_cells", "expected_html"), [
+        # +----------+---------------------+
+        # | row1col1 | row1col2 | row1col3 |
+        # |----------|----------+----------|
+        # | row2col1 | row2col2 | row2col3 |
+        # +----------+----------+----------+
+        pytest.param(
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "row1col1", "column header": False},
+                {"row_nums": [0], "column_nums": [1], "cell text": "row1col2", "column header": False},
+                {"row_nums": [0], "column_nums": [2], "cell text": "row1col3", "column header": False},
+                {"row_nums": [1], "column_nums": [0], "cell text": "row2col1", "column header": False},
+                {"row_nums": [1], "column_nums": [1], "cell text": "row2col2", "column header": False},
+                {"row_nums": [1], "column_nums": [2], "cell text": "row2col3", "column header": False},
+            ],
+            (
+                    '<table><tbody><tr><td>row1col1</td><td>row1col2</td><td>row1col3</td></tr>'
+                    '<tr><td>row2col1</td><td>row2col2</td><td>row2col3</td></tr></tbody></table>'
+            ),
+            id="simple table without header",
+        ),
+        # +----------+---------------------+
+        # |  h1col1  |  h1col2  |  h1col3  |
+        # |----------|----------+----------|
+        # | row1col1 | row1col2 | row1col3 |
+        # |----------|----------+----------|
+        # | row2col1 | row2col2 | row2col3 |
+        # +----------+----------+----------+
+        pytest.param(
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1], "cell text": "h1col2", "column header": True},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+                {"row_nums": [1], "column_nums": [0], "cell text": "row1col1", "column header": False},
+                {"row_nums": [1], "column_nums": [1], "cell text": "row1col2", "column header": False},
+                {"row_nums": [1], "column_nums": [2], "cell text": "row1col3", "column header": False},
+                {"row_nums": [2], "column_nums": [0], "cell text": "row2col1", "column header": False},
+                {"row_nums": [2], "column_nums": [1], "cell text": "row2col2", "column header": False},
+                {"row_nums": [2], "column_nums": [2], "cell text": "row2col3", "column header": False},
+            ],
+            (
+                    '<table><thead><tr><th>h1col1</th><th>h1col2</th><th>h1col2</th></tr></thead>'
+                    '<tbody><tr><td>row1col1</td><td>row1col2</td><td>row1col3</td></tr>'
+                    '<tr><td>row2col1</td><td>row2col2</td><td>row2col3</td></tr></tbody></table>'
+            ),
+            id="simple table with header",
+        ),
+        # +----------+---------------------+
+        # |  h1col1  |  h1col2  |  h1col3  |
+        # |----------|----------+----------|
+        # | row1col1 | row1col2 | row1col3 |
+        # |----------|----------+----------|
+        # | row2col1 | row2col2 | row2col3 |
+        # +----------+----------+----------+
+        pytest.param(
+            [
+                {"row_nums": [0], "column_nums": [1], "cell text": "h1col2", "column header": True},
+                {"row_nums": [2], "column_nums": [0], "cell text": "row2col1", "column header": False},
+                {"row_nums": [1], "column_nums": [0], "cell text": "row1col1", "column header": False},
+                {"row_nums": [2], "column_nums": [1], "cell text": "row2col2", "column header": False},
+                {"row_nums": [1], "column_nums": [1], "cell text": "row1col2", "column header": False},
+                {"row_nums": [2], "column_nums": [2], "cell text": "row2col3", "column header": False},
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [1], "column_nums": [2], "cell text": "row1col3", "column header": False},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+            ],
+            (
+                    '<table><thead><tr><th>h1col1</th><th>h1col2</th><th>h1col2</th></tr></thead>'
+                    '<tbody><tr><td>row1col1</td><td>row1col2</td><td>row1col3</td></tr>'
+                    '<tr><td>row2col1</td><td>row2col2</td><td>row2col3</td></tr></tbody></table>'
+            ),
+            id="simple table with header, mixed elements",
+        ),
+        # +----------+---------------------+
+        # |    two   |   two columns       |
+        # |          |----------+----------|
+        # |    rows  |sub cell 1|sub cell 2|
+        # +----------+----------+----------+
+        pytest.param(
+            [
+                {"row_nums": [0, 1], "column_nums": [0], "cell text": "two row", "column header": False},
+                {"row_nums": [0], "column_nums": [1, 2], "cell text": "two cols", "column header": False},
+                {"row_nums": [1], "column_nums": [1], "cell text": "sub cell 1", "column header": False},
+                {"row_nums": [1], "column_nums": [2], "cell text": "sub cell 2", "column header": False},
+            ],
+            (
+                    '<table><tbody><tr><td rowspan="2">two row</td><td colspan="2">two '
+                    "cols</td></tr><tr><td></td><td>sub cell 1</td><td>sub cell 2</td></tr></tbody></table>"
+            ),
+            id="various spans, no headers",
+        ),
+        # +----------+---------------------+----------+
+        # |          |       h1col23       |  h1col4  |
+        # | h12col1  |----------+----------+----------|
+        # |          |  h2col2  |       h2col34       |
+        # |----------|----------+----------+----------+
+        # |  r3col1  |  r3col2  |                     |
+        # |----------+----------|      r34col34       |
+        # |       r4col12       |                     |
+        # +----------+----------+----------+----------+
+        pytest.param(
+            [
+                {"row_nums": [0, 1], "column_nums": [0], "cell text": "h12col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1, 2], "cell text": "h1col23", "column header": True},
+                {"row_nums": [0], "column_nums": [3], "cell text": "h1col4", "column header": True},
+                {"row_nums": [1], "column_nums": [1], "cell text": "h2col2", "column header": True},
+                {"row_nums": [1], "column_nums": [2, 3], "cell text": "h2col34", "column header": True},
+                {"row_nums": [2], "column_nums": [0], "cell text": "r3col1", "column header": False},
+                {"row_nums": [2], "column_nums": [1], "cell text": "r3col2", "column header": False},
+                {"row_nums": [2, 3], "column_nums": [2, 3], "cell text": "r34col34", "column header": False},
+                {"row_nums": [3], "column_nums": [0, 1], "cell text": "r4col12", "column header": False},
+            ],
+            (
+                    '<table><thead><tr><th rowspan="2">h12col1</th><th colspan="2">h1col23</th><th>h1col4</th></tr>'
+                    '<tr><th>h2col2</th><th colspan="2">h2col34</th></tr></thead><tbody>'
+                    '<tr><td>r3col1</td><td>r3col2</td><td colspan="2" rowspan="2">r34col34</td></tr>'
+                    '<tr><td colspan="2">r4col12</td></tr></tbody></table>'
+            ),
+            id="various spans, no headers",
+        ),
+    ]
+)
+def test_cells_to_html(input_cells, expected_html):
+    assert tables.cells_to_html(input_cells) == expected_html
+
+
+@pytest.mark.parametrize(
+    ("input_cells", "expected_cells"), [
+        pytest.param(
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1], "cell text": "h1col2", "column header": True},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+                {"row_nums": [1], "column_nums": [0], "cell text": "row1col1", "column header": False},
+                {"row_nums": [1], "column_nums": [1], "cell text": "row1col2", "column header": False},
+                {"row_nums": [1], "column_nums": [2], "cell text": "row1col3", "column header": False},
+                {"row_nums": [2], "column_nums": [0], "cell text": "row2col1", "column header": False},
+                {"row_nums": [2], "column_nums": [1], "cell text": "row2col2", "column header": False},
+                {"row_nums": [2], "column_nums": [2], "cell text": "row2col3", "column header": False},
+            ],
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1], "cell text": "h1col2", "column header": True},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+                {"row_nums": [1], "column_nums": [0], "cell text": "row1col1", "column header": False},
+                {"row_nums": [1], "column_nums": [1], "cell text": "row1col2", "column header": False},
+                {"row_nums": [1], "column_nums": [2], "cell text": "row1col3", "column header": False},
+                {"row_nums": [2], "column_nums": [0], "cell text": "row2col1", "column header": False},
+                {"row_nums": [2], "column_nums": [1], "cell text": "row2col2", "column header": False},
+                {"row_nums": [2], "column_nums": [2], "cell text": "row2col3", "column header": False},
+            ],
+        id="identical tables, no changes expected"
+        ),
+        pytest.param(
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+                {"row_nums": [1], "column_nums": [0], "cell text": "row1col1", "column header": False},
+                {"row_nums": [1], "column_nums": [1], "cell text": "row1col2", "column header": False},
+                {"row_nums": [2], "column_nums": [0], "cell text": "row2col1", "column header": False},
+                {"row_nums": [2], "column_nums": [1], "cell text": "row2col2", "column header": False},
+                {"row_nums": [2], "column_nums": [2], "cell text": "row2col3", "column header": False},
+            ],
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1], "cell text": "", "column header": True},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+                {"row_nums": [1], "column_nums": [0], "cell text": "row1col1", "column header": False},
+                {"row_nums": [1], "column_nums": [1], "cell text": "row1col2", "column header": False},
+                {"row_nums": [1], "column_nums": [2], "cell text": "", "column header": False},
+                {"row_nums": [2], "column_nums": [0], "cell text": "row2col1", "column header": False},
+                {"row_nums": [2], "column_nums": [1], "cell text": "row2col2", "column header": False},
+                {"row_nums": [2], "column_nums": [2], "cell text": "row2col3", "column header": False},
+            ],
+            id="missing column in header and in the middle",
+        ),
+        pytest.param(
+            [
+                {"row_nums": [0, 1], "column_nums": [0], "cell text": "h12col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1, 2], "cell text": "h1col23", "column header": True},
+                {"row_nums": [1], "column_nums": [1], "cell text": "h2col2", "column header": True},
+                {"row_nums": [1], "column_nums": [2, 3], "cell text": "h2col34", "column header": True},
+                {"row_nums": [2], "column_nums": [0], "cell text": "r3col1", "column header": False},
+                {"row_nums": [2, 3], "column_nums": [2, 3], "cell text": "r34col34", "column header": False},
+                {"row_nums": [3], "column_nums": [0, 1], "cell text": "r4col12", "column header": False},
+            ],
+            [
+                {"row_nums": [0, 1], "column_nums": [0], "cell text": "h12col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1, 2], "cell text": "h1col23", "column header": True},
+                {"row_nums": [0], "column_nums": [3], "cell text": "", "column header": True},
+                {"row_nums": [1], "column_nums": [1], "cell text": "h2col2", "column header": True},
+                {"row_nums": [1], "column_nums": [2, 3], "cell text": "h2col34", "column header": True},
+                {"row_nums": [2], "column_nums": [0], "cell text": "r3col1", "column header": False},
+                {"row_nums": [2], "column_nums": [1], "cell text": "", "column header": False},
+                {"row_nums": [2, 3], "column_nums": [2, 3], "cell text": "r34col34", "column header": False},
+                {"row_nums": [3], "column_nums": [0, 1], "cell text": "r4col12", "column header": False},
+            ],
+            id="missing column in header and in the middle in table with spans"
+        )
+]
+)
+def test_fill_cells(input_cells, expected_cells):
+    def sort_cells(cells):
+        return sorted(cells, key=lambda x: (x["row_nums"], x["column_nums"]))
+    assert sort_cells(tables.fill_cells(input_cells)) == sort_cells(expected_cells)
 
 
 def test_padded_results_has_right_dimensions(table_transformer, example_image):
@@ -1292,31 +1480,31 @@ def test_compute_confidence_score_zero_division_error_handling():
     "column_span_score, row_span_score, expected_text_to_indexes",
     [
         (
-            0.9,
-            0.8,
-            (
-                {
-                    "one three": {"row_nums": [0, 1], "column_nums": [0]},
-                    "two": {"row_nums": [0], "column_nums": [1]},
-                    "four": {"row_nums": [1], "column_nums": [1]},
-                }
-            ),
+                0.9,
+                0.8,
+                (
+                        {
+                            "one three": {"row_nums": [0, 1], "column_nums": [0]},
+                            "two": {"row_nums": [0], "column_nums": [1]},
+                            "four": {"row_nums": [1], "column_nums": [1]},
+                        }
+                ),
         ),
         (
-            0.8,
-            0.9,
-            (
-                {
-                    "one two": {"row_nums": [0], "column_nums": [0, 1]},
-                    "three": {"row_nums": [1], "column_nums": [0]},
-                    "four": {"row_nums": [1], "column_nums": [1]},
-                }
-            ),
+                0.8,
+                0.9,
+                (
+                        {
+                            "one two": {"row_nums": [0], "column_nums": [0, 1]},
+                            "three": {"row_nums": [1], "column_nums": [0]},
+                            "four": {"row_nums": [1], "column_nums": [1]},
+                        }
+                ),
         ),
     ],
 )
 def test_subcells_filtering_when_overlapping_spanning_cells(
-    column_span_score, row_span_score, expected_text_to_indexes
+        column_span_score, row_span_score, expected_text_to_indexes
 ):
     """
     # table
