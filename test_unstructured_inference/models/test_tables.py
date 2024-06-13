@@ -1494,7 +1494,7 @@ def test_zoom_image(example_image, zoom):
                 '<tr><td>r3col1</td><td>r3col2</td><td colspan="2" rowspan="2">r34col34</td></tr>'
                 '<tr><td colspan="2">r4col12</td></tr></tbody></table>'
             ),
-            id="various spans, no headers",
+            id="various spans, with 2 row header",
         ),
     ],
 )
