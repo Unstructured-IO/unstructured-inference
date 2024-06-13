@@ -1,4 +1,4 @@
-## 0.7.35-dev0
+## 0.7.35
 Fix syntax for generated HTML tables
 
 ## 0.7.34
