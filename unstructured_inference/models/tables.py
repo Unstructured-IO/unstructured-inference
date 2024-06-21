@@ -664,6 +664,9 @@ def fill_cells(cells: List[dict]) -> List[dict]:
         whether this cell is a column header
 
     """
+    if not cells:
+        return []
+
     table_rows_no = max({row for cell in cells for row in cell["row_nums"]})
     table_cols_no = max({col for cell in cells for col in cell["column_nums"]})
     filled = np.zeros((table_rows_no + 1, table_cols_no + 1), dtype=bool)
