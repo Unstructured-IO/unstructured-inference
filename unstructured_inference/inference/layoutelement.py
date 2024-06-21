@@ -214,7 +214,9 @@ def separate(region_a: Rectangle, region_b: Rectangle):
             reduce(keep=region_b, reduce=region_a)
 
 
-def table_cells_to_dataframe(cells: dict, nrows: int = 1, ncols: int = 1, header=None) -> DataFrame:
+def table_cells_to_dataframe(
+    cells: List[dict], nrows: int = 1, ncols: int = 1, header=None
+) -> DataFrame:
     """convert table-transformer's cells data into a pandas dataframe"""
     arr = np.empty((nrows, ncols), dtype=object)
     for cell in cells:

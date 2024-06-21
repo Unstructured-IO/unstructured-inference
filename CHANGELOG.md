@@ -1,4 +1,9 @@
+## 0.7.36
+
+fix: add input parameter validation to `fill_cells()` when converting cells to html
+
 ## 0.7.35
+
 Fix syntax for generated HTML tables
 
 ## 0.7.34
