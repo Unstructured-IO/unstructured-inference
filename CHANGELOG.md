@@ -1,3 +1,7 @@
+## 0.7.37-dev0
+
+* refactor: remove layout analysis related code
+
 ## 0.7.36
 
 fix: add input parameter validation to `fill_cells()` when converting cells to html

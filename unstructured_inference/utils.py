@@ -2,19 +2,12 @@ import os
 from collections.abc import Mapping
 from html.parser import HTMLParser
 from io import StringIO
-from typing import TYPE_CHECKING, Any, Callable, Hashable, Iterable, Iterator, Union
+from typing import Any, Callable, Hashable, Iterable, Iterator, Union
 
-import cv2
-import numpy as np
 from huggingface_hub import hf_hub_download
 from PIL import Image
 
-from unstructured_inference.constants import AnnotationResult
 from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.visualize import show_plot
-
-if TYPE_CHECKING:
-    from unstructured_inference.inference.layout import DocumentLayout
 
 
 class LazyEvaluateInfo:
@@ -54,79 +47,6 @@ class LazyDict(Mapping):
 
     def __len__(self) -> int:
         return len(self._raw_dict)
-
-
-def write_image(image: Union[Image.Image, np.ndarray], output_image_path: str):
-    """
-    Write an image to a specified file path, supporting both PIL Image and numpy ndarray formats.
-
-    Parameters:
-    - image (Union[Image.Image, np.ndarray]): The image to be written, which can be in PIL Image
-      format or a numpy ndarray format.
-    - output_image_path (str): The path to which the image will be written.
-
-    Raises:
-    - ValueError: If the provided image type is neither PIL Image nor numpy ndarray.
-
-    Returns:
-    - None: The function writes the image to the specified path but does not return any value.
-    """
-
-    if isinstance(image, Image.Image):
-        image.save(output_image_path)
-    elif isinstance(image, np.ndarray):
-        cv2.imwrite(output_image_path, image)
-    else:
-        raise ValueError("Unsupported Image Type")
-
-
-def annotate_layout_elements(
-    doc: "DocumentLayout",
-    annotation_data_map: dict,
-    output_dir_path: str,
-    output_f_basename: str,
-    result: AnnotationResult = AnnotationResult.IMAGE,
-    plot_desired_width: int = 14,
-):
-    """
-    Annotates layout elements on each page of the document and saves or displays the result.
-
-    This function iterates through each page of the given document and applies annotations based on
-    the given action type and action value in the annotation_data_map. The annotated images are then
-    either saved to the disk or displayed as plots.
-
-    Parameters:
-    - doc (DocumentLayout): The document layout object containing the pages to annotate.
-    - annotation_data_map (dict): A mapping from action types to action values defining the
-                                  annotations to be applied.
-    - output_dir_path (str): The directory path where the annotated images will be saved.
-    - output_f_basename (str): The base name to use for the output image files.
-    - result (str, optional): Specifies the result type. Can be either
-                              'ANNOTATION_RESULT_WITH_IMAGE' for saving the annotated images
-                              or 'ANNOTATION_RESULT_WITH_PLOT' for displaying them as plots.
-                              Default is 'ANNOTATION_RESULT_WITH_IMAGE'.
-    - plot_desired_width (int, optional): The desired width for the plot when result is set to
-                                          'ANNOTATION_RESULT_WITH_PLOT'. Default is 14.
-
-    Note:
-    - If the 'result' parameter is set to 'ANNOTATION_RESULT_WITH_IMAGE', the annotated images will
-      be saved in the directory specified by 'output_dir_path'.
-    - If the 'result' parameter is set to 'ANNOTATION_RESULT_WITH_PLOT', the annotated images will
-      be displayed as plots and not saved.
-    """
-
-    for idx, page in enumerate(doc.pages):
-        for action_type, action_value in annotation_data_map.items():
-            img = page.annotate(annotation_data=action_value)
-            output_f_path = os.path.join(
-                output_dir_path,
-                f"{output_f_basename}_{idx + 1}_{action_type}.jpg",
-            )
-            if result == AnnotationResult.IMAGE:
-                write_image(img, output_f_path)
-                print(f"wrote {output_f_path}")
-            elif result == AnnotationResult.PLOT:
-                show_plot(img, desired_width=plot_desired_width)
 
 
 def tag(elements: Iterable[LayoutElement]):
