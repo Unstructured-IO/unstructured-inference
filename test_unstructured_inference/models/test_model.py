@@ -1,3 +1,4 @@
+import json
 from typing import Any
 from unittest import mock
 
@@ -25,10 +26,33 @@ class MockModel(UnstructuredObjectDetectionModel):
         return []
 
 
+MOCK_MODEL_TYPES = {
+    "foo": {
+        "input_shape": (640, 640),
+    },
+}
+
+
 def test_get_model(monkeypatch):
     monkeypatch.setattr(models, "models", {})
-    with mock.patch.dict(models.model_class_map, {"checkbox": MockModel}):
-        assert isinstance(models.get_model("checkbox"), MockModel)
+    with mock.patch.dict(models.model_class_map, {"yolox": MockModel}):
+        assert isinstance(models.get_model("yolox"), MockModel)
+
+
+def test_register_new_model():
+    assert "foo" not in models.model_class_map
+    assert "foo" not in models.model_config_map
+    models.register_new_model(MOCK_MODEL_TYPES, MockModel)
+    assert "foo" in models.model_class_map
+    assert "foo" in models.model_config_map
+    model = models.get_model("foo")
+    assert len(model.initializer.mock_calls) == 1
+    assert model.initializer.mock_calls[0][-1] == MOCK_MODEL_TYPES["foo"]
+    assert isinstance(model, MockModel)
+    # unregister the new model by reset to default
+    models.model_class_map, models.model_config_map = models.get_default_model_mappings()
+    assert "foo" not in models.model_class_map
+    assert "foo" not in models.model_config_map
 
 
 def test_raises_invalid_model():
@@ -38,14 +62,16 @@ def test_raises_invalid_model():
 
 def test_raises_uninitialized():
     with pytest.raises(ModelNotInitializedError):
-        models.UnstructuredDetectronModel().predict(None)
+        models.UnstructuredDetectronONNXModel().predict(None)
 
 
 def test_model_initializes_once():
     from unstructured_inference.inference import layout
 
     with mock.patch.dict(models.model_class_map, {"yolox": MockModel}), mock.patch.object(
-        models, "models", {}
+        models,
+        "models",
+        {},
     ):
         doc = layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf")
         doc.pages[0].detection_model.initializer.assert_called_once()
@@ -143,23 +169,32 @@ def test_env_variables_override_default_model(monkeypatch):
     # args, we should get back the model the env var calls for
     monkeypatch.setattr(models, "models", {})
     with mock.patch.dict(
-        models.os.environ, {"UNSTRUCTURED_DEFAULT_MODEL_NAME": "checkbox"}
-    ), mock.patch.dict(models.model_class_map, {"checkbox": MockModel}):
+        models.os.environ,
+        {"UNSTRUCTURED_DEFAULT_MODEL_NAME": "yolox"},
+    ), mock.patch.dict(models.model_class_map, {"yolox": MockModel}):
         model = models.get_model()
     assert isinstance(model, MockModel)
 
 
-def test_env_variables_override_intialization_params(monkeypatch):
+def test_env_variables_override_initialization_params(monkeypatch):
     # When initialization params are specified in an environment variable, and we call get_model, we
     # should see that the model was initialized with those params
     monkeypatch.setattr(models, "models", {})
+    fake_label_map = {"1": "label1", "2": "label2"}
     with mock.patch.dict(
         models.os.environ,
         {"UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH": "fake_json.json"},
     ), mock.patch.object(models, "DEFAULT_MODEL", "fake"), mock.patch.dict(
-        models.model_class_map, {"fake": mock.MagicMock()}
+        models.model_class_map,
+        {"fake": mock.MagicMock()},
     ), mock.patch(
-        "builtins.open", mock.mock_open(read_data='{"date": "3/26/81"}')
+        "builtins.open",
+        mock.mock_open(
+            read_data='{"model_path": "fakepath", "label_map": ' + json.dumps(fake_label_map) + "}",
+        ),
     ):
         model = models.get_model()
-    model.initialize.assert_called_once_with(date="3/26/81")
+    model.initialize.assert_called_once_with(
+        model_path="fakepath",
+        label_map={1: "label1", 2: "label2"},
+    )

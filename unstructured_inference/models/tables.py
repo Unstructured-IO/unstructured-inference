@@ -3,13 +3,16 @@
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 import cv2
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image as PILImage
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
+from transformers.models.table_transformer.modeling_table_transformer import (
+    TableTransformerObjectDetectionOutput,
+)
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.inference.layoutelement import table_cells_to_dataframe
@@ -27,7 +30,12 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def __init__(self):
         pass
 
-    def predict(self, x: Image, ocr_tokens: Optional[List[Dict]] = None):
+    def predict(
+        self,
+        x: PILImage.Image,
+        ocr_tokens: Optional[List[Dict]] = None,
+        result_format: str = "html",
+    ):
         """Predict table structure deferring to run_prediction with ocr tokens
 
         Note:
@@ -44,7 +52,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         FIXME: refactor token data into a dataclass so we have clear expectations of the fields
         """
         super().predict(x)
-        return self.run_prediction(x, ocr_tokens=ocr_tokens)
+        return self.run_prediction(x, ocr_tokens=ocr_tokens, result_format=result_format)
 
     def initialize(
         self,
@@ -70,13 +78,12 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def get_structure(
         self,
-        x: Image,
+        x: PILImage.Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
     ) -> dict:
         """get the table structure as a dictionary contaning different types of elements as
         key-value pairs; check table-transformer documentation for more information"""
         with torch.no_grad():
-            logger.info(f"padding image by {pad_for_structure_detection} for structure detection")
             encoding = self.feature_extractor(
                 pad_image_with_background_color(x, pad_for_structure_detection),
                 return_tensors="pt",
@@ -87,7 +94,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def run_prediction(
         self,
-        x: Image,
+        x: PILImage.Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
         ocr_tokens: Optional[List[Dict]] = None,
         result_format: Optional[str] = "html",
@@ -96,12 +103,27 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         outputs_structure = self.get_structure(x, pad_for_structure_detection)
         if ocr_tokens is None:
             raise ValueError("Cannot predict table structure with no OCR tokens")
-        prediction = recognize(outputs_structure, x, tokens=ocr_tokens)[0]
+
+        recognized_table = recognize(outputs_structure, x, tokens=ocr_tokens)
+        if len(recognized_table) > 0:
+            prediction = recognized_table[0]
+        # NOTE(robinson) - This means that the table was not recognized
+        else:
+            return ""
+
         if result_format == "html":
             # Convert cells to HTML
             prediction = cells_to_html(prediction) or ""
         elif result_format == "dataframe":
             prediction = table_cells_to_dataframe(prediction)
+        elif result_format == "cells":
+            prediction = prediction
+        else:
+            raise ValueError(
+                f"result_format {result_format} is not a valid format. "
+                f'Valid formats are: "html", "dataframe", "cells"',
+            )
+
         return prediction
 
 
@@ -148,22 +170,26 @@ structure_class_thresholds = {
 }
 
 
-def recognize(outputs: dict, img: Image, tokens: list):
+def recognize(outputs: dict, img: PILImage.Image, tokens: list):
     """Recognize table elements."""
     str_class_name2idx = get_class_map("structure")
     str_class_idx2name = {v: k for k, v in str_class_name2idx.items()}
-    str_class_thresholds = structure_class_thresholds
+    class_thresholds = structure_class_thresholds
 
     # Post-process detected objects, assign class labels
     objects = outputs_to_objects(outputs, img.size, str_class_idx2name)
-
+    high_confidence_objects = apply_thresholds_on_objects(objects, class_thresholds)
     # Further process the detected objects so they correspond to a consistent table
-    tables_structure = objects_to_structures(objects, tokens, str_class_thresholds)
+    tables_structure = objects_to_structures(high_confidence_objects, tokens, class_thresholds)
     # Enumerate all table cells: grid cells and spanning cells
     return [structure_to_cells(structure, tokens)[0] for structure in tables_structure]
 
 
-def outputs_to_objects(outputs, img_size, class_idx2name):
+def outputs_to_objects(
+    outputs: TableTransformerObjectDetectionOutput,
+    img_size: Tuple[int, int],
+    class_idx2name: Mapping[int, str],
+):
     """Output table element types."""
     m = outputs["logits"].softmax(-1).max(-1)
     pred_labels = list(m.indices.detach().cpu().numpy())[0]
@@ -189,6 +215,33 @@ def outputs_to_objects(outputs, img_size, class_idx2name):
                 },
             )
 
+    return objects
+
+
+def apply_thresholds_on_objects(
+    objects: Sequence[Mapping[str, Any]],
+    thresholds: Mapping[str, float],
+) -> Sequence[Mapping[str, Any]]:
+    """
+    Filters predicted objects which the confidence scores below the thresholds
+
+    Args:
+        objects: Sequence of mappings for example:
+        [
+            {
+                "label": "table row",
+                "score": 0.55,
+                "bbox": [...],
+            },
+            ...,
+        ]
+        thresholds: Mapping from labels to thresholds
+
+    Returns:
+        Filtered list of objects
+
+    """
+    objects = [obj for obj in objects if obj["score"] >= thresholds[obj["label"]]]
     return objects
 
 
@@ -431,6 +484,8 @@ def structure_to_cells(table_structure, tokens):
     columns = table_structure["columns"]
     rows = table_structure["rows"]
     spanning_cells = table_structure["spanning cells"]
+    spanning_cells = sorted(spanning_cells, reverse=True, key=lambda cell: cell["score"])
+
     cells = []
     subcells = []
     # Identify complete cells and subcells
@@ -454,6 +509,7 @@ def structure_to_cells(table_structure, tokens):
                     spanning_cell_rect.intersect(cell_rect).get_area() / cell_rect.get_area()
                 ) > inference_config.TABLE_IOB_THRESHOLD:
                     cell["subcell"] = True
+                    cell["is_merged"] = False
                     break
 
             if cell["subcell"]:
@@ -475,7 +531,7 @@ def structure_to_cells(table_structure, tokens):
             subcell_rect_area = subcell_rect.get_area()
             if (
                 subcell_rect.intersect(spanning_cell_rect).get_area() / subcell_rect_area
-            ) > inference_config.TABLE_IOB_THRESHOLD:
+            ) > inference_config.TABLE_IOB_THRESHOLD and subcell["is_merged"] is False:
                 if cell_rect is None:
                     cell_rect = Rect(list(subcell["bbox"]))
                 else:
@@ -486,6 +542,8 @@ def structure_to_cells(table_structure, tokens):
                 # as header cells for a spanning cell to be classified as a header cell;
                 # otherwise, this could lead to a non-rectangular header region
                 header = header and "column header" in subcell and subcell["column header"]
+                subcell["is_merged"] = True
+
         if len(cell_rows) > 0 and len(cell_columns) > 0:
             cell = {
                 "bbox": cell_rect.get_bbox(),
@@ -590,11 +648,8 @@ def structure_to_cells(table_structure, tokens):
 
 
 def fill_cells(cells: List[dict]) -> List[dict]:
-    """add empty cells to pad cells that spans multiple rows for html conversion
-
-    For example if a cell takes row 0 and 1 and column 0, we add a new empty cell at row 1 and
-    column 0. This padding ensures the structure of the output table is intact. In this example the
-    cell data is {"row_nums": [0, 1], "column_nums": [0], ...}
+    """fills the missing cells in the table by adding a cells with empty text
+    where there are no cells detected by the model.
 
     A cell contains the following keys relevent to the html conversion:
     row_nums: List[int]
@@ -605,28 +660,63 @@ def fill_cells(cells: List[dict]) -> List[dict]:
         than one numbers
     cell text: str
         the text in this cell
+    column header: bool
+        whether this cell is a column header
 
     """
-    new_cells = cells.copy()
+    if not cells:
+        return []
+
+    table_rows_no = max({row for cell in cells for row in cell["row_nums"]})
+    table_cols_no = max({col for cell in cells for col in cell["column_nums"]})
+    filled = np.zeros((table_rows_no + 1, table_cols_no + 1), dtype=bool)
     for cell in cells:
-        for extra_row in sorted(cell["row_nums"][1:]):
-            new_cell = cell.copy()
-            new_cell["row_nums"] = [extra_row]
-            new_cell["cell text"] = ""
-            new_cells.append(new_cell)
+        for row in cell["row_nums"]:
+            for col in cell["column_nums"]:
+                filled[row, col] = True
+    # add cells for which filled is false
+    header_rows = {row for cell in cells if cell["column header"] for row in cell["row_nums"]}
+    new_cells = cells.copy()
+    not_filled_idx = np.where(filled == False)  # noqa: E712
+    for row, col in zip(not_filled_idx[0], not_filled_idx[1]):
+        new_cell = {
+            "row_nums": [row],
+            "column_nums": [col],
+            "cell text": "",
+            "column header": row in header_rows,
+        }
+        new_cells.append(new_cell)
     return new_cells
 
 
-def cells_to_html(cells):
-    """Convert table structure to html format."""
+def cells_to_html(cells: List[dict]) -> str:
+    """Convert table structure to html format.
+
+    Args:
+        cells: List of dictionaries representing table cells, where each dictionary has the
+            following format:
+            {
+                "row_nums": List[int],
+                "column_nums": List[int],
+                "cell text": str,
+                "column header": bool,
+            }
+    Returns:
+        str: HTML table string
+    """
     cells = sorted(fill_cells(cells), key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
 
     table = ET.Element("table")
     current_row = -1
 
+    table_header = None
+    table_has_header = any(cell["column header"] for cell in cells)
+    if table_has_header:
+        table_header = ET.SubElement(table, "thead")
+
+    table_body = ET.SubElement(table, "tbody")
     for cell in cells:
         this_row = min(cell["row_nums"])
-
         attrib = {}
         colspan = len(cell["column_nums"])
         if colspan > 1:
@@ -637,18 +727,19 @@ def cells_to_html(cells):
         if this_row > current_row:
             current_row = this_row
             if cell["column header"]:
+                table_subelement = table_header
                 cell_tag = "th"
-                row = ET.SubElement(table, "thead")
             else:
+                table_subelement = table_body
                 cell_tag = "td"
-                row = ET.SubElement(table, "tr")
+            row = ET.SubElement(table_subelement, "tr")  # type: ignore
         tcell = ET.SubElement(row, cell_tag, attrib=attrib)
         tcell.text = cell["cell text"]
 
     return str(ET.tostring(table, encoding="unicode", short_empty_elements=False))
 
 
-def zoom_image(image: Image, zoom: float) -> Image:
+def zoom_image(image: PILImage.Image, zoom: float) -> PILImage.Image:
     """scale an image based on the zoom factor using cv2; the scaled image is post processed by
     dilation then erosion to improve edge sharpness for OCR tasks"""
     if zoom <= 0:
@@ -666,4 +757,4 @@ def zoom_image(image: Image, zoom: float) -> Image:
     new_image = cv2.dilate(new_image, kernel, iterations=1)
     new_image = cv2.erode(new_image, kernel, iterations=1)
 
-    return Image.fromarray(new_image)
+    return PILImage.fromarray(new_image)

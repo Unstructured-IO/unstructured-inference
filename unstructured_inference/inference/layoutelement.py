@@ -10,6 +10,7 @@ from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.constants import (
+    CHIPPER_VERSIONS,
     FULL_PAGE_REGION_THRESHOLD,
     ElementType,
     Source,
@@ -30,16 +31,6 @@ class LayoutElement(TextRegion):
     prob: Optional[float] = None
     image_path: Optional[str] = None
     parent: Optional[LayoutElement] = None
-
-    def extract_text(
-        self,
-        objects: Optional[Collection[TextRegion]],
-    ):
-        """Extracts text contained in region"""
-        text = super().extract_text(
-            objects=objects,
-        )
-        return text
 
     def to_dict(self) -> dict:
         """Converts the class instance to dictionary form."""
@@ -108,7 +99,7 @@ def merge_inferred_layout_with_extracted_layout(
                 continue
         region_matched = False
         for inferred_region in inferred_layout:
-            if inferred_region.source in (Source.CHIPPER, Source.CHIPPERV1):
+            if inferred_region.source in CHIPPER_VERSIONS:
                 continue
 
             if inferred_region.bbox.intersects(extracted_region.bbox):
@@ -164,9 +155,11 @@ def merge_inferred_layout_with_extracted_layout(
     categorized_extracted_elements_to_add = [
         LayoutElement(
             text=el.text,
-            type=ElementType.IMAGE
-            if isinstance(el, ImageTextRegion)
-            else ElementType.UNCATEGORIZED_TEXT,
+            type=(
+                ElementType.IMAGE
+                if isinstance(el, ImageTextRegion)
+                else ElementType.UNCATEGORIZED_TEXT
+            ),
             source=el.source,
             bbox=el.bbox,
         )
@@ -221,7 +214,9 @@ def separate(region_a: Rectangle, region_b: Rectangle):
             reduce(keep=region_b, reduce=region_a)
 
 
-def table_cells_to_dataframe(cells: dict, nrows: int = 1, ncols: int = 1, header=None) -> DataFrame:
+def table_cells_to_dataframe(
+    cells: List[dict], nrows: int = 1, ncols: int = 1, header=None
+) -> DataFrame:
     """convert table-transformer's cells data into a pandas dataframe"""
     arr = np.empty((nrows, ncols), dtype=object)
     for cell in cells:

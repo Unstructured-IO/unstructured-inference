@@ -1,6 +1,84 @@
-## 0.7.20
+## 0.7.37-dev0
 
 * refactor: remove layout analysis related code
+
+## 0.7.36
+
+fix: add input parameter validation to `fill_cells()` when converting cells to html
+
+## 0.7.35
+
+Fix syntax for generated HTML tables
+
+## 0.7.34
+
+* Reduce excessive logging
+
+## 0.7.33
+
+* BREAKING CHANGE: removes legacy detectron2 model
+* deps: remove layoutparser optional dependencies
+
+## 0.7.32
+
+* refactor: remove all code related to filling inferred elements text from embedded text (pdfminer).
+* bug: set the Chipper max_length variable
+
+## 0.7.31
+
+* refactor: remove all `cid` related code that was originally added to filter out invalid `pdfminer` text
+* enhancement: Wrapped hf_hub_download with a function that checks for local file before checking HF
+
+## 0.7.30
+
+* fix: table transformer doesn't return multiple cells with same coordinates
+*
+## 0.7.29
+
+* fix: table transformer predictions are now removed if confidence is below threshold
+
+
+## 0.7.28
+
+* feat: allow table transformer agent to return table prediction in not parsed format
+
+## 0.7.27
+
+* fix: remove pin from `onnxruntime` dependency.
+
+## 0.7.26
+
+* feat: add a set of new `ElementType`s to extend future element types recognition
+* feat: allow registering of new models for inference using `unstructured_inference.models.base.register_new_model` function
+
+## 0.7.25
+
+* fix: replace `Rectangle.is_in()` with `Rectangle.is_almost_subregion_of()` when filling in an inferred element with embedded text
+* bug: check for None in Chipper bounding box reduction
+* chore: removes `install-detectron2` from the `Makefile`
+* fix: convert label_map keys read from os.environment `UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH` to int type
+* feat: removes supergradients references
+
+## 0.7.24
+
+* fix: assign value to `text_as_html` element attribute only if `text` attribute contains HTML tags.
+
+## 0.7.23
+
+* fix: added handling in `UnstructuredTableTransformerModel` for if `recognize` returns an empty
+  list in `run_prediction`.
+
+## 0.7.22
+
+* fix: add logic to handle computation of intersections betwen 2 `Rectangle`s when a `Rectangle` has `None` value in its coordinates
+
+## 0.7.21
+
+* fix: fix a bug where chipper, or any element extraction model based `PageLayout` object, lack `image_metadata` and other attributes that are required for downstream processing; this fix also reduces the memory overhead of using chipper model
+
+## 0.7.20
+
+* chipper-v3: improved table prediction
 
 ## 0.7.19
 

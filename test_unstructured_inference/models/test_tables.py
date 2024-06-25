@@ -7,9 +7,11 @@ from PIL import Image
 from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerDecoder,
 )
+from copy import deepcopy
 
 import unstructured_inference.models.table_postprocess as postprocess
 from unstructured_inference.models import tables
+from unstructured_inference.models.tables import apply_thresholds_on_objects, structure_to_cells
 
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
@@ -932,15 +934,98 @@ def test_table_prediction_output_format(
         assert expectation in result
 
 
+def test_table_prediction_output_format_when_wrong_type_then_value_error(
+    table_transformer,
+    example_image,
+    mocker,
+    example_table_cells,
+    mocked_ocr_tokens,
+):
+    mocker.patch.object(tables, "recognize", return_value=example_table_cells)
+    mocker.patch.object(
+        tables.UnstructuredTableTransformerModel,
+        "get_structure",
+        return_value=None,
+    )
+    with pytest.raises(ValueError):
+        table_transformer.run_prediction(
+            example_image, result_format="Wrong format", ocr_tokens=mocked_ocr_tokens
+        )
+
+
+def test_table_prediction_runs_with_empty_recognize(
+    table_transformer,
+    example_image,
+    mocker,
+    mocked_ocr_tokens,
+):
+    mocker.patch.object(tables, "recognize", return_value=[])
+    mocker.patch.object(
+        tables.UnstructuredTableTransformerModel,
+        "get_structure",
+        return_value=None,
+    )
+    assert table_transformer.run_prediction(example_image, ocr_tokens=mocked_ocr_tokens) == ""
+
+
 def test_table_prediction_with_ocr_tokens(table_transformer, example_image, mocked_ocr_tokens):
     prediction = table_transformer.predict(example_image, ocr_tokens=mocked_ocr_tokens)
-    assert '<table><thead><th rowspan="2">' in prediction
+    assert '<table><thead><tr><th rowspan="2">' in prediction
     assert "<tr><td>Blind</td><td>5</td><td>1</td><td>4</td><td>34.5%, n=1</td>" in prediction
 
 
 def test_table_prediction_with_no_ocr_tokens(table_transformer, example_image):
     with pytest.raises(ValueError):
         table_transformer.predict(example_image)
+
+
+@pytest.mark.parametrize(
+    ("thresholds", "expected_object_number"),
+    [
+        ({"0": 0.5}, 1),
+        ({"0": 0.1}, 3),
+        ({"0": 0.9}, 0),
+    ],
+)
+def test_objects_are_filtered_based_on_class_thresholds_when_correct_prediction_and_threshold(
+    thresholds, expected_object_number
+):
+    objects = [
+        {"label": "0", "score": 0.2},
+        {"label": "0", "score": 0.4},
+        {"label": "0", "score": 0.55},
+    ]
+    assert len(apply_thresholds_on_objects(objects, thresholds)) == expected_object_number
+
+
+@pytest.mark.parametrize(
+    ("thresholds", "expected_object_number"),
+    [
+        ({"0": 0.5, "1": 0.1}, 4),
+        ({"0": 0.1, "1": 0.9}, 3),
+        ({"0": 0.9, "1": 0.5}, 1),
+    ],
+)
+def test_objects_are_filtered_based_on_class_thresholds_when_two_classes(
+    thresholds, expected_object_number
+):
+    objects = [
+        {"label": "0", "score": 0.2},
+        {"label": "0", "score": 0.4},
+        {"label": "0", "score": 0.55},
+        {"label": "1", "score": 0.2},
+        {"label": "1", "score": 0.4},
+        {"label": "1", "score": 0.55},
+    ]
+    assert len(apply_thresholds_on_objects(objects, thresholds)) == expected_object_number
+
+
+def test_objects_filtering_when_missing_threshold():
+    class_name = "class_name"
+    objects = [{"label": class_name, "score": 0.2}]
+    thresholds = {"1": 0.5}
+    with pytest.raises(KeyError, match=class_name):
+        apply_thresholds_on_objects(objects, thresholds)
 
 
 def test_intersect():
@@ -1131,26 +1216,6 @@ def test_header_supercell_tree(supercells, expected_len):
     assert len(supercells) == expected_len
 
 
-def test_cells_to_html():
-    # example table
-    # +----------+---------------------+
-    # |    two   |   two columns       |
-    # |          |----------+----------|
-    # |    rows  |sub cell 1|sub cell 2|
-    # +----------+----------+----------+
-    cells = [
-        {"row_nums": [0, 1], "column_nums": [0], "cell text": "two row", "column header": False},
-        {"row_nums": [0], "column_nums": [1, 2], "cell text": "two cols", "column header": False},
-        {"row_nums": [1], "column_nums": [1], "cell text": "sub cell 1", "column header": False},
-        {"row_nums": [1], "column_nums": [2], "cell text": "sub cell 2", "column header": False},
-    ]
-    expected = (
-        '<table><tr><td rowspan="2">two row</td><td colspan="2">two '
-        "cols</td></tr><tr><td></td><td>sub cell 1</td><td>sub cell 2</td></tr></table>"
-    )
-    assert tables.cells_to_html(cells) == expected
-
-
 @pytest.mark.parametrize("zoom", [1, 0.1, 5, -1, 0])
 def test_zoom_image(example_image, zoom):
     width, height = example_image.size
@@ -1160,6 +1225,534 @@ def test_zoom_image(example_image, zoom):
         zoom = 1
     assert new_w == np.round(width * zoom, 0)
     assert new_h == np.round(height * zoom, 0)
+
+
+@pytest.mark.parametrize(
+    ("input_cells", "expected_html"),
+    [
+        # +----------+---------------------+
+        # | row1col1 | row1col2 | row1col3 |
+        # |----------|----------+----------|
+        # | row2col1 | row2col2 | row2col3 |
+        # +----------+----------+----------+
+        pytest.param(
+            [
+                {
+                    "row_nums": [0],
+                    "column_nums": [0],
+                    "cell text": "row1col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [0],
+                    "column_nums": [1],
+                    "cell text": "row1col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [0],
+                    "column_nums": [2],
+                    "cell text": "row1col3",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [0],
+                    "cell text": "row2col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [1],
+                    "cell text": "row2col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [2],
+                    "cell text": "row2col3",
+                    "column header": False,
+                },
+            ],
+            (
+                "<table><tbody><tr><td>row1col1</td><td>row1col2</td><td>row1col3</td></tr>"
+                "<tr><td>row2col1</td><td>row2col2</td><td>row2col3</td></tr></tbody></table>"
+            ),
+            id="simple table without header",
+        ),
+        # +----------+---------------------+
+        # |  h1col1  |  h1col2  |  h1col3  |
+        # |----------|----------+----------|
+        # | row1col1 | row1col2 | row1col3 |
+        # |----------|----------+----------|
+        # | row2col1 | row2col2 | row2col3 |
+        # +----------+----------+----------+
+        pytest.param(
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1], "cell text": "h1col2", "column header": True},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+                {
+                    "row_nums": [1],
+                    "column_nums": [0],
+                    "cell text": "row1col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [1],
+                    "cell text": "row1col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [2],
+                    "cell text": "row1col3",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [0],
+                    "cell text": "row2col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [1],
+                    "cell text": "row2col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [2],
+                    "cell text": "row2col3",
+                    "column header": False,
+                },
+            ],
+            (
+                "<table><thead><tr><th>h1col1</th><th>h1col2</th><th>h1col2</th></tr></thead>"
+                "<tbody><tr><td>row1col1</td><td>row1col2</td><td>row1col3</td></tr>"
+                "<tr><td>row2col1</td><td>row2col2</td><td>row2col3</td></tr></tbody></table>"
+            ),
+            id="simple table with header",
+        ),
+        # +----------+---------------------+
+        # |  h1col1  |  h1col2  |  h1col3  |
+        # |----------|----------+----------|
+        # | row1col1 | row1col2 | row1col3 |
+        # |----------|----------+----------|
+        # | row2col1 | row2col2 | row2col3 |
+        # +----------+----------+----------+
+        pytest.param(
+            [
+                {"row_nums": [0], "column_nums": [1], "cell text": "h1col2", "column header": True},
+                {
+                    "row_nums": [2],
+                    "column_nums": [0],
+                    "cell text": "row2col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [0],
+                    "cell text": "row1col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [1],
+                    "cell text": "row2col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [1],
+                    "cell text": "row1col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [2],
+                    "cell text": "row2col3",
+                    "column header": False,
+                },
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {
+                    "row_nums": [1],
+                    "column_nums": [2],
+                    "cell text": "row1col3",
+                    "column header": False,
+                },
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+            ],
+            (
+                "<table><thead><tr><th>h1col1</th><th>h1col2</th><th>h1col2</th></tr></thead>"
+                "<tbody><tr><td>row1col1</td><td>row1col2</td><td>row1col3</td></tr>"
+                "<tr><td>row2col1</td><td>row2col2</td><td>row2col3</td></tr></tbody></table>"
+            ),
+            id="simple table with header, mixed elements",
+        ),
+        # +----------+---------------------+
+        # |    two   |   two columns       |
+        # |          |----------+----------|
+        # |    rows  |sub cell 1|sub cell 2|
+        # +----------+----------+----------+
+        pytest.param(
+            [
+                {
+                    "row_nums": [0, 1],
+                    "column_nums": [0],
+                    "cell text": "two row",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [0],
+                    "column_nums": [1, 2],
+                    "cell text": "two cols",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [1],
+                    "cell text": "sub cell 1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [2],
+                    "cell text": "sub cell 2",
+                    "column header": False,
+                },
+            ],
+            (
+                '<table><tbody><tr><td rowspan="2">two row</td><td colspan="2">two '
+                "cols</td></tr><tr><td>sub cell 1</td><td>sub cell 2</td></tr>"
+                "</tbody></table>"
+            ),
+            id="various spans, no headers",
+        ),
+        # +----------+---------------------+----------+
+        # |          |       h1col23       |  h1col4  |
+        # | h12col1  |----------+----------+----------|
+        # |          |  h2col2  |       h2col34       |
+        # |----------|----------+----------+----------+
+        # |  r3col1  |  r3col2  |                     |
+        # |----------+----------|      r34col34       |
+        # |       r4col12       |                     |
+        # +----------+----------+----------+----------+
+        pytest.param(
+            [
+                {
+                    "row_nums": [0, 1],
+                    "column_nums": [0],
+                    "cell text": "h12col1",
+                    "column header": True,
+                },
+                {
+                    "row_nums": [0],
+                    "column_nums": [1, 2],
+                    "cell text": "h1col23",
+                    "column header": True,
+                },
+                {"row_nums": [0], "column_nums": [3], "cell text": "h1col4", "column header": True},
+                {"row_nums": [1], "column_nums": [1], "cell text": "h2col2", "column header": True},
+                {
+                    "row_nums": [1],
+                    "column_nums": [2, 3],
+                    "cell text": "h2col34",
+                    "column header": True,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [0],
+                    "cell text": "r3col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [1],
+                    "cell text": "r3col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2, 3],
+                    "column_nums": [2, 3],
+                    "cell text": "r34col34",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [3],
+                    "column_nums": [0, 1],
+                    "cell text": "r4col12",
+                    "column header": False,
+                },
+            ],
+            (
+                '<table><thead><tr><th rowspan="2">h12col1</th>'
+                '<th colspan="2">h1col23</th><th>h1col4</th></tr>'
+                '<tr><th>h2col2</th><th colspan="2">h2col34</th></tr></thead><tbody>'
+                '<tr><td>r3col1</td><td>r3col2</td><td colspan="2" rowspan="2">r34col34</td></tr>'
+                '<tr><td colspan="2">r4col12</td></tr></tbody></table>'
+            ),
+            id="various spans, with 2 row header",
+        ),
+    ],
+)
+def test_cells_to_html(input_cells, expected_html):
+    assert tables.cells_to_html(input_cells) == expected_html
+
+
+@pytest.mark.parametrize(
+    ("input_cells", "expected_cells"),
+    [
+        pytest.param(
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1], "cell text": "h1col2", "column header": True},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+                {
+                    "row_nums": [1],
+                    "column_nums": [0],
+                    "cell text": "row1col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [1],
+                    "cell text": "row1col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [2],
+                    "cell text": "row1col3",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [0],
+                    "cell text": "row2col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [1],
+                    "cell text": "row2col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [2],
+                    "cell text": "row2col3",
+                    "column header": False,
+                },
+            ],
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1], "cell text": "h1col2", "column header": True},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+                {
+                    "row_nums": [1],
+                    "column_nums": [0],
+                    "cell text": "row1col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [1],
+                    "cell text": "row1col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [2],
+                    "cell text": "row1col3",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [0],
+                    "cell text": "row2col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [1],
+                    "cell text": "row2col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [2],
+                    "cell text": "row2col3",
+                    "column header": False,
+                },
+            ],
+            id="identical tables, no changes expected",
+        ),
+        pytest.param(
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+                {
+                    "row_nums": [1],
+                    "column_nums": [0],
+                    "cell text": "row1col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [1],
+                    "cell text": "row1col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [0],
+                    "cell text": "row2col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [1],
+                    "cell text": "row2col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [2],
+                    "cell text": "row2col3",
+                    "column header": False,
+                },
+            ],
+            [
+                {"row_nums": [0], "column_nums": [0], "cell text": "h1col1", "column header": True},
+                {"row_nums": [0], "column_nums": [1], "cell text": "", "column header": True},
+                {"row_nums": [0], "column_nums": [2], "cell text": "h1col2", "column header": True},
+                {
+                    "row_nums": [1],
+                    "column_nums": [0],
+                    "cell text": "row1col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [1],
+                    "column_nums": [1],
+                    "cell text": "row1col2",
+                    "column header": False,
+                },
+                {"row_nums": [1], "column_nums": [2], "cell text": "", "column header": False},
+                {
+                    "row_nums": [2],
+                    "column_nums": [0],
+                    "cell text": "row2col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [1],
+                    "cell text": "row2col2",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [2],
+                    "cell text": "row2col3",
+                    "column header": False,
+                },
+            ],
+            id="missing column in header and in the middle",
+        ),
+        pytest.param(
+            [
+                {
+                    "row_nums": [0, 1],
+                    "column_nums": [0],
+                    "cell text": "h12col1",
+                    "column header": True,
+                },
+                {
+                    "row_nums": [0],
+                    "column_nums": [1, 2],
+                    "cell text": "h1col23",
+                    "column header": True,
+                },
+                {"row_nums": [1], "column_nums": [1], "cell text": "h2col2", "column header": True},
+                {
+                    "row_nums": [1],
+                    "column_nums": [2, 3],
+                    "cell text": "h2col34",
+                    "column header": True,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [0],
+                    "cell text": "r3col1",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [2, 3],
+                    "column_nums": [2, 3],
+                    "cell text": "r34col34",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [3],
+                    "column_nums": [0, 1],
+                    "cell text": "r4col12",
+                    "column header": False,
+                },
+            ],
+            [
+                {
+                    "row_nums": [0, 1],
+                    "column_nums": [0],
+                    "cell text": "h12col1",
+                    "column header": True,
+                },
+                {
+                    "row_nums": [0],
+                    "column_nums": [1, 2],
+                    "cell text": "h1col23",
+                    "column header": True,
+                },
+                {"row_nums": [0], "column_nums": [3], "cell text": "", "column header": True},
+                {"row_nums": [1], "column_nums": [1], "cell text": "h2col2", "column header": True},
+                {
+                    "row_nums": [1],
+                    "column_nums": [2, 3],
+                    "cell text": "h2col34",
+                    "column header": True,
+                },
+                {
+                    "row_nums": [2],
+                    "column_nums": [0],
+                    "cell text": "r3col1",
+                    "column header": False,
+                },
+                {"row_nums": [2], "column_nums": [1], "cell text": "", "column header": False},
+                {
+                    "row_nums": [2, 3],
+                    "column_nums": [2, 3],
+                    "cell text": "r34col34",
+                    "column header": False,
+                },
+                {
+                    "row_nums": [3],
+                    "column_nums": [0, 1],
+                    "cell text": "r4col12",
+                    "column header": False,
+                },
+            ],
+            id="missing column in header and in the middle in table with spans",
+        ),
+    ],
+)
+def test_fill_cells(input_cells, expected_cells):
+    def sort_cells(cells):
+        return sorted(cells, key=lambda x: (x["row_nums"], x["column_nums"]))
+
+    assert sort_cells(tables.fill_cells(input_cells)) == sort_cells(expected_cells)
 
 
 def test_padded_results_has_right_dimensions(table_transformer, example_image):
@@ -1201,3 +1794,100 @@ def test_padded_results_has_right_dimensions(table_transformer, example_image):
 
 def test_compute_confidence_score_zero_division_error_handling():
     assert tables.compute_confidence_score([]) == 0
+
+
+@pytest.mark.parametrize(
+    "column_span_score, row_span_score, expected_text_to_indexes",
+    [
+        (
+            0.9,
+            0.8,
+            (
+                {
+                    "one three": {"row_nums": [0, 1], "column_nums": [0]},
+                    "two": {"row_nums": [0], "column_nums": [1]},
+                    "four": {"row_nums": [1], "column_nums": [1]},
+                }
+            ),
+        ),
+        (
+            0.8,
+            0.9,
+            (
+                {
+                    "one two": {"row_nums": [0], "column_nums": [0, 1]},
+                    "three": {"row_nums": [1], "column_nums": [0]},
+                    "four": {"row_nums": [1], "column_nums": [1]},
+                }
+            ),
+        ),
+    ],
+)
+def test_subcells_filtering_when_overlapping_spanning_cells(
+    column_span_score, row_span_score, expected_text_to_indexes
+):
+    """
+    # table
+    # +-----------+----------+
+    # |    one    |   two    |
+    # |-----------+----------|
+    # |    three  |   four   |
+    # +-----------+----------+
+
+    spanning cells over first row and over first column
+    """
+    table_structure = {
+        "rows": [
+            {"bbox": [0, 0, 10, 20]},
+            {"bbox": [10, 0, 20, 20]},
+        ],
+        "columns": [
+            {"bbox": [0, 0, 20, 10]},
+            {"bbox": [0, 10, 20, 20]},
+        ],
+        "spanning cells": [
+            {"bbox": [0, 0, 20, 10], "score": column_span_score},
+            {"bbox": [0, 0, 10, 20], "score": row_span_score},
+        ],
+    }
+    tokens = [
+        {
+            "text": "one",
+            "bbox": [0, 0, 10, 10],
+        },
+        {
+            "text": "two",
+            "bbox": [0, 10, 10, 20],
+        },
+        {
+            "text": "three",
+            "bbox": [10, 0, 20, 10],
+        },
+        {"text": "four", "bbox": [10, 10, 20, 20]},
+    ]
+    token_args = {"span_num": 1, "line_num": 1, "block_num": 1}
+    for token in tokens:
+        token.update(token_args)
+    for spanning_cell in table_structure["spanning cells"]:
+        spanning_cell["projected row header"] = False
+
+    # table structure is edited inside structure_to_cells, save copy for future runs
+    saved_table_structure = deepcopy(table_structure)
+
+    predicted_cells, _ = structure_to_cells(table_structure, tokens=tokens)
+    predicted_text_to_indexes = {
+        cell["cell text"]: {
+            "row_nums": cell["row_nums"],
+            "column_nums": cell["column_nums"],
+        }
+        for cell in predicted_cells
+    }
+    assert predicted_text_to_indexes == expected_text_to_indexes
+
+    # swap spanning cells to ensure the highest prob spanning cell is used
+    spans = saved_table_structure["spanning cells"]
+    spans[0], spans[1] = spans[1], spans[0]
+    saved_table_structure["spanning cells"] = spans
+
+    predicted_cells_after_reorder, _ = structure_to_cells(saved_table_structure, tokens=tokens)
+    assert predicted_cells_after_reorder == predicted_cells

@@ -9,7 +9,10 @@ from PIL import Image
 
 import unstructured_inference.models.base as models
 from unstructured_inference.inference import elements, layout, layoutelement
-from unstructured_inference.inference.elements import EmbeddedTextRegion, ImageTextRegion
+from unstructured_inference.inference.elements import (
+    EmbeddedTextRegion,
+    ImageTextRegion,
+)
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -156,7 +159,7 @@ def test_process_data_with_model_raises_on_invalid_model_name():
         layout.process_data_with_model(fp, model_name="fake")
 
 
-@pytest.mark.parametrize("model_name", [None, "checkbox"])
+@pytest.mark.parametrize("model_name", [None, "yolox"])
 def test_process_file_with_model(monkeypatch, mock_final_layout, model_name):
     def mock_initialize(self, *args, **kwargs):
         self.model = MockLayoutModel(mock_final_layout)
@@ -166,7 +169,7 @@ def test_process_file_with_model(monkeypatch, mock_final_layout, model_name):
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
-    monkeypatch.setattr(models.UnstructuredDetectronModel, "initialize", mock_initialize)
+    monkeypatch.setattr(models.UnstructuredDetectronONNXModel, "initialize", mock_initialize)
     filename = ""
     assert layout.process_file_with_model(filename, model_name=model_name)
 
@@ -180,7 +183,7 @@ def test_process_file_no_warnings(monkeypatch, mock_final_layout, recwarn):
         "from_file",
         lambda *args, **kwargs: layout.DocumentLayout.from_pages([]),
     )
-    monkeypatch.setattr(models.UnstructuredDetectronModel, "initialize", mock_initialize)
+    monkeypatch.setattr(models.UnstructuredDetectronONNXModel, "initialize", mock_initialize)
     filename = ""
     layout.process_file_with_model(filename, model_name=None)
     # There should be no UserWarning, but if there is one it should not have the following message
@@ -224,33 +227,6 @@ class MockPageLayout(layout.PageLayout):
         self.detection_model = detection_model
 
 
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [
-        ("base", 0.0),
-        ("", 0.0),
-        ("(cid:2)", 1.0),
-        ("(cid:1)a", 0.5),
-        ("c(cid:1)ab", 0.25),
-    ],
-)
-def test_cid_ratio(text, expected):
-    assert elements.cid_ratio(text) == expected
-
-
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [
-        ("base", False),
-        ("(cid:2)", True),
-        ("(cid:1234567890)", True),
-        ("jkl;(cid:12)asdf", True),
-    ],
-)
-def test_is_cid_present(text, expected):
-    assert elements.is_cid_present(text) == expected
-
-
 class MockLayout:
     def __init__(self, *elements):
         self.elements = elements
@@ -271,12 +247,14 @@ class MockLayout:
         return MockLayout()
 
 
+@pytest.mark.parametrize("element_extraction_model", [None, "foo"])
 @pytest.mark.parametrize("filetype", ["png", "jpg", "tiff"])
-def test_from_image_file(monkeypatch, mock_final_layout, filetype):
+def test_from_image_file(monkeypatch, mock_final_layout, filetype, element_extraction_model):
     def mock_get_elements(self, *args, **kwargs):
         self.elements = [mock_final_layout]
 
     monkeypatch.setattr(layout.PageLayout, "get_elements_with_detection_model", mock_get_elements)
+    monkeypatch.setattr(layout.PageLayout, "get_elements_using_image_extraction", mock_get_elements)
     filename = f"sample-docs/loremipsum.{filetype}"
     image = Image.open(filename)
     image_metadata = {
@@ -285,7 +263,10 @@ def test_from_image_file(monkeypatch, mock_final_layout, filetype):
         "height": image.height,
     }
 
-    doc = layout.DocumentLayout.from_image_file(filename)
+    doc = layout.DocumentLayout.from_image_file(
+        filename,
+        element_extraction_model=element_extraction_model,
+    )
     page = doc.pages[0]
     assert page.elements[0] == mock_final_layout
     assert page.image is None
@@ -331,16 +312,6 @@ def test_from_image_file_raises_isadirectoryerror_with_dir():
         layout.DocumentLayout.from_image_file(tempdir)
 
 
-@pytest.mark.parametrize("idx", range(2))
-def test_get_elements_from_layout(mock_initial_layout, idx):
-    page = MockPageLayout()
-    block = mock_initial_layout[idx]
-    block.bbox.pad(3)
-    fixed_layout = [block]
-    elements = page.get_elements_from_layout(fixed_layout)
-    assert elements[0].text == block.text
-
-
 def test_page_numbers_in_page_objects():
     with patch(
         "unstructured_inference.inference.layout.PageLayout.get_elements_with_detection_model",
@@ -350,49 +321,8 @@ def test_page_numbers_in_page_objects():
         assert [page.number for page in doc.pages] == list(range(1, len(doc.pages) + 1))
 
 
-@pytest.mark.parametrize(
-    ("fixed_layouts", "called_method", "not_called_method"),
-    [
-        (
-            [MockLayout()],
-            "get_elements_from_layout",
-            "get_elements_with_detection_model",
-        ),
-        (None, "get_elements_with_detection_model", "get_elements_from_layout"),
-    ],
-)
-def test_from_file_fixed_layout(fixed_layouts, called_method, not_called_method):
-    with patch.object(
-        layout.PageLayout,
-        "get_elements_with_detection_model",
-        return_value=[],
-    ), patch.object(
-        layout.PageLayout,
-        "get_elements_from_layout",
-        return_value=[],
-    ):
-        layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf", fixed_layouts=fixed_layouts)
-        getattr(layout.PageLayout, called_method).assert_called()
-        getattr(layout.PageLayout, not_called_method).assert_not_called()
-
-
-@pytest.mark.parametrize(
-    ("text", "expected"),
-    [("c\to\x0cn\ftrol\ncharacter\rs\b", "control characters"), ("\"'\\", "\"'\\")],
-)
-def test_remove_control_characters(text, expected):
-    assert elements.remove_control_characters(text) == expected
-
-
 no_text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100)
 text_region = EmbeddedTextRegion.from_coords(0, 0, 100, 100, text="test")
-cid_text_region = EmbeddedTextRegion.from_coords(
-    0,
-    0,
-    100,
-    100,
-    text="(cid:1)(cid:2)(cid:3)(cid:4)(cid:5)",
-)
 overlapping_rect = ImageTextRegion.from_coords(50, 50, 150, 150)
 nonoverlapping_rect = ImageTextRegion.from_coords(150, 150, 200, 200)
 populated_text_region = EmbeddedTextRegion.from_coords(50, 50, 60, 60, text="test")
@@ -441,12 +371,6 @@ def test_annotate(colors, add_details, threshold):
         page.image_path = "mock_path_to_image"
         annotated_image = page.annotate(colors=colors, add_details=add_details)
         check_annotated_image()
-
-
-@pytest.mark.parametrize(("text", "expected"), [("asdf", "asdf"), (None, "")])
-def test_embedded_text_region(text, expected):
-    etr = elements.EmbeddedTextRegion.from_coords(0, 0, 24, 24, text=text)
-    assert etr.extract_text(objects=None) == expected
 
 
 class MockDetectionModel(layout.UnstructuredObjectDetectionModel):

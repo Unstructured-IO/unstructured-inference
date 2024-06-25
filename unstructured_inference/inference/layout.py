@@ -15,10 +15,8 @@ from unstructured_inference.inference.elements import (
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
 )
-from unstructured_inference.inference.ordering import order_layout
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
-from unstructured_inference.models.chipper import UnstructuredChipperModel
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -140,7 +138,7 @@ class PageLayout:
     ):
         if detection_model is not None and element_extraction_model is not None:
             raise ValueError("Only one of detection_model and extraction_model should be passed.")
-        self.image = image
+        self.image: Optional[Image.Image] = image
         if image_metadata is None:
             image_metadata = {}
         self.image_metadata = image_metadata
@@ -167,6 +165,7 @@ class PageLayout:
             raise ValueError(
                 "Cannot get elements using image extraction, no image extraction model defined",
             )
+        assert self.image is not None
         elements = self.element_extraction_model(self.image)
         if inplace:
             self.elements = elements
@@ -178,7 +177,6 @@ class PageLayout:
         inplace: bool = True,
     ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
-        logger.info("Detecting page elements ...")
         if self.detection_model is None:
             model = get_model()
             if isinstance(model, UnstructuredObjectDetectionModel):
@@ -188,6 +186,7 @@ class PageLayout:
 
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
+        assert self.image is not None
         inferred_layout: List[LayoutElement] = self.detection_model(self.image)
         inferred_layout = self.detection_model.deduplicate_detected_elements(
             inferred_layout,
@@ -198,29 +197,6 @@ class PageLayout:
             return None
 
         return inferred_layout
-
-    def get_elements_from_layout(
-        self,
-        layout: List[TextRegion],
-        pdf_objects: Optional[List[TextRegion]] = None,
-    ) -> List[LayoutElement]:
-        """Uses the given Layout to separate the page text into elements, either extracting the
-        text from the discovered layout blocks."""
-
-        # If the model is a chipper model, we don't want to order the
-        # elements, as they are already ordered
-        order_elements = not isinstance(self.detection_model, UnstructuredChipperModel)
-        if order_elements:
-            layout = order_layout(layout)
-
-        elements = [
-            get_element_from_block(
-                block=e,
-                pdf_objects=pdf_objects,
-            )
-            for e in layout
-        ]
-        return elements
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""
@@ -322,13 +298,13 @@ class PageLayout:
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
         )
+        # FIXME (yao): refactor the other methods so they all return elements like the third route
         if page.element_extraction_model is not None:
             page.get_elements_using_image_extraction()
-            return page
-        if fixed_layout is None:
+        elif fixed_layout is None:
             page.get_elements_with_detection_model()
         else:
-            page.elements = page.get_elements_from_layout(fixed_layout)
+            page.elements = []
 
         page.image_metadata = {
             "format": page.image.format if page.image else None,
@@ -401,19 +377,6 @@ def process_file_with_model(
         )
     )
     return layout
-
-
-def get_element_from_block(
-    block: TextRegion,
-    pdf_objects: Optional[List[TextRegion]] = None,
-) -> LayoutElement:
-    """Creates a LayoutElement from a given layout or image by finding all the text that lies within
-    a given block."""
-    element = block if isinstance(block, LayoutElement) else LayoutElement.from_region(block)
-    element.text = element.extract_text(
-        objects=pdf_objects,
-    )
-    return element
 
 
 def convert_pdf_to_image(

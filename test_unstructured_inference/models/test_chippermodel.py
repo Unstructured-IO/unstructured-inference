@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 import torch
 from PIL import Image
+from unstructured_inference.inference.layoutelement import LayoutElement
 
 from unstructured_inference.models import chipper
 from unstructured_inference.models.base import get_model
@@ -139,13 +140,8 @@ def test_no_repeat_ngram_logits():
 
     no_repeat_ngram_size = 2
 
-    output = chipper._no_repeat_ngram_logits(
-        input_ids=input_ids,
-        cur_len=cur_len,
-        logits=logits,
-        batch_size=batch_size,
-        no_repeat_ngram_size=no_repeat_ngram_size,
-    )
+    logitsProcessor = chipper.NoRepeatNGramLogitsProcessor(ngram_size=2)
+    output = logitsProcessor(input_ids=input_ids, scores=logits)
 
     assert (
         int(
@@ -192,6 +188,25 @@ def test_no_repeat_ngram_logits():
         )
         == 6
     )
+
+
+def test_ngram_repetiton_stopping_criteria():
+    input_ids = torch.tensor([[1, 2, 3, 4, 0, 1, 2, 3, 4]])
+    logits = torch.tensor([[0.1, -0.3, -0.5, 0, 1.0, -0.9]])
+
+    stoppingCriteria = chipper.NGramRepetitonStoppingCriteria(
+        repetition_window=2, skip_tokens={0, 1, 2, 3, 4}
+    )
+
+    output = stoppingCriteria(input_ids=input_ids, scores=logits)
+
+    assert output is False
+
+    stoppingCriteria = chipper.NGramRepetitonStoppingCriteria(
+        repetition_window=2, skip_tokens={1, 2, 3, 4}
+    )
+    output = stoppingCriteria(input_ids=input_ids, scores=logits)
+    assert output is True
 
 
 @pytest.mark.parametrize(
@@ -241,7 +256,51 @@ def test_postprocess_bbox(decoded_str, expected_classes):
         assert out[i].type == expected_classes[i]
 
 
-def test_run_chipper_v2():
+def test_predict_tokens_beam_indices():
+    model = get_model("chipper")
+    model.stopping_criteria = [
+        chipper.NGramRepetitonStoppingCriteria(
+            repetition_window=1,
+            skip_tokens={},
+        ),
+    ]
+    img = Image.open("sample-docs/easy_table.jpg")
+    output = model.predict_tokens(image=img)
+    assert len(output) > 0
+
+
+def test_largest_margin_edge():
+    model = get_model("chipper")
+    img = Image.open("sample-docs/easy_table.jpg")
+    output = model.largest_margin(image=img, input_bbox=[0, 1, 0, 0], transpose=False)
+
+    assert output is None
+
+    output = model.largest_margin(img, [1, 1, 1, 1], False)
+
+    assert output is None
+
+    output = model.largest_margin(img, [2, 1, 3, 10], True)
+
+    assert output == (0, 0, 0)
+
+
+def test_deduplicate_detected_elements():
+    model = get_model("chipper")
+    img = Image.open("sample-docs/easy_table.jpg")
+    elements = model(img)
+
+    output = model.deduplicate_detected_elements(elements)
+
+    assert len(output) == 2
+
+
+def test_norepeatnGramlogitsprocessor_exception():
+    with pytest.raises(ValueError):
+        chipper.NoRepeatNGramLogitsProcessor(ngram_size="")
+
+
+def test_run_chipper_v3():
     model = get_model("chipper")
     img = Image.open("sample-docs/easy_table.jpg")
     elements = model(img)
@@ -364,3 +423,26 @@ def test_check_overlap(bbox1, bbox2, output):
     model = get_model("chipper")
 
     assert model.check_overlap(bbox1, bbox2) == output
+
+
+def test_format_table_elements():
+    table_html = "<table><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td></tr></table>"
+    texts = [
+        "Text",
+        "  - List element",
+        table_html,
+        None,
+    ]
+    elements = [LayoutElement(bbox=mock.MagicMock(), text=text) for text in texts]
+    formatted_elements = chipper.UnstructuredChipperModel.format_table_elements(elements)
+    text_attributes = [fe.text for fe in formatted_elements]
+    text_as_html_attributes = [
+        fe.text_as_html if hasattr(fe, "text_as_html") else None for fe in formatted_elements
+    ]
+    assert text_attributes == [
+        "Text",
+        "  - List element",
+        "Cell 1Cell 2Cell 3",
+        None,
+    ]
+    assert text_as_html_attributes == [None, None, table_html, None]

@@ -1,8 +1,10 @@
+import os
 from collections.abc import Mapping
 from html.parser import HTMLParser
 from io import StringIO
 from typing import Any, Callable, Hashable, Iterable, Iterator, Union
 
+from huggingface_hub import hf_hub_download
 from PIL import Image
 
 from unstructured_inference.inference.layoutelement import LayoutElement
@@ -101,3 +103,13 @@ def strip_tags(html: str) -> str:
     s = MLStripper()
     s.feed(html)
     return s.get_data()
+
+
+def download_if_needed_and_get_local_path(path_or_repo: str, filename: str, **kwargs) -> str:
+    """Returns path to local file if it exists, otherwise treats it as a huggingface repo and
+    attempts to download."""
+    full_path = os.path.join(path_or_repo, filename)
+    if os.path.exists(full_path):
+        return full_path
+    else:
+        return hf_hub_download(path_or_repo, filename, **kwargs)
