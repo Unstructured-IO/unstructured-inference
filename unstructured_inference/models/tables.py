@@ -65,11 +65,10 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
         try:
             logger.info("Loading the table structure model ...")
-
+            cached_current_verbosity = logging.get_verbosity()
             logging.set_verbosity_error()
             self.model = TableTransformerForObjectDetection.from_pretrained(model)
-            logging.set_verbosity_warning()
-
+            logging.set_verbosity(cached_current_verbosity)
             self.model.eval()
 
         except EnvironmentError:
