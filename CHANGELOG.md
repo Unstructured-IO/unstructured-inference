@@ -1,6 +1,7 @@
-## 0.7.37-dev0
+## 0.7.37-dev1
 
 * refactor: remove layout analysis related code
+* enhancement: Hide warning about table transformer weights not being loaded
 
 ## 0.7.36
 
