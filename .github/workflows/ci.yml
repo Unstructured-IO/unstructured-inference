@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       id: virtualenv-cache
       with:
         path: |
@@ -22,7 +22,7 @@ jobs:
         key: ${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements/*.txt') }}
         lookup-only: true
     - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     - name: Install Poppler
@@ -41,7 +41,7 @@ jobs:
     needs: setup
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/cache/restore@v3
+    - uses: actions/cache/restore@v4
       id: virtualenv-cache
       with:
         path: .venv
@@ -71,7 +71,7 @@ jobs:
     needs: [setup, lint]
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/cache/restore@v3
+    - uses: actions/cache/restore@v4
       id: virtualenv-cache
       with:
         path: |

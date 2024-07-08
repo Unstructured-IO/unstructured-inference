@@ -1,6 +1,19 @@
-## 0.7.34-dev0
+## 0.7.37-dev1
 
+* refactor: remove layout analysis related code
 * enhancement: Hide warning about table transformer weights not being loaded
+
+## 0.7.36
+
+fix: add input parameter validation to `fill_cells()` when converting cells to html
+
+## 0.7.35
+
+Fix syntax for generated HTML tables
+
+## 0.7.34
+
+* Reduce excessive logging
 
 ## 0.7.33
 
