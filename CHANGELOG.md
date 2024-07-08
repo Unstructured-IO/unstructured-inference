@@ -1,6 +1,6 @@
-## 0.7.34
+## 0.7.34-dev0
 
-* Reduce excessive logging
+* enhancement: Hide warning about table transformer weights not being loaded
 
 ## 0.7.33
 

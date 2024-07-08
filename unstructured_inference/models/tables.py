@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image as PILImage
-from transformers import DetrImageProcessor, TableTransformerForObjectDetection
+from transformers import DetrImageProcessor, TableTransformerForObjectDetection, logging
 from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerObjectDetectionOutput,
 )
@@ -65,7 +65,11 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
         try:
             logger.info("Loading the table structure model ...")
+
+            logging.set_verbosity_error()
             self.model = TableTransformerForObjectDetection.from_pretrained(model)
+            logging.set_verbosity_warning()
+
             self.model.eval()
 
         except EnvironmentError:
