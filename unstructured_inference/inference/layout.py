@@ -9,12 +9,8 @@ import numpy as np
 import pdf2image
 from PIL import Image, ImageSequence
 
-from unstructured_inference.inference.elements import (
-    TextRegion,
-)
-from unstructured_inference.inference.layoutelement import (
-    LayoutElement,
-)
+from unstructured_inference.inference.elements import TextRegion
+from unstructured_inference.inference.layoutelement import LayoutElement
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import (
@@ -327,14 +323,21 @@ def process_data_with_model(
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
-    with tempfile.NamedTemporaryFile() as tmp_file:
+
+    # Create a named temporary file without automatic deletion
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        tmp_filename = tmp_file.name
         tmp_file.write(data.read())
         tmp_file.flush()  # Make sure the file is written out
+
+    try:
         layout = process_file_with_model(
-            tmp_file.name,
+            tmp_filename,
             model_name,
             **kwargs,
         )
+    finally:
+        os.remove(tmp_filename)
 
     return layout
 
