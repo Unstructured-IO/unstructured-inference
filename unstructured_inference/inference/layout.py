@@ -327,11 +327,13 @@ def process_data_with_model(
 ) -> DocumentLayout:
     """Processes pdf file in the form of a file handler (supporting a read method) into a
     DocumentLayout by using a model identified by model_name."""
-    with tempfile.NamedTemporaryFile() as tmp_file:
-        tmp_file.write(data.read())
-        tmp_file.flush()  # Make sure the file is written out
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        tmp_path = os.path.join(tmp_dir_path, f"tmpfile")
+        with open(tmp_path, "wb") as tmp:
+            tmp.write(data.read())
+            tmp.flush()
         layout = process_file_with_model(
-            tmp_file.name,
+            tmp_path,
             model_name,
             **kwargs,
         )
