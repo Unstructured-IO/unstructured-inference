@@ -1,7 +1,8 @@
-## 0.7.37-dev1
+## 0.7.37-dev2
 
 * refactor: remove layout analysis related code
 * enhancement: Hide warning about table transformer weights not being loaded
+* fix(layout): Use TemporaryDirectory instead of NamedTemporaryFile for Windows support
 
 ## 0.7.36
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from pathlib import PurePath
-from typing import BinaryIO, Collection, List, Optional, Union, cast
+from typing import Any, BinaryIO, Collection, List, Optional, Union, cast
 
 import numpy as np
 import pdf2image
@@ -323,15 +323,19 @@ class PageLayout:
 def process_data_with_model(
     data: BinaryIO,
     model_name: Optional[str],
-    **kwargs,
+    **kwargs: Any,
 ) -> DocumentLayout:
-    """Processes pdf file in the form of a file handler (supporting a read method) into a
-    DocumentLayout by using a model identified by model_name."""
-    with tempfile.NamedTemporaryFile() as tmp_file:
-        tmp_file.write(data.read())
-        tmp_file.flush()  # Make sure the file is written out
+    """Process PDF as file-like object `data` into a `DocumentLayout`.
+
+    Uses the model identified by `model_name`.
+    """
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        file_path = os.path.join(tmp_dir_path, "document.pdf")
+        with open(file_path, "wb") as f:
+            f.write(data.read())
+            f.flush()
         layout = process_file_with_model(
-            tmp_file.name,
+            file_path,
             model_name,
             **kwargs,
         )
@@ -345,7 +349,7 @@ def process_file_with_model(
     is_image: bool = False,
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     pdf_image_dpi: int = 200,
-    **kwargs,
+    **kwargs: Any,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
     model_name."""
