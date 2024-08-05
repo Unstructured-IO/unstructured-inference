@@ -3,7 +3,7 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/237e943ac64aa32eb32f875faa93ebb18512d41d/yolox/data/data_augment.py
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
-from typing import List, cast
+from typing import Dict, List, Optional, Union, cast
 
 import cv2
 import numpy as np
@@ -68,7 +68,12 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         super().predict(x)
         return self.image_processing(x)
 
-    def initialize(self, model_path: str, label_map: dict):
+    def initialize(
+            self,
+            model_path: str,
+            label_map: dict,
+            session_options_dict: Optional[Dict[str, Union[int, bool, str]]] = None,
+        ):
         """Start inference session for YoloX model."""
         self.model_path = model_path
 
@@ -80,8 +85,14 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         ]
         providers = [provider for provider in ordered_providers if provider in available_providers]
 
+        session_options = onnxruntime.SessionOptions()
+        if session_options_dict:
+            for option_name, option_value in session_options_dict.items():
+                setattr(session_options, option_name, option_value)
+
         self.model = onnxruntime.InferenceSession(
             model_path,
+            sess_options=session_options,
             providers=providers,
         )
 
