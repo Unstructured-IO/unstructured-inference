@@ -12,9 +12,7 @@ from PIL import Image, ImageSequence
 from unstructured_inference.inference.elements import (
     TextRegion,
 )
-from unstructured_inference.inference.layoutelement import (
-    LayoutElement,
-)
+from unstructured_inference.inference.layoutelement import LayoutElement, LayoutElements
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import (
@@ -187,7 +185,7 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         assert self.image is not None
-        inferred_layout: List[LayoutElement] = self.detection_model(self.image)
+        inferred_layout: LayoutElements = self.detection_model(self.image)
         inferred_layout = self.detection_model.deduplicate_detected_elements(
             inferred_layout,
         )

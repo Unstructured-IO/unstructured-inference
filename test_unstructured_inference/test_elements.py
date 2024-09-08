@@ -2,13 +2,22 @@ import os
 from random import randint
 from unittest.mock import PropertyMock, patch
 
+import numpy as np
 import pytest
 
 from unstructured_inference.constants import ElementType
 from unstructured_inference.inference import elements
-from unstructured_inference.inference.elements import Rectangle, TextRegion, ImageTextRegion
+from unstructured_inference.inference.elements import (
+    ImageTextRegion,
+    Rectangle,
+    TextRegion,
+    TextRegions,
+)
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
+    LayoutElements,
+    clean_layoutelements,
+    clean_layoutelements_for_class,
     merge_inferred_layout_with_extracted_layout,
     partition_groups_from_regions,
     separate,
@@ -111,11 +120,10 @@ def test_minimal_containing_rect():
 
 
 def test_partition_groups_from_regions(mock_embedded_text_regions):
-    words = mock_embedded_text_regions
+    words = TextRegions.from_list(mock_embedded_text_regions)
     groups = partition_groups_from_regions(words)
     assert len(groups) == 1
-    sorted_groups = sorted(groups, key=lambda group: group[0].bbox.y1)
-    text = "".join([el.text for el in sorted_groups[-1]])
+    text = "".join(groups[-1].texts)
     assert text.startswith("Layout")
 
 
@@ -284,3 +292,81 @@ def test_merge_inferred_layout_with_extracted_layout():
         page_image_size=(1700, 2200),
     )
     assert merged_layout == inferred_layout
+
+
+def test_clean_layoutelements():
+    coords = np.array(
+        [
+            [0.6, 0.6, 0.65, 0.65],  # One little table nested inside all the others
+            [0.5, 0.5, 0.7, 0.7],  # One nested table
+            [0, 0, 1, 1],  # Big table
+            [0.01, 0.01, 1.01, 1.01],
+            [0.02, 0.02, 1.02, 1.02],
+            [0.03, 0.03, 1.03, 1.03],
+            [0.04, 0.04, 1.04, 1.04],
+            [0.05, 0.05, 1.05, 1.05],
+            [2, 2, 3, 3],  # Big table
+        ],
+    )
+    element_class_ids = np.array([1, 1, 1, 0, 0, 0, 0, 0, 2])
+    elements = LayoutElements(element_coords=coords, element_class_ids=element_class_ids)
+
+    elements = clean_layoutelements(elements, element_class=1).as_list()
+    assert len(elements) == 2
+    assert (
+        elements[0].bbox.x1,
+        elements[0].bbox.y1,
+        elements[0].bbox.x2,
+        elements[0].bbox.x2,
+    ) == (0, 0, 1, 1)
+    assert (
+        elements[1].bbox.x1,
+        elements[1].bbox.y1,
+        elements[1].bbox.x2,
+        elements[1].bbox.x2,
+    ) == (2, 2, 3, 3)
+
+
+@pytest.mark.parametrize(
+    ("coords", "class_ids", "class_to_filter", "expected_coords", "expected_ids"),
+    [
+        ([[0, 0, 1, 1], [0, 0, 1, 1]], [0, 1], 1, [[0, 0, 1, 1]], [1]),  # one box
+        (
+            [[0, 0, 1, 1], [0, 0, 1, 1], [1, 1, 2, 2]],  # one box
+            [0, 1, 0],
+            1,
+            [[0, 0, 1, 1], [1, 1, 2, 2]],
+            [1, 0],
+        ),
+        (
+            # a -> b, b -> c, but a not -> c
+            [[0, 0, 1.4, 1.4], [0, 0, 1, 1], [0.4, 0, 1.4, 1], [1.2, 0, 1.4, 1]],
+            [0, 1, 1, 1],
+            1,
+            [[0, 0, 1, 1], [1.2, 0, 1.4, 1], [0, 0, 1.4, 1.4]],
+            [1, 1, 0],
+        ),
+        (
+            # a -> b, b -> c, but a not -> c
+            [[0, 0, 1.4, 1.4], [0, 0, 1, 1], [0.4, 0, 1.4, 1], [1.2, 0, 1.4, 1]],
+            [0, 1, 1, 1],
+            0,
+            [[0, 0, 1.4, 1.4]],
+            [0],
+        ),
+    ],
+)
+def test_clean_layoutelements_for_class_edge_cases(
+    coords,
+    class_ids,
+    class_to_filter,
+    expected_coords,
+    expected_ids,
+):
+    coords = np.array(coords)
+    element_class_ids = np.array(class_ids)
+    elements = LayoutElements(element_coords=coords, element_class_ids=element_class_ids)
+
+    elements = clean_layoutelements_for_class(elements, element_class=class_to_filter)
+    np.testing.assert_array_equal(elements.element_coords, expected_coords)
+    np.testing.assert_array_equal(elements.element_class_ids, expected_ids)

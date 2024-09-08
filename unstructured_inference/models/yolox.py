@@ -3,8 +3,6 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/237e943ac64aa32eb32f875faa93ebb18512d41d/yolox/data/data_augment.py
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
-from typing import List, cast
-
 import cv2
 import numpy as np
 import onnxruntime
@@ -12,8 +10,10 @@ from onnxruntime.capi import _pybind_state as C
 from PIL import Image as PILImage
 
 from unstructured_inference.constants import ElementType, Source
-from unstructured_inference.inference.layoutelement import LayoutElement
-from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDetectionModel
+from unstructured_inference.inference.layoutelement import LayoutElements
+from unstructured_inference.models.unstructuredmodel import (
+    UnstructuredObjectDetectionModel,
+)
 from unstructured_inference.utils import (
     LazyDict,
     LazyEvaluateInfo,
@@ -90,7 +90,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
     def image_processing(
         self,
         image: PILImage.Image,
-    ) -> List[LayoutElement]:
+    ) -> LayoutElements:
         """Method runing YoloX for layout detection, returns a PageLayout
         parameters
         ----------
@@ -132,31 +132,16 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         else:
             dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.1, score_thr=0.25)
 
-        regions = []
+        order = np.argsort(dets[:, 1])
+        sorted_dets = dets[order]
 
-        for det in dets:
-            # Each detection should have (x1,y1,x2,y2,probability,class) format
-            # being (x1,y1) the top left and (x2,y2) the bottom right
-            x1, y1, x2, y2, prob, class_id = det.tolist()
-            detected_class = self.layout_classes[int(class_id)]
-            region = LayoutElement.from_coords(
-                x1,
-                y1,
-                x2,
-                y2,
-                text=None,
-                type=detected_class,
-                prob=prob,
-                source=Source.YOLOX,
-            )
-
-            regions.append(region)
-
-        regions.sort(key=lambda element: element.bbox.y1)
-
-        page_layout = cast(List[LayoutElement], regions)  # TODO(benjamin): encode image as base64?
-
-        return page_layout
+        return LayoutElements(
+            element_coords=sorted_dets[:, :4],
+            element_probs=sorted_dets[:, 4].astype(int),
+            element_class_ids=sorted_dets[:, 5].astype(int),
+            element_class_id_map=self.layout_classes,
+            source=Source.YOLOX,
+        )
 
 
 # Note: preprocess function was named preproc on original source
