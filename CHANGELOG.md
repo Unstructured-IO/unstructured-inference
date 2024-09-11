@@ -112,7 +112,7 @@ Fix syntax for generated HTML tables
 * refactor: add a class `ElementType` for the element type constants and use the constants to replace element type strings
 * enhancement: support extracting elements with types `Picture` and `Figure`
 * fix: update logger in table initialization where the logger info was not showing
-* chore: supress UserWarning about specified model providers
+* chore: suppress UserWarning about specified model providers
 
 ## 0.7.12
 
