@@ -1763,7 +1763,7 @@ def test_padded_results_has_right_dimensions(table_transformer, example_image):
     pad = int(min(example_image.size) / 10)
 
     structure = table_transformer.get_structure(example_image, pad_for_structure_detection=pad)
-    # boxes deteced OUTSIDE of the original image; this shouldn't happen but we want to make sure
+    # boxes detected OUTSIDE of the original image; this shouldn't happen but we want to make sure
     # the code handles it as expected
     structure["pred_boxes"][0][0, :2] = 0.5
     structure["pred_boxes"][0][0, 2:] = 1.0
