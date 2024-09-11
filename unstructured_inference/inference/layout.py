@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import tempfile
-from functools import cached_property
 from pathlib import PurePath
 from typing import Any, BinaryIO, Collection, List, Optional, Union, cast
 
@@ -153,10 +152,6 @@ class PageLayout:
         # locations now and if we need to support LayoutElements without bounding boxes we can make
         # the bbox property optional
 
-    @cached_property
-    def elements(self) -> list[LayoutElement]:
-        return self.elements_array.as_list()
-
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
 
@@ -179,8 +174,12 @@ class PageLayout:
     def get_elements_with_detection_model(
         self,
         inplace: bool = True,
-    ) -> LayoutElements | None:
+        array_only: bool = False,
+    ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
+        import pdb
+
+        pdb.set_trace()
         if self.detection_model is None:
             model = get_model()
             if isinstance(model, UnstructuredObjectDetectionModel):
@@ -198,9 +197,11 @@ class PageLayout:
 
         if inplace:
             self.elements_array = inferred_layout
+            if not array_only:
+                self.elements = inferred_layout.as_list()
             return None
 
-        return inferred_layout
+        return inferred_layout.as_list()
 
     def _get_image_array(self) -> Union[np.ndarray, None]:
         """Converts the raw image into a numpy array."""

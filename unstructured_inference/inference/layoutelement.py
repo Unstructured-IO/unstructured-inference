@@ -35,6 +35,8 @@ class LayoutElements(TextRegions):
     element_class_id_map: dict[int, str] | None = None
 
     def __post_init__(self):
+        if self.element_probs is not None:
+            self.element_probs = self.element_probs.astype(float)
         for attr in ("element_probs", "element_class_ids", "texts"):
             if getattr(self, attr) is None:
                 setattr(self, attr, np.array([None] * self.element_coords.shape[0]))
@@ -70,10 +72,6 @@ class LayoutElements(TextRegions):
 
     def as_list(self) -> list[LayoutElement]:
         """for backward compatibility"""
-        len_elements = self.element_coords.shape[0]
-        texts = self.texts or [None] * len_elements
-        element_class_ids = self.element_class_ids or [None] * len_elements
-        element_probs = self.element_probs or [None] * len_elements
         return [
             LayoutElement.from_coords(
                 x1,
@@ -89,9 +87,9 @@ class LayoutElements(TextRegions):
             )
             for (x1, y1, x2, y2), text, prob, class_id in zip(
                 self.element_coords,
-                texts,
-                element_probs,
-                element_class_ids,
+                self.texts,
+                self.element_probs,
+                self.element_class_ids,
             )
         ]
 

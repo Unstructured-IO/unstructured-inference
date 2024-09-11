@@ -15,7 +15,7 @@ def test_layout_yolox_local_parsing_image():
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 13 detections
     types_known = ["Text", "Section-header", "Page-header"]
-    elements = document_layout.pages[0].elements
+    elements = document_layout.pages[0].elements_array
     known_regions = [
         e for e in elements.element_class_ids if elements.element_class_id_map[e] in types_known
     ]
