@@ -72,7 +72,7 @@ Fix syntax for generated HTML tables
 
 ## 0.7.22
 
-* fix: add logic to handle computation of intersections betwen 2 `Rectangle`s when a `Rectangle` has `None` value in its coordinates
+* fix: add logic to handle computation of intersections between 2 `Rectangle`s when a `Rectangle` has `None` value in its coordinates
 
 ## 0.7.21
 
