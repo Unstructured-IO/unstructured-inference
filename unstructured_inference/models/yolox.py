@@ -99,7 +99,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         origin_img
             If specified, an Image object for process with YoloX model
         page_number
-            Number asigned to the PageLayout returned
+            Number assigned to the PageLayout returned
         output_directory
             Boolean indicating if result will be stored
         """
