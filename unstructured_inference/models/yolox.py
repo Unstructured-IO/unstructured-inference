@@ -91,7 +91,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         self,
         image: PILImage.Image,
     ) -> List[LayoutElement]:
-        """Method runing YoloX for layout detection, returns a PageLayout
+        """Method running YoloX for layout detection, returns a PageLayout
         parameters
         ----------
         page
