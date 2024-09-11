@@ -256,7 +256,7 @@ we have the mapping from standard language code to paddle language code.
 
 ## 0.5.21
 
-* adds `safe_division` to replae 0 with machine epsilon for `float` to avoid division by 0
+* adds `safe_division` to replace 0 with machine epsilon for `float` to avoid division by 0
 * apply `safe_division` to area overlap calculations in `unstructured_inference/inference/elements.py`
 
 ## 0.5.20
