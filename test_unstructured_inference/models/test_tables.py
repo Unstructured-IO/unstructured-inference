@@ -927,7 +927,7 @@ def test_table_prediction_output_format(
         assert expectation in result.values
     elif output_format == "cells":
         # other output like bbox are flakey to test since they depend on OCR and it may change
-        # slightly when OCR pacakge changes or even on different machines
+        # slightly when OCR package changes or even on different machines
         validation_fields = ("column_nums", "row_nums", "column header", "cell text")
         assert expectation in [{key: cell[key] for key in validation_fields} for cell in result]
     else:
