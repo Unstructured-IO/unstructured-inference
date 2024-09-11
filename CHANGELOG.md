@@ -346,7 +346,7 @@ we have the mapping from standard language code to paddle language code.
 * Added functionality to convert a PDF in small chunks of pages at a time for `pdf2image.convert_from_path`
 * Table processing check for the area of the package to fix division by zero bug
 * Added CUDA and TensorRT execution providers for yolox and detectron2onnx model.
-* Warning for onnx version of detectron2 for empty pages suppresed.
+* Warning for onnx version of detectron2 for empty pages suppressed.
 
 ## 0.5.4
 
