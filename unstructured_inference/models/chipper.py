@@ -102,7 +102,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ]
 
         self.stopping_criteria = [
-            NGramRepetitonStoppingCriteria(
+            NGramRepetitionStoppingCriteria(
                 repetition_window=30,
                 skip_tokens=get_table_token_ids(self.processor),
             ),
@@ -1027,7 +1027,7 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         )
 
 
-class NGramRepetitonStoppingCriteria(StoppingCriteria):
+class NGramRepetitionStoppingCriteria(StoppingCriteria):
     def __init__(self, repetition_window: int, skip_tokens: set = set()):
         self.repetition_window = repetition_window
         self.skip_tokens = skip_tokens

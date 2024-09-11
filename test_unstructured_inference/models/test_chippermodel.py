@@ -190,11 +190,11 @@ def test_no_repeat_ngram_logits():
     )
 
 
-def test_ngram_repetiton_stopping_criteria():
+def test_ngram_repetition_stopping_criteria():
     input_ids = torch.tensor([[1, 2, 3, 4, 0, 1, 2, 3, 4]])
     logits = torch.tensor([[0.1, -0.3, -0.5, 0, 1.0, -0.9]])
 
-    stoppingCriteria = chipper.NGramRepetitonStoppingCriteria(
+    stoppingCriteria = chipper.NGramRepetitionStoppingCriteria(
         repetition_window=2, skip_tokens={0, 1, 2, 3, 4}
     )
 
@@ -202,7 +202,7 @@ def test_ngram_repetiton_stopping_criteria():
 
     assert output is False
 
-    stoppingCriteria = chipper.NGramRepetitonStoppingCriteria(
+    stoppingCriteria = chipper.NGramRepetitionStoppingCriteria(
         repetition_window=2, skip_tokens={1, 2, 3, 4}
     )
     output = stoppingCriteria(input_ids=input_ids, scores=logits)
@@ -259,7 +259,7 @@ def test_postprocess_bbox(decoded_str, expected_classes):
 def test_predict_tokens_beam_indices():
     model = get_model("chipper")
     model.stopping_criteria = [
-        chipper.NGramRepetitonStoppingCriteria(
+        chipper.NGramRepetitionStoppingCriteria(
             repetition_window=1,
             skip_tokens={},
         ),
