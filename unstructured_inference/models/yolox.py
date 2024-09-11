@@ -125,7 +125,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         boxes_xyxy[:, 3] = boxes[:, 1] + boxes[:, 3] / 2.0
         boxes_xyxy /= ratio
 
-        # Note (Benjamin): Distinct models (quantized and original) requires distincts
+        # Note (Benjamin): Distinct models (quantized and original) requires distinct
         # levels of thresholds
         if "quantized" in self.model_path:
             dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.0, score_thr=0.07)
