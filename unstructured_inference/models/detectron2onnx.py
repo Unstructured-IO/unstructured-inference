@@ -48,7 +48,7 @@ MODEL_TYPES: Dict[str, Union[LazyDict, dict]] = {
         "model_path": os.path.join(
             HUGGINGFACE_HUB_CACHE,
             "detectron2_quantized",
-            "detectrin2_quantized.onnx",
+            "detectron2_quantized.onnx",
         ),
         "label_map": DEFAULT_LABEL_MAP,
         "confidence_threshold": 0.8,
