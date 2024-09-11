@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Optional
+from typing import Collection, Iterable, List, Optional
 
 import numpy as np
 from layoutparser.elements.layout import TextBlock
@@ -33,6 +33,40 @@ class LayoutElements(TextRegions):
     element_probs: np.ndarray | None = None
     element_class_ids: np.ndarray | None = None
     element_class_id_map: dict[int, str] | None = None
+
+    def __post_init__(self):
+        for attr in ("element_probs", "element_class_ids", "texts"):
+            if getattr(self, attr) is None:
+                setattr(self, attr, np.array([None] * self.element_coords.shape[0]))
+
+    def slice(self, indices) -> LayoutElements:
+        return LayoutElements(
+            element_coords=self.element_coords[indices],
+            texts=self.texts[indices],
+            source=self.source,
+            element_probs=self.element_probs[indices],
+            element_class_ids=self.element_class_ids[indices],
+            element_class_id_map=self.element_class_id_map,
+        )
+
+    @classmethod
+    def concatenate(cls, groups: Iterable[LayoutElements]) -> LayoutElements:
+        coords, texts, probs, class_ids = [], [], [], []
+        class_id_map = {}
+        for group in groups:
+            coords.append(group.element_coords)
+            texts.append(group.texts)
+            probs.append(group.element_probs)
+            class_ids.append(group.element_class_ids)
+            class_id_map.update(group.element_class_id_map)
+        return cls(
+            element_coords=np.concatenate(coords),
+            texts=np.concatenate(texts),
+            element_probs=np.concatenate(probs),
+            element_class_ids=np.concatenate(class_ids),
+            element_class_id_map=class_id_map,
+            source=group.source,
+        )
 
     def as_list(self) -> list[LayoutElement]:
         """for backward compatibility"""
@@ -290,14 +324,7 @@ def partition_groups_from_regions(regions: TextRegions) -> List[TextRegions]:
     group_count, group_nums = connected_components(intersection_mtx)
     groups: List[TextRegions] = []
     for group in range(group_count):
-        indices = np.where(group_nums == group)[0]
-        groups.append(
-            TextRegions(
-                element_coords=regions.element_coords[indices],
-                texts=regions.texts[indices],
-                source=regions.source,
-            ),
-        )
+        groups.append(regions.slice(np.where(group_nums == group)[0]))
 
     return groups
 

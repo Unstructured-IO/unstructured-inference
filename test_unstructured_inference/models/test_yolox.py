@@ -15,14 +15,15 @@ def test_layout_yolox_local_parsing_image():
     assert len(document_layout.pages) == 1
     # NOTE(benjamin) The example sent to the test contains 13 detections
     types_known = ["Text", "Section-header", "Page-header"]
-    known_regions = [e for e in document_layout.pages[0].elements if e.type in types_known]
+    elements = document_layout.pages[0].elements
+    known_regions = [
+        e for e in elements.element_class_ids if elements.element_class_id_map[e] in types_known
+    ]
     assert len(known_regions) == 13
-    assert hasattr(
-        document_layout.pages[0].elements[0],
-        "prob",
-    )  # NOTE(pravin) New Assertion to Make Sure LayoutElement has probabilities
+    # NOTE(pravin) New Assertion to Make Sure LayoutElement has probabilities
+    assert hasattr(elements, "element_probs")
     assert isinstance(
-        document_layout.pages[0].elements[0].prob,
+        elements.element_probs[0],
         float,
     )  # NOTE(pravin) New Assertion to Make Sure Populated Probability is Float
 

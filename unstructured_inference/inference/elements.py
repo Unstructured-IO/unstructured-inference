@@ -212,6 +212,17 @@ class TextRegions:
     texts: np.array | None = None
     source: Source | None = None
 
+    def __post_init__(self):
+        if self.texts is None:
+            self.texts = np.array([None] * self.element_coords.shape[0])
+
+    def slice(self, indices) -> TextRegions:
+        return TextRegions(
+            element_coord=self.element_coords[indices],
+            texts=self.texts[indices],
+            source=self.source,
+        )
+
     def as_list(self):
         if self.texts is None:
             return [

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from functools import cached_property
 from pathlib import PurePath
 from typing import Any, BinaryIO, Collection, List, Optional, Union, cast
 
@@ -147,9 +148,14 @@ class PageLayout:
         self.detection_model = detection_model
         self.element_extraction_model = element_extraction_model
         self.elements: Collection[LayoutElement] = []
+        self.elements_array: LayoutElements | None = None
         # NOTE(alan): Dropped LocationlessLayoutElement that was created for chipper - chipper has
         # locations now and if we need to support LayoutElements without bounding boxes we can make
         # the bbox property optional
+
+    @cached_property
+    def elements(self) -> list[LayoutElement]:
+        return self.elements_array.as_list()
 
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
@@ -173,7 +179,7 @@ class PageLayout:
     def get_elements_with_detection_model(
         self,
         inplace: bool = True,
-    ) -> Optional[List[LayoutElement]]:
+    ) -> LayoutElements | None:
         """Uses specified model to detect the elements on the page."""
         if self.detection_model is None:
             model = get_model()
@@ -191,7 +197,7 @@ class PageLayout:
         )
 
         if inplace:
-            self.elements = inferred_layout
+            self.elements_array = inferred_layout
             return None
 
         return inferred_layout

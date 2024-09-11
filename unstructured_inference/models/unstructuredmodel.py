@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, List, cast
+from typing import Any, List
 
 import numpy as np
 from PIL.Image import Image
@@ -12,16 +12,12 @@ from unstructured_inference.inference.elements import (
     intersections,
 )
 from unstructured_inference.inference.layoutelement import (
+    LayoutElement,
+    LayoutElements,
     clean_layoutelements,
     partition_groups_from_regions,
     separate,
 )
-
-if TYPE_CHECKING:
-    from unstructured_inference.inference.layoutelement import (
-        LayoutElement,
-        LayoutElements,
-    )
 
 
 class UnstructuredModel(ABC):
@@ -181,15 +177,14 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         if len(elements) <= 1:
             return elements
 
-        cleaned_elements: LayoutElements = []
+        cleaned_elements = []
         # TODO: Delete nested elements with low or None probability
         # TODO: Keep most confident
         # TODO: Better to grow horizontally than vertically?
-        groups_tmp = partition_groups_from_regions(elements)
-        groups = cast(List[LayoutElements], groups_tmp)
-        for elements in groups:
-            cleaned_elements.extend(clean_layoutelements(elements))
-        return cleaned_elements
+        groups = partition_groups_from_regions(elements)
+        for group in groups:
+            cleaned_elements.append(clean_layoutelements(group))
+        return LayoutElements.concatenate(cleaned_elements)
 
 
 class UnstructuredElementExtractionModel(UnstructuredModel):
