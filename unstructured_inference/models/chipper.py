@@ -658,7 +658,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         input_bbox: List[float],
     ) -> List[float]:
         """
-        If an element does overlap with other elements, reduce bouding box by selecting the largest
+        If an element does overlap with other elements, reduce bounding box by selecting the largest
         bbox after blurring existing text
         """
         input_bbox = [int(b) for b in input_bbox]
