@@ -137,7 +137,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         else:
             if swap_head_hidden_layer_size is not None:
                 logger.warning(
-                    f"swap_head is False but recieved value {swap_head_hidden_layer_size} for "
+                    f"swap_head is False but received value {swap_head_hidden_layer_size} for "
                     "swap_head_hidden_layer_size, which will be ignored.",
                 )
 
