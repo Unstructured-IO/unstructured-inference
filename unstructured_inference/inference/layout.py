@@ -177,9 +177,6 @@ class PageLayout:
         array_only: bool = False,
     ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
-        import pdb
-
-        pdb.set_trace()
         if self.detection_model is None:
             model = get_model()
             if isinstance(model, UnstructuredObjectDetectionModel):
