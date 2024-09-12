@@ -50,7 +50,7 @@ class LazyDict(Mapping):
 
 
 def tag(elements: Iterable[LayoutElement]):
-    """Asign a numeric id to the elements in the list.
+    """Assign a numeric id to the elements in the list.
     Useful for debugging"""
     colors = ["red", "blue", "green", "magenta", "brown"]
     for i, e in enumerate(elements):
