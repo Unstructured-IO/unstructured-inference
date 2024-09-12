@@ -98,9 +98,11 @@ class LayoutElements(TextRegions):
                 x2,
                 y2,
                 text=text,
-                type=self.element_class_id_map[class_id]
-                if class_id and self.element_class_id_map
-                else None,
+                type=(
+                    self.element_class_id_map[class_id]
+                    if class_id and self.element_class_id_map
+                    else None
+                ),
                 prob=prob,
                 source=self.source,
             )
