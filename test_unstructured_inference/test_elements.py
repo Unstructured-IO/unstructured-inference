@@ -311,7 +311,7 @@ def test_clean_layoutelements():
     element_class_ids = np.array([1, 1, 1, 0, 0, 0, 0, 0, 2])
     elements = LayoutElements(element_coords=coords, element_class_ids=element_class_ids)
 
-    elements = clean_layoutelements(elements, element_class=1).as_list()
+    elements = clean_layoutelements(elements).as_list()
     assert len(elements) == 2
     assert (
         elements[0].bbox.x1,
@@ -325,6 +325,39 @@ def test_clean_layoutelements():
         elements[1].bbox.x2,
         elements[1].bbox.x2,
     ) == (2, 2, 3, 3)
+
+
+@pytest.mark.parametrize(
+    ("coords", "class_ids", "expected_coords", "expected_ids"),
+    [
+        ([[0, 0, 1, 1], [0, 0, 1, 1]], [0, 1], [[0, 0, 1, 1]], [0]),  # one box
+        (
+            [[0, 0, 1, 1], [0, 0, 1, 1], [1, 1, 2, 2]],
+            [0, 1, 0],
+            [[0, 0, 1, 1], [1, 1, 2, 2]],
+            [0, 0],
+        ),
+        (
+            [[0, 0, 1.4, 1.4], [0, 0, 1, 1], [0.4, 0, 1.4, 1], [1.2, 0, 1.4, 1]],
+            [0, 1, 1, 1],
+            [[0, 0, 1.4, 1.4]],
+            [0],
+        ),
+    ],
+)
+def test_clean_layoutelements_cases(
+    coords,
+    class_ids,
+    expected_coords,
+    expected_ids,
+):
+    coords = np.array(coords)
+    element_class_ids = np.array(class_ids)
+    elements = LayoutElements(element_coords=coords, element_class_ids=element_class_ids)
+
+    elements = clean_layoutelements(elements)
+    np.testing.assert_array_equal(elements.element_coords, expected_coords)
+    np.testing.assert_array_equal(elements.element_class_ids, expected_ids)
 
 
 @pytest.mark.parametrize(
@@ -347,7 +380,7 @@ def test_clean_layoutelements():
             [1, 1, 0],
         ),
         (
-            # a -> b, b -> c, but a not -> c
+            # like the case above but a different filtering element type changes the results
             [[0, 0, 1.4, 1.4], [0, 0, 1, 1], [0.4, 0, 1.4, 1], [1.2, 0, 1.4, 1]],
             [0, 1, 1, 1],
             0,
@@ -356,7 +389,7 @@ def test_clean_layoutelements():
         ),
     ],
 )
-def test_clean_layoutelements_for_class_edge_cases(
+def test_clean_layoutelements_for_class(
     coords,
     class_ids,
     class_to_filter,

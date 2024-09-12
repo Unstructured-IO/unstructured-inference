@@ -60,7 +60,8 @@ class LayoutElements(TextRegions):
             texts.append(group.texts)
             probs.append(group.element_probs)
             class_ids.append(group.element_class_ids)
-            class_id_map.update(group.element_class_id_map)
+            if group.element_class_id_map:
+                class_id_map.update(group.element_class_id_map)
         return cls(
             element_coords=np.concatenate(coords),
             texts=np.concatenate(texts),
@@ -456,10 +457,10 @@ def clean_layoutelements_for_class(
         target_coords_to_keep,
     )
     # check from largest to smallest regions to find if it contains any other regions
+    other_areas = elements.areas[sorted_by_area][~target_indices]
     other_is_almost_subregion_of_target = (
-        other_to_target_intersection / np.maximum(target_areas[mask], EPSILON_AREA)
-        > subregion_threshold
-    ) & (elements.areas[sorted_by_area][~target_indices].reshape((-1, 1)) <= target_areas.T)
+        other_to_target_intersection / np.maximum(other_areas, EPSILON_AREA) > subregion_threshold
+    ) & (other_areas.reshape((-1, 1)) <= target_areas[mask].T)
 
     other_mask = ~other_is_almost_subregion_of_target.sum(axis=1).astype(bool)
 

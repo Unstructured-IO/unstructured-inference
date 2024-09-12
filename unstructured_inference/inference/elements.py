@@ -218,7 +218,7 @@ class TextRegions:
 
     def slice(self, indices) -> TextRegions:
         return TextRegions(
-            element_coord=self.element_coords[indices],
+            element_coords=self.element_coords[indices],
             texts=self.texts[indices],
             source=self.source,
         )
