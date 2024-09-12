@@ -54,12 +54,12 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
     """Wrapper class for object detection models used by unstructured."""
 
     @abstractmethod
-    def predict(self, x: Image) -> List[LayoutElement]:
+    def predict(self, x: Image) -> LayoutElements:
         """Do inference using the wrapped model."""
         super().predict(x)
         return []  # pragma: no cover
 
-    def __call__(self, x: Image) -> List[LayoutElement]:
+    def __call__(self, x: Image) -> LayoutElements:
         """Inference using function call interface."""
         return super().__call__(x)
 

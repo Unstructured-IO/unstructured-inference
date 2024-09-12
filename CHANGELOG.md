@@ -1,8 +1,10 @@
-## 0.7.37-dev2
+## 0.7.37-dev3
 
 * refactor: remove layout analysis related code
 * enhancement: Hide warning about table transformer weights not being loaded
 * fix(layout): Use TemporaryDirectory instead of NamedTemporaryFile for Windows support
+* refactor: use `numpy` array to store layout elements' information in one single `LayoutElements`
+  object instead of using a list of `LayoutElement`
 
 ## 0.7.36
 
