@@ -23,7 +23,7 @@ Run `pip install unstructured-inference`.
 
 [Detectron2](https://github.com/facebookresearch/detectron2) is required for using models from the [layoutparser model zoo](#using-models-from-the-layoutparser-model-zoo) 
 but is not automatically installed with this package. 
-For MacOS and Linux, build from source with:
+For macOS and Linux, build from source with:
 ```shell
 pip install 'git+https://github.com/facebookresearch/detectron2.git@57bdb21249d5418c130d54e2ebdc94dda7a4c01a'
 ```
