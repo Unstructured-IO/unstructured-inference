@@ -157,7 +157,7 @@ def intersections(*rects: Rectangle):
     return coords_intersections(coords)
 
 
-def coords_intersections(coords: np.ndarry) -> np.ndarray:
+def coords_intersections(coords: np.ndarray) -> np.ndarray:
     """Returns a square boolean matrix of intersections of given stack of coords, i.e.
     the ijth entry of the matrix is True if and only if the ith coords and jth coords
     intersect."""
@@ -209,11 +209,11 @@ class TextRegion:
 @dataclass
 class TextRegions:
     element_coords: np.ndarray
-    texts: np.array | None = None
+    texts: np.ndarray = np.array([])
     source: Source | None = None
 
     def __post_init__(self):
-        if self.texts is None:
+        if self.texts.size == 0 and self.element_coords.size > 0:
             self.texts = np.array([None] * self.element_coords.shape[0])
 
     def slice(self, indices) -> TextRegions:

@@ -30,16 +30,17 @@ EPSILON_AREA = 1e-7
 
 @dataclass
 class LayoutElements(TextRegions):
-    element_probs: np.ndarray | None = None
-    element_class_ids: np.ndarray | None = None
+    element_probs: np.ndarray = np.array([])
+    element_class_ids: np.ndarray = np.array([])
     element_class_id_map: dict[int, str] | None = None
 
     def __post_init__(self):
         if self.element_probs is not None:
             self.element_probs = self.element_probs.astype(float)
+        element_size = self.element_coords.shape[0]
         for attr in ("element_probs", "element_class_ids", "texts"):
-            if getattr(self, attr) is None:
-                setattr(self, attr, np.array([None] * self.element_coords.shape[0]))
+            if getattr(self, attr).size == 0 and element_size:
+                setattr(self, attr, np.array([None] * element_size))
 
     def slice(self, indices) -> LayoutElements:
         """slice and return only selected indices"""
@@ -50,6 +51,21 @@ class LayoutElements(TextRegions):
             element_probs=self.element_probs[indices],
             element_class_ids=self.element_class_ids[indices],
             element_class_id_map=self.element_class_id_map,
+        )
+
+    def __iter__(self, idx) -> LayoutElement:
+        x1, y1, x2, y2 = self.element_coords[idx]
+        etype = (
+            self.element_class_id_map[self.element_class_ids[idx]]
+            if self.element_class_id_map
+            else None
+        )
+        return LayoutElement(
+            Rectangle(x1=x1, y1=y1, x2=x2, y2=y2),
+            text=self.texts[idx],
+            source=self.source,
+            type=etype,
+            prob=self.element_probs[idx],
         )
 
     @classmethod
