@@ -72,7 +72,7 @@ Fix syntax for generated HTML tables
 
 ## 0.7.22
 
-* fix: add logic to handle computation of intersections betwen 2 `Rectangle`s when a `Rectangle` has `None` value in its coordinates
+* fix: add logic to handle computation of intersections between 2 `Rectangle`s when a `Rectangle` has `None` value in its coordinates
 
 ## 0.7.21
 
@@ -111,8 +111,8 @@ Fix syntax for generated HTML tables
 
 * refactor: add a class `ElementType` for the element type constants and use the constants to replace element type strings
 * enhancement: support extracting elements with types `Picture` and `Figure`
-* fix: update logger in table initalization where the logger info was not showing
-* chore: supress UserWarning about specified model providers
+* fix: update logger in table initialization where the logger info was not showing
+* chore: suppress UserWarning about specified model providers
 
 ## 0.7.12
 
@@ -215,7 +215,7 @@ we have the mapping from standard language code to paddle language code.
 
 ## 0.6.0
 
-* add a config class to handle parameter configurations for inference tasks; parameters in the config class can be set via environement variables
+* add a config class to handle parameter configurations for inference tasks; parameters in the config class can be set via environment variables
 * update behavior of `pad_image_with_background_color` so that input `pad` is applied to all sides
 
 ## 0.5.31
@@ -256,7 +256,7 @@ we have the mapping from standard language code to paddle language code.
 
 ## 0.5.21
 
-* adds `safe_division` to replae 0 with machine epsilon for `float` to avoid division by 0
+* adds `safe_division` to replace 0 with machine epsilon for `float` to avoid division by 0
 * apply `safe_division` to area overlap calculations in `unstructured_inference/inference/elements.py`
 
 ## 0.5.20
@@ -346,7 +346,7 @@ we have the mapping from standard language code to paddle language code.
 * Added functionality to convert a PDF in small chunks of pages at a time for `pdf2image.convert_from_path`
 * Table processing check for the area of the package to fix division by zero bug
 * Added CUDA and TensorRT execution providers for yolox and detectron2onnx model.
-* Warning for onnx version of detectron2 for empty pages suppresed.
+* Warning for onnx version of detectron2 for empty pages suppressed.
 
 ## 0.5.4
 

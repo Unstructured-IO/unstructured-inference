@@ -91,7 +91,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         self,
         image: PILImage.Image,
     ) -> List[LayoutElement]:
-        """Method runing YoloX for layout detection, returns a PageLayout
+        """Method running YoloX for layout detection, returns a PageLayout
         parameters
         ----------
         page
@@ -99,7 +99,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         origin_img
             If specified, an Image object for process with YoloX model
         page_number
-            Number asigned to the PageLayout returned
+            Number assigned to the PageLayout returned
         output_directory
             Boolean indicating if result will be stored
         """
@@ -125,7 +125,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         boxes_xyxy[:, 3] = boxes[:, 1] + boxes[:, 3] / 2.0
         boxes_xyxy /= ratio
 
-        # Note (Benjamin): Distinct models (quantized and original) requires distincts
+        # Note (Benjamin): Distinct models (quantized and original) requires distinct
         # levels of thresholds
         if "quantized" in self.model_path:
             dets = multiclass_nms(boxes_xyxy, scores, nms_thr=0.0, score_thr=0.07)

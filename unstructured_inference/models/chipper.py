@@ -102,7 +102,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         ]
 
         self.stopping_criteria = [
-            NGramRepetitonStoppingCriteria(
+            NGramRepetitionStoppingCriteria(
                 repetition_window=30,
                 skip_tokens=get_table_token_ids(self.processor),
             ),
@@ -137,7 +137,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         else:
             if swap_head_hidden_layer_size is not None:
                 logger.warning(
-                    f"swap_head is False but recieved value {swap_head_hidden_layer_size} for "
+                    f"swap_head is False but received value {swap_head_hidden_layer_size} for "
                     "swap_head_hidden_layer_size, which will be ignored.",
                 )
 
@@ -658,7 +658,7 @@ class UnstructuredChipperModel(UnstructuredElementExtractionModel):
         input_bbox: List[float],
     ) -> List[float]:
         """
-        If an element does overlap with other elements, reduce bouding box by selecting the largest
+        If an element does overlap with other elements, reduce bounding box by selecting the largest
         bbox after blurring existing text
         """
         input_bbox = [int(b) for b in input_bbox]
@@ -1027,7 +1027,7 @@ class NoRepeatNGramLogitsProcessor(LogitsProcessor):
         )
 
 
-class NGramRepetitonStoppingCriteria(StoppingCriteria):
+class NGramRepetitionStoppingCriteria(StoppingCriteria):
     def __init__(self, repetition_window: int, skip_tokens: set = set()):
         self.repetition_window = repetition_window
         self.skip_tokens = skip_tokens

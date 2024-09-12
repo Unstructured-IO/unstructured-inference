@@ -84,7 +84,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         x: PILImage.Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
     ) -> dict:
-        """get the table structure as a dictionary contaning different types of elements as
+        """get the table structure as a dictionary containing different types of elements as
         key-value pairs; check table-transformer documentation for more information"""
         with torch.no_grad():
             encoding = self.feature_extractor(

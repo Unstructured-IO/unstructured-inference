@@ -178,7 +178,7 @@ def separate(region_a: Rectangle, region_b: Rectangle):
     """Reduce leftmost rectangle to don't overlap with the other"""
 
     def reduce(keep: Rectangle, reduce: Rectangle):
-        # Asume intersection
+        # Assume intersection
 
         # Other is down
         if reduce.y2 > keep.y2 and reduce.x1 < keep.x2:

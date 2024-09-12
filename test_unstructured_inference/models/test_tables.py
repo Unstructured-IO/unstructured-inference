@@ -927,7 +927,7 @@ def test_table_prediction_output_format(
         assert expectation in result.values
     elif output_format == "cells":
         # other output like bbox are flakey to test since they depend on OCR and it may change
-        # slightly when OCR pacakge changes or even on different machines
+        # slightly when OCR package changes or even on different machines
         validation_fields = ("column_nums", "row_nums", "column header", "cell text")
         assert expectation in [{key: cell[key] for key in validation_fields} for cell in result]
     else:
@@ -1763,11 +1763,11 @@ def test_padded_results_has_right_dimensions(table_transformer, example_image):
     pad = int(min(example_image.size) / 10)
 
     structure = table_transformer.get_structure(example_image, pad_for_structure_detection=pad)
-    # boxes deteced OUTSIDE of the original image; this shouldn't happen but we want to make sure
+    # boxes detected OUTSIDE of the original image; this shouldn't happen but we want to make sure
     # the code handles it as expected
     structure["pred_boxes"][0][0, :2] = 0.5
     structure["pred_boxes"][0][0, 2:] = 1.0
-    # mock a box we know are safly inside the original image with known positions
+    # mock a box we know are safely inside the original image with known positions
     width, height = example_image.size
     padded_width = width + pad * 2
     padded_height = height + pad * 2
