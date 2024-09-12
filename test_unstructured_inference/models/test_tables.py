@@ -1767,7 +1767,7 @@ def test_padded_results_has_right_dimensions(table_transformer, example_image):
     # the code handles it as expected
     structure["pred_boxes"][0][0, :2] = 0.5
     structure["pred_boxes"][0][0, 2:] = 1.0
-    # mock a box we know are safly inside the original image with known positions
+    # mock a box we know are safely inside the original image with known positions
     width, height = example_image.size
     padded_width = width + pad * 2
     padded_height = height + pad * 2
