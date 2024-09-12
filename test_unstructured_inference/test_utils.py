@@ -77,7 +77,7 @@ def test_pad_image_with_background_color(mock_pil_image):
 
 
 def test_pad_image_with_invalid_input(mock_pil_image):
-    with pytest.raises(ValueError, match="Can not pad an image with negative space!"):
+    with pytest.raises(ValueError, match="Cannot pad an image with negative space!"):
         pad_image_with_background_color(mock_pil_image, -1)
 
 
