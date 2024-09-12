@@ -131,7 +131,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         """
         # TODO (benjamin): check other shapes for inference
         img = np.array(image)
-        # TODO (benjamin): We should use models.get_model() but currenly returns Detectron model
+        # TODO (benjamin): We should use models.get_model() but currently returns Detectron model
         session = self.model
         # onnx input expected
         # [3,1035,800]
