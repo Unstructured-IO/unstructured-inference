@@ -42,6 +42,7 @@ class LayoutElements(TextRegions):
                 setattr(self, attr, np.array([None] * self.element_coords.shape[0]))
 
     def slice(self, indices) -> LayoutElements:
+        """slice and return only selected indices"""
         return LayoutElements(
             element_coords=self.element_coords[indices],
             texts=self.texts[indices],
@@ -53,6 +54,7 @@ class LayoutElements(TextRegions):
 
     @classmethod
     def concatenate(cls, groups: Iterable[LayoutElements]) -> LayoutElements:
+        """concatenate a sequence of LayoutElements in order as one LayoutElements"""
         coords, texts, probs, class_ids = [], [], [], []
         class_id_map = {}
         for group in groups:
@@ -72,7 +74,7 @@ class LayoutElements(TextRegions):
         )
 
     def as_list(self) -> list[LayoutElement]:
-        """for backward compatibility"""
+        """return a list of LayoutElement for backward compatibility"""
         return [
             LayoutElement.from_coords(
                 x1,

@@ -217,6 +217,7 @@ class TextRegions:
             self.texts = np.array([None] * self.element_coords.shape[0])
 
     def slice(self, indices) -> TextRegions:
+        """slice text regions based on indices"""
         return TextRegions(
             element_coords=self.element_coords[indices],
             texts=self.texts[indices],
@@ -224,6 +225,7 @@ class TextRegions:
         )
 
     def as_list(self):
+        """return a list of TextRegion objects representing the data"""
         if self.texts is None:
             return [
                 TextRegion.from_coords(x1, y1, x2, y2, None, self.source)
@@ -236,6 +238,8 @@ class TextRegions:
 
     @classmethod
     def from_list(cls, regions: list[TextRegion]):
+        """create TextRegions from a list of TextRegion objects; the objects must have the same
+        source"""
         coords, texts = [], []
         for region in regions:
             coords.append((region.bbox.x1, region.bbox.y1, region.bbox.x2, region.bbox.y2))
