@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any, List, cast
 
 import numpy as np
 from PIL.Image import Image
@@ -54,10 +54,10 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
     """Wrapper class for object detection models used by unstructured."""
 
     @abstractmethod
-    def predict(self, x: Image) -> LayoutElements:
+    def predict(self, x: Image) -> LayoutElements | list[LayoutElement]:
         """Do inference using the wrapped model."""
         super().predict(x)
-        return []  # pragma: no cover
+        return []
 
     def __call__(self, x: Image) -> LayoutElements:
         """Inference using function call interface."""
@@ -128,7 +128,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
     @staticmethod
     def clean_type(
-        elements: LayoutElements,
+        elements: list[LayoutElement],
         type_to_clean=ElementType.TABLE,
     ) -> List[LayoutElement]:
         """After this function, the list of elements will not contain any element inside
@@ -181,7 +181,7 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
         # TODO: Delete nested elements with low or None probability
         # TODO: Keep most confident
         # TODO: Better to grow horizontally than vertically?
-        groups = partition_groups_from_regions(elements)
+        groups = cast(list[LayoutElements], partition_groups_from_regions(elements))
         for group in groups:
             cleaned_elements.append(clean_layoutelements(group))
         return LayoutElements.concatenate(cleaned_elements)

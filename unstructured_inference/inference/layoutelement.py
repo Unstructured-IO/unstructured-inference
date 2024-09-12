@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, Iterable, List, Optional
+from typing import Any, Collection, Iterable, List, Optional
 
 import numpy as np
 from layoutparser.elements.layout import TextBlock
@@ -89,7 +89,7 @@ class LayoutElements(TextRegions):
             source=group.source,
         )
 
-    def as_list(self) -> list[LayoutElement]:
+    def as_list(self):
         """return a list of LayoutElement for backward compatibility"""
         return [
             LayoutElement.from_coords(
@@ -407,7 +407,7 @@ def clean_layoutelements(elements: LayoutElements, subregion_threshold: float = 
     final_coords = sorted_coords[mask]
     sorted_by_y1 = np.argsort(final_coords[:, 1])
 
-    final_attrs = {"element_class_id_map": elements.element_class_id_map}
+    final_attrs: dict[str, Any] = {"element_class_id_map": elements.element_class_id_map}
     for attr in ("element_class_ids", "element_probs", "texts"):
         if (original_attr := getattr(elements, attr)) is None:
             continue
@@ -483,7 +483,7 @@ def clean_layoutelements_for_class(
     other_mask = ~other_is_almost_subregion_of_target.sum(axis=1).astype(bool)
 
     final_coords = np.vstack([target_coords[mask], other_coords[other_mask]])
-    final_attrs = {"element_class_id_map": elements.element_class_id_map}
+    final_attrs: dict[str, Any] = {"element_class_id_map": elements.element_class_id_map}
     for attr in ("element_class_ids", "element_probs", "texts"):
         if (original_attr := getattr(elements, attr)) is None:
             continue
