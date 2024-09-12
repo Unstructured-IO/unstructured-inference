@@ -6,7 +6,9 @@ from typing import Dict, Optional, Tuple, Type
 
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
 from unstructured_inference.models.chipper import UnstructuredChipperModel
-from unstructured_inference.models.detectron2onnx import MODEL_TYPES as DETECTRON2_ONNX_MODEL_TYPES
+from unstructured_inference.models.detectron2onnx import (
+    MODEL_TYPES as DETECTRON2_ONNX_MODEL_TYPES,
+)
 from unstructured_inference.models.detectron2onnx import UnstructuredDetectronONNXModel
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.models.yolox import MODEL_TYPES as YOLOX_MODEL_TYPES
@@ -18,10 +20,12 @@ DEFAULT_MODEL = "yolox"
 models: Dict[str, UnstructuredModel] = {}
 
 
-def get_default_model_mappings() -> Tuple[
-    Dict[str, Type[UnstructuredModel]],
-    Dict[str, dict | LazyDict],
-]:
+def get_default_model_mappings() -> (
+    Tuple[
+        Dict[str, Type[UnstructuredModel]],
+        Dict[str, dict | LazyDict],
+    ]
+):
     """default model mappings for models that are in `unstructured_inference` repo"""
     return {
         **{name: UnstructuredDetectronONNXModel for name in DETECTRON2_ONNX_MODEL_TYPES},
