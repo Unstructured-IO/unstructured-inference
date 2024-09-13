@@ -107,7 +107,6 @@ portalocker==2.10.1
     # via iopath
 protobuf==5.28.1
     # via
-    #   -c requirements/constraints.in
     #   onnx
     #   onnxruntime
 pycparser==2.22
@@ -177,5 +176,5 @@ tzdata==2024.1
     # via pandas
 urllib3==2.2.3
     # via requests
-zipp==3.20.1
+zipp==3.20.2
     # via importlib-resources

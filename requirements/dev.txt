@@ -427,7 +427,7 @@ wheel==0.44.0
     # via pip-tools
 widgetsnbextension==4.0.13
     # via ipywidgets
-zipp==3.20.1
+zipp==3.20.2
     # via
     #   -c requirements/base.txt
     #   importlib-metadata
