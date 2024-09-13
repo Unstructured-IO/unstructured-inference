@@ -2,10 +2,11 @@ import json
 from typing import Any
 from unittest import mock
 
+import numpy as np
 import pytest
 
 import unstructured_inference.models.base as models
-from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.inference.layoutelement import LayoutElement, LayoutElements
 from unstructured_inference.models.unstructuredmodel import (
     ModelNotInitializedError,
     UnstructuredObjectDetectionModel,
@@ -23,7 +24,7 @@ class MockModel(UnstructuredObjectDetectionModel):
         return self.initializer(self, *args, **kwargs)
 
     def predict(self, x: Any) -> Any:
-        return []
+        return LayoutElements(element_coords=np.array([]))
 
 
 MOCK_MODEL_TYPES = {
