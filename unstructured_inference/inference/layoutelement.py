@@ -53,21 +53,6 @@ class LayoutElements(TextRegions):
             element_class_id_map=self.element_class_id_map,
         )
 
-    def __iter__(self, idx) -> LayoutElement:
-        x1, y1, x2, y2 = self.element_coords[idx]
-        etype = (
-            self.element_class_id_map[self.element_class_ids[idx]]
-            if self.element_class_id_map
-            else None
-        )
-        return LayoutElement(
-            Rectangle(x1=x1, y1=y1, x2=x2, y2=y2),
-            text=self.texts[idx],
-            source=self.source,
-            type=etype,
-            prob=self.element_probs[idx],
-        )
-
     @classmethod
     def concatenate(cls, groups: Iterable[LayoutElements]) -> LayoutElements:
         """concatenate a sequence of LayoutElements in order as one LayoutElements"""
