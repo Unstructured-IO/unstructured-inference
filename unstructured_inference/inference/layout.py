@@ -96,7 +96,7 @@ class DocumentLayout:
         try:
             image = Image.open(filename)
             format = image.format
-            images = []
+            images: list[Image.Image] = []
             for i, im in enumerate(ImageSequence.Iterator(image)):
                 im = im.convert("RGB")
                 im.format = format
@@ -107,7 +107,7 @@ class DocumentLayout:
             else:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
         pages = []
-        for i, image in enumerate(images):
+        for i, image in enumerate(images):  # type: ignore
             page = PageLayout.from_image(
                 image,
                 image_path=filename,
@@ -141,7 +141,7 @@ class PageLayout:
             image_metadata = {}
         self.image_metadata = image_metadata
         self.image_path = image_path
-        self.image_array: Union[np.ndarray, None] = None
+        self.image_array: Union[np.ndarray[Any, Any], None] = None
         self.document_filename = document_filename
         self.number = number
         self.detection_model = detection_model
@@ -200,13 +200,13 @@ class PageLayout:
 
         return inferred_layout.as_list()
 
-    def _get_image_array(self) -> Union[np.ndarray, None]:
+    def _get_image_array(self) -> Union[np.ndarray[Any, Any], None]:
         """Converts the raw image into a numpy array."""
         if self.image_array is None:
             if self.image:
                 self.image_array = np.array(self.image)
             else:
-                image = Image.open(self.image_path)
+                image = Image.open(self.image_path)  # type: ignore
                 self.image_array = np.array(image)
         return self.image_array
 
