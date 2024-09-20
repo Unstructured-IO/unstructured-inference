@@ -65,7 +65,7 @@ check: check-src check-tests check-version
 ## check-src:               runs linters (source only, no tests)
 .PHONY: check-src
 check-src:
-	ruff ${PACKAGE_NAME} --line-length 100 --select C4,COM,E,F,I,PLR0402,PT,SIM,UP015,UP018,UP032,UP034 --ignore COM812,PT011,PT012,SIM117
+	ruff check ${PACKAGE_NAME} --line-length 100 --select C4,COM,E,F,I,PLR0402,PT,SIM,UP015,UP018,UP032,UP034 --ignore COM812,PT011,PT012,SIM117
 	python -m black --line-length 100 ${PACKAGE_NAME} --check
 	python -m flake8 ${PACKAGE_NAME}
 	python -m mypy ${PACKAGE_NAME} --ignore-missing-imports
@@ -92,7 +92,7 @@ check-version:
 ## tidy:                    run black
 .PHONY: tidy
 tidy:
-	ruff ${PACKAGE_NAME} --fix --line-length 100 --select C4,COM,E,F,I,PLR0402,PT,SIM,UP015,UP018,UP032,UP034 --ignore COM812,PT011,PT012,SIM117
+	ruff check ${PACKAGE_NAME} --fix --line-length 100 --select C4,COM,E,F,I,PLR0402,PT,SIM,UP015,UP018,UP032,UP034 --ignore COM812,PT011,PT012,SIM117
 	black --line-length 100 ${PACKAGE_NAME}
 	black --line-length 100 test_${PACKAGE_NAME}
 
