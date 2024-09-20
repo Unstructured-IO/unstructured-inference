@@ -66,14 +66,14 @@ check: check-src check-tests check-version
 .PHONY: check-src
 check-src:
 	ruff ${PACKAGE_NAME} --line-length 100 --select C4,COM,E,F,I,PLR0402,PT,SIM,UP015,UP018,UP032,UP034 --ignore COM812,PT011,PT012,SIM117
-	black --line-length 100 ${PACKAGE_NAME} --check
-	flake8 ${PACKAGE_NAME}
-	mypy ${PACKAGE_NAME} --ignore-missing-imports
+	python -m black --line-length 100 ${PACKAGE_NAME} --check
+	python -m flake8 ${PACKAGE_NAME}
+	python -m mypy ${PACKAGE_NAME} --ignore-missing-imports
 
 .PHONY: check-tests
 check-tests:
-	black --line-length 100 test_${PACKAGE_NAME} --check
-	flake8 test_${PACKAGE_NAME}
+	python -m black --line-length 100 test_${PACKAGE_NAME} --check
+	python -m flake8 test_${PACKAGE_NAME}
 
 ## check-scripts:           run shellcheck
 .PHONY: check-scripts
@@ -105,7 +105,7 @@ version-sync:
 
 .PHONY: check-coverage
 check-coverage:
-	coverage report --fail-under=95
+	python -m coverage report --fail-under=95
 
 ##########
 # Docker #
