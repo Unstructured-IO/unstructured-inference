@@ -15,7 +15,7 @@ help: Makefile
 ## install-base:            installs core requirements needed for text processing bricks
 .PHONY: install-base
 install-base: install-base-pip-packages
-	pip install -r requirements/base.txt
+	python3 -m pip install -r requirements/base.txt
 
 ## install:                 installs all test, dev, and experimental requirements
 .PHONY: install
@@ -30,11 +30,11 @@ install-base-pip-packages:
 
 .PHONY: install-test
 install-test: install-base
-	pip install -r requirements/test.txt
+	python3 -m pip install -r requirements/test.txt
 
 .PHONY: install-dev
 install-dev: install-test
-	pip install -r requirements/dev.txt
+	python3 -m pip install -r requirements/dev.txt
 
 ## pip-compile:             compiles all base/dev/test requirements
 .PHONY: pip-compile
