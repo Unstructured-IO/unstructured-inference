@@ -6,7 +6,9 @@ from typing import Dict, Optional, Tuple, Type
 
 from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
 from unstructured_inference.models.chipper import UnstructuredChipperModel
-from unstructured_inference.models.detectron2onnx import MODEL_TYPES as DETECTRON2_ONNX_MODEL_TYPES
+from unstructured_inference.models.detectron2onnx import (
+    MODEL_TYPES as DETECTRON2_ONNX_MODEL_TYPES,
+)
 from unstructured_inference.models.detectron2onnx import UnstructuredDetectronONNXModel
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.models.yolox import MODEL_TYPES as YOLOX_MODEL_TYPES

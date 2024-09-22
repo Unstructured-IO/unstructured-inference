@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Optional, Union
 
 import numpy as np
@@ -152,9 +153,15 @@ def intersections(*rects: Rectangle):
     the ijth entry of the matrix is True if and only if the ith Rectangle and jth Rectangle
     intersect."""
     # NOTE(alan): Rewrite using line scan
-    coords = np.stack([[[r.x1, r.y1], [r.x2, r.y2]] for r in rects], axis=-1)
+    coords = np.array([[r.x1, r.y1, r.x2, r.y2] for r in rects])
+    return coords_intersections(coords)
 
-    (x1s, y1s), (x2s, y2s) = coords
+
+def coords_intersections(coords: np.ndarray) -> np.ndarray:
+    """Returns a square boolean matrix of intersections of given stack of coords, i.e.
+    the ijth entry of the matrix is True if and only if the ith coords and jth coords
+    intersect."""
+    x1s, y1s, x2s, y2s = coords[:, 0], coords[:, 1], coords[:, 2], coords[:, 3]
 
     # Use broadcasting to get comparison matrices.
     # For Rectangles r1 and r2, any of the following conditions makes the rectangles disjoint:
@@ -197,6 +204,75 @@ class TextRegion:
         bbox = Rectangle(x1, y1, x2, y2)
 
         return cls(text=text, source=source, bbox=bbox, **kwargs)
+
+
+@dataclass
+class TextRegions:
+    element_coords: np.ndarray
+    texts: np.ndarray = np.array([])
+    source: Source | None = None
+
+    def __post_init__(self):
+        if self.texts.size == 0 and self.element_coords.size > 0:
+            self.texts = np.array([None] * self.element_coords.shape[0])
+
+    def slice(self, indices) -> TextRegions:
+        """slice text regions based on indices"""
+        return TextRegions(
+            element_coords=self.element_coords[indices],
+            texts=self.texts[indices],
+            source=self.source,
+        )
+
+    def as_list(self):
+        """return a list of TextRegion objects representing the data"""
+        if self.texts is None:
+            return [
+                TextRegion.from_coords(x1, y1, x2, y2, None, self.source)
+                for (x1, y1, x2, y2) in self.element_coords
+            ]
+        return [
+            TextRegion.from_coords(x1, y1, x2, y2, text, self.source)
+            for (x1, y1, x2, y2), text in zip(self.element_coords, self.texts)
+        ]
+
+    @classmethod
+    def from_list(cls, regions: list[TextRegion]):
+        """create TextRegions from a list of TextRegion objects; the objects must have the same
+        source"""
+        coords, texts = [], []
+        for region in regions:
+            coords.append((region.bbox.x1, region.bbox.y1, region.bbox.x2, region.bbox.y2))
+            texts.append(region.text)
+        return cls(element_coords=np.array(coords), texts=np.array(texts), source=regions[0].source)
+
+    def __len__(self):
+        return self.element_coords.shape[0]
+
+    @property
+    def x1(self):
+        """left coordinate"""
+        return self.element_coords[:, 0]
+
+    @property
+    def y1(self):
+        """top coordinate"""
+        return self.element_coords[:, 1]
+
+    @property
+    def x2(self):
+        """right coordinate"""
+        return self.element_coords[:, 2]
+
+    @property
+    def y2(self):
+        """bottom coordinate"""
+        return self.element_coords[:, 3]
+
+    @cached_property
+    def areas(self) -> np.ndarray:
+        """areas of each region; only compute it when it is needed"""
+        return (self.x2 - self.x1) * (self.y2 - self.y1)
 
 
 class EmbeddedTextRegion(TextRegion):

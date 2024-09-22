@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, List, cast
+from typing import Any, List, cast
 
 import numpy as np
 from PIL.Image import Image
@@ -11,10 +11,13 @@ from unstructured_inference.inference.elements import (
     grow_region_to_match_region,
     intersections,
 )
-from unstructured_inference.inference.layoutelement import partition_groups_from_regions, separate
-
-if TYPE_CHECKING:
-    from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.inference.layoutelement import (
+    LayoutElement,
+    LayoutElements,
+    clean_layoutelements,
+    partition_groups_from_regions,
+    separate,
+)
 
 
 class UnstructuredModel(ABC):
@@ -51,12 +54,12 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
     """Wrapper class for object detection models used by unstructured."""
 
     @abstractmethod
-    def predict(self, x: Image) -> List[LayoutElement]:
+    def predict(self, x: Image) -> LayoutElements | list[LayoutElement]:
         """Do inference using the wrapped model."""
         super().predict(x)
-        return []  # pragma: no cover
+        return []
 
-    def __call__(self, x: Image) -> List[LayoutElement]:
+    def __call__(self, x: Image) -> LayoutElements:
         """Inference using function call interface."""
         return super().__call__(x)
 
@@ -125,7 +128,8 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
     @staticmethod
     def clean_type(
-        elements: List[LayoutElement], type_to_clean=ElementType.TABLE
+        elements: list[LayoutElement],
+        type_to_clean=ElementType.TABLE,
     ) -> List[LayoutElement]:
         """After this function, the list of elements will not contain any element inside
         of the type specified"""
@@ -165,26 +169,22 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
     def deduplicate_detected_elements(
         self,
-        elements: List[LayoutElement],
+        elements: LayoutElements,
         min_text_size: int = 15,
-    ) -> List[LayoutElement]:
+    ) -> LayoutElements:
         """Deletes overlapping elements in a list of elements."""
 
         if len(elements) <= 1:
             return elements
 
-        cleaned_elements: List[LayoutElement] = []
+        cleaned_elements = []
         # TODO: Delete nested elements with low or None probability
         # TODO: Keep most confident
         # TODO: Better to grow horizontally than vertically?
-        groups_tmp = partition_groups_from_regions(elements)
-        groups = cast(List[List["LayoutElement"]], groups_tmp)
-        for g in groups:
-            all_types = {e.type for e in g}
-            for type in all_types:
-                g = UnstructuredObjectDetectionModel.clean_type(g, type)
-            cleaned_elements.extend(g)
-        return cleaned_elements
+        groups = cast(list[LayoutElements], partition_groups_from_regions(elements))
+        for group in groups:
+            cleaned_elements.append(clean_layoutelements(group))
+        return LayoutElements.concatenate(cleaned_elements)
 
 
 class UnstructuredElementExtractionModel(UnstructuredModel):

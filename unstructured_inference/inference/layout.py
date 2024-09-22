@@ -12,9 +12,7 @@ from PIL import Image, ImageSequence
 from unstructured_inference.inference.elements import (
     TextRegion,
 )
-from unstructured_inference.inference.layoutelement import (
-    LayoutElement,
-)
+from unstructured_inference.inference.layoutelement import LayoutElement, LayoutElements
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import (
@@ -149,6 +147,7 @@ class PageLayout:
         self.detection_model = detection_model
         self.element_extraction_model = element_extraction_model
         self.elements: Collection[LayoutElement] = []
+        self.elements_array: LayoutElements | None = None
         # NOTE(alan): Dropped LocationlessLayoutElement that was created for chipper - chipper has
         # locations now and if we need to support LayoutElements without bounding boxes we can make
         # the bbox property optional
@@ -175,6 +174,7 @@ class PageLayout:
     def get_elements_with_detection_model(
         self,
         inplace: bool = True,
+        array_only: bool = False,
     ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
         if self.detection_model is None:
@@ -187,16 +187,18 @@ class PageLayout:
         # NOTE(mrobinson) - We'll want make this model inference step some kind of
         # remote call in the future.
         assert self.image is not None
-        inferred_layout: List[LayoutElement] = self.detection_model(self.image)
+        inferred_layout: LayoutElements = self.detection_model(self.image)
         inferred_layout = self.detection_model.deduplicate_detected_elements(
             inferred_layout,
         )
 
         if inplace:
-            self.elements = inferred_layout
+            self.elements_array = inferred_layout
+            if not array_only:
+                self.elements = inferred_layout.as_list()
             return None
 
-        return inferred_layout
+        return inferred_layout.as_list()
 
     def _get_image_array(self) -> Union[np.ndarray[Any, Any], None]:
         """Converts the raw image into a numpy array."""

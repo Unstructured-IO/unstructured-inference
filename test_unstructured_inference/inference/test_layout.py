@@ -71,7 +71,7 @@ def mock_final_layout():
         type="Title",
     )
 
-    return [text_block, title_block]
+    return layoutelement.LayoutElements.from_list([text_block, title_block])
 
 
 def test_pdf_page_converts_images_to_array(mock_image):
@@ -378,15 +378,41 @@ class MockDetectionModel(layout.UnstructuredObjectDetectionModel):
         pass
 
     def predict(self, x):
-        return [
-            layout.LayoutElement.from_coords(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
-            layout.LayoutElement.from_coords(x1=380.6, y1=473.4, x2=1334.8, y2=533.9, text="1"),
-            layout.LayoutElement.from_coords(x1=578.6, y1=556.8, x2=1109.0, y2=874.4, text="2"),
-            layout.LayoutElement.from_coords(x1=444.5, y1=942.3, x2=1261.1, y2=1584.1, text="3"),
-            layout.LayoutElement.from_coords(x1=444.8, y1=1609.4, x2=1257.2, y2=1665.2, text="4"),
-            layout.LayoutElement.from_coords(x1=414.0, y1=1718.8, x2=635.0, y2=1755.2, text="5"),
-            layout.LayoutElement.from_coords(x1=372.6, y1=1786.9, x2=1333.6, y2=1848.7, text="6"),
-        ]
+        return layoutelement.LayoutElements.from_list(
+            [
+                layout.LayoutElement.from_coords(x1=447.0, y1=315.0, x2=1275.7, y2=413.0, text="0"),
+                layout.LayoutElement.from_coords(x1=380.6, y1=473.4, x2=1334.8, y2=533.9, text="1"),
+                layout.LayoutElement.from_coords(x1=578.6, y1=556.8, x2=1109.0, y2=874.4, text="2"),
+                layout.LayoutElement.from_coords(
+                    x1=444.5,
+                    y1=942.3,
+                    x2=1261.1,
+                    y2=1584.1,
+                    text="3",
+                ),
+                layout.LayoutElement.from_coords(
+                    x1=444.8,
+                    y1=1609.4,
+                    x2=1257.2,
+                    y2=1665.2,
+                    text="4",
+                ),
+                layout.LayoutElement.from_coords(
+                    x1=414.0,
+                    y1=1718.8,
+                    x2=635.0,
+                    y2=1755.2,
+                    text="5",
+                ),
+                layout.LayoutElement.from_coords(
+                    x1=372.6,
+                    y1=1786.9,
+                    x2=1333.6,
+                    y2=1848.7,
+                    text="6",
+                ),
+            ],
+        )
 
 
 def test_layout_order(mock_image):

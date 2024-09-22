@@ -2,13 +2,22 @@ import os
 from random import randint
 from unittest.mock import PropertyMock, patch
 
+import numpy as np
 import pytest
 
 from unstructured_inference.constants import ElementType
 from unstructured_inference.inference import elements
-from unstructured_inference.inference.elements import Rectangle, TextRegion, ImageTextRegion
+from unstructured_inference.inference.elements import (
+    ImageTextRegion,
+    Rectangle,
+    TextRegion,
+    TextRegions,
+)
 from unstructured_inference.inference.layoutelement import (
     LayoutElement,
+    LayoutElements,
+    clean_layoutelements,
+    clean_layoutelements_for_class,
     merge_inferred_layout_with_extracted_layout,
     partition_groups_from_regions,
     separate,
@@ -29,6 +38,30 @@ def rand_rect(size=10):
     x1 = randint(0, 30 - size)
     y1 = randint(0, 30 - size)
     return elements.Rectangle(x1, y1, x1 + size, y1 + size)
+
+
+@pytest.fixture()
+def test_layoutelements():
+    coords = np.array(
+        [
+            [0.6, 0.6, 0.65, 0.65],  # One little table nested inside all the others
+            [0.5, 0.5, 0.7, 0.7],  # One nested table
+            [0, 0, 1, 1],  # Big table
+            [0.01, 0.01, 1.01, 1.01],
+            [0.02, 0.02, 1.02, 1.02],
+            [0.03, 0.03, 1.03, 1.03],
+            [0.04, 0.04, 1.04, 1.04],
+            [0.05, 0.05, 1.05, 1.05],
+            [2, 2, 3, 3],  # Big table
+        ],
+    )
+    element_class_ids = np.array([1, 1, 1, 0, 0, 0, 0, 0, 2])
+    class_map = {0: "type0", 1: "type1", 2: "type2"}
+    return LayoutElements(
+        element_coords=coords,
+        element_class_ids=element_class_ids,
+        element_class_id_map=class_map,
+    )
 
 
 @pytest.mark.parametrize(
@@ -111,12 +144,21 @@ def test_minimal_containing_rect():
 
 
 def test_partition_groups_from_regions(mock_embedded_text_regions):
-    words = mock_embedded_text_regions
+    words = TextRegions.from_list(mock_embedded_text_regions)
     groups = partition_groups_from_regions(words)
     assert len(groups) == 1
-    sorted_groups = sorted(groups, key=lambda group: group[0].bbox.y1)
-    text = "".join([el.text for el in sorted_groups[-1]])
+    text = "".join(groups[-1].texts)
     assert text.startswith("Layout")
+    # test backward compatibility
+    text = "".join([str(region) for region in groups[-1].as_list()])
+    assert text.startswith("Layout")
+
+
+def test_rectangle_padding():
+    rect = Rectangle(x1=0, y1=1, x2=3, y2=4)
+    padded = rect.pad(1)
+    assert (padded.x1, padded.y1, padded.x2, padded.y2) == (-1, 0, 4, 5)
+    assert (rect.x1, rect.y1, rect.x2, rect.y2) == (0, 1, 3, 4)
 
 
 def test_rectangle_area(monkeypatch):
@@ -284,3 +326,98 @@ def test_merge_inferred_layout_with_extracted_layout():
         page_image_size=(1700, 2200),
     )
     assert merged_layout == inferred_layout
+
+
+def test_clean_layoutelements(test_layoutelements):
+    elements = clean_layoutelements(test_layoutelements).as_list()
+    assert len(elements) == 2
+    assert (
+        elements[0].bbox.x1,
+        elements[0].bbox.y1,
+        elements[0].bbox.x2,
+        elements[0].bbox.x2,
+    ) == (0, 0, 1, 1)
+    assert (
+        elements[1].bbox.x1,
+        elements[1].bbox.y1,
+        elements[1].bbox.x2,
+        elements[1].bbox.x2,
+    ) == (2, 2, 3, 3)
+
+
+@pytest.mark.parametrize(
+    ("coords", "class_ids", "expected_coords", "expected_ids"),
+    [
+        ([[0, 0, 1, 1], [0, 0, 1, 1]], [0, 1], [[0, 0, 1, 1]], [0]),  # one box
+        (
+            [[0, 0, 1, 1], [0, 0, 1, 1], [1, 1, 2, 2]],
+            [0, 1, 0],
+            [[0, 0, 1, 1], [1, 1, 2, 2]],
+            [0, 0],
+        ),
+        (
+            [[0, 0, 1.4, 1.4], [0, 0, 1, 1], [0.4, 0, 1.4, 1], [1.2, 0, 1.4, 1]],
+            [0, 1, 1, 1],
+            [[0, 0, 1.4, 1.4]],
+            [0],
+        ),
+    ],
+)
+def test_clean_layoutelements_cases(
+    coords,
+    class_ids,
+    expected_coords,
+    expected_ids,
+):
+    coords = np.array(coords)
+    element_class_ids = np.array(class_ids)
+    elements = LayoutElements(element_coords=coords, element_class_ids=element_class_ids)
+
+    elements = clean_layoutelements(elements)
+    np.testing.assert_array_equal(elements.element_coords, expected_coords)
+    np.testing.assert_array_equal(elements.element_class_ids, expected_ids)
+
+
+@pytest.mark.parametrize(
+    ("coords", "class_ids", "class_to_filter", "expected_coords", "expected_ids"),
+    [
+        ([[0, 0, 1, 1], [0, 0, 1, 1]], [0, 1], 1, [[0, 0, 1, 1]], [1]),  # one box
+        (
+            [[0, 0, 1, 1], [0, 0, 1, 1], [1, 1, 2, 2]],  # one box
+            [0, 1, 0],
+            1,
+            [[0, 0, 1, 1], [1, 1, 2, 2]],
+            [1, 0],
+        ),
+        (
+            # a -> b, b -> c, but a not -> c
+            [[0, 0, 1.4, 1.4], [0, 0, 1, 1], [0.4, 0, 1.4, 1], [1.2, 0, 1.4, 1]],
+            [0, 1, 1, 1],
+            1,
+            [[0, 0, 1, 1], [1.2, 0, 1.4, 1], [0, 0, 1.4, 1.4]],
+            [1, 1, 0],
+        ),
+        (
+            # like the case above but a different filtering element type changes the results
+            [[0, 0, 1.4, 1.4], [0, 0, 1, 1], [0.4, 0, 1.4, 1], [1.2, 0, 1.4, 1]],
+            [0, 1, 1, 1],
+            0,
+            [[0, 0, 1.4, 1.4]],
+            [0],
+        ),
+    ],
+)
+def test_clean_layoutelements_for_class(
+    coords,
+    class_ids,
+    class_to_filter,
+    expected_coords,
+    expected_ids,
+):
+    coords = np.array(coords)
+    element_class_ids = np.array(class_ids)
+    elements = LayoutElements(element_coords=coords, element_class_ids=element_class_ids)
+
+    elements = clean_layoutelements_for_class(elements, element_class=class_to_filter)
+    np.testing.assert_array_equal(elements.element_coords, expected_coords)
+    np.testing.assert_array_equal(elements.element_class_ids, expected_ids)
