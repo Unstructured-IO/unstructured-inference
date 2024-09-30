@@ -1,3 +1,7 @@
+## 0.7.38-dev0
+
+* fix: Correctly assign mutable default value to variable in `TextRegions` class
+
 ## 0.7.37
 
 * refactor: remove layout analysis related code
