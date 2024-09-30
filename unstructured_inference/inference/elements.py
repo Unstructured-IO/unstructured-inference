@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Optional, Union
 
@@ -209,7 +209,7 @@ class TextRegion:
 @dataclass
 class TextRegions:
     element_coords: np.ndarray
-    texts: np.ndarray = np.array([])
+    texts: np.ndarray = field(default_factory=lambda: np.array([]))
     source: Source | None = None
 
     def __post_init__(self):
