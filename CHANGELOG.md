@@ -1,4 +1,4 @@
-## 0.7.38-dev0
+## 0.7.38
 
 * fix: Correctly assign mutable default value to variable in `TextRegions` class
 
