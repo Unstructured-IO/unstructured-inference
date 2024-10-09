@@ -1,3 +1,7 @@
+## 0.7.39
+
+* fix: Correctly assign mutable default value to variable in `LayoutElements` class
+
 ## 0.7.38
 
 * fix: Correctly assign mutable default value to variable in `TextRegions` class
