@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Collection, Iterable, List, Optional
 
 import numpy as np
@@ -30,8 +30,8 @@ EPSILON_AREA = 1e-7
 
 @dataclass
 class LayoutElements(TextRegions):
-    element_probs: np.ndarray = np.array([])
-    element_class_ids: np.ndarray = np.array([])
+    element_probs: np.ndarray = field(default_factory=lambda: np.array([]))
+    element_class_ids: np.ndarray = field(default_factory=lambda: np.array([]))
     element_class_id_map: dict[int, str] | None = None
 
     def __post_init__(self):
