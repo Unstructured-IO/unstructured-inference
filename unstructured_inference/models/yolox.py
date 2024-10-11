@@ -137,7 +137,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 
         return LayoutElements(
             element_coords=sorted_dets[:, :4],
-            element_probs=sorted_dets[:, 4].astype(int),
+            element_probs=sorted_dets[:, 4].astype(float),
             element_class_ids=sorted_dets[:, 5].astype(int),
             element_class_id_map=self.layout_classes,
             source=Source.YOLOX,
