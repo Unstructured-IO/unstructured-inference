@@ -1,3 +1,7 @@
+## 0.7.40
+
+* fix: store probabilities with `float` data type instead of `int`
+
 ## 0.7.39
 
 * fix: Correctly assign mutable default value to variable in `LayoutElements` class
