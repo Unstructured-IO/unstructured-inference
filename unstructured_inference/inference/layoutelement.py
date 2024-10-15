@@ -35,12 +35,11 @@ class LayoutElements(TextRegions):
     element_class_id_map: dict[int, str] | None = None
 
     def __post_init__(self):
-        if self.element_probs is not None:
-            self.element_probs = self.element_probs.astype(float)
         element_size = self.element_coords.shape[0]
         for attr in ("element_probs", "element_class_ids", "texts"):
             if getattr(self, attr).size == 0 and element_size:
                 setattr(self, attr, np.array([None] * element_size))
+        self.element_probs = self.element_probs.astype(float)
 
     def slice(self, indices) -> LayoutElements:
         """slice and return only selected indices"""
@@ -85,7 +84,7 @@ class LayoutElements(TextRegions):
                 text=text,
                 type=(
                     self.element_class_id_map[class_id]
-                    if class_id and self.element_class_id_map
+                    if class_id is not None and self.element_class_id_map
                     else None
                 ),
                 prob=prob,
@@ -98,6 +97,35 @@ class LayoutElements(TextRegions):
                 self.element_class_ids,
             )
         ]
+
+    @classmethod
+    def from_list(cls, elements: list[LayoutElement]):
+        """create LayoutElements from a list of LayoutElement objects; the objects must have the same
+        source"""
+        len_ele = len(elements)
+        coords = np.empty((len_ele, 4), dtype=float)
+        # text and probs can be Nones so use lists first then convert into array to avoid them being
+        # filled as nan
+        texts = []
+        class_probs = []
+        class_types = np.empty((len_ele,), dtype="object")
+
+        for i, element in enumerate(elements):
+            coords[i] = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
+            texts.append(element.text)
+            class_probs.append(element.prob)
+            class_types[i] = element.type
+
+        unique_ids, class_ids = np.unique(class_types, return_inverse=True)
+
+        return cls(
+            element_coords=coords,
+            texts=np.array(texts),
+            element_probs=np.array(class_probs),
+            element_class_ids=class_ids,
+            element_class_id_map=dict(zip(range(len(unique_ids)), unique_ids)),
+            source=elements[0].source,
+        )
 
 
 @dataclass
@@ -315,7 +343,7 @@ def partition_groups_from_regions(regions: TextRegions) -> List[TextRegions]:
     regions, each list corresponding with a group"""
     if len(regions) == 0:
         return []
-    padded_coords = regions.element_coords.copy()
+    padded_coords = regions.element_coords.copy().astype(float)
     v_pad = (regions.y2 - regions.y1) * inference_config.ELEMENTS_V_PADDING_COEF
     h_pad = (regions.x2 - regions.x1) * inference_config.ELEMENTS_H_PADDING_COEF
     padded_coords[:, 0] -= h_pad

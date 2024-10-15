@@ -421,3 +421,14 @@ def test_clean_layoutelements_for_class(
     elements = clean_layoutelements_for_class(elements, element_class=class_to_filter)
     np.testing.assert_array_equal(elements.element_coords, expected_coords)
     np.testing.assert_array_equal(elements.element_class_ids, expected_ids)
+
+
+def test_layoutelements_to_list_and_back(test_layoutelements):
+    back = LayoutElements.from_list(test_layoutelements.as_list())
+    np.testing.assert_array_equal(test_layoutelements.element_coords, back.element_coords)
+    np.testing.assert_array_equal(test_layoutelements.texts, back.texts)
+    assert all(np.isnan(back.element_probs))
+    assert [
+        test_layoutelements.element_class_id_map[idx]
+        for idx in test_layoutelements.element_class_ids
+    ] == [back.element_class_id_map[idx] for idx in back.element_class_ids]
