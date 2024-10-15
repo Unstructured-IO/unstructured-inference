@@ -100,8 +100,8 @@ class LayoutElements(TextRegions):
 
     @classmethod
     def from_list(cls, elements: list[LayoutElement]):
-        """create LayoutElements from a list of LayoutElement objects; the objects must have the same
-        source"""
+        """create LayoutElements from a list of LayoutElement objects; the objects must have the
+        same source"""
         len_ele = len(elements)
         coords = np.empty((len_ele, 4), dtype=float)
         # text and probs can be Nones so use lists first then convert into array to avoid them being
