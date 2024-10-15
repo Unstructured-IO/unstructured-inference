@@ -99,7 +99,7 @@ class LayoutElements(TextRegions):
         ]
 
     @classmethod
-    def from_list(cls, elements: list[LayoutElement]):
+    def from_list(cls, elements: list):
         """create LayoutElements from a list of LayoutElement objects; the objects must have the
         same source"""
         len_ele = len(elements)
