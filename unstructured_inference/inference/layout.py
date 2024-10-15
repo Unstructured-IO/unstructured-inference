@@ -51,6 +51,7 @@ class DocumentLayout:
         filename: str,
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         pdf_image_dpi: int = 200,
+        password:Optional[str] = None,
         **kwargs,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
@@ -62,6 +63,7 @@ class DocumentLayout:
                 pdf_image_dpi,
                 output_folder=temp_dir,
                 path_only=True,
+                password=password,
             )
             image_paths = cast(List[str], _image_paths)
             number_of_pages = len(image_paths)
@@ -89,6 +91,7 @@ class DocumentLayout:
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         fixed_layout: Optional[List[TextRegion]] = None,
+        password:Optional[str] = None,
         **kwargs,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from an image file."""
@@ -115,6 +118,7 @@ class DocumentLayout:
                 detection_model=detection_model,
                 element_extraction_model=element_extraction_model,
                 fixed_layout=fixed_layout,
+                password=password,
                 **kwargs,
             )
             pages.append(page)
@@ -133,6 +137,7 @@ class PageLayout:
         document_filename: Optional[Union[str, PurePath]] = None,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
+        password:Optional[str] = None,
     ):
         if detection_model is not None and element_extraction_model is not None:
             raise ValueError("Only one of detection_model and extraction_model should be passed.")
@@ -148,6 +153,7 @@ class PageLayout:
         self.element_extraction_model = element_extraction_model
         self.elements: Collection[LayoutElement] = []
         self.elements_array: LayoutElements | None = None
+        self.password = password
         # NOTE(alan): Dropped LocationlessLayoutElement that was created for chipper - chipper has
         # locations now and if we need to support LayoutElements without bounding boxes we can make
         # the bbox property optional
@@ -291,6 +297,7 @@ class PageLayout:
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         fixed_layout: Optional[List[TextRegion]] = None,
+        password:Optional[str] = None,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
 
@@ -299,6 +306,7 @@ class PageLayout:
             image=image,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
+            password=password,
         )
         # FIXME (yao): refactor the other methods so they all return elements like the third route
         if page.element_extraction_model is not None:
@@ -325,6 +333,7 @@ class PageLayout:
 def process_data_with_model(
     data: BinaryIO,
     model_name: Optional[str],
+    password: Optional[str] = None,
     **kwargs: Any,
 ) -> DocumentLayout:
     """Process PDF as file-like object `data` into a `DocumentLayout`.
@@ -339,6 +348,7 @@ def process_data_with_model(
         layout = process_file_with_model(
             file_path,
             model_name,
+            password=password,
             **kwargs,
         )
 
@@ -351,6 +361,7 @@ def process_file_with_model(
     is_image: bool = False,
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     pdf_image_dpi: int = 200,
+    password: Optional[str] = None,
     **kwargs: Any,
 ) -> DocumentLayout:
     """Processes pdf file with name filename into a DocumentLayout by using a model identified by
@@ -370,6 +381,7 @@ def process_file_with_model(
             filename,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
+            password=password,
             **kwargs,
         )
         if is_image
@@ -379,6 +391,7 @@ def process_file_with_model(
             element_extraction_model=element_extraction_model,
             fixed_layouts=fixed_layouts,
             pdf_image_dpi=pdf_image_dpi,
+            password=password,
             **kwargs,
         )
     )
@@ -390,6 +403,7 @@ def convert_pdf_to_image(
     dpi: int = 200,
     output_folder: Optional[Union[str, PurePath]] = None,
     path_only: bool = False,
+    password: Optional[str] = None,
 ) -> Union[List[Image.Image], List[str]]:
     """Get the image renderings of the pdf pages using pdf2image"""
 
@@ -402,12 +416,14 @@ def convert_pdf_to_image(
             dpi=dpi,
             output_folder=output_folder,
             paths_only=path_only,
+            userpw=password,
         )
     else:
         images = pdf2image.convert_from_path(
             filename,
             dpi=dpi,
             paths_only=path_only,
+            userpw=password,
         )
 
     return images
