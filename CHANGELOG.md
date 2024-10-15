@@ -1,3 +1,8 @@
+## 0.7.41
+
+* fix: fix incorrect type casting with higher versions of `numpy` when substracting a `float` from an `int` array
+* fix: fix a bug where class id 0 becomes class type `None` when calling `LayoutElements.as_list()`
+
 ## 0.7.40
 
 * fix: store probabilities with `float` data type instead of `int`
