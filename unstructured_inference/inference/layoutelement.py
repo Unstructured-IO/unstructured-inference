@@ -39,7 +39,23 @@ class LayoutElements(TextRegions):
         for attr in ("element_probs", "element_class_ids", "texts"):
             if getattr(self, attr).size == 0 and element_size:
                 setattr(self, attr, np.array([None] * element_size))
+
         self.element_probs = self.element_probs.astype(float)
+
+    def __eq__(self, other: LayoutElements) -> bool:
+        mask = ~np.isnan(self.element_probs)
+        other_mask = ~np.isnan(other.element_probs)
+        return (
+            np.array_equal(self.element_coords, other.element_coords)
+            and np.array_equal(self.texts, other.texts)
+            and np.array_equal(mask, other_mask)
+            and np.array_equal(self.element_probs[mask], other.element_probs[mask])
+            and (
+                [self.element_class_id_map[idx] for idx in self.element_class_ids]
+                == [other.element_class_id_map[idx] for idx in other.element_class_ids]
+            )
+            and self.source == other.source
+        )
 
     def slice(self, indices) -> LayoutElements:
         """slice and return only selected indices"""
@@ -87,7 +103,7 @@ class LayoutElements(TextRegions):
                     if class_id is not None and self.element_class_id_map
                     else None
                 ),
-                prob=prob,
+                prob=None if np.isnan(prob) else prob,
                 source=self.source,
             )
             for (x1, y1, x2, y2), text, prob, class_id in zip(
@@ -114,9 +130,10 @@ class LayoutElements(TextRegions):
             coords[i] = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
             texts.append(element.text)
             class_probs.append(element.prob)
-            class_types[i] = element.type
+            class_types[i] = element.type or "None"
 
         unique_ids, class_ids = np.unique(class_types, return_inverse=True)
+        unique_ids[unique_ids == "None"] = None
 
         return cls(
             element_coords=coords,
