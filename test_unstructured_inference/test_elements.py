@@ -143,8 +143,10 @@ def test_minimal_containing_rect():
         assert rect2.is_in(big_rect)
 
 
-def test_partition_groups_from_regions(mock_embedded_text_regions):
+@pytest.mark.parametrize("coord_type", [int, float])
+def test_partition_groups_from_regions(mock_embedded_text_regions, coord_type):
     words = TextRegions.from_list(mock_embedded_text_regions)
+    words.element_coords = words.element_coords.astype(coord_type)
     groups = partition_groups_from_regions(words)
     assert len(groups) == 1
     text = "".join(groups[-1].texts)
