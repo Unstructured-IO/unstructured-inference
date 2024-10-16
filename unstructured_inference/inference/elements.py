@@ -237,7 +237,7 @@ class TextRegions:
         ]
 
     @classmethod
-    def from_list(cls, regions: list[TextRegion]):
+    def from_list(cls, regions: list):
         """create TextRegions from a list of TextRegion objects; the objects must have the same
         source"""
         coords, texts = [], []

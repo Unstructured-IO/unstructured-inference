@@ -143,8 +143,10 @@ def test_minimal_containing_rect():
         assert rect2.is_in(big_rect)
 
 
-def test_partition_groups_from_regions(mock_embedded_text_regions):
+@pytest.mark.parametrize("coord_type", [int, float])
+def test_partition_groups_from_regions(mock_embedded_text_regions, coord_type):
     words = TextRegions.from_list(mock_embedded_text_regions)
+    words.element_coords = words.element_coords.astype(coord_type)
     groups = partition_groups_from_regions(words)
     assert len(groups) == 1
     text = "".join(groups[-1].texts)
@@ -421,3 +423,14 @@ def test_clean_layoutelements_for_class(
     elements = clean_layoutelements_for_class(elements, element_class=class_to_filter)
     np.testing.assert_array_equal(elements.element_coords, expected_coords)
     np.testing.assert_array_equal(elements.element_class_ids, expected_ids)
+
+
+def test_layoutelements_to_list_and_back(test_layoutelements):
+    back = LayoutElements.from_list(test_layoutelements.as_list())
+    np.testing.assert_array_equal(test_layoutelements.element_coords, back.element_coords)
+    np.testing.assert_array_equal(test_layoutelements.texts, back.texts)
+    assert all(np.isnan(back.element_probs))
+    assert [
+        test_layoutelements.element_class_id_map[idx]
+        for idx in test_layoutelements.element_class_ids
+    ] == [back.element_class_id_map[idx] for idx in back.element_class_ids]
