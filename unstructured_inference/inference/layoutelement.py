@@ -32,7 +32,7 @@ EPSILON_AREA = 1e-7
 class LayoutElements(TextRegions):
     element_probs: np.ndarray = field(default_factory=lambda: np.array([]))
     element_class_ids: np.ndarray = field(default_factory=lambda: np.array([]))
-    element_class_id_map: dict[int, str] | None = None
+    element_class_id_map: dict[int, str] = field(default_factory=dict)
 
     def __post_init__(self):
         element_size = self.element_coords.shape[0]
@@ -42,7 +42,10 @@ class LayoutElements(TextRegions):
 
         self.element_probs = self.element_probs.astype(float)
 
-    def __eq__(self, other: LayoutElements) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, LayoutElements):
+            return NotImplemented
+
         mask = ~np.isnan(self.element_probs)
         other_mask = ~np.isnan(other.element_probs)
         return (
