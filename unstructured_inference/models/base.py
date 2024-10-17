@@ -4,8 +4,6 @@ import json
 import os
 from typing import Dict, Optional, Tuple, Type
 
-from unstructured_inference.models.chipper import MODEL_TYPES as CHIPPER_MODEL_TYPES
-from unstructured_inference.models.chipper import UnstructuredChipperModel
 from unstructured_inference.models.detectron2onnx import (
     MODEL_TYPES as DETECTRON2_ONNX_MODEL_TYPES,
 )
@@ -28,12 +26,7 @@ def get_default_model_mappings() -> Tuple[
     return {
         **{name: UnstructuredDetectronONNXModel for name in DETECTRON2_ONNX_MODEL_TYPES},
         **{name: UnstructuredYoloXModel for name in YOLOX_MODEL_TYPES},
-        **{name: UnstructuredChipperModel for name in CHIPPER_MODEL_TYPES},
-    }, {
-        **DETECTRON2_ONNX_MODEL_TYPES,
-        **YOLOX_MODEL_TYPES,
-        **CHIPPER_MODEL_TYPES,
-    }
+    }, {**DETECTRON2_ONNX_MODEL_TYPES, **YOLOX_MODEL_TYPES}
 
 
 model_class_map, model_config_map = get_default_model_mappings()

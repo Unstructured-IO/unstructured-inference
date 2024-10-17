@@ -1,3 +1,7 @@
+## 0.7.42
+
+* Remove chipper model
+
 ## 0.7.41
 
 * fix: fix incorrect type casting with higher versions of `numpy` when substracting a `float` from an `int` array
