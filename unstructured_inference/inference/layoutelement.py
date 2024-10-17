@@ -10,7 +10,6 @@ from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.constants import (
-    CHIPPER_VERSIONS,
     FULL_PAGE_REGION_THRESHOLD,
     ElementType,
     Source,
@@ -222,8 +221,6 @@ def merge_inferred_layout_with_extracted_layout(
                 continue
         region_matched = False
         for inferred_region in inferred_layout:
-            if inferred_region.source in CHIPPER_VERSIONS:
-                continue
 
             if inferred_region.bbox.intersects(extracted_region.bbox):
                 same_bbox = region_bounding_boxes_are_almost_the_same(
