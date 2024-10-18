@@ -73,13 +73,15 @@ class LayoutElements(TextRegions):
     @classmethod
     def concatenate(cls, groups: Iterable[LayoutElements]) -> LayoutElements:
         """concatenate a sequence of LayoutElements in order as one LayoutElements"""
-        coords, texts, probs, class_ids = [], [], [], []
+        coords, texts, probs, class_ids, sources = [], [], [], [], []
         class_id_map = {}
         for group in groups:
             coords.append(group.element_coords)
             texts.append(group.texts)
             probs.append(group.element_probs)
             class_ids.append(group.element_class_ids)
+            if group.source:
+                sources.append(group.source)
             if group.element_class_id_map:
                 class_id_map.update(group.element_class_id_map)
         return cls(
@@ -88,7 +90,7 @@ class LayoutElements(TextRegions):
             element_probs=np.concatenate(probs),
             element_class_ids=np.concatenate(class_ids),
             element_class_id_map=class_id_map,
-            source=group.source,
+            source=sources[0] if sources else None,
         )
 
     def as_list(self):
@@ -439,7 +441,10 @@ def clean_layoutelements(elements: LayoutElements, subregion_threshold: float = 
     final_coords = sorted_coords[mask]
     sorted_by_y1 = np.argsort(final_coords[:, 1])
 
-    final_attrs: dict[str, Any] = {"element_class_id_map": elements.element_class_id_map}
+    final_attrs: dict[str, Any] = {
+        "element_class_id_map": elements.element_class_id_map,
+        "source": elements.source,
+    }
     for attr in ("element_class_ids", "element_probs", "texts"):
         if (original_attr := getattr(elements, attr)) is None:
             continue
