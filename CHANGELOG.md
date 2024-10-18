@@ -1,6 +1,7 @@
 ## 0.7.42
 
 * fix: fix missing source after cleaning layout elements
+* Remove chipper model
 
 ## 0.7.41
 
