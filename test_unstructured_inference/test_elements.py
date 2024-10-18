@@ -61,6 +61,7 @@ def test_layoutelements():
         element_coords=coords,
         element_class_ids=element_class_ids,
         element_class_id_map=class_map,
+        source="yolox",
     )
 
 
@@ -345,6 +346,7 @@ def test_clean_layoutelements(test_layoutelements):
         elements[1].bbox.x2,
         elements[1].bbox.x2,
     ) == (2, 2, 3, 3)
+    assert elements[0].source == elements[1].source == "yolox"
 
 
 @pytest.mark.parametrize(
