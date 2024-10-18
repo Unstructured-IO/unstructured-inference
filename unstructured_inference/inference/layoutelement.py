@@ -90,7 +90,7 @@ class LayoutElements(TextRegions):
             element_probs=np.concatenate(probs),
             element_class_ids=np.concatenate(class_ids),
             element_class_id_map=class_id_map,
-            source=sources[0],
+            source=sources[0] if sources else None,
         )
 
     def as_list(self):
