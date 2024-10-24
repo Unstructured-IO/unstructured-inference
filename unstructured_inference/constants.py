@@ -5,19 +5,7 @@ class Source(Enum):
     YOLOX = "yolox"
     DETECTRON2_ONNX = "detectron2_onnx"
     DETECTRON2_LP = "detectron2_lp"
-    CHIPPER = "chipper"
-    CHIPPERV1 = "chipperv1"
-    CHIPPERV2 = "chipperv2"
-    CHIPPERV3 = "chipperv3"
     MERGED = "merged"
-
-
-CHIPPER_VERSIONS = (
-    Source.CHIPPER,
-    Source.CHIPPERV1,
-    Source.CHIPPERV2,
-    Source.CHIPPERV3,
-)
 
 
 class ElementType:
