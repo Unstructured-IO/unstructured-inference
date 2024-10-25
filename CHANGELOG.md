@@ -1,5 +1,5 @@
 ## 0.8.1
-* fix: fix a bug caused by making LayoutElements subject from empty page
+* fix: fix a bug caused by calling LayoutElements.from_list() with empty list
 
 ## 0.8.0
 
