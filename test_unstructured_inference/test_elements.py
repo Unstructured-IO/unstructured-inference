@@ -436,3 +436,8 @@ def test_layoutelements_to_list_and_back(test_layoutelements):
         test_layoutelements.element_class_id_map[idx]
         for idx in test_layoutelements.element_class_ids
     ] == [back.element_class_id_map[idx] for idx in back.element_class_ids]
+
+
+def test_layoutelements_from_list_no_elements():
+    back = LayoutElements.from_list(elements=[])
+    assert back.source is None
