@@ -1,3 +1,6 @@
+## 0.8.1
+* fix: fix list index out of range error caused by calling LayoutElements.from_list() with empty list
+
 ## 0.8.0
 
 * fix: fix missing source after cleaning layout elements
