@@ -145,7 +145,7 @@ class LayoutElements(TextRegions):
             element_probs=np.array(class_probs),
             element_class_ids=class_ids,
             element_class_id_map=dict(zip(range(len(unique_ids)), unique_ids)),
-            source=elements[0].source,
+            source=elements[0].source if len_ele else None,
         )
 
 

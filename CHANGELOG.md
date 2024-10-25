@@ -1,3 +1,6 @@
+## 0.8.1
+* fix: fix a bug caused by making LayoutElements subject from empty page
+
 ## 0.8.0
 
 * fix: fix missing source after cleaning layout elements
