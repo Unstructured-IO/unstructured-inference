@@ -91,7 +91,6 @@ class DocumentLayout:
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         fixed_layout: Optional[List[TextRegion]] = None,
-        password:Optional[str] = None,
         **kwargs,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from an image file."""
@@ -118,7 +117,6 @@ class DocumentLayout:
                 detection_model=detection_model,
                 element_extraction_model=element_extraction_model,
                 fixed_layout=fixed_layout,
-                password=password,
                 **kwargs,
             )
             pages.append(page)
@@ -297,7 +295,6 @@ class PageLayout:
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         fixed_layout: Optional[List[TextRegion]] = None,
-        password:Optional[str] = None,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
 
@@ -306,7 +303,6 @@ class PageLayout:
             image=image,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
-            password=password,
         )
         # FIXME (yao): refactor the other methods so they all return elements like the third route
         if page.element_extraction_model is not None:
