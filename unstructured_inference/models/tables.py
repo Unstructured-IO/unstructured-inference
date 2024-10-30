@@ -5,6 +5,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
+import os
 import cv2
 import numpy as np
 import torch
@@ -139,7 +140,12 @@ def load_agent():
 
     if not hasattr(tables_agent, "model"):
         logger.info("Loading the Table agent ...")
-        tables_agent.initialize("microsoft/table-transformer-structure-recognition")
+        if os.environ.get("UNSTRUCTURED_USE_MODELSCOPE", "false") == "true":
+            from modelscope import snapshot_download
+            model_dir = snapshot_download("AI-ModelScope/table-transformer-structure-recognition-v1.1-all")
+            tables_agent.initialize(model_dir)
+        else:
+            tables_agent.initialize("microsoft/table-transformer-structure-recognition")
 
     return
 
