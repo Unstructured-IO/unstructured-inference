@@ -1,5 +1,6 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
+import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
@@ -139,7 +140,14 @@ def load_agent():
 
     if not hasattr(tables_agent, "model"):
         logger.info("Loading the Table agent ...")
-        tables_agent.initialize("microsoft/table-transformer-structure-recognition")
+        if os.environ.get("UNSTRUCTURED_USE_MODELSCOPE", "false") == "true":
+            from modelscope import snapshot_download
+            model_dir = snapshot_download(
+                "AI-ModelScope/table-transformer-structure-recognition-v1.1-all"
+            )
+            tables_agent.initialize(model_dir)
+        else:
+            tables_agent.initialize("microsoft/table-transformer-structure-recognition")
 
     return
 

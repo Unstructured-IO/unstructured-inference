@@ -112,4 +112,12 @@ def download_if_needed_and_get_local_path(path_or_repo: str, filename: str, **kw
     if os.path.exists(full_path):
         return full_path
     else:
-        return hf_hub_download(path_or_repo, filename, **kwargs)
+        if os.environ.get("UNSTRUCTURED_USE_MODELSCOPE", "false") == "true":
+            from modelscope import snapshot_download
+            path_or_repo = path_or_repo.replace(
+                "unstructuredio/", "AI-ModelScope/")
+            model_dir = snapshot_download(
+                path_or_repo, allow_patterns=filename)
+            return os.path.join(model_dir, filename)
+        else:
+            return hf_hub_download(path_or_repo, filename, **kwargs)

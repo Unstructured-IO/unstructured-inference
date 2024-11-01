@@ -61,6 +61,9 @@ The inference pipeline operates by finding text elements in a document page usin
 
 We offer several detection models including [Detectron2](https://github.com/facebookresearch/detectron2) and [YOLOX](https://github.com/Megvii-BaseDetection/YOLOX).
 
+> [!NOTE]  
+> By default, `unstructured_inference` downloads models from [HuggingFace](https://huggingface.co/). If you would like to use models from [ModelScope](https://modelscope.cn/), set the environment variable `UNSTRUCTURED_USE_MODELSCOPE=true` before initialization.
+
 ### Using a non-default model
 
 When doing inference, an alternate model can be used by passing the model object to the ingestion method via the `model` parameter. The `get_model` function can be used to construct one of our out-of-the-box models from a keyword, e.g.:
