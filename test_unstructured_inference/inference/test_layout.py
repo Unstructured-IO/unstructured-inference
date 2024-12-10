@@ -563,6 +563,7 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
             fixed_layouts=None,
+            password=None,
             pdf_image_dpi=200,
         )
 
