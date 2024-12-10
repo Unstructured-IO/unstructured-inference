@@ -377,7 +377,6 @@ def process_file_with_model(
             filename,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
-            password=password,
             **kwargs,
         )
         if is_image
