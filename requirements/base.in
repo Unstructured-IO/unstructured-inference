@@ -2,7 +2,7 @@
 layoutparser
 python-multipart
 huggingface-hub
-numpy<2
+numpy<3
 opencv-python!=4.7.0.68
 onnx
 onnxruntime>=1.17.0
