@@ -4,9 +4,9 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
 import cv2
+import logging
 import numpy as np
 import onnxruntime
-from onnxruntime.capi import _pybind_state as C
 from PIL import Image as PILImage
 
 from unstructured_inference.constants import ElementType, Source
@@ -20,6 +20,7 @@ from unstructured_inference.utils import (
     download_if_needed_and_get_local_path,
 )
 
+logger = logging.getLogger(__name__)
 YOLOX_LABEL_MAP = {
     0: ElementType.CAPTION,
     1: ElementType.FOOTNOTE,
@@ -72,13 +73,18 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         """Start inference session for YoloX model."""
         self.model_path = model_path
 
-        available_providers = C.get_available_providers()
+        available_providers = onnxruntime.get_available_providers()
         ordered_providers = [
             "TensorrtExecutionProvider",
             "CUDAExecutionProvider",
             "CPUExecutionProvider",
         ]
         providers = [provider for provider in ordered_providers if provider in available_providers]
+        logger.info("Available ONNX runtime providers: %r", providers)
+        if "CUDAExecutionProvider" not in providers:
+            logger.info("If you expected to see CUDAExecutionProvider and it is not there, "
+                        "you may need to install the appropriate version of onnxruntime-gpu "
+                        "for your CUDA toolkit.")
 
         self.model = onnxruntime.InferenceSession(
             model_path,
