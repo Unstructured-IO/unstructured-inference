@@ -74,7 +74,7 @@ class LayoutElements(TextRegions):
     def concatenate(cls, groups: Iterable[LayoutElements]) -> LayoutElements:
         """concatenate a sequence of LayoutElements in order as one LayoutElements"""
         coords, texts, probs, class_ids, sources = [], [], [], [], []
-        class_id_reverse_map = {}
+        class_id_reverse_map: dict[str, int] = {}
         for group in groups:
             coords.append(group.element_coords)
             texts.append(group.texts)
