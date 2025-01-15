@@ -74,22 +74,31 @@ class LayoutElements(TextRegions):
     def concatenate(cls, groups: Iterable[LayoutElements]) -> LayoutElements:
         """concatenate a sequence of LayoutElements in order as one LayoutElements"""
         coords, texts, probs, class_ids, sources = [], [], [], [], []
-        class_id_map = {}
+        class_id_reverse_map: dict[str, int] = {}
         for group in groups:
             coords.append(group.element_coords)
             texts.append(group.texts)
             probs.append(group.element_probs)
-            class_ids.append(group.element_class_ids)
             if group.source:
                 sources.append(group.source)
+
+            idx = group.element_class_ids.copy()
             if group.element_class_id_map:
-                class_id_map.update(group.element_class_id_map)
+                for class_id, class_name in group.element_class_id_map.items():
+                    if class_name in class_id_reverse_map:
+                        idx[group.element_class_ids == class_id] = class_id_reverse_map[class_name]
+                        continue
+                    new_id = len(class_id_reverse_map)
+                    class_id_reverse_map[class_name] = new_id
+                    idx[group.element_class_ids == class_id] = new_id
+            class_ids.append(idx)
+
         return cls(
             element_coords=np.concatenate(coords),
             texts=np.concatenate(texts),
             element_probs=np.concatenate(probs),
             element_class_ids=np.concatenate(class_ids),
-            element_class_id_map=class_id_map,
+            element_class_id_map={v: k for k, v in class_id_reverse_map.items()},
             source=sources[0] if sources else None,
         )
 

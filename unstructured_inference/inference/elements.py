@@ -244,7 +244,8 @@ class TextRegions:
         for region in regions:
             coords.append((region.bbox.x1, region.bbox.y1, region.bbox.x2, region.bbox.y2))
             texts.append(region.text)
-        return cls(element_coords=np.array(coords), texts=np.array(texts), source=regions[0].source)
+        source = regions[0].source if regions else None
+        return cls(element_coords=np.array(coords), texts=np.array(texts), source=source)
 
     def __len__(self):
         return self.element_coords.shape[0]
