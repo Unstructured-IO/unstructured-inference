@@ -1,3 +1,9 @@
+## 0.8.3
+
+* fix: removed `layoutelement.from_lp_textblock()` and related tests as it's not used
+* fix: update requirements to drop `layoutparser` lib
+* fix: update `README.md` to remove layoutparser model zoo support note
+
 ## 0.8.2
 
 * fix: fix bug when an empty list is passed into `TextRegions.from_list` triggers `IndexError`

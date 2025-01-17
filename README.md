@@ -72,10 +72,6 @@ model = get_model("yolox")
 layout = DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf", detection_model=model)
 ```
 
-### Using models from the layoutparser model zoo
-
-The `UnstructuredDetectronModel` class in `unstructured_inference.modelts.detectron2` uses the `faster_rcnn_R_50_FPN_3x` model pretrained on DocLayNet, but by using different construction parameters, any model in the `layoutparser` [model zoo](https://layout-parser.readthedocs.io/en/latest/notes/modelzoo.html) can be used. `UnstructuredDetectronModel` is a light wrapper around the `layoutparser` `Detectron2LayoutModel` object, and accepts the same arguments. See [layoutparser documentation](https://layout-parser.readthedocs.io/en/latest/api_doc/models.html#layoutparser.models.Detectron2LayoutModel) for details.
-
 ### Using your own model
 
 Any detection model can be used for in the `unstructured_inference` pipeline by wrapping the model in the `UnstructuredObjectDetectionModel` class. To integrate with the `DocumentLayout` class, a subclass of `UnstructuredObjectDetectionModel` must have a `predict` method that accepts a `PIL.Image.Image` and returns a list of `LayoutElement`s, and an `initialize` method, which loads the model and prepares it for inference.
