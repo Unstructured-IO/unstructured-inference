@@ -6,12 +6,18 @@
 #
 certifi==2024.12.14
     # via requests
+cffi==1.17.1
+    # via cryptography
 charset-normalizer==3.4.1
-    # via requests
+    # via
+    #   pdfminer-six
+    #   requests
 coloredlogs==15.0.1
     # via onnxruntime
 contourpy==1.3.0
     # via matplotlib
+cryptography==44.0.0
+    # via pdfminer-six
 cycler==0.12.1
     # via matplotlib
 filelock==3.16.1
@@ -59,6 +65,8 @@ numpy==1.26.4
     #   onnx
     #   onnxruntime
     #   opencv-python
+    #   pandas
+    #   scipy
     #   torchvision
     #   transformers
 onnx==1.17.0
@@ -73,20 +81,35 @@ packaging==24.2
     #   matplotlib
     #   onnxruntime
     #   transformers
+pandas==2.2.3
+    # via -r requirements/base.in
+pdfminer-six==20231228
+    # via pdfplumber
+pdfplumber==0.11.5
+    # via -r requirements/base.in
 pillow==11.1.0
     # via
     #   matplotlib
+    #   pdfplumber
     #   torchvision
 protobuf==5.29.3
     # via
     #   onnx
     #   onnxruntime
+pycparser==2.22
+    # via cffi
 pyparsing==3.2.1
     # via matplotlib
+pypdfium2==4.30.1
+    # via pdfplumber
 python-dateutil==2.9.0.post0
-    # via matplotlib
+    # via
+    #   matplotlib
+    #   pandas
 python-multipart==0.0.20
     # via -r requirements/base.in
+pytz==2024.2
+    # via pandas
 pyyaml==6.0.2
     # via
     #   huggingface-hub
@@ -104,6 +127,8 @@ safetensors==0.5.2
     # via
     #   timm
     #   transformers
+scipy==1.13.1
+    # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
 sympy==1.13.1
@@ -131,6 +156,8 @@ typing-extensions==4.12.2
     # via
     #   huggingface-hub
     #   torch
+tzdata==2024.2
+    # via pandas
 urllib3==2.3.0
     # via requests
 zipp==3.21.0
