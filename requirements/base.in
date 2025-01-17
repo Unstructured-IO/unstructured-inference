@@ -1,5 +1,4 @@
 -c constraints.in
-layoutparser
 python-multipart
 huggingface-hub
 numpy<2
