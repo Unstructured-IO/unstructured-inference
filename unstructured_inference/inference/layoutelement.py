@@ -11,7 +11,6 @@ from unstructured_inference.config import inference_config
 from unstructured_inference.constants import (
     FULL_PAGE_REGION_THRESHOLD,
     ElementType,
-    Source,
 )
 from unstructured_inference.inference.elements import (
     ImageTextRegion,
