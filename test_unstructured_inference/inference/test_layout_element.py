@@ -1,6 +1,3 @@
-
-
-
 from unstructured_inference.constants import Source
 from unstructured_inference.inference.layoutelement import LayoutElement, TextRegion
 
@@ -22,5 +19,3 @@ def test_layout_element_from_region(mock_rectangle):
     region = TextRegion(bbox=mock_rectangle)
 
     assert LayoutElement.from_region(region) == expected
-
-
