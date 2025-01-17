@@ -1,4 +1,4 @@
-from unstructured_inference.constants import Source
+
 from unstructured_inference.inference.layoutelement import LayoutElement, TextRegion
 
 
