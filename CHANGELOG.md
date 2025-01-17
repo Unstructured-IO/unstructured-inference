@@ -1,3 +1,8 @@
+## 0.8.3
+
+* feat: add `text_as_html` and `table_as_cells` to `LayoutElements` class as new attributes
+* feat: replace the single valueed `source` attribute from `TextRegions` and `LayoutElements` with an array attribute `sources`
+
 ## 0.8.2
 
 * fix: fix bug when an empty list is passed into `TextRegions.from_list` triggers `IndexError`
