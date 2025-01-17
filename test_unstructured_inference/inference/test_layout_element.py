@@ -1,4 +1,3 @@
-
 from unstructured_inference.inference.layoutelement import LayoutElement, TextRegion
 
 
