@@ -225,16 +225,12 @@ class TextRegions:
         )
 
     def iter_elements(self):
-        if self.texts is None:
-            for (x1, y1, x2, y2) in zip(self.element_coords, self.sources):
-                yield TextRegion.from_coords(x1, y1, x2, y2, None, source)
-        else:
-            for (x1, y1, x2, y2), text, source in zip(
-                self.element_coords,
-                self.texts,
-                self.sources,
-            ):
-                yield TextRegion.from_coords(x1, y1, x2, y2, text, source)
+        for (x1, y1, x2, y2), text, source in zip(
+            self.element_coords,
+            self.texts,
+            self.sources,
+        ):
+            yield TextRegion.from_coords(x1, y1, x2, y2, text, source)
 
     def as_list(self):
         """return a list of LayoutElement for backward compatibility"""
