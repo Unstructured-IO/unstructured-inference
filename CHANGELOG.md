@@ -1,7 +1,13 @@
-## 0.8.3
+## 0.8.4
 
 * feat: add `text_as_html` and `table_as_cells` to `LayoutElements` class as new attributes
 * feat: replace the single valueed `source` attribute from `TextRegions` and `LayoutElements` with an array attribute `sources`
+
+## 0.8.3
+
+* fix: removed `layoutelement.from_lp_textblock()` and related tests as it's not used
+* fix: update requirements to drop `layoutparser` lib
+* fix: update `README.md` to remove layoutparser model zoo support note
 
 ## 0.8.2
 

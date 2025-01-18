@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from typing import Any, Collection, Iterable, List, Optional
 
 import numpy as np
-from layoutparser.elements.layout import TextBlock
 from pandas import DataFrame
 from scipy.sparse.csgraph import connected_components
 
@@ -12,7 +11,6 @@ from unstructured_inference.config import inference_config
 from unstructured_inference.constants import (
     FULL_PAGE_REGION_THRESHOLD,
     ElementType,
-    Source,
 )
 from unstructured_inference.inference.elements import (
     ImageTextRegion,
@@ -214,24 +212,6 @@ class LayoutElement(TextRegion):
         prob = region.prob if hasattr(region, "prob") else None
         source = region.source if hasattr(region, "source") else None
         return cls(text=text, source=source, type=type, prob=prob, bbox=region.bbox)
-
-    @classmethod
-    def from_lp_textblock(cls, textblock: TextBlock):
-        """Create LayoutElement from layoutparser TextBlock object."""
-        x1, y1, x2, y2 = textblock.coordinates
-        text = textblock.text
-        type = textblock.type
-        prob = textblock.score
-        return cls.from_coords(
-            x1,
-            y1,
-            x2,
-            y2,
-            text=text,
-            source=Source.DETECTRON2_LP,
-            type=type,
-            prob=prob,
-        )
 
 
 def merge_inferred_layout_with_extracted_layout(
