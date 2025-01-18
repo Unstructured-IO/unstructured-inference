@@ -120,6 +120,8 @@ class LayoutElements(TextRegions):
         )
 
     def iter_elements(self):
+        """iter elements as one LayoutElement per iteration; this returns a generator and has less
+        memory impact than the as_list method"""
         for (x1, y1, x2, y2), text, prob, class_id, source, text_as_html, table_as_cells in zip(
             self.element_coords,
             self.texts,

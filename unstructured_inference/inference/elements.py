@@ -225,6 +225,8 @@ class TextRegions:
         )
 
     def iter_elements(self):
+        """iter text regions as one TextRegion per iteration; this returns a generator and has less
+        memory impact than the as_list method"""
         for (x1, y1, x2, y2), text, source in zip(
             self.element_coords,
             self.texts,
