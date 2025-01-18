@@ -119,10 +119,17 @@ class LayoutElements(TextRegions):
             table_as_cells=np.concatenate(table_as_cells),
         )
 
-    def as_list(self):
-        """return a list of LayoutElement for backward compatibility"""
-        return [
-            LayoutElement.from_coords(
+    def iter_elements(self):
+        for (x1, y1, x2, y2), text, prob, class_id, source, text_as_html, table_as_cells in zip(
+            self.element_coords,
+            self.texts,
+            self.element_probs,
+            self.element_class_ids,
+            self.sources,
+            self.text_as_html,
+            self.table_as_cells,
+        ):
+            yield LayoutElement.from_coords(
                 x1,
                 y1,
                 x2,
@@ -138,16 +145,6 @@ class LayoutElements(TextRegions):
                 text_as_html=text_as_html,
                 table_as_cells=table_as_cells,
             )
-            for (x1, y1, x2, y2), text, prob, class_id, source, text_as_html, table_as_cells in zip(
-                self.element_coords,
-                self.texts,
-                self.element_probs,
-                self.element_class_ids,
-                self.sources,
-                self.text_as_html,
-                self.table_as_cells,
-            )
-        ]
 
     @classmethod
     def from_list(cls, elements: list):

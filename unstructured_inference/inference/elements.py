@@ -224,17 +224,21 @@ class TextRegions:
             sources=self.sources[indices],
         )
 
-    def as_list(self):
-        """return a list of TextRegion objects representing the data"""
+    def iter_elements(self):
         if self.texts is None:
-            return [
-                TextRegion.from_coords(x1, y1, x2, y2, None, source)
-                for (x1, y1, x2, y2) in zip(self.element_coords, self.sources)
-            ]
-        return [
-            TextRegion.from_coords(x1, y1, x2, y2, text, source)
-            for (x1, y1, x2, y2), text, source in zip(self.element_coords, self.texts, self.sources)
-        ]
+            for (x1, y1, x2, y2) in zip(self.element_coords, self.sources):
+                yield TextRegion.from_coords(x1, y1, x2, y2, None, source)
+        else:
+            for (x1, y1, x2, y2), text, source in zip(
+                self.element_coords,
+                self.texts,
+                self.sources,
+            ):
+                yield TextRegion.from_coords(x1, y1, x2, y2, text, source)
+
+    def as_list(self):
+        """return a list of LayoutElement for backward compatibility"""
+        return list(self.iter_elements())
 
     @classmethod
     def from_list(cls, regions: list):
