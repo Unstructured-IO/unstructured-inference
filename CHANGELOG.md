@@ -1,3 +1,7 @@
+## 0.8.4-dev0
+
+* feat: **Use password** to load PDF with all modes
+
 ## 0.8.3
 
 * fix: removed `layoutelement.from_lp_textblock()` and related tests as it's not used
