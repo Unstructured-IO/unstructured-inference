@@ -51,7 +51,7 @@ class DocumentLayout:
         filename: str,
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         pdf_image_dpi: int = 200,
-        password:Optional[str] = None,
+        password: Optional[str] = None,
         **kwargs,
     ) -> DocumentLayout:
         """Creates a DocumentLayout from a pdf file."""
@@ -135,7 +135,7 @@ class PageLayout:
         document_filename: Optional[Union[str, PurePath]] = None,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
-        password:Optional[str] = None,
+        password: Optional[str] = None,
     ):
         if detection_model is not None and element_extraction_model is not None:
             raise ValueError("Only one of detection_model and extraction_model should be passed.")
