@@ -30,10 +30,21 @@ class LayoutElements(TextRegions):
     element_probs: np.ndarray = field(default_factory=lambda: np.array([]))
     element_class_ids: np.ndarray = field(default_factory=lambda: np.array([]))
     element_class_id_map: dict[int, str] = field(default_factory=dict)
+    text_as_html: np.ndarray = field(default_factory=lambda: np.array([]))
+    table_as_cells: np.ndarray = field(default_factory=lambda: np.array([]))
 
     def __post_init__(self):
         element_size = self.element_coords.shape[0]
-        for attr in ("element_probs", "element_class_ids", "texts"):
+        # NOTE: maybe we should create an attribute _optional_attributes: list[str] to store this
+        # list
+        for attr in (
+            "element_probs",
+            "element_class_ids",
+            "texts",
+            "sources",
+            "text_as_html",
+            "table_as_cells",
+        ):
             if getattr(self, attr).size == 0 and element_size:
                 setattr(self, attr, np.array([None] * element_size))
 
@@ -54,7 +65,9 @@ class LayoutElements(TextRegions):
                 [self.element_class_id_map[idx] for idx in self.element_class_ids]
                 == [other.element_class_id_map[idx] for idx in other.element_class_ids]
             )
-            and self.source == other.source
+            and np.array_equal(self.sources[mask], other.sources[mask])
+            and np.array_equal(self.text_as_html[mask], other.text_as_html[mask])
+            and np.array_equal(self.table_as_cells[mask], other.table_as_cells[mask])
         )
 
     def slice(self, indices) -> LayoutElements:
@@ -62,23 +75,27 @@ class LayoutElements(TextRegions):
         return LayoutElements(
             element_coords=self.element_coords[indices],
             texts=self.texts[indices],
-            source=self.source,
+            sources=self.sources[indices],
             element_probs=self.element_probs[indices],
             element_class_ids=self.element_class_ids[indices],
             element_class_id_map=self.element_class_id_map,
+            text_as_html=self.text_as_html[indices],
+            table_as_cells=self.table_as_cells[indices],
         )
 
     @classmethod
     def concatenate(cls, groups: Iterable[LayoutElements]) -> LayoutElements:
         """concatenate a sequence of LayoutElements in order as one LayoutElements"""
         coords, texts, probs, class_ids, sources = [], [], [], [], []
+        text_as_html, table_as_cells = [], []
         class_id_reverse_map: dict[str, int] = {}
         for group in groups:
             coords.append(group.element_coords)
             texts.append(group.texts)
             probs.append(group.element_probs)
-            if group.source:
-                sources.append(group.source)
+            sources.append(group.sources)
+            text_as_html.append(group.text_as_html)
+            table_as_cells.append(group.table_as_cells)
 
             idx = group.element_class_ids.copy()
             if group.element_class_id_map:
@@ -97,13 +114,24 @@ class LayoutElements(TextRegions):
             element_probs=np.concatenate(probs),
             element_class_ids=np.concatenate(class_ids),
             element_class_id_map={v: k for k, v in class_id_reverse_map.items()},
-            source=sources[0] if sources else None,
+            sources=np.concatenate(sources),
+            text_as_html=np.concatenate(text_as_html),
+            table_as_cells=np.concatenate(table_as_cells),
         )
 
-    def as_list(self):
-        """return a list of LayoutElement for backward compatibility"""
-        return [
-            LayoutElement.from_coords(
+    def iter_elements(self):
+        """iter elements as one LayoutElement per iteration; this returns a generator and has less
+        memory impact than the as_list method"""
+        for (x1, y1, x2, y2), text, prob, class_id, source, text_as_html, table_as_cells in zip(
+            self.element_coords,
+            self.texts,
+            self.element_probs,
+            self.element_class_ids,
+            self.sources,
+            self.text_as_html,
+            self.table_as_cells,
+        ):
+            yield LayoutElement.from_coords(
                 x1,
                 y1,
                 x2,
@@ -115,15 +143,10 @@ class LayoutElements(TextRegions):
                     else None
                 ),
                 prob=None if np.isnan(prob) else prob,
-                source=self.source,
+                source=source,
+                text_as_html=text_as_html,
+                table_as_cells=table_as_cells,
             )
-            for (x1, y1, x2, y2), text, prob, class_id in zip(
-                self.element_coords,
-                self.texts,
-                self.element_probs,
-                self.element_class_ids,
-            )
-        ]
 
     @classmethod
     def from_list(cls, elements: list):
@@ -133,13 +156,15 @@ class LayoutElements(TextRegions):
         coords = np.empty((len_ele, 4), dtype=float)
         # text and probs can be Nones so use lists first then convert into array to avoid them being
         # filled as nan
-        texts = []
-        class_probs = []
+        texts, text_as_html, table_as_cells, sources, class_probs = [], [], [], [], []
         class_types = np.empty((len_ele,), dtype="object")
 
         for i, element in enumerate(elements):
             coords[i] = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
             texts.append(element.text)
+            sources.append(element.source)
+            text_as_html.append(element.text_as_html)
+            table_as_cells.append(element.table_as_cells)
             class_probs.append(element.prob)
             class_types[i] = element.type or "None"
 
@@ -152,7 +177,9 @@ class LayoutElements(TextRegions):
             element_probs=np.array(class_probs),
             element_class_ids=class_ids,
             element_class_id_map=dict(zip(range(len(unique_ids)), unique_ids)),
-            source=elements[0].source if len_ele else None,
+            sources=np.array(sources),
+            text_as_html=np.array(text_as_html),
+            table_as_cells=np.array(table_as_cells),
         )
 
 
@@ -162,6 +189,8 @@ class LayoutElement(TextRegion):
     prob: Optional[float] = None
     image_path: Optional[str] = None
     parent: Optional[LayoutElement] = None
+    text_as_html: Optional[str] = None
+    table_as_cells: Optional[str] = None
 
     def to_dict(self) -> dict:
         """Converts the class instance to dictionary form."""
@@ -432,9 +461,8 @@ def clean_layoutelements(elements: LayoutElements, subregion_threshold: float = 
 
     final_attrs: dict[str, Any] = {
         "element_class_id_map": elements.element_class_id_map,
-        "source": elements.source,
     }
-    for attr in ("element_class_ids", "element_probs", "texts"):
+    for attr in ("element_class_ids", "element_probs", "texts", "sources"):
         if (original_attr := getattr(elements, attr)) is None:
             continue
         final_attrs[attr] = original_attr[sorted_by_area][mask][sorted_by_y1]
@@ -510,7 +538,7 @@ def clean_layoutelements_for_class(
 
     final_coords = np.vstack([target_coords[mask], other_coords[other_mask]])
     final_attrs: dict[str, Any] = {"element_class_id_map": elements.element_class_id_map}
-    for attr in ("element_class_ids", "element_probs", "texts"):
+    for attr in ("element_class_ids", "element_probs", "texts", "sources"):
         if (original_attr := getattr(elements, attr)) is None:
             continue
         final_attrs[attr] = np.concatenate(
