@@ -80,7 +80,7 @@ executing==2.1.0
     # via stack-data
 fastjsonschema==2.21.1
     # via nbformat
-fonttools==4.55.3
+fonttools==4.55.4
     # via
     #   -c requirements/base.txt
     #   matplotlib
@@ -106,7 +106,7 @@ idna==3.10
     #   httpx
     #   jsonschema
     #   requests
-importlib-metadata==8.5.0
+importlib-metadata==8.6.1
     # via
     #   build
     #   jupyter-client
@@ -273,7 +273,7 @@ platformdirs==4.3.6
     #   jupyter-core
 prometheus-client==0.21.1
     # via jupyter-server
-prompt-toolkit==3.0.48
+prompt-toolkit==3.0.50
     # via
     #   ipython
     #   jupyter-console
