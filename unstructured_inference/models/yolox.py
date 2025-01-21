@@ -140,7 +140,7 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
             element_probs=sorted_dets[:, 4].astype(float),
             element_class_ids=sorted_dets[:, 5].astype(int),
             element_class_id_map=self.layout_classes,
-            source=Source.YOLOX,
+            sources=np.array([Source.YOLOX] * sorted_dets.shape[0]),
         )
 
 

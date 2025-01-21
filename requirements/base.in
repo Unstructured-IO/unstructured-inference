@@ -1,5 +1,4 @@
 -c constraints.in
-layoutparser
 python-multipart
 huggingface-hub
 numpy<2
@@ -12,3 +11,6 @@ timm
 # NOTE(alan): Pinned because this is when the most recent module we import appeared
 transformers>=4.25.1
 rapidfuzz
+pandas
+scipy
+pdfplumber

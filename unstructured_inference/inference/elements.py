@@ -210,7 +210,7 @@ class TextRegion:
 class TextRegions:
     element_coords: np.ndarray
     texts: np.ndarray = field(default_factory=lambda: np.array([]))
-    source: Source | None = None
+    sources: np.ndarray = field(default_factory=lambda: np.array([]))
 
     def __post_init__(self):
         if self.texts.size == 0 and self.element_coords.size > 0:
@@ -221,30 +221,37 @@ class TextRegions:
         return TextRegions(
             element_coords=self.element_coords[indices],
             texts=self.texts[indices],
-            source=self.source,
+            sources=self.sources[indices],
         )
 
+    def iter_elements(self):
+        """iter text regions as one TextRegion per iteration; this returns a generator and has less
+        memory impact than the as_list method"""
+        for (x1, y1, x2, y2), text, source in zip(
+            self.element_coords,
+            self.texts,
+            self.sources,
+        ):
+            yield TextRegion.from_coords(x1, y1, x2, y2, text, source)
+
     def as_list(self):
-        """return a list of TextRegion objects representing the data"""
-        if self.texts is None:
-            return [
-                TextRegion.from_coords(x1, y1, x2, y2, None, self.source)
-                for (x1, y1, x2, y2) in self.element_coords
-            ]
-        return [
-            TextRegion.from_coords(x1, y1, x2, y2, text, self.source)
-            for (x1, y1, x2, y2), text in zip(self.element_coords, self.texts)
-        ]
+        """return a list of LayoutElement for backward compatibility"""
+        return list(self.iter_elements())
 
     @classmethod
     def from_list(cls, regions: list):
         """create TextRegions from a list of TextRegion objects; the objects must have the same
         source"""
-        coords, texts = [], []
+        coords, texts, sources = [], [], []
         for region in regions:
             coords.append((region.bbox.x1, region.bbox.y1, region.bbox.x2, region.bbox.y2))
             texts.append(region.text)
-        return cls(element_coords=np.array(coords), texts=np.array(texts), source=regions[0].source)
+            sources.append(region.source)
+        return cls(
+            element_coords=np.array(coords),
+            texts=np.array(texts),
+            sources=np.array(sources),
+        )
 
     def __len__(self):
         return self.element_coords.shape[0]

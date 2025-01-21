@@ -1,3 +1,29 @@
+## 0.8.4
+
+* feat: add `text_as_html` and `table_as_cells` to `LayoutElements` class as new attributes
+* feat: replace the single valueed `source` attribute from `TextRegions` and `LayoutElements` with an array attribute `sources`
+
+## 0.8.3
+
+* fix: removed `layoutelement.from_lp_textblock()` and related tests as it's not used
+* fix: update requirements to drop `layoutparser` lib
+* fix: update `README.md` to remove layoutparser model zoo support note
+
+## 0.8.2
+
+* fix: fix bug when an empty list is passed into `TextRegions.from_list` triggers `IndexError`
+* fix: fix bug when concatenate a list of `LayoutElements` the class id mapping is no properly
+  updated
+
+## 0.8.1
+
+* fix: fix list index out of range error caused by calling LayoutElements.from_list() with empty list
+
+## 0.8.0
+
+* fix: fix missing source after cleaning layout elements
+* **BREAKING** Remove chipper model
+
 ## 0.7.41
 
 * fix: fix incorrect type casting with higher versions of `numpy` when substracting a `float` from an `int` array

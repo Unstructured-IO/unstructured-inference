@@ -61,6 +61,7 @@ def test_layoutelements():
         element_coords=coords,
         element_class_ids=element_class_ids,
         element_class_id_map=class_map,
+        sources=np.array(["yolox"] * len(element_class_ids)),
     )
 
 
@@ -345,6 +346,7 @@ def test_clean_layoutelements(test_layoutelements):
         elements[1].bbox.x2,
         elements[1].bbox.x2,
     ) == (2, 2, 3, 3)
+    assert elements[0].source == elements[1].source == "yolox"
 
 
 @pytest.mark.parametrize(
@@ -434,3 +436,37 @@ def test_layoutelements_to_list_and_back(test_layoutelements):
         test_layoutelements.element_class_id_map[idx]
         for idx in test_layoutelements.element_class_ids
     ] == [back.element_class_id_map[idx] for idx in back.element_class_ids]
+
+
+def test_layoutelements_from_list_no_elements():
+    back = LayoutElements.from_list(elements=[])
+    assert back.sources.size == 0
+    assert back.element_coords.size == 0
+
+
+def test_textregions_from_list_no_elements():
+    back = TextRegions.from_list(regions=[])
+    assert back.sources.size == 0
+    assert back.element_coords.size == 0
+
+
+def test_layoutelements_concatenate():
+    layout1 = LayoutElements(
+        element_coords=np.array([[0, 0, 1, 1], [1, 1, 2, 2]]),
+        texts=np.array(["a", "two"]),
+        sources=np.array(["yolox", "yolox"]),
+        element_class_ids=np.array([0, 1]),
+        element_class_id_map={0: "type0", 1: "type1"},
+    )
+    layout2 = LayoutElements(
+        element_coords=np.array([[10, 10, 2, 2], [20, 20, 1, 1]]),
+        texts=np.array(["three", "4"]),
+        sources=np.array(["ocr", "ocr"]),
+        element_class_ids=np.array([0, 1]),
+        element_class_id_map={0: "type1", 1: "type2"},
+    )
+    joint = LayoutElements.concatenate([layout1, layout2])
+    assert joint.texts.tolist() == ["a", "two", "three", "4"]
+    assert joint.sources.tolist() == ["yolox", "yolox", "ocr", "ocr"]
+    assert joint.element_class_ids.tolist() == [0, 1, 1, 2]
+    assert joint.element_class_id_map == {0: "type0", 1: "type1", 2: "type2"}
