@@ -13,4 +13,5 @@ transformers>=4.25.1
 rapidfuzz
 pandas
 scipy
-pdfplumber
+pdfminer-six==20240706
+pypdfium2
