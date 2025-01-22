@@ -1,4 +1,4 @@
-## 0.8.5
+## 0.8.6
 
 * feat: add back `source` to `TextRegions` and `LayoutElements` for backward compatibility
 
