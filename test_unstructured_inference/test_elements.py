@@ -61,7 +61,7 @@ def test_layoutelements():
         element_coords=coords,
         element_class_ids=element_class_ids,
         element_class_id_map=class_map,
-        sources=np.array(["yolox"] * len(element_class_ids)),
+        source="yolox",
     )
 
 
@@ -441,12 +441,14 @@ def test_layoutelements_to_list_and_back(test_layoutelements):
 def test_layoutelements_from_list_no_elements():
     back = LayoutElements.from_list(elements=[])
     assert back.sources.size == 0
+    assert back.source is None
     assert back.element_coords.size == 0
 
 
 def test_textregions_from_list_no_elements():
     back = TextRegions.from_list(regions=[])
     assert back.sources.size == 0
+    assert back.source is None
     assert back.element_coords.size == 0
 
 
@@ -454,7 +456,7 @@ def test_layoutelements_concatenate():
     layout1 = LayoutElements(
         element_coords=np.array([[0, 0, 1, 1], [1, 1, 2, 2]]),
         texts=np.array(["a", "two"]),
-        sources=np.array(["yolox", "yolox"]),
+        source="yolox",
         element_class_ids=np.array([0, 1]),
         element_class_id_map={0: "type0", 1: "type1"},
     )

@@ -41,12 +41,17 @@ class LayoutElements(TextRegions):
             "element_probs",
             "element_class_ids",
             "texts",
-            "sources",
             "text_as_html",
             "table_as_cells",
         ):
             if getattr(self, attr).size == 0 and element_size:
                 setattr(self, attr, np.array([None] * element_size))
+
+        # for backward compatibility; also allow to use one value to set sources for all regions
+        if self.sources.size == 0 and self.element_coords.size > 0:
+            self.sources = np.array([self.source] * self.element_coords.shape[0])
+        elif self.source is None and self.sources.size:
+            self.source = self.sources[0]
 
         self.element_probs = self.element_probs.astype(float)
 

@@ -211,10 +211,20 @@ class TextRegions:
     element_coords: np.ndarray
     texts: np.ndarray = field(default_factory=lambda: np.array([]))
     sources: np.ndarray = field(default_factory=lambda: np.array([]))
+    source: Source | None = None
 
     def __post_init__(self):
         if self.texts.size == 0 and self.element_coords.size > 0:
             self.texts = np.array([None] * self.element_coords.shape[0])
+
+        # for backward compatibility; also allow to use one value to set sources for all regions
+        if self.sources.size == 0 and self.element_coords.size > 0:
+            self.sources = np.array([self.source] * self.element_coords.shape[0])
+        elif self.source is None and self.sources.size:
+            self.source = self.sources[0]
+
+        # we convert to float so data type is more consistent (e.g., None will be np.nan)
+        self.element_coords = self.element_coords.astype(float)
 
     def slice(self, indices) -> TextRegions:
         """slice text regions based on indices"""
