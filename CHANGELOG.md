@@ -1,3 +1,11 @@
+## 0.8.6
+
+* feat: add back `source` to `TextRegions` and `LayoutElements` for backward compatibility
+
+## 0.8.5
+
+* fix: remove `pdfplumber` but include `pdfminer-six==20240706` to update `pdfminer`
+
 ## 0.8.4
 
 * feat: add `text_as_html` and `table_as_cells` to `LayoutElements` class as new attributes
