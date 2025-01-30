@@ -1,5 +1,4 @@
 import os
-from copy import deepcopy
 
 import numpy as np
 import pytest
@@ -8,6 +7,7 @@ from PIL import Image
 from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerDecoder,
 )
+from copy import deepcopy
 
 import unstructured_inference.models.table_postprocess as postprocess
 from unstructured_inference.models import tables

@@ -1,5 +1,6 @@
 ## 0.8.6
 
+* fix: add `password` for PDF
 * feat: add back `source` to `TextRegions` and `LayoutElements` for backward compatibility
 
 ## 0.8.5
@@ -13,7 +14,6 @@
 
 ## 0.8.3
 
-* fix: add `password` for PDF
 * fix: removed `layoutelement.from_lp_textblock()` and related tests as it's not used
 * fix: update requirements to drop `layoutparser` lib
 * fix: update `README.md` to remove layoutparser model zoo support note
