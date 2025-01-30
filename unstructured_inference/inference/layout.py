@@ -411,14 +411,14 @@ def convert_pdf_to_image(
             dpi=dpi,
             output_folder=output_folder,
             paths_only=path_only,
-            userpw=password,
+            userpw=password or "",
         )
     else:
         images = pdf2image.convert_from_path(
             filename,
             dpi=dpi,
             paths_only=path_only,
-            userpw=password,
+            userpw=password or "",
         )
 
     return images
