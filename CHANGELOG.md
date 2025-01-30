@@ -1,3 +1,7 @@
+## 0.8.7
+
+* fix: add `password` for PDF
+
 ## 0.8.6
 
 * feat: add back `source` to `TextRegions` and `LayoutElements` for backward compatibility

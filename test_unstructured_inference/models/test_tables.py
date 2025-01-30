@@ -11,7 +11,10 @@ from copy import deepcopy
 
 import unstructured_inference.models.table_postprocess as postprocess
 from unstructured_inference.models import tables
-from unstructured_inference.models.tables import apply_thresholds_on_objects, structure_to_cells
+from unstructured_inference.models.tables import (
+    apply_thresholds_on_objects,
+    structure_to_cells,
+)
 
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 

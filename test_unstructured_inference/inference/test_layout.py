@@ -302,6 +302,21 @@ def test_from_file(monkeypatch, mock_final_layout):
             assert page.image is None
 
 
+@pytest.mark.slow()
+def test_from_file_with_password(monkeypatch, mock_final_layout):
+
+    doc = layout.DocumentLayout.from_file("sample-docs/password.pdf", password="password")
+    assert doc
+
+    monkeypatch.setattr(layout, "get_model", lambda x: MockLayoutModel(mock_final_layout))
+    with patch(
+        "unstructured_inference.inference.layout.UnstructuredObjectDetectionModel",
+        MockLayoutModel,
+    ), open("sample-docs/password.pdf", mode="rb") as fp:
+        doc = layout.process_data_with_model(fp, model_name="fake", password="password")
+        assert doc
+
+
 def test_from_image_file_raises_with_empty_fn():
     with pytest.raises(FileNotFoundError):
         layout.DocumentLayout.from_image_file("")
@@ -544,6 +559,7 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
             fixed_layouts=None,
+            password=None,
             pdf_image_dpi=200,
         )
 
