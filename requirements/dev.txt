@@ -21,7 +21,7 @@ asttokens==3.0.0
     # via stack-data
 async-lru==2.0.4
     # via jupyterlab
-attrs==24.3.0
+attrs==25.1.0
     # via
     #   jsonschema
     #   referencing
@@ -33,7 +33,7 @@ bleach[css]==6.2.0
     # via nbconvert
 build==1.2.2.post1
     # via pip-tools
-certifi==2024.12.14
+certifi==2025.1.31
     # via
     #   -c requirements/base.txt
     #   -c requirements/test.txt
@@ -76,11 +76,11 @@ exceptiongroup==1.2.2
     #   -c requirements/test.txt
     #   anyio
     #   ipython
-executing==2.1.0
+executing==2.2.0
     # via stack-data
 fastjsonschema==2.21.1
     # via nbformat
-fonttools==4.55.4
+fonttools==4.55.8
     # via
     #   -c requirements/base.txt
     #   matplotlib
@@ -186,7 +186,7 @@ jupyter-server==2.15.0
     #   notebook-shim
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.3.4
+jupyterlab==4.3.5
     # via
     #   jupyter
     #   notebook
@@ -215,11 +215,11 @@ matplotlib-inline==0.1.7
     # via
     #   ipykernel
     #   ipython
-mistune==3.1.0
+mistune==3.1.1
     # via nbconvert
 nbclient==0.10.2
     # via nbconvert
-nbconvert==7.16.5
+nbconvert==7.16.6
     # via
     #   jupyter
     #   jupyter-server
@@ -315,13 +315,13 @@ pyyaml==6.0.2
     #   -c requirements/base.txt
     #   -c requirements/test.txt
     #   jupyter-events
-pyzmq==26.2.0
+pyzmq==26.2.1
     # via
     #   ipykernel
     #   jupyter-client
     #   jupyter-console
     #   jupyter-server
-referencing==0.36.1
+referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
