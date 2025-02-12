@@ -11,6 +11,7 @@ from PIL import Image as PILImage
 
 from unstructured_inference.constants import ElementType, Source
 from unstructured_inference.inference.layoutelement import LayoutElements
+from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
@@ -20,7 +21,6 @@ from unstructured_inference.utils import (
     download_if_needed_and_get_local_path,
 )
 
-logger = logging.getLogger(__name__)
 YOLOX_LABEL_MAP = {
     0: ElementType.CAPTION,
     1: ElementType.FOOTNOTE,
