@@ -4,7 +4,6 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
 import cv2
-import logging
 import numpy as np
 import onnxruntime
 from PIL import Image as PILImage
