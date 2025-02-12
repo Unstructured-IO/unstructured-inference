@@ -1,3 +1,7 @@
+## 0.8.8-dev1
+
+* fix: pdfminer-six dependencies
+
 ## 0.8.7
 
 * fix: add `password` for PDF
