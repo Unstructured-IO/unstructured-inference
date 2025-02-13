@@ -1,4 +1,4 @@
-## 0.8.8-dev1
+## 0.8.8-dev0
 
 * fix: pdfminer-six dependencies
 
