@@ -48,7 +48,7 @@ jobs:
       id: virtualenv-cache
       with:
         path: .venv
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements/*.txt') }}
+        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements/*.txt') }}-${{ github.run_id }}
     # NOTE(robinson) - This is a fallback in case the lint job does not find the cache.
     # We can take this out when we implement the fix in CORE-99
     - name: Setup virtual environment (no cache hit)
