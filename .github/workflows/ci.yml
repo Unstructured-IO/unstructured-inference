@@ -19,7 +19,7 @@ jobs:
       with:
         path: |
           .venv
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements/*.txt') }}
+        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements/*.txt') }}-${{ github.run_id }}
         lookup-only: true
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -81,13 +81,15 @@ jobs:
       with:
         path: |
           .venv
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements/*.txt') }}
+        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements/*.txt') }}-${{ github.run_id }}
     # NOTE(robinson) - This is a fallback in case the lint job does not find the cache.
     # We can take this out when we implement the fix in CORE-99
     - name: Setup virtual environment (no cache hit)
       if: steps.virtualenv-cache.outputs.cache-hit != 'true'
       run: |
         python${{ matrix.python-version }} -m venv .venv
+        source .venv/bin/activate
+        make install-ci
     - name: Install Poppler
       run: |
         sudo apt-get update
