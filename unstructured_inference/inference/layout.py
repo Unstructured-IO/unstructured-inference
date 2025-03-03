@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from functools import cached_property
 from pathlib import PurePath
 from typing import Any, BinaryIO, Collection, List, Optional, Union, cast
 
@@ -149,7 +150,6 @@ class PageLayout:
         self.number = number
         self.detection_model = detection_model
         self.element_extraction_model = element_extraction_model
-        self.elements: Collection[LayoutElement] = []
         self.elements_array: LayoutElements | None = None
         self.password = password
         # NOTE(alan): Dropped LocationlessLayoutElement that was created for chipper - chipper has
@@ -159,10 +159,16 @@ class PageLayout:
     def __str__(self) -> str:
         return "\n\n".join([str(element) for element in self.elements])
 
+    @cached_property
+    def elements(self) -> Collection[LayoutElement]:
+        """return a list of layout elements from the array data structure; intended for backward
+        compatibility"""
+        return self.elements_array.as_list()
+
     def get_elements_using_image_extraction(
         self,
         inplace=True,
-    ) -> Optional[List[LayoutElement]]:
+    ) -> Optional[LayoutElements]:
         """Uses end-to-end text element extraction model to extract the elements on the page."""
         if self.element_extraction_model is None:
             raise ValueError(
@@ -178,7 +184,6 @@ class PageLayout:
     def get_elements_with_detection_model(
         self,
         inplace: bool = True,
-        array_only: bool = False,
     ) -> Optional[List[LayoutElement]]:
         """Uses specified model to detect the elements on the page."""
         if self.detection_model is None:
@@ -198,11 +203,9 @@ class PageLayout:
 
         if inplace:
             self.elements_array = inferred_layout
-            if not array_only:
-                self.elements = inferred_layout.as_list()
             return None
 
-        return inferred_layout.as_list()
+        return inferred_layout
 
     def _get_image_array(self) -> Union[np.ndarray[Any, Any], None]:
         """Converts the raw image into a numpy array."""
