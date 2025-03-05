@@ -163,12 +163,14 @@ class PageLayout:
     def elements(self) -> Collection[LayoutElement]:
         """return a list of layout elements from the array data structure; intended for backward
         compatibility"""
+        if self.elements_array is None:
+            return []
         return self.elements_array.as_list()
 
     def get_elements_using_image_extraction(
         self,
         inplace=True,
-    ) -> Optional[LayoutElements]:
+    ) -> Optional[list[LayoutElement]]:
         """Uses end-to-end text element extraction model to extract the elements on the page."""
         if self.element_extraction_model is None:
             raise ValueError(
@@ -184,7 +186,7 @@ class PageLayout:
     def get_elements_with_detection_model(
         self,
         inplace: bool = True,
-    ) -> Optional[List[LayoutElement]]:
+    ) -> Optional[LayoutElements]:
         """Uses specified model to detect the elements on the page."""
         if self.detection_model is None:
             model = get_model()
