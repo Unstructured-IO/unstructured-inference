@@ -1,4 +1,4 @@
-## 0.8.9-dev0
+## 0.8.9
 
 * chore: unpin `pdfminer-six` version
 
