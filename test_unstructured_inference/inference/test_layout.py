@@ -116,7 +116,7 @@ def test_get_page_elements(monkeypatch, mock_final_layout):
     )
     elements = page.get_elements_with_detection_model(inplace=False)
     page.get_elements_with_detection_model(inplace=True)
-    assert elements == page.elements
+    assert elements == page.elements_array
 
 
 class MockPool:
