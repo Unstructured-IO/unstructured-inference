@@ -1,3 +1,7 @@
+## 0.8.9
+
+* chore: unpin `pdfminer-six` version
+
 ## 0.8.8
 * fix: pdfminer-six dependencies
 * feat: `PageLayout.elements` is now a `cached_property` to reduce unecessary memory and cpu costs
