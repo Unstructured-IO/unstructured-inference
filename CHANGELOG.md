@@ -1,6 +1,7 @@
-## 0.8.8-dev0
+## 0.8.8-dev1
 
 * fix: pdfminer-six dependencies
+* feat: `PageLayout.elements` is now a `cached_property` to reduce unecessary memory and cpu costs
 
 ## 0.8.7
 
