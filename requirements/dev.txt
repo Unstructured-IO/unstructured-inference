@@ -21,7 +21,7 @@ asttokens==3.0.0
     # via stack-data
 async-lru==2.0.4
     # via jupyterlab
-attrs==25.1.0
+attrs==25.3.0
     # via
     #   jsonschema
     #   referencing
@@ -236,7 +236,7 @@ notebook-shim==0.2.4
     # via
     #   jupyterlab
     #   notebook
-numpy==1.26.4
+numpy==2.0.2
     # via
     #   -c requirements/base.txt
     #   contourpy
@@ -309,14 +309,14 @@ python-dateutil==2.9.0.post0
     #   arrow
     #   jupyter-client
     #   matplotlib
-python-json-logger==3.2.1
+python-json-logger==3.3.0
     # via jupyter-events
 pyyaml==6.0.2
     # via
     #   -c requirements/base.txt
     #   -c requirements/test.txt
     #   jupyter-events
-pyzmq==26.2.1
+pyzmq==26.3.0
     # via
     #   ipykernel
     #   jupyter-client
