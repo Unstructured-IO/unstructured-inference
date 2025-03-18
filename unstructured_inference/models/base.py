@@ -24,8 +24,8 @@ def get_default_model_mappings() -> Tuple[
 ]:
     """default model mappings for models that are in `unstructured_inference` repo"""
     return {
-        **{name: UnstructuredDetectronONNXModel for name in DETECTRON2_ONNX_MODEL_TYPES},
-        **{name: UnstructuredYoloXModel for name in YOLOX_MODEL_TYPES},
+        **dict.fromkeys(DETECTRON2_ONNX_MODEL_TYPES, UnstructuredDetectronONNXModel),
+        **dict.fromkeys(YOLOX_MODEL_TYPES, UnstructuredYoloXModel),
     }, {**DETECTRON2_ONNX_MODEL_TYPES, **YOLOX_MODEL_TYPES}
 
 
@@ -38,7 +38,7 @@ def register_new_model(model_config: dict, model_class: UnstructuredModel):
     Those maps are updated with the with the new model class information.
     """
     model_config_map.update(model_config)
-    model_class_map.update({name: model_class for name in model_config})
+    model_class_map.update(dict.fromkeys(model_config, model_class))
 
 
 def get_model(model_name: Optional[str] = None) -> UnstructuredModel:

@@ -1,3 +1,7 @@
+## 0.8.10
+
+* feat: unpin `numpy` and bump minimum for `onnxruntime` to be compatible with `numpy>=2`
+
 ## 0.8.9
 
 * chore: unpin `pdfminer-six` version

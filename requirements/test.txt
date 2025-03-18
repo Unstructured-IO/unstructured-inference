@@ -40,7 +40,7 @@ flake8==7.1.2
     #   flake8-docstrings
 flake8-docstrings==1.7.0
     # via -r requirements/test.in
-fsspec==2025.2.0
+fsspec==2025.3.0
     # via
     #   -c requirements/base.txt
     #   huggingface-hub
@@ -50,7 +50,7 @@ httpcore==1.0.7
     # via httpx
 httpx==0.28.1
     # via -r requirements/test.in
-huggingface-hub==0.29.2
+huggingface-hub==0.29.3
     # via
     #   -c requirements/base.txt
     #   -r requirements/test.in
@@ -110,7 +110,7 @@ requests==2.32.3
     # via
     #   -c requirements/base.txt
     #   huggingface-hub
-ruff==0.9.9
+ruff==0.10.0
     # via -r requirements/test.in
 sniffio==1.3.1
     # via anyio

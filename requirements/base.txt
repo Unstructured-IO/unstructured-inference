@@ -29,11 +29,11 @@ flatbuffers==25.2.10
     # via onnxruntime
 fonttools==4.56.0
     # via matplotlib
-fsspec==2025.2.0
+fsspec==2025.3.0
     # via
     #   huggingface-hub
     #   torch
-huggingface-hub==0.29.2
+huggingface-hub==0.29.3
     # via
     #   -r requirements/base.in
     #   timm
@@ -57,7 +57,7 @@ mpmath==1.3.0
     # via sympy
 networkx==3.2.1
     # via torch
-numpy==1.26.4
+numpy==2.0.2
     # via
     #   -r requirements/base.in
     #   contourpy
@@ -134,7 +134,7 @@ sympy==1.13.1
     #   torch
 timm==1.0.15
     # via -r requirements/base.in
-tokenizers==0.21.0
+tokenizers==0.21.1
     # via transformers
 torch==2.6.0
     # via

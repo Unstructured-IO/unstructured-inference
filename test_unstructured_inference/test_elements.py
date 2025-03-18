@@ -47,7 +47,7 @@ def test_layoutelements():
             [0.6, 0.6, 0.65, 0.65],  # One little table nested inside all the others
             [0.5, 0.5, 0.7, 0.7],  # One nested table
             [0, 0, 1, 1],  # Big table
-            [0.01, 0.01, 1.01, 1.01],
+            [0.01, 0.01, 0.09, 0.09],
             [0.02, 0.02, 1.02, 1.02],
             [0.03, 0.03, 1.03, 1.03],
             [0.04, 0.04, 1.04, 1.04],
