@@ -135,7 +135,6 @@ tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerMo
 
 def load_agent():
     """Loads the Table agent as a global variable to ensure that we only load it once."""
-    global tables_agent
 
     if not hasattr(tables_agent, "model"):
         logger.info("Loading the Table agent ...")

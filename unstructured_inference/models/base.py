@@ -46,8 +46,6 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     # TODO(alan): These cases are similar enough that we can probably do them all together with
     # importlib
 
-    global models
-
     if model_name is None:
         default_name_from_env = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_NAME")
         model_name = default_name_from_env if default_name_from_env is not None else DEFAULT_MODEL
