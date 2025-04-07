@@ -2,6 +2,7 @@
 -c base.txt
 -c test.txt 
 jupyter
-ipython==8.18.1
+ipython<=8.19; python_version <= '3.9'
+ipython; python_version >= '3.10'
 pip-tools
 matplotlib

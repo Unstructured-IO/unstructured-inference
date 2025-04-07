@@ -1,5 +1,5 @@
 PACKAGE_NAME := unstructured_inference
-PIP_VERSION := 23.2.1
+PIP_VERSION := 25.0.1
 CURRENT_DIR := $(shell pwd)
 
 
@@ -14,7 +14,7 @@ help: Makefile
 
 ## install-base:            installs core requirements needed for text processing bricks
 .PHONY: install-base
-install-base: install-base-pip-packages
+install-base: install-base-pip-packages requirements/base.in
 	python3 -m pip install -r requirements/base.txt
 
 ## install:                 installs all test, dev, and experimental requirements
@@ -29,16 +29,16 @@ install-base-pip-packages:
 	python3 -m pip install pip==${PIP_VERSION}
 
 .PHONY: install-test
-install-test: install-base
+install-test: install-base requirements/test.txt
 	python3 -m pip install -r requirements/test.txt
 
 .PHONY: install-dev
-install-dev: install-test
+install-dev: install-test requirements/dev.txt
 	python3 -m pip install -r requirements/dev.txt
 
 ## pip-compile:             compiles all base/dev/test requirements
 .PHONY: pip-compile
-pip-compile:
+pip-compile: requirements/base.txt requirements/test.txt requirements/dev.txt
 	pip-compile --upgrade requirements/base.in
 	pip-compile --upgrade requirements/test.in
 	pip-compile --upgrade requirements/dev.in

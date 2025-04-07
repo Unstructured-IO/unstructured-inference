@@ -1,6 +1,6 @@
 ## 0.8.11-dev0
 
-* fix: fix dependencies for python 3.9
+* fix: dependencies of pdfminer-six and python 3.9
 
 ## 0.8.10
 

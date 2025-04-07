@@ -55,7 +55,7 @@ comm==0.2.2
     # via
     #   ipykernel
     #   ipywidgets
-contourpy==1.3.0
+contourpy==1.3.1 ; python_version >= "3.10"
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   matplotlib
@@ -104,12 +104,14 @@ ipykernel==6.29.5
     #   jupyter
     #   jupyter-console
     #   jupyterlab
-ipython==8.18.1
+ipython==9.1.0 ; python_version >= "3.10"
     # via
     #   -r requirements/dev.in
     #   ipykernel
     #   ipywidgets
     #   jupyter-console
+ipython-pygments-lexers==1.1.1
+    # via ipython
 ipywidgets==8.1.5
     # via jupyter
 isoduration==20.11.0
@@ -123,7 +125,7 @@ jinja2==3.1.6
     #   jupyterlab
     #   jupyterlab-server
     #   nbconvert
-json5==0.11.0
+json5==0.12.0
     # via jupyterlab-server
 jsonpointer==3.0.0
     # via jsonschema
@@ -179,7 +181,7 @@ jupyterlab-server==2.27.3
     #   notebook
 jupyterlab-widgets==3.0.13
     # via ipywidgets
-kiwisolver==1.4.7
+kiwisolver==1.4.8 ; python_version >= "3.10"
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   matplotlib
@@ -188,7 +190,7 @@ markupsafe==3.0.2
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   jinja2
     #   nbconvert
-matplotlib==3.9.4
+matplotlib==3.10.1 ; python_version >= "3.10"
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   -r requirements/dev.in
@@ -217,7 +219,7 @@ notebook-shim==0.2.4
     # via
     #   jupyterlab
     #   notebook
-numpy==2.0.2
+numpy==2.2.4 ; python_version > "3.10"
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   contourpy
@@ -274,6 +276,7 @@ pycparser==2.22
 pygments==2.19.1
     # via
     #   ipython
+    #   ipython-pygments-lexers
     #   jupyter-console
     #   nbconvert
 pyparsing==3.2.3
@@ -297,7 +300,7 @@ pyyaml==6.0.2
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/test.txt
     #   jupyter-events
-pyzmq==26.3.0
+pyzmq==26.4.0
     # via
     #   ipykernel
     #   jupyter-client
@@ -372,7 +375,7 @@ traitlets==5.14.3
     #   nbformat
 types-python-dateutil==2.9.0.20241206
     # via arrow
-typing-extensions==4.13.0
+typing-extensions==4.13.1
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/test.txt
