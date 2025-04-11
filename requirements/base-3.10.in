@@ -1,0 +1,17 @@
+-c constraints.in
+python-multipart
+huggingface-hub
+numpy
+opencv-python!=4.7.0.68
+onnx
+onnxruntime ; python_version >= '3.10'
+matplotlib ; python_version >= '3.10'
+torch
+timm
+# NOTE(alan): Pinned because this is when the most recent module we import appeared
+transformers
+rapidfuzz
+pandas
+scipy ; python_version >= '3.10'
+pypdfium2
+pdfminer-six>=20250327

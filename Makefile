@@ -38,8 +38,12 @@ install-dev: install-test requirements/dev.txt
 
 ## pip-compile:             compiles all base/dev/test requirements
 .PHONY: pip-compile
-pip-compile: requirements/base.txt requirements/test.txt requirements/dev.txt
+pip-compile \
+requirements/base.txt requirements/base-3.10.txt requirements/test.txt \
+requirements/dev.txt \
+: requirements/base.in requirements/base-3.10.in requirements/test.in requirements/dev.in
 	pip-compile --upgrade requirements/base.in
+	pip-compile --upgrade requirements/base-3.10.in -o requirements/base-3.10.txt
 	pip-compile --upgrade requirements/test.in
 	pip-compile --upgrade requirements/dev.in
 

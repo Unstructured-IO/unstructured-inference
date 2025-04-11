@@ -55,7 +55,7 @@ comm==0.2.2
     # via
     #   ipykernel
     #   ipywidgets
-contourpy==1.3.1 ; python_version >= "3.10"
+contourpy==1.3.0
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   matplotlib
@@ -63,7 +63,7 @@ cycler==0.12.1
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   matplotlib
-debugpy==1.8.13
+debugpy==1.8.14
     # via ipykernel
 decorator==5.2.1
     # via ipython
@@ -112,7 +112,7 @@ ipython==9.1.0 ; python_version >= "3.10"
     #   jupyter-console
 ipython-pygments-lexers==1.1.1
     # via ipython
-ipywidgets==8.1.5
+ipywidgets==8.1.6
     # via jupyter
 isoduration==20.11.0
     # via jsonschema
@@ -169,7 +169,7 @@ jupyter-server==2.15.0
     #   notebook-shim
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.3.6
+jupyterlab==4.4.0
     # via
     #   jupyter
     #   notebook
@@ -179,9 +179,9 @@ jupyterlab-server==2.27.3
     # via
     #   jupyterlab
     #   notebook
-jupyterlab-widgets==3.0.13
+jupyterlab-widgets==3.0.14
     # via ipywidgets
-kiwisolver==1.4.8 ; python_version >= "3.10"
+kiwisolver==1.4.7
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   matplotlib
@@ -190,7 +190,7 @@ markupsafe==3.0.2
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   jinja2
     #   nbconvert
-matplotlib==3.10.1 ; python_version >= "3.10"
+matplotlib==3.9.4
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   -r requirements/dev.in
@@ -213,13 +213,13 @@ nbformat==5.10.4
     #   nbconvert
 nest-asyncio==1.6.0
     # via ipykernel
-notebook==7.3.3
+notebook==7.4.0
     # via jupyter
 notebook-shim==0.2.4
     # via
     #   jupyterlab
     #   notebook
-numpy==2.2.4 ; python_version > "3.10"
+numpy==2.0.2
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   contourpy
@@ -375,7 +375,7 @@ traitlets==5.14.3
     #   nbformat
 types-python-dateutil==2.9.0.20241206
     # via arrow
-typing-extensions==4.13.1
+typing-extensions==4.13.2
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/test.txt
@@ -384,7 +384,7 @@ typing-extensions==4.13.1
     #   referencing
 uri-template==1.3.0
     # via jsonschema
-urllib3==2.3.0
+urllib3==2.4.0
     # via
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/base.txt
     #   -c /home/pprados/workspace.bda/unstructured-inference/requirements/test.txt
@@ -401,7 +401,7 @@ websocket-client==1.8.0
     # via jupyter-server
 wheel==0.45.1
     # via pip-tools
-widgetsnbextension==4.0.13
+widgetsnbextension==4.0.14
     # via ipywidgets
 
 # The following packages are considered to be unsafe in a requirements file:
