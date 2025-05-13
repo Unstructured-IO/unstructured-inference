@@ -57,7 +57,7 @@ comm==0.2.2
     # via
     #   ipykernel
     #   ipywidgets
-contourpy==1.3.2
+contourpy==1.3.2 ; python_version >= "3.10"
     # via
     #   -c requirements/base.txt
     #   matplotlib
@@ -183,7 +183,7 @@ jupyterlab-server==2.27.3
     #   notebook
 jupyterlab-widgets==3.0.15
     # via ipywidgets
-kiwisolver==1.4.8
+kiwisolver==1.4.8 ; python_version >= "3.10"
     # via
     #   -c requirements/base.txt
     #   matplotlib
