@@ -14,8 +14,10 @@ charset-normalizer==3.4.2
     #   requests
 coloredlogs==15.0.1
     # via onnxruntime
-contourpy==1.3.2
-    # via matplotlib
+contourpy==1.3.2 ; python_version >= "3.10"
+    # via
+    #   -r requirements/base.in
+    #   matplotlib
 cryptography==44.0.3
     # via pdfminer-six
 cycler==0.12.1
