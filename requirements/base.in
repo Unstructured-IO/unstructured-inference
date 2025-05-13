@@ -9,6 +9,7 @@ matplotlib
 torch
 timm
 # NOTE(alan): Pinned because this is when the most recent module we import appeared
+torch==2.6.0
 transformers>=4.25.1,<=4.40.0
 rapidfuzz
 pandas
