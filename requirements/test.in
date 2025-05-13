@@ -5,7 +5,8 @@ coverage
 # NOTE(mrobinson) - Pinning click due to a unicode issue in black
 # can remove after black drops support for Python 3.6
 # ref: https://github.com/psf/black/issues/2964
-click>=8.1
+click==8.1.8; python_version == "3.9"
+click>=8.2.0; python_version >= "3.10"
 # NOTE(alan) - Added to cover the fact that is isn't specified in
 # starlette even though it's required for TestClient
 httpx

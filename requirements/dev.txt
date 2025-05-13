@@ -49,7 +49,7 @@ charset-normalizer==3.4.2
     #   -c requirements/base.txt
     #   -c requirements/test.txt
     #   requests
-click==8.2.0
+click==8.2.0 ; python_version >= "3.10"
     # via
     #   -c requirements/test.txt
     #   pip-tools
