@@ -128,7 +128,7 @@ safetensors==0.5.3
     # via
     #   timm
     #   transformers
-scipy==1.15.3
+scipy==1.15.3 ; python_version >= "3.10"
     # via -r requirements/base.in
 six==1.17.0
     # via python-dateutil
