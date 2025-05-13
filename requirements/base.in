@@ -1,10 +1,10 @@
 -c constraints.in
 python-multipart
 huggingface-hub
-numpy
 opencv-python!=4.7.0.68
 onnx
-onnxruntime>=1.18.0
+onnxruntime==1.20.1; python_version == "3.9"
+onnxruntime>=1.22.0; python_version >= "3.10"
 matplotlib==3.9.4; python_version == "3.9"
 matplotlib>=3.10.3; python_version >= "3.11"
 contourpy==1.2.0; python_version == "3.9"
