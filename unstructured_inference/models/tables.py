@@ -63,6 +63,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         self.device = device
         self.feature_extractor = DetrImageProcessor.from_pretrained(model)
         # value not set in the configuration and needed for newer models
+        # https://huggingface.co/microsoft/table-transformer-structure-recognition-v1.1-all/discussions/1
         self.feature_extractor.size['shortest_edge'] = 800 
 
         try:
