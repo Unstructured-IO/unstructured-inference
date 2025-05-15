@@ -1,11 +1,13 @@
 import logging
+from os import PathLike
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import torch
 from PIL import Image as PILImage
 from transformers import (
     DonutProcessor,
+    PretrainedConfig,
     VisionEncoderDecoderConfig,
     VisionEncoderDecoderModel,
 )
@@ -23,9 +25,9 @@ class UnstructuredDonutModel(UnstructuredModel):
 
     def initialize(
         self,
-        model: Union[str, Path, VisionEncoderDecoderModel] = None,
-        processor: Union[str, Path, DonutProcessor] = None,
-        config: Optional[Union[str, Path, VisionEncoderDecoderConfig]] = None,
+        model: Union[str, PathLike[Any]],
+        processor: Union[str, PathLike[Any]],
+        config: Optional[Union[str, Path, PretrainedConfig]] = None,
         task_prompt: Optional[str] = "<s>",
         device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
     ):
@@ -35,7 +37,7 @@ class UnstructuredDonutModel(UnstructuredModel):
         self.device = device
 
         try:
-            if not isinstance(config, VisionEncoderDecoderModel):
+            if config and not isinstance(config, VisionEncoderDecoderModel):
                 config = VisionEncoderDecoderConfig.from_pretrained(config)
 
             logging.info("Loading the Donut model and processor...")

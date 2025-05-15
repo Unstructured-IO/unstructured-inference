@@ -566,7 +566,7 @@ def mocked_ocr_tokens():
     ],
 )
 def test_load_table_model_raises_when_not_available(model_path):
-    with pytest.raises(ImportError):
+    with pytest.raises(OSError):
         table_model = tables.UnstructuredTableTransformerModel()
         table_model.initialize(model=model_path)
 
