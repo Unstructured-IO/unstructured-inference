@@ -56,12 +56,12 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def initialize(
         self,
-        model: Union[str, Path, TableTransformerForObjectDetection] = None,
+        model: Union[str, Path, TableTransformerForObjectDetection],
         device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         """Loads the donut model using the specified parameters"""
         self.device = device
-        self.feature_extractor = DetrImageProcessor()
+        self.feature_extractor = DetrImageProcessor.from_pretrained(model)
 
         try:
             logger.info("Loading the table structure model ...")
@@ -83,7 +83,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         self,
         x: PILImage.Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
-    ) -> dict:
+    ) -> TableTransformerObjectDetectionOutput:
         """get the table structure as a dictionary contaning different types of elements as
         key-value pairs; check table-transformer documentation for more information"""
         with torch.no_grad():
@@ -173,7 +173,7 @@ structure_class_thresholds = {
 }
 
 
-def recognize(outputs: dict, img: PILImage.Image, tokens: list):
+def recognize(outputs: TableTransformerObjectDetectionOutput, img: PILImage.Image, tokens: list):
     """Recognize table elements."""
     str_class_name2idx = get_class_map("structure")
     str_class_idx2name = {v: k for k, v in str_class_name2idx.items()}
