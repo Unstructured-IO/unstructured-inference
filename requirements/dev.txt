@@ -264,7 +264,9 @@ prompt-toolkit==3.0.51
     #   ipython
     #   jupyter-console
 psutil==7.0.0
-    # via ipykernel
+    # via
+    #   -c requirements/base.txt
+    #   ipykernel
 ptyprocess==0.7.0
     # via
     #   pexpect
@@ -351,7 +353,7 @@ terminado==0.18.1
     #   jupyter-server-terminals
 tinycss2==1.4.0
     # via bleach
-tornado==6.4.2
+tornado==6.5
     # via
     #   ipykernel
     #   jupyter-client

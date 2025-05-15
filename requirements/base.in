@@ -10,6 +10,7 @@ torch
 timm
 # NOTE(alan): Pinned because this is when the most recent module we import appeared
 transformers>=4.25.1
+accelerate
 rapidfuzz
 pandas
 scipy

@@ -4,6 +4,8 @@
 #
 #    pip-compile requirements/base.in
 #
+accelerate==1.7.0
+    # via -r requirements/base.in
 certifi==2025.4.26
     # via requests
 cffi==1.17.1
@@ -36,6 +38,7 @@ fsspec==2025.3.2
 huggingface-hub==0.31.2
     # via
     #   -r requirements/base.in
+    #   accelerate
     #   timm
     #   tokenizers
     #   transformers
@@ -58,6 +61,7 @@ networkx==3.4.2
 numpy==2.2.5
     # via
     #   -r requirements/base.in
+    #   accelerate
     #   contourpy
     #   matplotlib
     #   onnx
@@ -75,6 +79,7 @@ opencv-python==4.11.0.86
     # via -r requirements/base.in
 packaging==25.0
     # via
+    #   accelerate
     #   huggingface-hub
     #   matplotlib
     #   onnxruntime
@@ -91,6 +96,8 @@ protobuf==6.31.0
     # via
     #   onnx
     #   onnxruntime
+psutil==7.0.0
+    # via accelerate
 pycparser==2.22
     # via cffi
 pyparsing==3.2.3
@@ -107,6 +114,7 @@ pytz==2025.2
     # via pandas
 pyyaml==6.0.2
     # via
+    #   accelerate
     #   huggingface-hub
     #   timm
     #   transformers
@@ -120,6 +128,7 @@ requests==2.32.3
     #   transformers
 safetensors==0.5.3
     # via
+    #   accelerate
     #   timm
     #   transformers
 scipy==1.15.3
@@ -137,6 +146,7 @@ tokenizers==0.21.1
 torch==2.7.0
     # via
     #   -r requirements/base.in
+    #   accelerate
     #   timm
     #   torchvision
 torchvision==0.22.0
