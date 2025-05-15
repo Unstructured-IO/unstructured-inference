@@ -67,7 +67,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             logger.info("Loading the table structure model ...")
             cached_current_verbosity = logging.get_verbosity()
             logging.set_verbosity_error()
-            self.model = TableTransformerForObjectDetection.from_pretrained(model)
+            self.model = TableTransformerForObjectDetection.from_pretrained(
+                model, device_map=self.device
+            )
             logging.set_verbosity(cached_current_verbosity)
             self.model.eval()
 
@@ -77,7 +79,6 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             raise ImportError(
                 "Review the parameters to initialize a UnstructuredTableTransformerModel obj",
             )
-        self.model.to(device)
 
     def get_structure(
         self,
