@@ -1,3 +1,7 @@
+## 0.8.11
+
+* fix: moving the table transformer model to device when loading the model instead of once the model is loaded.
+
 ## 0.8.10
 
 * feat: unpin `numpy` and bump minimum for `onnxruntime` to be compatible with `numpy>=2`
