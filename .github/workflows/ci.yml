@@ -10,7 +10,7 @@ jobs:
   setup:
     strategy:
       matrix:
-        python-version: ["3.9","3.10","3.11", "3.12"]
+        python-version: ["3.10","3.11", "3.12"]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
   lint:
     strategy:
       matrix:
-        python-version: ["3.9","3.10","3.11", "3.12"]
+        python-version: ["3.10","3.11", "3.12"]
     runs-on: ubuntu-latest
     needs: setup
     steps:
@@ -71,7 +71,7 @@ jobs:
   test:
     strategy:
       matrix:
-        python-version: ["3.9","3.10","3.11", "3.12"]
+        python-version: ["3.10","3.11", "3.12"]
     runs-on: ubuntu-latest
     needs: [setup, lint]
     steps:

@@ -1,3 +1,7 @@
+## 1.0.0
+
+* feat: support for Python 3.10+
+
 ## 0.8.11
 
 * feat: remove `donut` model
