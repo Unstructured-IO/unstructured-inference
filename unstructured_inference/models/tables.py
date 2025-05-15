@@ -61,7 +61,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     ):
         """Loads the donut model using the specified parameters"""
         self.device = device
-        self.feature_extractor = DetrImageProcessor().from_pretrained(model)
+        self.feature_extractor = DetrImageProcessor.from_pretrained(model)
 
         try:
             logger.info("Loading the table structure model ...")
