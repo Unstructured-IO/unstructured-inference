@@ -1,3 +1,15 @@
+## 1.0.1
+
+* fix: moving the table transformer model to device when loading the model instead of once the model is loaded.
+
+## 1.0.0
+
+* feat: support for Python 3.10+; drop support for Python 3.9
+
+## 0.8.11
+
+* feat: remove `donut` model
+
 ## 0.8.10
 
 * feat: unpin `numpy` and bump minimum for `onnxruntime` to be compatible with `numpy>=2`

@@ -56,18 +56,20 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def initialize(
         self,
-        model: Union[str, Path, TableTransformerForObjectDetection] = None,
+        model: Union[str, Path, TableTransformerForObjectDetection],
         device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         """Loads the donut model using the specified parameters"""
         self.device = device
-        self.feature_extractor = DetrImageProcessor()
+        self.feature_extractor = DetrImageProcessor.from_pretrained(model)
 
         try:
             logger.info("Loading the table structure model ...")
             cached_current_verbosity = logging.get_verbosity()
             logging.set_verbosity_error()
-            self.model = TableTransformerForObjectDetection.from_pretrained(model)
+            self.model = TableTransformerForObjectDetection.from_pretrained(
+                model, device_map=self.device
+            )
             logging.set_verbosity(cached_current_verbosity)
             self.model.eval()
 
@@ -77,13 +79,12 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             raise ImportError(
                 "Review the parameters to initialize a UnstructuredTableTransformerModel obj",
             )
-        self.model.to(device)
 
     def get_structure(
         self,
         x: PILImage.Image,
         pad_for_structure_detection: int = inference_config.TABLE_IMAGE_BACKGROUND_PAD,
-    ) -> dict:
+    ) -> TableTransformerObjectDetectionOutput:
         """get the table structure as a dictionary contaning different types of elements as
         key-value pairs; check table-transformer documentation for more information"""
         with torch.no_grad():
@@ -135,7 +136,7 @@ tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerMo
 
 def load_agent():
     """Loads the Table agent as a global variable to ensure that we only load it once."""
-    global tables_agent
+    global tables_agent  # noqa
 
     if not hasattr(tables_agent, "model"):
         logger.info("Loading the Table agent ...")
@@ -173,7 +174,7 @@ structure_class_thresholds = {
 }
 
 
-def recognize(outputs: dict, img: PILImage.Image, tokens: list):
+def recognize(outputs: TableTransformerObjectDetectionOutput, img: PILImage.Image, tokens: list):
     """Recognize table elements."""
     str_class_name2idx = get_class_map("structure")
     str_class_idx2name = {v: k for k, v in str_class_name2idx.items()}
