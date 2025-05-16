@@ -1,4 +1,4 @@
-## 1.0.1-dev
+## 1.0.2
 
 * adding parameter to table image preprocessor related to the image size
 
