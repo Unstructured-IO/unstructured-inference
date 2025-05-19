@@ -1,3 +1,7 @@
+## 1.0.2
+
+* adding parameter to table image preprocessor related to the image size
+
 ## 1.0.1
 
 * fix: moving the table transformer model to device when loading the model instead of once the model is loaded.
