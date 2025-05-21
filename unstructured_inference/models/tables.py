@@ -65,6 +65,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         # value not set in the configuration and needed for newer models
         # https://huggingface.co/microsoft/table-transformer-structure-recognition-v1.1-all/discussions/1
         self.feature_extractor.size["shortest_edge"] = 800
+        self.feature_extractor.size["longest_edge"] = 1333
 
         try:
             logger.info("Loading the table structure model ...")
