@@ -1,3 +1,7 @@
+## 1.0.3
+
+* setting longest_edge=1333 to the table image processor
+
 ## 1.0.2
 
 * adding parameter to table image preprocessor related to the image size
