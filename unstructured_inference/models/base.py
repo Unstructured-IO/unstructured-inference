@@ -16,7 +16,7 @@ from unstructured_inference.utils import LazyDict
 DEFAULT_MODEL = "yolox"
 
 
-class Models(dict):
+class Models:
     _instance = None
 
     @classmethod
