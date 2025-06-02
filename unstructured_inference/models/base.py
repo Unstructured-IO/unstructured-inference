@@ -21,6 +21,7 @@ class Models:
 
     @classmethod
     def instance(cls):
+        """return an instance if one already exists otherwise create an instance"""
         if cls._instance is None:
             cls._instance = cls.__new__(cls)
             cls.models: Dict[str, UnstructuredModel] = {}
@@ -66,6 +67,7 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     """Gets the model object by model name."""
     # TODO(alan): These cases are similar enough that we can probably do them all together with
     # importlib
+    models: Dict[str, UnstructuredModel] = Models.instance()
 
     if model_name is None:
         default_name_from_env = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_NAME")

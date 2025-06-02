@@ -34,6 +34,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     @classmethod
     def instance(cls):
+        """return an instance if one already exists otherwise create an instance"""
         if cls._instance is None:
             cls._instance = cls.__new__(cls)
         return cls._instance
