@@ -1,3 +1,7 @@
+## 1.0.5
+
+* feat: add thread lock to prevent racing condition when instantiating singletons
+
 ## 1.0.4
 
 * feat: use singleton instead of `global` to store shared variables

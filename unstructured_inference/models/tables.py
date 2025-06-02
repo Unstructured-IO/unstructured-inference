@@ -1,5 +1,6 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
+import threading
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
@@ -28,6 +29,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     """Unstructured model wrapper for table-transformer."""
 
     _instance = None
+    _lock = threading.Lock()
 
     def __init__(self):
         pass
@@ -36,7 +38,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     def instance(cls):
         """return an instance if one already exists otherwise create an instance"""
         if cls._instance is None:
-            cls._instance = cls.__new__(cls)
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls.__new__(cls)
         return cls._instance
 
     def predict(

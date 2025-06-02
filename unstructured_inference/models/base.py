@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from typing import Dict, Optional, Tuple, Type
 
 from unstructured_inference.models.detectron2onnx import (
@@ -18,12 +19,15 @@ DEFAULT_MODEL = "yolox"
 
 class Models(object):
     _instance = None
+    _lock = threading.Lock()
 
     def __new__(cls):
         """return an instance if one already exists otherwise create an instance"""
         if cls._instance is None:
-            cls._instance = super(Models, cls).__new__(cls)
-            cls.models: Dict[str, UnstructuredModel] = {}
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(Models, cls).__new__(cls)
+                    cls.models: Dict[str, UnstructuredModel] = {}
         return cls._instance
 
     def __contains__(self, key):
