@@ -36,7 +36,7 @@ class Models(object):
         self.models[key] = value
 
 
-models: Dict[str, UnstructuredModel] = Models()
+models: Models = Models()
 
 
 def get_default_model_mappings() -> Tuple[
