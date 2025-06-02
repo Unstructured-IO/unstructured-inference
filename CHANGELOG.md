@@ -1,3 +1,7 @@
+## 1.0.4
+
+* feat: use singleton instead of `global` to store shared variables
+
 ## 1.0.3
 
 * setting longest_edge=1333 to the table image processor

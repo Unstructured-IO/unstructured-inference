@@ -27,8 +27,17 @@ from . import table_postprocess as postprocess
 class UnstructuredTableTransformerModel(UnstructuredModel):
     """Unstructured model wrapper for table-transformer."""
 
+    _instance = None
+
     def __init__(self):
         pass
+
+    @classmethod
+    def instance(cls):
+        """return an instance if one already exists otherwise create an instance"""
+        if cls._instance is None:
+            cls._instance = cls.__new__(cls)
+        return cls._instance
 
     def predict(
         self,
@@ -72,7 +81,8 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             cached_current_verbosity = logging.get_verbosity()
             logging.set_verbosity_error()
             self.model = TableTransformerForObjectDetection.from_pretrained(
-                model, device_map=self.device
+                model,
+                device_map=self.device,
             )
             logging.set_verbosity(cached_current_verbosity)
             self.model.eval()
@@ -135,12 +145,11 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         return prediction
 
 
-tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerModel()
+tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerModel.instance()
 
 
 def load_agent():
-    """Loads the Table agent as a global variable to ensure that we only load it once."""
-    global tables_agent  # noqa
+    """Loads the Table agent."""
 
     if not hasattr(tables_agent, "model"):
         logger.info("Loading the Table agent ...")
