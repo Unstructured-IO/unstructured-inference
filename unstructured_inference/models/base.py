@@ -15,7 +15,28 @@ from unstructured_inference.utils import LazyDict
 
 DEFAULT_MODEL = "yolox"
 
-models: Dict[str, UnstructuredModel] = {}
+
+class Models(dict):
+    _instance = None
+
+    @classmethod
+    def instance(cls):
+        if cls._instance is None:
+            cls._instance = cls.__new__(cls)
+            cls.models: Dict[str, UnstructuredModel] = {}
+        return cls._instance
+
+    def __contains__(self, key):
+        return key in self.models
+
+    def __getitem__(self, key: str):
+        return self.models.__getitem__(key)
+
+    def __setitem__(self, key: str, value: UnstructuredModel):
+        self.models[key] = value
+
+
+models: Dict[str, UnstructuredModel] = Models.instance()
 
 
 def get_default_model_mappings() -> Tuple[
@@ -45,8 +66,6 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     """Gets the model object by model name."""
     # TODO(alan): These cases are similar enough that we can probably do them all together with
     # importlib
-
-    global models  # noqa
 
     if model_name is None:
         default_name_from_env = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_NAME")
