@@ -33,13 +33,12 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     _instance = None
     _lock = threading.Lock()
 
-    def __new__(cls, model: str = DEFAULT_MODEL):
+    def __new__(cls):
         """return an instance if one already exists otherwise create an instance"""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
                     cls._instance = super(UnstructuredTableTransformerModel, cls).__new__(cls)
-                    cls._instance.initialize(model)
         return cls._instance
 
     def predict(
