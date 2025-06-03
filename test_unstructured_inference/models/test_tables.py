@@ -1907,6 +1907,7 @@ def test_subcells_filtering_when_overlapping_spanning_cells(
 
 def test_model_init_is_thread_safe():
     threads = []
+    tables.tables_agent.model = None
     for i in range(5):
         thread = threading.Thread(target=tables.load_agent)
         threads.append(thread)
@@ -1914,3 +1915,5 @@ def test_model_init_is_thread_safe():
 
     for thread in threads:
         thread.join()
+
+    assert tables.tables_agent.model is not None
