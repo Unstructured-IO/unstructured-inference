@@ -1,3 +1,7 @@
+## 1.0.5-dev0
+
+* feat: parametrize edge config for `DetrImageProcessor` with env variables
+
 ## 1.0.4
 
 * feat: use singleton instead of `global` to store shared variables
