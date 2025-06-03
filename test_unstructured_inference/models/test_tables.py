@@ -1,4 +1,6 @@
 import os
+import threading
+from copy import deepcopy
 
 import numpy as np
 import pytest
@@ -7,7 +9,6 @@ from PIL import Image
 from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerDecoder,
 )
-from copy import deepcopy
 
 import unstructured_inference.models.table_postprocess as postprocess
 from unstructured_inference.models import tables
@@ -572,7 +573,7 @@ def test_load_table_model_raises_when_not_available(model_path):
 
 
 @pytest.mark.parametrize(
-    "bbox1, bbox2, expected_result",
+    ("bbox1", "bbox2", "expected_result"),
     [
         ((0, 0, 5, 5), (2, 2, 7, 7), 0.36),
         ((0, 0, 0, 0), (6, 6, 10, 10), 0),
@@ -921,7 +922,9 @@ def test_table_prediction_output_format(
     )
     if output_format:
         result = table_transformer.run_prediction(
-            example_image, result_format=output_format, ocr_tokens=mocked_ocr_tokens
+            example_image,
+            result_format=output_format,
+            ocr_tokens=mocked_ocr_tokens,
         )
     else:
         result = table_transformer.run_prediction(example_image, ocr_tokens=mocked_ocr_tokens)
@@ -952,7 +955,9 @@ def test_table_prediction_output_format_when_wrong_type_then_value_error(
     )
     with pytest.raises(ValueError):
         table_transformer.run_prediction(
-            example_image, result_format="Wrong format", ocr_tokens=mocked_ocr_tokens
+            example_image,
+            result_format="Wrong format",
+            ocr_tokens=mocked_ocr_tokens,
         )
 
 
@@ -991,7 +996,8 @@ def test_table_prediction_with_no_ocr_tokens(table_transformer, example_image):
     ],
 )
 def test_objects_are_filtered_based_on_class_thresholds_when_correct_prediction_and_threshold(
-    thresholds, expected_object_number
+    thresholds,
+    expected_object_number,
 ):
     objects = [
         {"label": "0", "score": 0.2},
@@ -1010,7 +1016,8 @@ def test_objects_are_filtered_based_on_class_thresholds_when_correct_prediction_
     ],
 )
 def test_objects_are_filtered_based_on_class_thresholds_when_two_classes(
-    thresholds, expected_object_number
+    thresholds,
+    expected_object_number,
 ):
     objects = [
         {"label": "0", "score": 0.2},
@@ -1800,7 +1807,7 @@ def test_compute_confidence_score_zero_division_error_handling():
 
 
 @pytest.mark.parametrize(
-    "column_span_score, row_span_score, expected_text_to_indexes",
+    ("column_span_score", "row_span_score", "expected_text_to_indexes"),
     [
         (
             0.9,
@@ -1827,7 +1834,9 @@ def test_compute_confidence_score_zero_division_error_handling():
     ],
 )
 def test_subcells_filtering_when_overlapping_spanning_cells(
-    column_span_score, row_span_score, expected_text_to_indexes
+    column_span_score,
+    row_span_score,
+    expected_text_to_indexes,
 ):
     """
     # table
@@ -1894,3 +1903,14 @@ def test_subcells_filtering_when_overlapping_spanning_cells(
 
     predicted_cells_after_reorder, _ = structure_to_cells(saved_table_structure, tokens=tokens)
     assert predicted_cells_after_reorder == predicted_cells
+
+
+def test_model_init_is_thread_safe():
+    threads = []
+    for i in range(5):
+        thread = threading.Thread(target=tables.load_agent)
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
