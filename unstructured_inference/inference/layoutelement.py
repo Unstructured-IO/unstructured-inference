@@ -75,7 +75,7 @@ class LayoutElements(TextRegions):
             and np.array_equal(self.table_as_cells[mask], other.table_as_cells[mask])
         )
 
-    def slice(self, indices) -> LayoutElements:
+    def __getitem__(self, indices) -> LayoutElements:
         """slice and return only selected indices"""
         return LayoutElements(
             element_coords=self.element_coords[indices],
