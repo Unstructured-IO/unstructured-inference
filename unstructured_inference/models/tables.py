@@ -153,9 +153,9 @@ tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerMo
 def load_agent():
     """Loads the Table agent."""
 
-    if not hasattr(tables_agent, "model"):
+    if getattr(tables_agent, "model", None) is None:
         with tables_agent._lock:
-            if not hasattr(tables_agent, "model"):
+            if getattr(tables_agent, "model", None) is None:
                 logger.info("Loading the Table agent ...")
                 tables_agent.initialize(DEFAULT_MODEL)
 
