@@ -31,16 +31,13 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     _instance = None
     _lock = threading.Lock()
 
-    def __init__(self):
-        pass
-
-    @classmethod
-    def instance(cls):
+    def __new__(cls):
         """return an instance if one already exists otherwise create an instance"""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
-                    cls._instance = cls.__new__(cls)
+                    cls._instance = super(UnstructuredTableTransformerModel, cls).__new__(cls)
+                    cls._instance.initialize("microsoft/table-transformer-structure-recognition")
         return cls._instance
 
     def predict(
@@ -149,15 +146,17 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         return prediction
 
 
-tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerModel.instance()
+tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerModel()
 
 
 def load_agent():
     """Loads the Table agent."""
 
     if not hasattr(tables_agent, "model"):
-        logger.info("Loading the Table agent ...")
-        tables_agent.initialize("microsoft/table-transformer-structure-recognition")
+        with tables_agent._lock:
+            if not hasattr(tables_agent, "model"):
+                logger.info("Loading the Table agent ...")
+                tables_agent.initialize("microsoft/table-transformer-structure-recognition")
 
     return
 
