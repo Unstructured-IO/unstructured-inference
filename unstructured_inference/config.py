@@ -106,5 +106,15 @@ class InferenceConfig:
         """Same as ELEMENTS_H_PADDING_COEF but the vertical extension."""
         return self._get_float("ELEMENTS_V_PADDING_COEF", 0.3)
 
+    @property
+    def IMG_PROCESSOR_LONGEST_EDGE(self) -> int:
+        """configuration for DetrImageProcessor to scale images"""
+        return self._get_int("IMG_PROCESSOR_LONGEST_EDGE", 1333)
+
+    @property
+    def IMG_PROCESSOR_SHORTEST_EDGE(self) -> int:
+        """configuration for DetrImageProcessor to scale images"""
+        return self._get_int("IMG_PROCESSOR_SHORTEST_EDGE", 800)
+
 
 inference_config = InferenceConfig()

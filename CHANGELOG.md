@@ -1,6 +1,15 @@
-## 1.0.4
+## 1.0.6
 
 * Add slicing through indexing for vectorized elements
+
+## 1.0.5
+
+* feat: add thread lock to prevent racing condition when instantiating singletons
+* feat: parametrize edge config for `DetrImageProcessor` with env variables
+
+## 1.0.4
+
+* feat: use singleton instead of `global` to store shared variables
 
 ## 1.0.3
 
