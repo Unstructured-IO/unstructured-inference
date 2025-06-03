@@ -1,3 +1,7 @@
+## 1.0.4
+
+* Add slicing through indexing for vectorized elements
+
 ## 1.0.3
 
 * setting longest_edge=1333 to the table image processor
