@@ -73,8 +73,8 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         self.feature_extractor = DetrImageProcessor.from_pretrained(model)
         # value not set in the configuration and needed for newer models
         # https://huggingface.co/microsoft/table-transformer-structure-recognition-v1.1-all/discussions/1
-        self.feature_extractor.size["shortest_edge"] = 800
-        self.feature_extractor.size["longest_edge"] = 1333
+        self.feature_extractor.size["shortest_edge"] = inference_config.IMG_PROCESSOR_SHORTEST_EDGE
+        self.feature_extractor.size["longest_edge"] = inference_config.IMG_PROCESSOR_LONGEST_EDGE
 
         try:
             logger.info("Loading the table structure model ...")
