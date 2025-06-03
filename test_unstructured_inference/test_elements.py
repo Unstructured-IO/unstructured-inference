@@ -474,25 +474,47 @@ def test_layoutelements_concatenate():
     assert joint.element_class_id_map == {0: "type0", 1: "type1", 2: "type2"}
 
 
-def test_textregions_support_numpy_slicing():
-    trs = TextRegions(
-        element_coords=np.array(
-            [
-                [0.0, 0.0, 1.0, 1.0],
-                [1.0, 0.0, 1.5, 1.0],
-                [2.0, 0.0, 2.5, 1.0],
-                [3.0, 0.0, 4.0, 1.0],
-                [4.0, 0.0, 5.0, 1.0],
-            ]
+@pytest.mark.parametrize(
+    "test_elements",
+    [
+        TextRegions(
+            element_coords=np.array(
+                [
+                    [0.0, 0.0, 1.0, 1.0],
+                    [1.0, 0.0, 1.5, 1.0],
+                    [2.0, 0.0, 2.5, 1.0],
+                    [3.0, 0.0, 4.0, 1.0],
+                    [4.0, 0.0, 5.0, 1.0],
+                ]
+            ),
+            texts=np.array(["0", "1", "2", "3", "4"]),
+            sources=np.array(["foo", "foo", "foo", "foo", "foo"], dtype="<U3"),
+            source=np.str_("foo"),
         ),
-        texts=np.array(["0", "1", "2", "3", "4"]),
-        sources=np.array(["foo", "foo", "foo", "foo", "foo"], dtype="<U3"),
-        source=np.str_("foo"),
-    )
-    np.testing.assert_equal(trs[1:4].texts, np.array(["1", "2", "3"]))
-    np.testing.assert_equal(trs[0::2].texts, np.array(["0", "2", "4"]))
-    np.testing.assert_equal(trs[[1, 2, 4]].texts, np.array(["1", "2", "4"]))
-    np.testing.assert_equal(trs[np.array([1, 2, 4])].texts, np.array(["1", "2", "4"]))
+        LayoutElements(
+            element_coords=np.array(
+                [
+                    [0.0, 0.0, 1.0, 1.0],
+                    [1.0, 0.0, 1.5, 1.0],
+                    [2.0, 0.0, 2.5, 1.0],
+                    [3.0, 0.0, 4.0, 1.0],
+                    [4.0, 0.0, 5.0, 1.0],
+                ]
+            ),
+            texts=np.array(["0", "1", "2", "3", "4"]),
+            sources=np.array(["foo", "foo", "foo", "foo", "foo"], dtype="<U3"),
+            source=np.str_("foo"),
+            element_probs=np.array([0.0, 0.1, 0.2, 0.3, 0.4]),
+        ),
+    ],
+)
+def test_textregions_support_numpy_slicing(test_elements):
+    np.testing.assert_equal(test_elements[1:4].texts, np.array(["1", "2", "3"]))
+    np.testing.assert_equal(test_elements[0::2].texts, np.array(["0", "2", "4"]))
+    np.testing.assert_equal(test_elements[[1, 2, 4]].texts, np.array(["1", "2", "4"]))
+    np.testing.assert_equal(test_elements[np.array([1, 2, 4])].texts, np.array(["1", "2", "4"]))
     np.testing.assert_equal(
-        trs[np.array([True, False, False, True, False])].texts, np.array(["0", "3"])
+        test_elements[np.array([True, False, False, True, False])].texts, np.array(["0", "3"])
     )
+    if isinstance(test_elements, LayoutElements):
+        np.testing.assert_almost_equal(test_elements[1:4].element_probs, np.array([0.1, 0.2, 0.3]))
