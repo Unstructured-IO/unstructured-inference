@@ -1,6 +1,7 @@
 ## 1.0.5
 
 * feat: add thread lock to prevent racing condition when instantiating singletons
+* feat: parametrize edge config for `DetrImageProcessor` with env variables
 
 ## 1.0.4
 
