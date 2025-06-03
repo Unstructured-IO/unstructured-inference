@@ -24,6 +24,8 @@ from unstructured_inference.utils import pad_image_with_background_color
 
 from . import table_postprocess as postprocess
 
+DEFAULT_MODEL = "microsoft/table-transformer-structure-recognition"
+
 
 class UnstructuredTableTransformerModel(UnstructuredModel):
     """Unstructured model wrapper for table-transformer."""
@@ -31,13 +33,13 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     _instance = None
     _lock = threading.Lock()
 
-    def __new__(cls):
+    def __new__(cls, model: str = DEFAULT_MODEL):
         """return an instance if one already exists otherwise create an instance"""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
                     cls._instance = super(UnstructuredTableTransformerModel, cls).__new__(cls)
-                    cls._instance.initialize("microsoft/table-transformer-structure-recognition")
+                    cls._instance.initialize(model)
         return cls._instance
 
     def predict(
@@ -156,7 +158,7 @@ def load_agent():
         with tables_agent._lock:
             if not hasattr(tables_agent, "model"):
                 logger.info("Loading the Table agent ...")
-                tables_agent.initialize("microsoft/table-transformer-structure-recognition")
+                tables_agent.initialize(DEFAULT_MODEL)
 
     return
 
