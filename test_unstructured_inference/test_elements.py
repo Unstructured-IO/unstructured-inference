@@ -472,3 +472,27 @@ def test_layoutelements_concatenate():
     assert joint.sources.tolist() == ["yolox", "yolox", "ocr", "ocr"]
     assert joint.element_class_ids.tolist() == [0, 1, 1, 2]
     assert joint.element_class_id_map == {0: "type0", 1: "type1", 2: "type2"}
+
+
+def test_textregions_support_numpy_slicing():
+    trs = TextRegions(
+        element_coords=np.array(
+            [
+                [0.0, 0.0, 1.0, 1.0],
+                [1.0, 0.0, 1.5, 1.0],
+                [2.0, 0.0, 2.5, 1.0],
+                [3.0, 0.0, 4.0, 1.0],
+                [4.0, 0.0, 5.0, 1.0],
+            ]
+        ),
+        texts=np.array(["0", "1", "2", "3", "4"]),
+        sources=np.array(["foo", "foo", "foo", "foo", "foo"], dtype="<U3"),
+        source=np.str_("foo"),
+    )
+    np.testing.assert_equal(trs[1:4].texts, np.array(["1", "2", "3"]))
+    np.testing.assert_equal(trs[0::2].texts, np.array(["0", "2", "4"]))
+    np.testing.assert_equal(trs[[1, 2, 4]].texts, np.array(["1", "2", "4"]))
+    np.testing.assert_equal(trs[np.array([1, 2, 4])].texts, np.array(["1", "2", "4"]))
+    np.testing.assert_equal(
+        trs[np.array([True, False, False, True, False])].texts, np.array(["0", "3"])
+    )
