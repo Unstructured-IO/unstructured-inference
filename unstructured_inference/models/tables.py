@@ -1,5 +1,6 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
+import threading
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
@@ -23,20 +24,21 @@ from unstructured_inference.utils import pad_image_with_background_color
 
 from . import table_postprocess as postprocess
 
+DEFAULT_MODEL = "microsoft/table-transformer-structure-recognition"
+
 
 class UnstructuredTableTransformerModel(UnstructuredModel):
     """Unstructured model wrapper for table-transformer."""
 
     _instance = None
+    _lock = threading.Lock()
 
-    def __init__(self):
-        pass
-
-    @classmethod
-    def instance(cls):
+    def __new__(cls):
         """return an instance if one already exists otherwise create an instance"""
         if cls._instance is None:
-            cls._instance = cls.__new__(cls)
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(UnstructuredTableTransformerModel, cls).__new__(cls)
         return cls._instance
 
     def predict(
@@ -70,7 +72,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     ):
         """Loads the donut model using the specified parameters"""
         self.device = device
-        self.feature_extractor = DetrImageProcessor.from_pretrained(model)
+        self.feature_extractor = DetrImageProcessor.from_pretrained(model, device_map=self.device)
         # value not set in the configuration and needed for newer models
         # https://huggingface.co/microsoft/table-transformer-structure-recognition-v1.1-all/discussions/1
         self.feature_extractor.size["shortest_edge"] = inference_config.IMG_PROCESSOR_SHORTEST_EDGE
@@ -145,15 +147,17 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         return prediction
 
 
-tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerModel.instance()
+tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerModel()
 
 
 def load_agent():
     """Loads the Table agent."""
 
-    if not hasattr(tables_agent, "model"):
-        logger.info("Loading the Table agent ...")
-        tables_agent.initialize("microsoft/table-transformer-structure-recognition")
+    if getattr(tables_agent, "model", None) is None:
+        with tables_agent._lock:
+            if getattr(tables_agent, "model", None) is None:
+                logger.info("Loading the Table agent ...")
+                tables_agent.initialize(DEFAULT_MODEL)
 
     return
 
