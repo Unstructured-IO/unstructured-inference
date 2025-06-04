@@ -1,3 +1,7 @@
+## 1.0.6
+
+* Add slicing through indexing for vectorized elements
+
 ## 1.0.5
 
 * feat: add thread lock to prevent racing condition when instantiating singletons
