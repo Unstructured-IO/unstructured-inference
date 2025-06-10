@@ -226,6 +226,9 @@ class TextRegions:
         # we convert to float so data type is more consistent (e.g., None will be np.nan)
         self.element_coords = self.element_coords.astype(float)
 
+    def __getitem__(self, indices) -> TextRegions:
+        return self.slice(indices)
+
     def slice(self, indices) -> TextRegions:
         """slice text regions based on indices"""
         return TextRegions(

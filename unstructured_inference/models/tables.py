@@ -1,5 +1,6 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
+import threading
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
@@ -23,12 +24,22 @@ from unstructured_inference.utils import pad_image_with_background_color
 
 from . import table_postprocess as postprocess
 
+DEFAULT_MODEL = "microsoft/table-transformer-structure-recognition"
+
 
 class UnstructuredTableTransformerModel(UnstructuredModel):
     """Unstructured model wrapper for table-transformer."""
 
-    def __init__(self):
-        pass
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        """return an instance if one already exists otherwise create an instance"""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(UnstructuredTableTransformerModel, cls).__new__(cls)
+        return cls._instance
 
     def predict(
         self,
@@ -61,18 +72,19 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     ):
         """Loads the donut model using the specified parameters"""
         self.device = device
-        self.feature_extractor = DetrImageProcessor.from_pretrained(model)
+        self.feature_extractor = DetrImageProcessor.from_pretrained(model, device_map=self.device)
         # value not set in the configuration and needed for newer models
         # https://huggingface.co/microsoft/table-transformer-structure-recognition-v1.1-all/discussions/1
-        self.feature_extractor.size["shortest_edge"] = 800
-        self.feature_extractor.size["longest_edge"] = 1333
+        self.feature_extractor.size["shortest_edge"] = inference_config.IMG_PROCESSOR_SHORTEST_EDGE
+        self.feature_extractor.size["longest_edge"] = inference_config.IMG_PROCESSOR_LONGEST_EDGE
 
         try:
             logger.info("Loading the table structure model ...")
             cached_current_verbosity = logging.get_verbosity()
             logging.set_verbosity_error()
             self.model = TableTransformerForObjectDetection.from_pretrained(
-                model, device_map=self.device
+                model,
+                device_map=self.device,
             )
             logging.set_verbosity(cached_current_verbosity)
             self.model.eval()
@@ -139,12 +151,13 @@ tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerMo
 
 
 def load_agent():
-    """Loads the Table agent as a global variable to ensure that we only load it once."""
-    global tables_agent  # noqa
+    """Loads the Table agent."""
 
-    if not hasattr(tables_agent, "model"):
-        logger.info("Loading the Table agent ...")
-        tables_agent.initialize("microsoft/table-transformer-structure-recognition")
+    if getattr(tables_agent, "model", None) is None:
+        with tables_agent._lock:
+            if getattr(tables_agent, "model", None) is None:
+                logger.info("Loading the Table agent ...")
+                tables_agent.initialize(DEFAULT_MODEL)
 
     return
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from typing import Dict, Optional, Tuple, Type
 
 from unstructured_inference.models.detectron2onnx import (
@@ -15,7 +16,31 @@ from unstructured_inference.utils import LazyDict
 
 DEFAULT_MODEL = "yolox"
 
-models: Dict[str, UnstructuredModel] = {}
+
+class Models(object):
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        """return an instance if one already exists otherwise create an instance"""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(Models, cls).__new__(cls)
+                    cls.models: Dict[str, UnstructuredModel] = {}
+        return cls._instance
+
+    def __contains__(self, key):
+        return key in self.models
+
+    def __getitem__(self, key: str):
+        return self.models.__getitem__(key)
+
+    def __setitem__(self, key: str, value: UnstructuredModel):
+        self.models[key] = value
+
+
+models: Models = Models()
 
 
 def get_default_model_mappings() -> Tuple[
@@ -45,8 +70,6 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     """Gets the model object by model name."""
     # TODO(alan): These cases are similar enough that we can probably do them all together with
     # importlib
-
-    global models  # noqa
 
     if model_name is None:
         default_name_from_env = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_NAME")
