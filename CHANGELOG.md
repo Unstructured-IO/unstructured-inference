@@ -1,3 +1,7 @@
+## 1.0.7
+
+* Fix a hardcoded file extension causing confusion in the logs
+
 ## 1.0.6
 
 * Add slicing through indexing for vectorized elements
