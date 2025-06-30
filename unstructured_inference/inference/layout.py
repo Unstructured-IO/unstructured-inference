@@ -368,8 +368,8 @@ def process_file_with_model(
     password: Optional[str] = None,
     **kwargs: Any,
 ) -> DocumentLayout:
-    """Processes pdf or image file with name filename into a DocumentLayout by using a model identified by
-    model_name."""
+    """Processes pdf or image file with name filename into a DocumentLayout by using
+    a model identified by model_name."""
 
     model = get_model(model_name, **kwargs)
     if isinstance(model, UnstructuredObjectDetectionModel):
