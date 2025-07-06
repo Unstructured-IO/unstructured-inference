@@ -229,6 +229,9 @@ class TextRegions:
     def __getitem__(self, indices) -> TextRegions:
         return self.slice(indices)
 
+    def __iter__(self):
+        return self.iter_elements()
+
     def slice(self, indices) -> TextRegions:
         """slice text regions based on indices"""
         return TextRegions(
