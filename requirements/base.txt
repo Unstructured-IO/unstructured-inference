@@ -4,41 +4,59 @@
 #
 #    pip-compile requirements/base.in
 #
-accelerate==1.7.0
-    # via -r requirements/base.in
-certifi==2025.4.26
+accelerate==1.10.0
+    # via
+    #   -r requirements/base.in
+    #   docling-ibm-models
+annotated-types==0.7.0
+    # via pydantic
+attrs==25.3.0
+    # via
+    #   jsonlines
+    #   jsonschema
+    #   referencing
+certifi==2025.8.3
     # via requests
 cffi==1.17.1
     # via cryptography
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via
     #   pdfminer-six
     #   requests
+click==8.2.1
+    # via typer
 coloredlogs==15.0.1
     # via onnxruntime
-contourpy==1.3.2
+contourpy==1.3.3
     # via matplotlib
-cryptography==44.0.3
+cryptography==45.0.6
     # via pdfminer-six
 cycler==0.12.1
     # via matplotlib
-filelock==3.18.0
+docling-core==2.44.2
+    # via docling-ibm-models
+docling-ibm-models==3.9.0
+    # via -r requirements/base.in
+filelock==3.19.1
     # via
     #   huggingface-hub
     #   torch
     #   transformers
 flatbuffers==25.2.10
     # via onnxruntime
-fonttools==4.58.0
+fonttools==4.59.1
     # via matplotlib
-fsspec==2025.3.2
+fsspec==2025.7.0
     # via
     #   huggingface-hub
     #   torch
-huggingface-hub==0.31.2
+hf-xet==1.1.8
+    # via huggingface-hub
+huggingface-hub==0.34.4
     # via
     #   -r requirements/base.in
     #   accelerate
+    #   docling-ibm-models
     #   timm
     #   tokenizers
     #   transformers
@@ -48,35 +66,54 @@ idna==3.10
     # via requests
 jinja2==3.1.6
     # via torch
-kiwisolver==1.4.8
+jsonlines==3.1.0
+    # via docling-ibm-models
+jsonref==1.1.0
+    # via docling-core
+jsonschema==4.25.1
+    # via docling-core
+jsonschema-specifications==2025.4.1
+    # via jsonschema
+kiwisolver==1.4.9
     # via matplotlib
+latex2mathml==3.78.0
+    # via docling-core
+markdown-it-py==4.0.0
+    # via rich
 markupsafe==3.0.2
     # via jinja2
-matplotlib==3.10.3
+matplotlib==3.10.5
     # via -r requirements/base.in
+mdurl==0.1.2
+    # via markdown-it-py
 mpmath==1.3.0
     # via sympy
-networkx==3.4.2
+networkx==3.5
     # via torch
-numpy==2.2.5
+numpy==2.2.6
     # via
     #   -r requirements/base.in
     #   accelerate
     #   contourpy
+    #   docling-ibm-models
     #   matplotlib
     #   onnx
     #   onnxruntime
     #   opencv-python
+    #   opencv-python-headless
     #   pandas
+    #   safetensors
     #   scipy
     #   torchvision
     #   transformers
 onnx==1.18.0
     # via -r requirements/base.in
-onnxruntime==1.22.0
+onnxruntime==1.22.1
     # via -r requirements/base.in
-opencv-python==4.11.0.86
+opencv-python==4.12.0.88
     # via -r requirements/base.in
+opencv-python-headless==4.12.0.88
+    # via docling-ibm-models
 packaging==25.0
     # via
     #   accelerate
@@ -84,15 +121,19 @@ packaging==25.0
     #   matplotlib
     #   onnxruntime
     #   transformers
-pandas==2.2.3
-    # via -r requirements/base.in
+pandas==2.3.1
+    # via
+    #   -r requirements/base.in
+    #   docling-core
 pdfminer-six==20250506
     # via -r requirements/base.in
-pillow==11.2.1
+pillow==11.3.0
     # via
+    #   docling-core
+    #   docling-ibm-models
     #   matplotlib
     #   torchvision
-protobuf==6.31.0
+protobuf==6.32.0
     # via
     #   onnx
     #   onnxruntime
@@ -100,9 +141,17 @@ psutil==7.0.0
     # via accelerate
 pycparser==2.22
     # via cffi
+pydantic==2.11.7
+    # via
+    #   docling-core
+    #   docling-ibm-models
+pydantic-core==2.33.2
+    # via pydantic
+pygments==2.19.2
+    # via rich
 pyparsing==3.2.3
     # via matplotlib
-pypdfium2==4.30.1
+pypdfium2==4.30.0
     # via -r requirements/base.in
 python-dateutil==2.9.0.post0
     # via
@@ -115,56 +164,91 @@ pytz==2025.2
 pyyaml==6.0.2
     # via
     #   accelerate
+    #   docling-core
     #   huggingface-hub
     #   timm
     #   transformers
 rapidfuzz==3.13.0
     # via -r requirements/base.in
-regex==2024.11.6
+referencing==0.36.2
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
+regex==2025.7.34
     # via transformers
-requests==2.32.3
+requests==2.32.5
     # via
     #   huggingface-hub
     #   transformers
-safetensors==0.5.3
+rich==14.1.0
+    # via typer
+rpds-py==0.27.0
+    # via
+    #   jsonschema
+    #   referencing
+rtree==1.4.1
+    # via docling-ibm-models
+safetensors[numpy,torch]==0.6.2
     # via
     #   accelerate
+    #   docling-ibm-models
     #   timm
     #   transformers
-scipy==1.15.3
+scipy==1.16.1
     # via -r requirements/base.in
+shellingham==1.5.4
+    # via typer
 six==1.17.0
     # via python-dateutil
 sympy==1.14.0
     # via
     #   onnxruntime
     #   torch
-timm==1.0.15
+tabulate==0.9.0
+    # via docling-core
+timm==1.0.19
     # via -r requirements/base.in
-tokenizers==0.21.1
+tokenizers==0.21.4
     # via transformers
-torch==2.7.0
+torch==2.8.0
     # via
     #   -r requirements/base.in
     #   accelerate
+    #   docling-ibm-models
+    #   safetensors
     #   timm
     #   torchvision
-torchvision==0.22.0
-    # via timm
+torchvision==0.23.0
+    # via
+    #   docling-ibm-models
+    #   timm
 tqdm==4.67.1
     # via
+    #   docling-ibm-models
     #   huggingface-hub
     #   transformers
-transformers==4.51.3
-    # via -r requirements/base.in
-typing-extensions==4.13.2
+transformers==4.55.2
     # via
+    #   -r requirements/base.in
+    #   docling-ibm-models
+typer==0.16.1
+    # via docling-core
+typing-extensions==4.14.1
+    # via
+    #   docling-core
     #   huggingface-hub
     #   onnx
+    #   pydantic
+    #   pydantic-core
+    #   referencing
     #   torch
+    #   typer
+    #   typing-inspection
+typing-inspection==0.4.1
+    # via pydantic
 tzdata==2025.2
     # via pandas
-urllib3==2.4.0
+urllib3==2.5.0
     # via requests
 
 # The following packages are considered to be unsafe in a requirements file:

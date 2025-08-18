@@ -8,6 +8,7 @@ onnxruntime>=1.18.0
 matplotlib
 torch
 timm
+docling-ibm-models>=3.9.0
 # NOTE(alan): Pinned because this is when the most recent module we import appeared
 transformers>=4.25.1
 accelerate
