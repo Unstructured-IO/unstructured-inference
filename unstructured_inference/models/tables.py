@@ -181,6 +181,7 @@ class UnstructuredTableFormerModel(UnstructuredModel):
         self,
         x: PILImage.Image,
         ocr_tokens: Optional[List[Dict]] = None,
+        result_format: str = "html",
         scale_factor: float = 0.62,
     ) -> Any:
         """
@@ -232,18 +233,56 @@ class UnstructuredTableFormerModel(UnstructuredModel):
             num_rows=num_rows,
             num_cols=num_cols,
         )
-        t = TableItem(data=td, self_ref="#/table")
+        table_item = TableItem(data=td, self_ref="#/table")
 
-        # Convert the output into HTML
-        doc_ser = HTMLDocSerializer(doc={"name": ""})  # Serializer with empty doc
-        html_ser = HTMLTableSerializer()
-        table_html = html_ser.serialize(
-            item=t,
-            doc_serializer=doc_ser,
-            doc=None,
-        ).text  # serialize HTML without doc
+        if result_format == "html":
+            doc_ser = HTMLDocSerializer(doc={"name": ""})  # Serializer with empty doc
+            html_ser = HTMLTableSerializer()
+            table_html = html_ser.serialize(
+                    item=table_item,
+                    doc_serializer=doc_ser,
+                    doc=None,
+                ).text  # serialize HTML without doc
 
-        return table_html
+            return table_html
+        elif result_format == "dataframe":
+            return table_item.export_to_dataframe()
+        elif result_format == "cells":
+            return table_item_to_cells(table_item)
+        else:
+            raise ValueError(
+                f"result_format {result_format} is not a valid format. "
+                f'Valid formats are: "html", "dataframe", "cells"',
+            )
+
+def cells_to_html(table_item: TableItem) -> List[Dict]:
+    """
+    Convert a list of table cells to an HTML representation.
+    
+    Args:
+        cells: List of dictionaries representing table cells, where each dictionary has the following keys:
+    
+    row_nums: List[int]
+        the row numbers this cell belongs to; for cells spanning multiple rows there are more than
+        one numbers
+    column_nums: List[int]
+        the columns numbers this cell belongs to; for cells spanning multiple columns there are more
+        than one numbers
+    cell text: str
+        the text in this cell
+    column header: bool
+        whether this cell is a column header
+    """
+    table_cells = table_item.data.table_cells
+
+    cells = [{
+        "row_nums": [cell.start_row_offset_idx] + list(range(cell.start_row_offset_idx + 1, cell.end_row_offset_idx + 1)),
+        "column_nums": [cell.start_col_offset_idx] + list(range(cell.start_col_offset_idx + 1, cell.end_col_offset_idx + 1)),
+        "cell text": cell.text,
+        "column header": cell.column_header
+    } for cell in table_cells]
+
+    return cells
 
 
 tables_agent = (
