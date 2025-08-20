@@ -162,6 +162,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 class UnstructuredTableFormerModel(UnstructuredModel):
     def initialize(
         self,
+        model = None, # currently ignored
         device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         # Downloads the model if not downloaded already
