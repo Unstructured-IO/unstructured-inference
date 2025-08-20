@@ -1,5 +1,7 @@
 # https://github.com/microsoft/table-transformer/blob/main/src/inference.py
 # https://github.com/NielsRogge/Transformers-Tutorials/blob/master/Table%20Transformer/Using_Table_Transformer_for_table_detection_and_table_structure_recognition.ipynb
+import json
+import os
 import threading
 import xml.etree.ElementTree as ET
 from collections import defaultdict
@@ -9,19 +11,19 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 import cv2
 import numpy as np
 import torch
+from docling.models.table_structure_model import TableStructureModel
+from docling_core.transforms.serializer.html import (
+    HTMLDocSerializer,
+    HTMLTableSerializer,
+)
+from docling_core.types.doc import CoordOrigin, TableCell
+from docling_core.types.doc.document import TableData, TableItem
+from docling_ibm_models.tableformer.data_management.tf_predictor import TFPredictor
 from PIL import Image as PILImage
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection, logging
 from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerObjectDetectionOutput,
 )
-
-import json
-
-from docling.models.table_structure_model import TableStructureModel
-from docling_core.transforms.serializer.html import HTMLDocSerializer, HTMLTableSerializer
-from docling_core.types.doc import CoordOrigin, TableCell
-from docling_core.types.doc.document import TableData, TableItem
-from docling_ibm_models.tableformer.data_management.tf_predictor import TFPredictor
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.inference.layoutelement import table_cells_to_dataframe
@@ -33,6 +35,8 @@ from unstructured_inference.utils import pad_image_with_background_color
 from . import table_postprocess as postprocess
 
 DEFAULT_MODEL = "microsoft/table-transformer-structure-recognition"
+
+UNSTRUCTURED_TABLES_AGENT_ENV = "UNSTRUCTURED_TABLES_AGENT"
 
 
 class UnstructuredTableTransformerModel(UnstructuredModel):
@@ -155,7 +159,101 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         return prediction
 
 
-tables_agent: UnstructuredTableTransformerModel = UnstructuredTableTransformerModel()
+class UnstructuredTableFormerModel(UnstructuredModel):
+    def initialize(
+        self,
+        device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
+    ):
+        # Downloads the model if not downloaded already
+        # Returns the path to the local model
+        path = TableStructureModel.download_models()
+
+        # Setting up the model artifacts directory
+        save_dir = path / "model_artifacts/tableformer/accurate/"
+        config = json.load(open(path / save_dir / "tm_config.json"))
+        config["model"]["save_dir"] = save_dir
+
+        # Loading the TFPredictor model
+        self.model = TFPredictor(config=config, device=device)
+
+    def predict(
+        self,
+        x: PILImage.Image,
+        ocr_tokens: Optional[List[Dict]] = None,
+        scale_factor: float = 0.62,
+    ) -> Any:
+        """
+        Predict the table structure from the image and OCR tokens.
+        """
+        # Prepare the image with three RGB channels in a numpy array
+        table_image = x.convert("RGB")
+        table_image = np.array(table_image)
+
+        # The OCR tokens needs to follow a specific docling formatting
+        table_tokens = [
+            {
+                "id": i,
+                "text": token["text"],
+                "bbox": {
+                    "l": token["bbox"][0],
+                    "t": token["bbox"][1],
+                    "r": token["bbox"][2],
+                    "b": token["bbox"][3],
+                    "coord_origin": CoordOrigin.TOPLEFT,
+                },
+            }
+            for i, token in enumerate(ocr_tokens)
+        ]
+        iocr_page = {
+            "width": table_image.shape[1],
+            "height": table_image.shape[0],
+            "image": table_image,
+            "tokens": table_tokens,
+        }
+
+        # Docling needs this to place the table in the document
+        # but we are processing the image only, so we can use the image dimensions
+        table_bbox = [0, 0, table_image.shape[1], table_image.shape[0]]
+
+        # Predicting the table structure
+        output = self.model.predict(
+            iocr_page=iocr_page,
+            table_bbox=table_bbox,
+            table_image=table_image,
+            scale_factor=scale_factor,
+        )
+
+        # Setting up the data structure to generate the HTML of the table
+        num_rows = max(cell["end_row_offset_idx"] for cell in output[0]) + 1
+        num_cols = max(cell["end_col_offset_idx"] for cell in output[0]) + 1
+        td = TableData(
+            table_cells=[TableCell.from_dict_format(c) for c in output[0]],
+            num_rows=num_rows,
+            num_cols=num_cols,
+        )
+        t = TableItem(data=td, self_ref="#/table")
+
+        # Convert the output into HTML
+        doc_ser = HTMLDocSerializer(doc={"name": ""})  # Serializer with empty doc
+        html_ser = HTMLTableSerializer()
+        table_html = html_ser.serialize(
+            item=t,
+            doc_serializer=doc_ser,
+            doc=None,
+        ).text  # serialize HTML without doc
+
+        return table_html
+
+
+tables_agent = (
+    UnstructuredTableFormerModel()
+    if os.getenv(
+        "UNSTRUCTURED_TABLES_AGENT",
+        "TableTransformer",
+    ).upper()
+    == "TABLEFORMER"
+    else UnstructuredTableTransformerModel()
+)
 
 
 def load_agent():
@@ -787,55 +885,3 @@ def zoom_image(image: PILImage.Image, zoom: float) -> PILImage.Image:
     new_image = cv2.erode(new_image, kernel, iterations=1)
 
     return PILImage.fromarray(new_image)
-
-class UnstructuredTableFormerModel(UnstructuredModel):
-    def initialize(
-        self,
-        device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
-    ):
-        # Downloads the model if not downloaded already
-        # Returns the path to the local model
-        path = TableStructureModel.download_models() 
-
-        # Setting up the model artifacts directory
-        save_dir = path / "model_artifacts/tableformer/accurate/"
-        config = json.load(open(path / save_dir / "tm_config.json"))
-        config["model"]["save_dir"] = save_dir
-
-        # Loading the TFPredictor model
-        self.model = TFPredictor(config=config, device=device)
-
-    def predict(self, x: PILImage.Image, ocr_tokens: Optional[List[Dict]] = None, scale_factor: float = 0.62) -> Any:
-        """
-        Predict the table structure from the image and OCR tokens.
-        """
-        # Prepare the image with three RGB channels in a numpy array
-        table_image = x.convert("RGB")
-        table_image = np.array(table_image)
-
-        # The OCR tokens needs to follow a specific docling formatting
-        table_tokens = [{"id": i, 'text': token["text"], "bbox": {"l":token["bbox"][0], "t":token["bbox"][1], "r": token["bbox"][2], "b":token["bbox"][3], 'coord_origin': CoordOrigin.TOPLEFT}} for i, token in enumerate(ocr_tokens)]
-        iocr_page= {'width': table_image.shape[1], 'height': table_image.shape[0], 'image': table_image, 'tokens': table_tokens}
-
-        # Docling needs this to place the table in the document
-        # but we are processing the image only, so we can use the image dimensions
-        table_bbox = [0, 0, table_image.shape[1], table_image.shape[0]]
-
-        # Predicting the table structure
-        output = self.model.predict(iocr_page=iocr_page,
-                           table_bbox=table_bbox,
-                           table_image=table_image,
-                           scale_factor=scale_factor)
-
-        # Setting up the data structure to generate the HTML of the table
-        num_rows = max(cell['end_row_offset_idx'] for cell in output[0]) + 1
-        num_cols = max(cell['end_col_offset_idx'] for cell in output[0]) + 1
-        td = TableData(table_cells=[TableCell.from_dict_format(c) for c in output[0]], num_rows = num_rows, num_cols=num_cols)
-        t = TableItem(data=td, self_ref="#/table")
-
-        # Convert the output into HTML
-        doc_ser = HTMLDocSerializer(doc={"name":""}) # Serializer with empty doc
-        html_ser = HTMLTableSerializer()
-        table_html = html_ser.serialize(item= t, doc_serializer=doc_ser, doc=None).text # serialize HTML without doc
-
-        return table_html
