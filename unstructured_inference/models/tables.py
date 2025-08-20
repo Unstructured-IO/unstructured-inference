@@ -255,7 +255,7 @@ class UnstructuredTableFormerModel(UnstructuredModel):
                 f'Valid formats are: "html", "dataframe", "cells"',
             )
 
-def cells_to_html(table_item: TableItem) -> List[Dict]:
+def table_item_to_cells(table_item: TableItem) -> List[Dict]:
     """
     Convert a list of table cells to an HTML representation.
     
