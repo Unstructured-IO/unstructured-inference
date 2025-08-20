@@ -15,6 +15,13 @@ from transformers.models.table_transformer.modeling_table_transformer import (
     TableTransformerObjectDetectionOutput,
 )
 
+import json
+
+from docling.models.table_structure_model import TableStructureModel
+from docling_core.types.doc import CoordOrigin, TableCell
+from docling_core.types.doc.document import TableData, TableItem
+from docling_ibm_models.tableformer.data_management.tf_predictor import TFPredictor
+
 from unstructured_inference.config import inference_config
 from unstructured_inference.inference.layoutelement import table_cells_to_dataframe
 from unstructured_inference.logger import logger
@@ -779,3 +786,59 @@ def zoom_image(image: PILImage.Image, zoom: float) -> PILImage.Image:
     new_image = cv2.erode(new_image, kernel, iterations=1)
 
     return PILImage.fromarray(new_image)
+
+class UnstructuredTableFormerModel(UnstructuredModel):
+    def initialize(
+        self,
+        device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
+    ):
+        # Downloads the model if not downloaded already
+        # Returns the path to the local model
+        path = TableStructureModel.download_models() 
+
+        # Setting up the model artifacts directory
+        save_dir = path / "model_artifacts/tableformer/accurate/"
+        config = json.load(open(path / save_dir / "tm_config.json"))
+        config["model"]["save_dir"] = save_dir
+
+        # Loading the TFPredictor model
+        self.model = TFPredictor(config=config, device=device)
+
+        """
+        self.model = TableStructureModel(
+            enabled=True,
+            artifacts_path=None,
+            options=TableStructureOptions(),
+            accelerator_options=AcceleratorOptions(),
+        )
+        """
+
+    def predict(self, x: PILImage.Image, ocr_tokens: Optional[List[Dict]] = None, scale_factor: float = 0.62) -> Any:
+        table_image = x.convert("RGB")
+        table_image = np.array(table_image)
+
+
+        table_tokens = [{"id": i, 'text': token["text"], "bbox": {"l":token["bbox"][0], "t":token["bbox"][1], "r": token["bbox"][2], "b":token["bbox"][3], 'coord_origin': CoordOrigin.TOPLEFT}} for i, token in enumerate(ocr_tokens)]
+
+        # page width and height
+        # image: (1584, 1224, 3) height, width, channels numpy.ndarray dtype=uint8
+        # from docling_core.types.doc import BoundingBox, CoordOrigin
+        # tokens, list of dicts example {'id': 83, 'text': 'CPU', 'bbox': {'l': 269.048, 't': 332.36400000000003, 'r': 307.802, 'b': 349.4680000000001, 'coord_origin': <CoordOrigin.TOPLEFT: 'TOPLEFT'>}}
+        iocr_page= {'width': table_image.shape[1], 'height': table_image.shape[0], 'image': table_image, 'tokens': table_tokens}
+
+        table_bbox = [0, 0, table_image.shape[1], table_image.shape[0]]
+
+        output = self.model.predict(iocr_page=iocr_page,
+                           table_bbox=table_bbox,
+                           table_image=table_image,
+                           scale_factor=scale_factor)
+
+        num_rows = max(cell['end_row_offset_idx'] for cell in output[0]) + 1
+        num_cols = max(cell['end_col_offset_idx'] for cell in output[0]) + 1
+
+        # Convert the output into HTML
+        td = TableData(table_cells=[TableCell.from_dict_format(c) for c in output[0]], num_rows = num_rows, num_cols=num_cols)
+        t = TableItem(data=td, self_ref="#/table")
+        table_html = t.export_to_dataframe().to_html()
+
+        return table_html
