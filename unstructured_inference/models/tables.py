@@ -160,6 +160,8 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
 
 class UnstructuredTableFormerModel(UnstructuredModel):
+    _lock = threading.Lock()
+
     def initialize(
         self,
         model = None, # currently ignored
@@ -197,15 +199,16 @@ class UnstructuredTableFormerModel(UnstructuredModel):
                 "id": i,
                 "text": token["text"],
                 "bbox": {
-                    "l": token["bbox"][0],
-                    "t": token["bbox"][1],
-                    "r": token["bbox"][2],
-                    "b": token["bbox"][3],
+                    "l": token["bbox"][0]/scale_factor,
+                    "t": token["bbox"][1]/scale_factor,
+                    "r": token["bbox"][2]/scale_factor,
+                    "b": token["bbox"][3]/scale_factor,
                     "coord_origin": CoordOrigin.TOPLEFT,
                 },
             }
             for i, token in enumerate(ocr_tokens)
         ]
+
         iocr_page = {
             "width": table_image.shape[1],
             "height": table_image.shape[0],
@@ -226,8 +229,8 @@ class UnstructuredTableFormerModel(UnstructuredModel):
         )
 
         # Setting up the data structure to generate the HTML of the table
-        num_rows = max(cell["end_row_offset_idx"] for cell in output[0]) + 1
-        num_cols = max(cell["end_col_offset_idx"] for cell in output[0]) + 1
+        num_rows = max(cell["end_row_offset_idx"] for cell in output[0])
+        num_cols = max(cell["end_col_offset_idx"] for cell in output[0])
         td = TableData(
             table_cells=[TableCell.from_dict_format(c) for c in output[0]],
             num_rows=num_rows,
@@ -236,11 +239,11 @@ class UnstructuredTableFormerModel(UnstructuredModel):
         table_item = TableItem(data=td, self_ref="#/table")
 
         if result_format == "html":
-            doc_ser = HTMLDocSerializer(doc={"name": ""})  # Serializer with empty doc
-            html_ser = HTMLTableSerializer()
-            table_html = html_ser.serialize(
+            doc_serializer = HTMLDocSerializer(doc={"name": ""})  # Serializer with empty doc
+            html_serializer = HTMLTableSerializer()
+            table_html = html_serializer.serialize(
                     item=table_item,
-                    doc_serializer=doc_ser,
+                    doc_serializer=doc_serializer,
                     doc=None,
                 ).text  # serialize HTML without doc
 
@@ -276,8 +279,8 @@ def table_item_to_cells(table_item: TableItem) -> List[Dict]:
     table_cells = table_item.data.table_cells
 
     cells = [{
-        "row_nums": [cell.start_row_offset_idx] + list(range(cell.start_row_offset_idx + 1, cell.end_row_offset_idx + 1)),
-        "column_nums": [cell.start_col_offset_idx] + list(range(cell.start_col_offset_idx + 1, cell.end_col_offset_idx + 1)),
+        "row_nums": [cell.start_row_offset_idx] + list(range(cell.start_row_offset_idx + 1, cell.end_row_offset_idx)),
+        "column_nums": [cell.start_col_offset_idx] + list(range(cell.start_col_offset_idx + 1, cell.end_col_offset_idx)),
         "cell text": cell.text,
         "column header": cell.column_header
     } for cell in table_cells]
