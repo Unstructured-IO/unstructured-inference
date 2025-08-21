@@ -1917,3 +1917,23 @@ def test_model_init_is_thread_safe():
         thread.join()
 
     assert tables.tables_agent.model is not None
+
+def test_model_init_is_thread_safe():
+    threads = []
+    tables.tables_agent = tables.UnstructuredTableFormerModel()
+    tables.tables_agent.model = None
+    for i in range(5):
+        thread = threading.Thread(target=tables.load_agent)
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    assert tables.tables_agent.model is not None
+
+def test_initialize_table_agent(monkeypatch):
+    monkeypatch.setenv(tables.UNSTRUCTURED_TABLES_AGENT_ENV, "TableFormer")
+    tables_agent = tables.initialize_table_agent()
+    assert tables_agent is not None
+    assert isinstance(tables_agent, tables.UnstructuredTableFormerModel)

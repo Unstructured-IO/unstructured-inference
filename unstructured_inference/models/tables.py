@@ -287,17 +287,10 @@ def table_item_to_cells(table_item: TableItem) -> List[Dict]:
 
     return cells
 
+def initialize_table_agent():
+    return UnstructuredTableFormerModel() if os.getenv( UNSTRUCTURED_TABLES_AGENT_ENV, "TableTransformer",).upper() == "TABLEFORMER" else UnstructuredTableTransformerModel()
 
-tables_agent = (
-    UnstructuredTableFormerModel()
-    if os.getenv(
-        "UNSTRUCTURED_TABLES_AGENT",
-        "TableTransformer",
-    ).upper()
-    == "TABLEFORMER"
-    else UnstructuredTableTransformerModel()
-)
-
+tables_agent = initialize_table_agent()
 
 def load_agent():
     """Loads the Table agent."""
