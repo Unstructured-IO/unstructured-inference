@@ -13,23 +13,27 @@ import numpy as np
 import torch
 from docling.models.layout_model import LayoutModel
 from docling.models.table_structure_model import TableStructureModel
-from docling_core.transforms.serializer.html import (HTMLDocSerializer,
-                                                     HTMLTableSerializer)
+from docling_core.transforms.serializer.html import (
+    HTMLDocSerializer,
+    HTMLTableSerializer,
+)
 from docling_core.types.doc import CoordOrigin, TableCell
 from docling_core.types.doc.document import TableData, TableItem
 from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
-from docling_ibm_models.tableformer.data_management.tf_predictor import \
-    TFPredictor
+from docling_ibm_models.tableformer.data_management.tf_predictor import TFPredictor
 from PIL import Image as PILImage
-from transformers import (DetrImageProcessor,
-                          TableTransformerForObjectDetection, logging)
-from transformers.models.table_transformer.modeling_table_transformer import \
-    TableTransformerObjectDetectionOutput
+from transformers import DetrImageProcessor, TableTransformerForObjectDetection, logging
+from transformers.models.table_transformer.modeling_table_transformer import (
+    TableTransformerObjectDetectionOutput,
+)
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.inference.layoutelement import (
-    LayoutElement, LayoutElements, table_cells_to_dataframe)
+    LayoutElement,
+    LayoutElements,
+    table_cells_to_dataframe,
+)
 from unstructured_inference.logger import logger
 from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
@@ -375,10 +379,17 @@ def table_item_to_cells(table_item: TableItem) -> List[Dict]:
 
     return cells
 
+
 def initialize_table_agent():
-    return UnstructuredTableFormerModel() if os.getenv( UNSTRUCTURED_TABLES_AGENT_ENV, "TableTransformer").upper() == "TABLEFORMER" else UnstructuredTableTransformerModel()
+    return (
+        UnstructuredTableFormerModel()
+        if os.getenv(UNSTRUCTURED_TABLES_AGENT_ENV, "TableTransformer").upper() == "TABLEFORMER"
+        else UnstructuredTableTransformerModel()
+    )
+
 
 tables_agent = initialize_table_agent()
+
 
 def load_agent():
     """Loads the Table agent."""
