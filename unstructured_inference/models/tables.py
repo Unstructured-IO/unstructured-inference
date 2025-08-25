@@ -11,14 +11,20 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 import cv2
 import numpy as np
 import torch
+
 from docling.models.table_structure_model import TableStructureModel
+from docling.models.layout_model import LayoutModel
+
 from docling_core.transforms.serializer.html import (
     HTMLDocSerializer,
     HTMLTableSerializer,
 )
 from docling_core.types.doc import CoordOrigin, TableCell
 from docling_core.types.doc.document import TableData, TableItem
+
+from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
 from docling_ibm_models.tableformer.data_management.tf_predictor import TFPredictor
+
 from PIL import Image as PILImage
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection, logging
 from transformers.models.table_transformer.modeling_table_transformer import (
@@ -27,10 +33,13 @@ from transformers.models.table_transformer.modeling_table_transformer import (
 
 from unstructured_inference.config import inference_config
 from unstructured_inference.inference.layoutelement import table_cells_to_dataframe
+from unstructured_inference.inference.layoutelement import LayoutElements, LayoutElement
+from unstructured_inference.inference.elements import Rectangle
 from unstructured_inference.logger import logger
 from unstructured_inference.models.table_postprocess import Rect
 from unstructured_inference.models.unstructuredmodel import UnstructuredModel
 from unstructured_inference.utils import pad_image_with_background_color
+
 
 from . import table_postprocess as postprocess
 
@@ -159,6 +168,41 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         return prediction
 
 
+def non_maximum_suppression(boxes):
+    """
+    Applies Non-Maximum Suppression to a list of bounding boxes.
+
+    Args:
+        boxes (list): A list of BoundingBox objects.
+
+    Returns:
+        list: A new list of selected bounding boxes.
+    """
+    # 1. Sort boxes by confidence in descending order
+    # Using a lambda function to sort by the 'confidence' attribute
+    boxes.sort(key=lambda b: b["confidence"], reverse=True)
+
+    selected_boxes = []
+
+    # 2. Loop as long as there are boxes left
+    while len(boxes) > 0:
+        # Select the box with the highest confidence
+        best_box = boxes.pop(0) # pop(0) removes and returns the first element
+        selected_boxes.append(best_box)
+
+        # Filter the remaining boxes by creating a new list
+        remaining_boxes = []
+        for box in boxes:
+            # If the IoU is less than the threshold, keep the box
+            if not best_box["bbox"].is_almost_subregion_of(box["bbox"]):
+                remaining_boxes.append(box)
+
+        # Update the list of boxes for the next iteration
+        boxes = remaining_boxes
+
+    return selected_boxes
+
+
 class UnstructuredTableFormerModel(UnstructuredModel):
     _lock = threading.Lock()
 
@@ -169,22 +213,54 @@ class UnstructuredTableFormerModel(UnstructuredModel):
     ):
         # Downloads the model if not downloaded already
         # Returns the path to the local model
-        path = TableStructureModel.download_models()
+        table_model_path = TableStructureModel.download_models()
 
         # Setting up the model artifacts directory
-        save_dir = path / "model_artifacts/tableformer/accurate/"
-        config = json.load(open(path / save_dir / "tm_config.json"))
+        save_dir = table_model_path / "model_artifacts/tableformer/accurate/"
+        config = json.load(open(table_model_path / save_dir / "tm_config.json"))
         config["model"]["save_dir"] = save_dir
 
         # Loading the TFPredictor model
-        self.model = TFPredictor(config=config, device=device)
+        self.table_model = TFPredictor(config=config, device=device)
+
+        layout_model_path = LayoutModel.download_models()
+        self.layout_model = LayoutPredictor(layout_model_path)
+
+    def find_tables(self, image: PILImage.Image) -> LayoutElements:
+        """
+        Find tables in the given image using Docling's model.
+        """
+        page_image = image.convert("RGB")
+
+        layout_prediction = self.layout_model.predict(page_image)
+
+        predicted_tables = [o for o in layout_prediction if o["label"]=='Table' and o["confidence"] >= 0.5]
+
+        for table in predicted_tables:
+            table["bbox"] = Rectangle(x1=table["l"],y1=table["t"],x2=table["r"],y2=table["b"])
+
+        if predicted_tables:
+            # Apply Non-Maximum Suppression to remove overlapping boxes
+            predicted_tables = non_maximum_suppression(predicted_tables)
+
+            tables = []
+
+            for table in predicted_tables:
+                table_element = LayoutElement(bbox=table["bbox"], source=None, type='Table', prob=table["confidence"], image_path=None, parent=None, table_as_cells=None)
+                tables.append(table_element)
+
+            # Remove current predicted tables
+            table_elements = LayoutElements.from_list(tables)
+
+            return table_elements
+
+        return None
 
     def predict(
         self,
         x: PILImage.Image,
         ocr_tokens: Optional[List[Dict]] = None,
         result_format: str = "html",
-        scale_factor: float = 0.62,
     ) -> Any:
         """
         Predict the table structure from the image and OCR tokens.
@@ -193,16 +269,15 @@ class UnstructuredTableFormerModel(UnstructuredModel):
         table_image = x.convert("RGB")
         table_image = np.array(table_image)
 
-        # The OCR tokens needs to follow a specific docling formatting
         table_tokens = [
             {
                 "id": i,
                 "text": token["text"],
                 "bbox": {
-                    "l": token["bbox"][0]/scale_factor,
-                    "t": token["bbox"][1]/scale_factor,
-                    "r": token["bbox"][2]/scale_factor,
-                    "b": token["bbox"][3]/scale_factor,
+                    "l": token["bbox"][0],
+                    "t": token["bbox"][1],
+                    "r": token["bbox"][2],
+                    "b": token["bbox"][3],
                     "coord_origin": CoordOrigin.TOPLEFT,
                 },
             }
@@ -221,11 +296,11 @@ class UnstructuredTableFormerModel(UnstructuredModel):
         table_bbox = [0, 0, table_image.shape[1], table_image.shape[0]]
 
         # Predicting the table structure
-        output = self.model.predict(
+        output = self.table_model.predict(
             iocr_page=iocr_page,
             table_bbox=table_bbox,
             table_image=table_image,
-            scale_factor=scale_factor,
+            scale_factor=1,
         )
 
         # Setting up the data structure to generate the HTML of the table
