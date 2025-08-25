@@ -1,3 +1,7 @@
+## 1.0.8
+
+* Add TableFormer from Docling as additional table model
+
 ## 1.0.7
 
 * Fix a hardcoded file extension causing confusion in the logs
