@@ -187,7 +187,7 @@ def non_maximum_suppression(boxes):
     # 2. Loop as long as there are boxes left
     while len(boxes) > 0:
         # Select the box with the highest confidence
-        best_box = boxes.pop(0) # pop(0) removes and returns the first element
+        best_box = boxes.pop(0)  # pop(0) removes and returns the first element
         selected_boxes.append(best_box)
 
         # Filter the remaining boxes by creating a new list
@@ -208,7 +208,7 @@ class UnstructuredTableFormerModel(UnstructuredModel):
 
     def initialize(
         self,
-        model = None, # currently ignored
+        model=None,  # currently ignored
         device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         # Downloads the model if not downloaded already
@@ -229,15 +229,18 @@ class UnstructuredTableFormerModel(UnstructuredModel):
     def find_tables(self, image: PILImage.Image) -> LayoutElements:
         """
         Find tables in the given image using Docling's model.
+        Return None if no table is detected.
         """
         page_image = image.convert("RGB")
 
         layout_prediction = self.layout_model.predict(page_image)
 
-        predicted_tables = [o for o in layout_prediction if o["label"]=='Table' and o["confidence"] >= 0.5]
+        predicted_tables = [
+            o for o in layout_prediction if o["label"] == "Table" and o["confidence"] >= 0.5
+        ]
 
         for table in predicted_tables:
-            table["bbox"] = Rectangle(x1=table["l"],y1=table["t"],x2=table["r"],y2=table["b"])
+            table["bbox"] = Rectangle(x1=table["l"], y1=table["t"], x2=table["r"], y2=table["b"])
 
         if predicted_tables:
             # Apply Non-Maximum Suppression to remove overlapping boxes
@@ -246,7 +249,15 @@ class UnstructuredTableFormerModel(UnstructuredModel):
             tables = []
 
             for table in predicted_tables:
-                table_element = LayoutElement(bbox=table["bbox"], source=None, type='Table', prob=table["confidence"], image_path=None, parent=None, table_as_cells=None)
+                table_element = LayoutElement(
+                    bbox=table["bbox"],
+                    source=None,
+                    type="Table",
+                    prob=table["confidence"],
+                    image_path=None,
+                    parent=None,
+                    table_as_cells=None,
+                )
                 tables.append(table_element)
 
             # Remove current predicted tables
@@ -317,10 +328,10 @@ class UnstructuredTableFormerModel(UnstructuredModel):
             doc_serializer = HTMLDocSerializer(doc={"name": ""})  # Serializer with empty doc
             html_serializer = HTMLTableSerializer()
             table_html = html_serializer.serialize(
-                    item=table_item,
-                    doc_serializer=doc_serializer,
-                    doc=None,
-                ).text  # serialize HTML without doc
+                item=table_item,
+                doc_serializer=doc_serializer,
+                doc=None,
+            ).text  # serialize HTML without doc
 
             return table_html
         elif result_format == "dataframe":
@@ -333,13 +344,14 @@ class UnstructuredTableFormerModel(UnstructuredModel):
                 f'Valid formats are: "html", "dataframe", "cells"',
             )
 
+
 def table_item_to_cells(table_item: TableItem) -> List[Dict]:
     """
     Convert a list of table cells to an HTML representation.
-    
+
     Args:
         cells: List of dictionaries representing table cells, where each dictionary has the following keys:
-    
+
     row_nums: List[int]
         the row numbers this cell belongs to; for cells spanning multiple rows there are more than
         one numbers
@@ -353,12 +365,17 @@ def table_item_to_cells(table_item: TableItem) -> List[Dict]:
     """
     table_cells = table_item.data.table_cells
 
-    cells = [{
-        "row_nums": [cell.start_row_offset_idx] + list(range(cell.start_row_offset_idx + 1, cell.end_row_offset_idx)),
-        "column_nums": [cell.start_col_offset_idx] + list(range(cell.start_col_offset_idx + 1, cell.end_col_offset_idx)),
-        "cell text": cell.text,
-        "column header": cell.column_header
-    } for cell in table_cells]
+    cells = [
+        {
+            "row_nums": [cell.start_row_offset_idx]
+            + list(range(cell.start_row_offset_idx + 1, cell.end_row_offset_idx)),
+            "column_nums": [cell.start_col_offset_idx]
+            + list(range(cell.start_col_offset_idx + 1, cell.end_col_offset_idx)),
+            "cell text": cell.text,
+            "column header": cell.column_header,
+        }
+        for cell in table_cells
+    ]
 
     return cells
 
