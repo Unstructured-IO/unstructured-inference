@@ -198,7 +198,7 @@ safetensors[numpy,torch]==0.6.2
     #   docling-ibm-models
     #   timm
     #   transformers
-scipy==1.16.1
+scipy==1.15.3
     # via -r requirements/base.in
 shellingham==1.5.4
     # via typer

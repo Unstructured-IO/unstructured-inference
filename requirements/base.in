@@ -18,6 +18,7 @@ transformers>=4.25.1
 accelerate
 rapidfuzz
 pandas
-scipy
+# NOTE(Antonio): Pinned since the following version requires python>3.11
+scipy<=1.15.3
 pypdfium2
 pdfminer-six
