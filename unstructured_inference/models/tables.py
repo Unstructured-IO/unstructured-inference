@@ -209,8 +209,9 @@ class UnstructuredTableFormerModel(UnstructuredModel):
         model=None,  # currently ignored
         device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
     ):
-        # Downloads the model if not downloaded already
-        # Returns the path to the local model
+        """
+        Downloads the model if not downloaded already and loads them
+        """
         table_model_path = TableStructureModel.download_models()
 
         # Setting up the model artifacts directory
@@ -381,6 +382,7 @@ def table_item_to_cells(table_item: TableItem) -> List[Dict]:
 
 
 def initialize_table_agent():
+    """Initializes the Table agent based on the environment variable UNSTRUCTURED_TABLES_AGENT."""
     return (
         UnstructuredTableFormerModel()
         if os.getenv(UNSTRUCTURED_TABLES_AGENT_ENV, "TableTransformer").upper() == "TABLEFORMER"
