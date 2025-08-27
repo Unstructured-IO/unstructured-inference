@@ -213,26 +213,29 @@ def outputs_to_objects(
 ):
     """Output table element types."""
     m = outputs["logits"].softmax(-1).max(-1)
-    pred_labels = list(m.indices.detach().cpu().numpy())[0]
-    pred_scores = list(m.values.detach().cpu().numpy())[0]
+    pred_labels = m.indices.detach().cpu().numpy()[0]
+    pred_scores = m.values.detach().cpu().numpy()[0]
     pred_bboxes = outputs["pred_boxes"].detach().cpu()[0]
 
     pad = outputs.get("pad_for_structure_detection", 0)
     scale_size = (img_size[0] + pad * 2, img_size[1] + pad * 2)
-    pred_bboxes = [elem.tolist() for elem in rescale_bboxes(pred_bboxes, scale_size)]
+    rescaled = rescale_bboxes(pred_bboxes, scale_size)
     # unshift the padding; padding effectively shifted the bounding boxes of structures in the
     # original image with half of the total pad
-    shift_size = pad
+    if pad != 0:
+        rescaled = rescaled - pad
+    pred_bboxes = rescaled.tolist()
 
     objects = []
+    append = objects.append
     for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes):
         class_label = class_idx2name[int(label)]
         if class_label != "no object":
-            objects.append(
+            append(
                 {
                     "label": class_label,
                     "score": float(score),
-                    "bbox": [float(elem) - shift_size for elem in bbox],
+                    "bbox": bbox,
                 },
             )
 
@@ -279,7 +282,7 @@ def rescale_bboxes(out_bbox, size):
     """Rescale relative bounding box to box of size given by size."""
     img_w, img_h = size
     b = box_cxcywh_to_xyxy(out_bbox)
-    b = b * torch.tensor([img_w, img_h, img_w, img_h], dtype=torch.float32)
+    b = b * torch.tensor([img_w, img_h, img_w, img_h], dtype=torch.float32, device=out_bbox.device)
     return b
 
 
