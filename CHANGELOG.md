@@ -1,3 +1,7 @@
+## 1.0.8
+
+* Adding source for table detection from TableFormer
+
 ## 1.0.7
 
 * Fix a hardcoded file extension causing confusion in the logs
