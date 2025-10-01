@@ -1,3 +1,7 @@
+## 1.0.8-dev1
+
+* Enhancement: Optimized cells_to_html (codeflash)
+
 ## 1.0.7
 
 * Fix a hardcoded file extension causing confusion in the logs

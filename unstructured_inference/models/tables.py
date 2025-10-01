@@ -706,12 +706,14 @@ def fill_cells(cells: List[dict]) -> List[dict]:
     for row in range(max_row + 1):
         for col in range(max_col + 1):
             if (row, col) not in filled:
-                new_cells.append({
-                    "row_nums": [row],
-                    "column_nums": [col],
-                    "cell text": "",
-                    "column header": row in header_rows,
-                })
+                new_cells.append(
+                    {
+                        "row_nums": [row],
+                        "column_nums": [col],
+                        "cell text": "",
+                        "column header": row in header_rows,
+                    }
+                )
     return new_cells
 
 
