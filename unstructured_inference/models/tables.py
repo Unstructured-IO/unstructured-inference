@@ -227,11 +227,10 @@ def outputs_to_objects(
     pred_bboxes = rescaled.tolist()
 
     objects = []
-    append = objects.append
     for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes):
         class_label = class_idx2name[int(label)]
         if class_label != "no object":
-            append(
+            objects.append(
                 {
                     "label": class_label,
                     "score": float(score),
