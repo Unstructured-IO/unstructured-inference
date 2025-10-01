@@ -766,8 +766,6 @@ def zoom_image(image: PILImage.Image, zoom: float) -> PILImage.Image:
     if zoom <= 0:
         # no zoom but still does dilation and erosion
         zoom = 1
-    
-    kernel = np.ones((1, 1), np.uint8)
     new_image = cv2.resize(
         cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR),
         None,
@@ -775,7 +773,7 @@ def zoom_image(image: PILImage.Image, zoom: float) -> PILImage.Image:
         fy=zoom,
         interpolation=cv2.INTER_CUBIC,
     )
-
+    kernel = np.ones((1, 1), np.uint8)
     new_image = cv2.dilate(new_image, kernel, iterations=1, dst=new_image)
     new_image = cv2.erode(new_image, kernel, iterations=1, dst=new_image)
 

@@ -1,3 +1,7 @@
+## 1.0.8-dev2
+
+* Enhancement: Optimized `zoom_image` (codeflash)
+
 ## 1.0.7
 
 * Fix a hardcoded file extension causing confusion in the logs
