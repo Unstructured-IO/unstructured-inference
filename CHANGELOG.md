@@ -1,3 +1,7 @@
+## 1.0.8-dev0
+
+* Enhancement: Optimized `outputs_to_objects` for an 88% speedup in some cases (codeflash)
+
 ## 1.0.7
 
 * Fix a hardcoded file extension causing confusion in the logs
