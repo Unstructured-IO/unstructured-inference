@@ -1,6 +1,7 @@
 ## 1.0.8-dev1
 
-* Enhancement: Optimized cells_to_html (codeflash)
+* Enhancement: Optimized `cells_to_html` for an 8% speedup in some cases (codeflash)
+* Enhancement: Optimized `outputs_to_objects` for an 88% speedup in some cases (codeflash)
 
 ## 1.0.7
 
