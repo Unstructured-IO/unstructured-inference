@@ -765,8 +765,9 @@ def cells_to_html(cells: List[dict]) -> str:
                 table_subelement = table_body
                 cell_tag = "td"
             row = ET.SubElement(table_subelement, "tr")  # type: ignore
-        tcell = ET.SubElement(row, cell_tag, attrib=attrib)
-        tcell.text = cell["cell text"]
+        if row is not None:
+            tcell = ET.SubElement(row, cell_tag, attrib=attrib)
+            tcell.text = cell["cell text"]
 
     return str(ET.tostring(table, encoding="unicode", short_empty_elements=False))
 
