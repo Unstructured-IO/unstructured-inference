@@ -213,16 +213,18 @@ def outputs_to_objects(
 ):
     """Output table element types."""
     m = outputs["logits"].softmax(-1).max(-1)
-    pred_labels = list(m.indices.detach().cpu().numpy())[0]
-    pred_scores = list(m.values.detach().cpu().numpy())[0]
+    pred_labels = m.indices.detach().cpu().numpy()[0]
+    pred_scores = m.values.detach().cpu().numpy()[0]
     pred_bboxes = outputs["pred_boxes"].detach().cpu()[0]
 
     pad = outputs.get("pad_for_structure_detection", 0)
     scale_size = (img_size[0] + pad * 2, img_size[1] + pad * 2)
-    pred_bboxes = [elem.tolist() for elem in rescale_bboxes(pred_bboxes, scale_size)]
+    rescaled = rescale_bboxes(pred_bboxes, scale_size)
     # unshift the padding; padding effectively shifted the bounding boxes of structures in the
     # original image with half of the total pad
-    shift_size = pad
+    if pad != 0:
+        rescaled = rescaled - pad
+    pred_bboxes = rescaled.tolist()
 
     objects = []
     for label, score, bbox in zip(pred_labels, pred_scores, pred_bboxes):
@@ -232,7 +234,7 @@ def outputs_to_objects(
                 {
                     "label": class_label,
                     "score": float(score),
-                    "bbox": [float(elem) - shift_size for elem in bbox],
+                    "bbox": bbox,
                 },
             )
 
@@ -279,7 +281,7 @@ def rescale_bboxes(out_bbox, size):
     """Rescale relative bounding box to box of size given by size."""
     img_w, img_h = size
     b = box_cxcywh_to_xyxy(out_bbox)
-    b = b * torch.tensor([img_w, img_h, img_w, img_h], dtype=torch.float32)
+    b = b * torch.tensor([img_w, img_h, img_w, img_h], dtype=torch.float32, device=out_bbox.device)
     return b
 
 
@@ -688,25 +690,32 @@ def fill_cells(cells: List[dict]) -> List[dict]:
     if not cells:
         return []
 
-    table_rows_no = max({row for cell in cells for row in cell["row_nums"]})
-    table_cols_no = max({col for cell in cells for col in cell["column_nums"]})
-    filled = np.zeros((table_rows_no + 1, table_cols_no + 1), dtype=bool)
+    # Find max row and col indices
+    max_row = max(row for cell in cells for row in cell["row_nums"])
+    max_col = max(col for cell in cells for col in cell["column_nums"])
+    filled = set()
     for cell in cells:
         for row in cell["row_nums"]:
             for col in cell["column_nums"]:
-                filled[row, col] = True
-    # add cells for which filled is false
-    header_rows = {row for cell in cells if cell["column header"] for row in cell["row_nums"]}
+                filled.add((row, col))
+    header_rows = set()
+    for cell in cells:
+        if cell["column header"]:
+            header_rows.update(cell["row_nums"])
+
+    # Compose output list directly for speed
     new_cells = cells.copy()
-    not_filled_idx = np.where(filled == False)  # noqa: E712
-    for row, col in zip(not_filled_idx[0], not_filled_idx[1]):
-        new_cell = {
-            "row_nums": [row],
-            "column_nums": [col],
-            "cell text": "",
-            "column header": row in header_rows,
-        }
-        new_cells.append(new_cell)
+    for row in range(max_row + 1):
+        for col in range(max_col + 1):
+            if (row, col) not in filled:
+                new_cells.append(
+                    {
+                        "row_nums": [row],
+                        "column_nums": [col],
+                        "cell text": "",
+                        "column header": row in header_rows,
+                    }
+                )
     return new_cells
 
 
@@ -725,18 +734,20 @@ def cells_to_html(cells: List[dict]) -> str:
     Returns:
         str: HTML table string
     """
-    cells = sorted(fill_cells(cells), key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
+    # Pre-sort with tuple key, as per original
+    cells_filled = fill_cells(cells)
+    cells_sorted = sorted(cells_filled, key=lambda k: (min(k["row_nums"]), min(k["column_nums"])))
 
     table = ET.Element("table")
     current_row = -1
 
-    table_header = None
-    table_has_header = any(cell["column header"] for cell in cells)
-    if table_has_header:
-        table_header = ET.SubElement(table, "thead")
-
+    # Check if any column header exists
+    table_has_header = any(cell["column header"] for cell in cells_sorted)
+    table_header = ET.SubElement(table, "thead") if table_has_header else None
     table_body = ET.SubElement(table, "tbody")
-    for cell in cells:
+
+    row = None
+    for cell in cells_sorted:
         this_row = min(cell["row_nums"])
         attrib = {}
         colspan = len(cell["column_nums"])
@@ -754,8 +765,9 @@ def cells_to_html(cells: List[dict]) -> str:
                 table_subelement = table_body
                 cell_tag = "td"
             row = ET.SubElement(table_subelement, "tr")  # type: ignore
-        tcell = ET.SubElement(row, cell_tag, attrib=attrib)
-        tcell.text = cell["cell text"]
+        if row is not None:
+            tcell = ET.SubElement(row, cell_tag, attrib=attrib)
+            tcell.text = cell["cell text"]
 
     return str(ET.tostring(table, encoding="unicode", short_empty_elements=False))
 
