@@ -78,6 +78,9 @@ class LayoutElements(TextRegions):
     def __getitem__(self, indices):
         return self.slice(indices)
 
+    def __iter__(self):
+        return self.iter_elements()
+
     def slice(self, indices) -> LayoutElements:
         """slice and return only selected indices"""
         return LayoutElements(
