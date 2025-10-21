@@ -1,3 +1,7 @@
+## 1.0.9
+
+* Make OD model loading thread safe
+
 ## 1.0.8-dev2
 
 * Enhancement: Optimized `zoom_image` (codeflash)
