@@ -42,6 +42,7 @@ class Models(object):
 
 models: Models = Models()
 
+models_lock = threading.Lock()
 
 def get_default_model_mappings() -> Tuple[
     Dict[str, Type[UnstructuredModel]],
@@ -78,24 +79,28 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
     if model_name in models:
         return models[model_name]
 
-    initialize_param_json = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH")
-    if initialize_param_json is not None:
-        with open(initialize_param_json) as fp:
-            initialize_params = json.load(fp)
-            label_map_int_keys = {
-                int(key): value for key, value in initialize_params["label_map"].items()
-            }
-            initialize_params["label_map"] = label_map_int_keys
-    else:
-        if model_name in model_config_map:
-            initialize_params = model_config_map[model_name]
+    with models_lock:
+        if model_name in models:
+            return models[model_name]
+
+        initialize_param_json = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH")
+        if initialize_param_json is not None:
+            with open(initialize_param_json) as fp:
+                initialize_params = json.load(fp)
+                label_map_int_keys = {
+                    int(key): value for key, value in initialize_params["label_map"].items()
+                }
+                initialize_params["label_map"] = label_map_int_keys
         else:
-            raise UnknownModelException(f"Unknown model type: {model_name}")
+            if model_name in model_config_map:
+                initialize_params = model_config_map[model_name]
+            else:
+                raise UnknownModelException(f"Unknown model type: {model_name}")
 
-    model: UnstructuredModel = model_class_map[model_name]()
+        model: UnstructuredModel = model_class_map[model_name]()
 
-    model.initialize(**initialize_params)
-    models[model_name] = model
+        model.initialize(**initialize_params)
+        models[model_name] = model
     return model
 
 
