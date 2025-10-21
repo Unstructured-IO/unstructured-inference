@@ -79,9 +79,9 @@ def test_get_model_threaded(monkeypatch):
 
     # Verify all results are MockModel instances
     for thread_id, model in results:
-        assert isinstance(model, MockModel), (
-            f"Thread {thread_id} got unexpected model type: {type(model)}"
-        )
+        assert isinstance(
+            model, MockModel
+        ), f"Thread {thread_id} got unexpected model type: {type(model)}"
 
 
 def test_register_new_model():
