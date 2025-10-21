@@ -83,7 +83,8 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
         if model_name in models:
             return models[model_name]
 
-        initialize_param_json = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH")
+        initialize_param_json = \
+            os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH")
         if initialize_param_json is not None:
             with open(initialize_param_json) as fp:
                 initialize_params = json.load(fp)
