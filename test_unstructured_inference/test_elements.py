@@ -5,20 +5,15 @@ from unittest.mock import PropertyMock, patch
 import numpy as np
 import pytest
 
-from unstructured_inference.constants import ElementType
 from unstructured_inference.inference import elements
 from unstructured_inference.inference.elements import (
-    ImageTextRegion,
     Rectangle,
-    TextRegion,
     TextRegions,
 )
 from unstructured_inference.inference.layoutelement import (
-    LayoutElement,
     LayoutElements,
     clean_layoutelements,
     clean_layoutelements_for_class,
-    merge_inferred_layout_with_extracted_layout,
     partition_groups_from_regions,
     separate,
 )
@@ -295,40 +290,6 @@ def test_separate(rect1, rect2):
     separate(rect1, rect2)
 
     # assert not rect1.intersects(rect2) #TODO: fix this test
-
-
-def test_merge_inferred_layout_with_extracted_layout():
-    inferred_layout = [
-        LayoutElement.from_coords(453, 322, 1258, 408, text=None, type=ElementType.SECTION_HEADER),
-        LayoutElement.from_coords(387, 477, 1320, 537, text=None, type=ElementType.TEXT),
-    ]
-
-    extracted_layout = [
-        TextRegion.from_coords(438, 318, 1272, 407, text="Example Section Header"),
-        TextRegion.from_coords(377, 469, 1335, 535, text="Example Title"),
-    ]
-
-    extracted_layout_with_full_page_image = [
-        ImageTextRegion.from_coords(0, 0, 1700, 2200, text="Example Section Header"),
-    ]
-
-    merged_layout = merge_inferred_layout_with_extracted_layout(
-        inferred_layout=inferred_layout,
-        extracted_layout=extracted_layout,
-        page_image_size=(1700, 2200),
-    )
-    assert merged_layout[0].type == ElementType.SECTION_HEADER
-    assert merged_layout[0].text == "Example Section Header"
-    assert merged_layout[1].type == ElementType.TEXT
-    assert merged_layout[1].text == "Example Title"
-
-    # case: extracted layout with a full page image
-    merged_layout = merge_inferred_layout_with_extracted_layout(
-        inferred_layout=inferred_layout,
-        extracted_layout=extracted_layout_with_full_page_image,
-        page_image_size=(1700, 2200),
-    )
-    assert merged_layout == inferred_layout
 
 
 def test_clean_layoutelements(test_layoutelements):
