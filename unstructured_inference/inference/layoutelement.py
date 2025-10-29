@@ -1,25 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Collection, Iterable, List, Optional
+from typing import Any, Iterable, List, Optional
 
 import numpy as np
 from pandas import DataFrame
 from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.config import inference_config
-from unstructured_inference.constants import (
-    FULL_PAGE_REGION_THRESHOLD,
-    ElementType,
-)
 from unstructured_inference.inference.elements import (
-    ImageTextRegion,
     Rectangle,
     TextRegion,
     TextRegions,
     coords_intersections,
-    grow_region_to_match_region,
-    region_bounding_boxes_are_almost_the_same,
 )
 
 EPSILON_AREA = 1e-7
@@ -219,107 +212,6 @@ class LayoutElement(TextRegion):
         prob = region.prob if hasattr(region, "prob") else None
         source = region.source if hasattr(region, "source") else None
         return cls(text=text, source=source, type=type, prob=prob, bbox=region.bbox)
-
-
-def merge_inferred_layout_with_extracted_layout(
-    inferred_layout: Collection[LayoutElement],
-    extracted_layout: Collection[TextRegion],
-    page_image_size: tuple,
-    same_region_threshold: float = inference_config.LAYOUT_SAME_REGION_THRESHOLD,
-    subregion_threshold: float = inference_config.LAYOUT_SUBREGION_THRESHOLD,
-) -> List[LayoutElement]:
-    """Merge two layouts to produce a single layout."""
-    extracted_elements_to_add: List[TextRegion] = []
-    inferred_regions_to_remove = []
-    w, h = page_image_size
-    full_page_region = Rectangle(0, 0, w, h)
-    for extracted_region in extracted_layout:
-        extracted_is_image = isinstance(extracted_region, ImageTextRegion)
-        if extracted_is_image:
-            # Skip extracted images for this purpose, we don't have the text from them and they
-            # don't provide good text bounding boxes.
-
-            is_full_page_image = region_bounding_boxes_are_almost_the_same(
-                extracted_region.bbox,
-                full_page_region,
-                FULL_PAGE_REGION_THRESHOLD,
-            )
-
-            if is_full_page_image:
-                continue
-        region_matched = False
-        for inferred_region in inferred_layout:
-
-            if inferred_region.bbox.intersects(extracted_region.bbox):
-                same_bbox = region_bounding_boxes_are_almost_the_same(
-                    inferred_region.bbox,
-                    extracted_region.bbox,
-                    same_region_threshold,
-                )
-                inferred_is_subregion_of_extracted = inferred_region.bbox.is_almost_subregion_of(
-                    extracted_region.bbox,
-                    subregion_threshold=subregion_threshold,
-                )
-                inferred_is_text = inferred_region.type not in (
-                    ElementType.FIGURE,
-                    ElementType.IMAGE,
-                    ElementType.PAGE_BREAK,
-                    ElementType.TABLE,
-                )
-                extracted_is_subregion_of_inferred = extracted_region.bbox.is_almost_subregion_of(
-                    inferred_region.bbox,
-                    subregion_threshold=subregion_threshold,
-                )
-                either_region_is_subregion_of_other = (
-                    inferred_is_subregion_of_extracted or extracted_is_subregion_of_inferred
-                )
-                if same_bbox:
-                    # Looks like these represent the same region
-                    if extracted_is_image:
-                        # keep extracted region, remove inferred region
-                        inferred_regions_to_remove.append(inferred_region)
-                    else:
-                        # keep inferred region, remove extracted region
-                        grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
-                        inferred_region.text = extracted_region.text
-                        region_matched = True
-                elif extracted_is_subregion_of_inferred and inferred_is_text:
-                    if extracted_is_image:
-                        # keep both extracted and inferred regions
-                        region_matched = False
-                    else:
-                        # keep inferred region, remove extracted region
-                        grow_region_to_match_region(inferred_region.bbox, extracted_region.bbox)
-                        region_matched = True
-                elif (
-                    either_region_is_subregion_of_other
-                    and inferred_region.type != ElementType.TABLE
-                ):
-                    # keep extracted region, remove inferred region
-                    inferred_regions_to_remove.append(inferred_region)
-        if not region_matched:
-            extracted_elements_to_add.append(extracted_region)
-    # Need to classify the extracted layout elements we're keeping.
-    categorized_extracted_elements_to_add = [
-        LayoutElement(
-            text=el.text,
-            type=(
-                ElementType.IMAGE
-                if isinstance(el, ImageTextRegion)
-                else ElementType.UNCATEGORIZED_TEXT
-            ),
-            source=el.source,
-            bbox=el.bbox,
-        )
-        for el in extracted_elements_to_add
-    ]
-    inferred_regions_to_add = [
-        region for region in inferred_layout if region not in inferred_regions_to_remove
-    ]
-
-    final_layout = categorized_extracted_elements_to_add + inferred_regions_to_add
-
-    return final_layout
 
 
 def separate(region_a: Rectangle, region_b: Rectangle):

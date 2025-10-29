@@ -1,3 +1,7 @@
+## 1.0.10
+
+* Remove merging logic that's no longer used
+
 ## 1.0.9
 
 * Make OD model loading thread safe
