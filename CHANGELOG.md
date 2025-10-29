@@ -6,7 +6,7 @@
 
 * Make OD model loading thread safe
 
-## 1.0.8-dev2
+## 1.0.8
 
 * Enhancement: Optimized `zoom_image` (codeflash)
 * Enhancement: Optimized `cells_to_html` for an 8% speedup in some cases (codeflash)
