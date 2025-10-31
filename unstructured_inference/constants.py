@@ -7,6 +7,12 @@ class Source(Enum):
     DETECTRON2_LP = "detectron2_lp"
 
 
+class TextSource(Enum):
+    OCR = "ocr"
+    EXTRACTED = "extracted"
+    VLM = "vlm"
+
+
 class ElementType:
     PARAGRAPH = "Paragraph"
     IMAGE = "Image"
