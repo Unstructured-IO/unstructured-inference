@@ -1,3 +1,8 @@
+## 1.1.0-dev0
+
+* Enhancement: Add `TextSource` to track where the text of an element came from
+* Enhancement: Refactor `__post_init__` of `TextRegions` and `LayoutElement` slightly to automate initialization
+
 ## 1.0.10
 
 * Remove merging logic that's no longer used
