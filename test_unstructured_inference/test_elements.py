@@ -432,7 +432,12 @@ def test_layoutelements_concatenate():
     )
     joint = LayoutElements.concatenate([layout1, layout2])
     assert joint.texts.tolist() == ["a", "two", "three", "4"]
-    assert [s.value for s in joint.sources.tolist()] == ["yolox", "yolox", "detectron2_onnx", "detectron2_onnx"]
+    assert [s.value for s in joint.sources.tolist()] == [
+        "yolox",
+        "yolox",
+        "detectron2_onnx",
+        "detectron2_onnx",
+    ]
     assert joint.element_class_ids.tolist() == [0, 1, 1, 2]
     assert joint.element_class_id_map == {0: "type0", 1: "type1", 2: "type2"}
 
@@ -484,17 +489,28 @@ def test_textregions_support_numpy_slicing(test_elements):
     if isinstance(test_elements, LayoutElements):
         np.testing.assert_almost_equal(test_elements[1:4].element_probs, np.array([0.1, 0.2, 0.3]))
 
+
 def test_textregions_from_list_collects_sources():
     """Test that TextRegions.from_list() collects both source and text_source from regions"""
     from unstructured_inference.inference.elements import TextRegion
 
     regions = [
-        TextRegion.from_coords(0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR),
-        TextRegion.from_coords(10, 10, 20, 20, text="second", source=Source.DETECTRON2_ONNX, text_source=TextSource.EXTRACTED),
+        TextRegion.from_coords(
+            0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR
+        ),
+        TextRegion.from_coords(
+            10,
+            10,
+            20,
+            20,
+            text="second",
+            source=Source.DETECTRON2_ONNX,
+            text_source=TextSource.EXTRACTED,
+        ),
     ]
-    
+
     text_regions = TextRegions.from_list(regions)
-    
+
     # This should fail because from_list() doesn't collect sources
     assert text_regions.sources.size > 0, "sources array should not be empty"
     assert text_regions.sources[0] == Source.YOLOX
@@ -506,8 +522,8 @@ def test_textregions_has_sources_field():
     text_regions = TextRegions(element_coords=np.array([[0, 0, 10, 10]]))
 
     # This should fail because TextRegions doesn't have a sources field
-    assert hasattr(text_regions, 'sources'), "TextRegions should have a sources field"
-    assert hasattr(text_regions, 'source'), "TextRegions should have a source field"
+    assert hasattr(text_regions, "sources"), "TextRegions should have a sources field"
+    assert hasattr(text_regions, "source"), "TextRegions should have a source field"
 
 
 def test_textregions_iter_elements_preserves_source():
@@ -515,7 +531,9 @@ def test_textregions_iter_elements_preserves_source():
     from unstructured_inference.inference.elements import TextRegion
 
     regions = [
-        TextRegion.from_coords(0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR),
+        TextRegion.from_coords(
+            0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR
+        ),
     ]
     text_regions = TextRegions.from_list(regions)
 
@@ -530,8 +548,18 @@ def test_textregions_slice_preserves_sources():
     from unstructured_inference.inference.elements import TextRegion
 
     regions = [
-        TextRegion.from_coords(0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR),
-        TextRegion.from_coords(10, 10, 20, 20, text="second", source=Source.DETECTRON2_ONNX, text_source=TextSource.EXTRACTED),
+        TextRegion.from_coords(
+            0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR
+        ),
+        TextRegion.from_coords(
+            10,
+            10,
+            20,
+            20,
+            text="second",
+            source=Source.DETECTRON2_ONNX,
+            text_source=TextSource.EXTRACTED,
+        ),
     ]
     text_regions = TextRegions.from_list(regions)
 
@@ -546,8 +574,7 @@ def test_textregions_post_init_handles_sources():
     """Test that TextRegions.__post_init__() handles sources array initialization"""
     # Create with source but no sources array
     text_regions = TextRegions(
-        element_coords=np.array([[0, 0, 10, 10], [10, 10, 20, 20]]),
-        source=Source.YOLOX
+        element_coords=np.array([[0, 0, 10, 10], [10, 10, 20, 20]]), source=Source.YOLOX
     )
 
     # This should fail because __post_init__() doesn't handle sources
@@ -559,7 +586,9 @@ def test_textregions_post_init_handles_sources():
 def test_textregions_from_coords_accepts_source():
     """Test that TextRegion.from_coords() accepts source parameter"""
     # This should fail because from_coords() doesn't accept source parameter
-    region = TextRegion.from_coords(0, 0, 10, 10, text="test", source=Source.YOLOX, text_source=TextSource.OCR)
+    region = TextRegion.from_coords(
+        0, 0, 10, 10, text="test", source=Source.YOLOX, text_source=TextSource.OCR
+    )
 
     assert region.source == Source.YOLOX
     assert region.text_source == TextSource.OCR
