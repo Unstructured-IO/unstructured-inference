@@ -5,9 +5,11 @@ from unittest.mock import PropertyMock, patch
 import numpy as np
 import pytest
 
+from unstructured_inference.constants import Source, TextSource
 from unstructured_inference.inference import elements
 from unstructured_inference.inference.elements import (
     Rectangle,
+    TextRegion,
     TextRegions,
 )
 from unstructured_inference.inference.layoutelement import (
@@ -479,3 +481,83 @@ def test_textregions_support_numpy_slicing(test_elements):
     )
     if isinstance(test_elements, LayoutElements):
         np.testing.assert_almost_equal(test_elements[1:4].element_probs, np.array([0.1, 0.2, 0.3]))
+
+def test_textregions_from_list_collects_sources():
+    """Test that TextRegions.from_list() collects both source and text_source from regions"""
+    from unstructured_inference.inference.elements import TextRegion
+
+    regions = [
+        TextRegion.from_coords(0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR),
+        TextRegion.from_coords(10, 10, 20, 20, text="second", source=Source.DETECTRON2_ONNX, text_source=TextSource.EXTRACTED),
+    ]
+    
+    text_regions = TextRegions.from_list(regions)
+    
+    # This should fail because from_list() doesn't collect sources
+    assert text_regions.sources.size > 0, "sources array should not be empty"
+    assert text_regions.sources[0] == Source.YOLOX
+    assert text_regions.sources[1] == Source.DETECTRON2_ONNX
+
+
+def test_textregions_has_sources_field():
+    """Test that TextRegions has a sources field"""
+    text_regions = TextRegions(element_coords=np.array([[0, 0, 10, 10]]))
+
+    # This should fail because TextRegions doesn't have a sources field
+    assert hasattr(text_regions, 'sources'), "TextRegions should have a sources field"
+    assert hasattr(text_regions, 'source'), "TextRegions should have a source field"
+
+
+def test_textregions_iter_elements_preserves_source():
+    """Test that TextRegions.iter_elements() preserves source property"""
+    from unstructured_inference.inference.elements import TextRegion
+
+    regions = [
+        TextRegion.from_coords(0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR),
+    ]
+    text_regions = TextRegions.from_list(regions)
+
+    elements = list(text_regions.iter_elements())
+
+    # This should fail because iter_elements() doesn't pass source to TextRegion.from_coords()
+    assert elements[0].source == Source.YOLOX, "iter_elements() should preserve source"
+
+
+def test_textregions_slice_preserves_sources():
+    """Test that TextRegions slicing preserves sources array"""
+    from unstructured_inference.inference.elements import TextRegion
+
+    regions = [
+        TextRegion.from_coords(0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR),
+        TextRegion.from_coords(10, 10, 20, 20, text="second", source=Source.DETECTRON2_ONNX, text_source=TextSource.EXTRACTED),
+    ]
+    text_regions = TextRegions.from_list(regions)
+
+    sliced = text_regions[0:1]
+
+    # This should fail because slice() doesn't handle sources
+    assert sliced.sources.size > 0, "Sliced TextRegions should have sources"
+    assert sliced.sources[0] == Source.YOLOX
+
+
+def test_textregions_post_init_handles_sources():
+    """Test that TextRegions.__post_init__() handles sources array initialization"""
+    # Create with source but no sources array
+    text_regions = TextRegions(
+        element_coords=np.array([[0, 0, 10, 10], [10, 10, 20, 20]]),
+        source=Source.YOLOX
+    )
+
+    # This should fail because __post_init__() doesn't handle sources
+    assert text_regions.sources.size > 0, "sources should be initialized from source"
+    assert text_regions.sources[0] == Source.YOLOX
+    assert text_regions.sources[1] == Source.YOLOX
+
+
+def test_textregions_from_coords_accepts_source():
+    """Test that TextRegion.from_coords() accepts source parameter"""
+    # This should fail because from_coords() doesn't accept source parameter
+    region = TextRegion.from_coords(0, 0, 10, 10, text="test", source=Source.YOLOX, text_source=TextSource.OCR)
+
+    assert region.source == Source.YOLOX
+    assert region.text_source == TextSource.OCR
