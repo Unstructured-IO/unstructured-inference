@@ -26,12 +26,25 @@ class LayoutElements(TextRegions):
     element_class_id_map: dict[int, str] = field(default_factory=dict)
     text_as_html: np.ndarray = field(default_factory=lambda: np.array([]))
     table_as_cells: np.ndarray = field(default_factory=lambda: np.array([]))
-    _optional_array_attributes: list[str] = field(init=False, default_factory=lambda: ["texts", "sources", "text_sources", "element_probs", "element_class_ids", "text_as_html", "table_as_cells"])
-    _scalar_to_array_mappings: dict[str, str] = field(init=False, default_factory=lambda: {
-        "source": "sources",
-        "text_source": "text_sources",
-    })
-
+    _optional_array_attributes: list[str] = field(
+        init=False,
+        default_factory=lambda: [
+            "texts",
+            "sources",
+            "text_sources",
+            "element_probs",
+            "element_class_ids",
+            "text_as_html",
+            "table_as_cells",
+        ],
+    )
+    _scalar_to_array_mappings: dict[str, str] = field(
+        init=False,
+        default_factory=lambda: {
+            "source": "sources",
+            "text_source": "text_sources",
+        },
+    )
 
     def __post_init__(self):
         super().__post_init__()
@@ -116,7 +129,16 @@ class LayoutElements(TextRegions):
     def iter_elements(self):
         """iter elements as one LayoutElement per iteration; this returns a generator and has less
         memory impact than the as_list method"""
-        for (x1, y1, x2, y2), text, prob, class_id, source, text_source, text_as_html, table_as_cells in zip(
+        for (
+            (x1, y1, x2, y2),
+            text,
+            prob,
+            class_id,
+            source,
+            text_source,
+            text_as_html,
+            table_as_cells,
+        ) in zip(
             self.element_coords,
             self.texts,
             self.element_probs,
@@ -152,7 +174,14 @@ class LayoutElements(TextRegions):
         coords = np.empty((len_ele, 4), dtype=float)
         # text and probs can be Nones so use lists first then convert into array to avoid them being
         # filled as nan
-        texts, text_as_html, table_as_cells, sources, text_sources, class_probs = [], [], [], [], [], []
+        texts, text_as_html, table_as_cells, sources, text_sources, class_probs = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         class_types = np.empty((len_ele,), dtype="object")
 
         for i, element in enumerate(elements):

@@ -216,16 +216,25 @@ class TextRegions:
     source: Source | None = None
     text_sources: np.ndarray = field(default_factory=lambda: np.array([]))
     text_source: TextSource | None = None
-    _optional_array_attributes: list[str] = field(init=False, default_factory=lambda: ["texts", "sources", "text_sources"])
-    _scalar_to_array_mappings: dict[str, str] = field(init=False, default_factory=lambda: {
-        "source": "sources",
-        "text_source": "text_sources",
-    })
+    _optional_array_attributes: list[str] = field(
+        init=False, default_factory=lambda: ["texts", "sources", "text_sources"]
+    )
+    _scalar_to_array_mappings: dict[str, str] = field(
+        init=False,
+        default_factory=lambda: {
+            "source": "sources",
+            "text_source": "text_sources",
+        },
+    )
 
     def __post_init__(self):
         element_size = self.element_coords.shape[0]
         for scalar, array in self._scalar_to_array_mappings.items():
-            if getattr(self, scalar) is not None and getattr(self, array).size == 0 and element_size:
+            if (
+                getattr(self, scalar) is not None
+                and getattr(self, array).size == 0
+                and element_size
+            ):
                 setattr(self, array, np.array([getattr(self, scalar)] * element_size))
             elif getattr(self, scalar) is None and getattr(self, array).size > 0:
                 setattr(self, scalar, getattr(self, array)[0])
