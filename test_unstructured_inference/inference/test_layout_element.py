@@ -2,10 +2,11 @@ from unstructured_inference.inference.layoutelement import LayoutElement, TextRe
 from unstructured_inference.constants import Source, TextSource
 
 
-def test_layout_element_do_dict(mock_layout_element):
+def test_layout_element_to_dict(mock_layout_element):
     expected = {
         "coordinates": ((100, 100), (100, 300), (300, 300), (300, 100)),
         "text": "Sample text",
+        "text_source": None,
         "type": "Text",
         "prob": None,
         "source": None,

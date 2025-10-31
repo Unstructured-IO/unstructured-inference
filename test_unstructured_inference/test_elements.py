@@ -58,7 +58,7 @@ def test_layoutelements():
         element_coords=coords,
         element_class_ids=element_class_ids,
         element_class_id_map=class_map,
-        source="yolox",
+        source=Source.YOLOX,
     )
 
 
@@ -309,7 +309,7 @@ def test_clean_layoutelements(test_layoutelements):
         elements[1].bbox.x2,
         elements[1].bbox.x2,
     ) == (2, 2, 3, 3)
-    assert elements[0].source == elements[1].source == "yolox"
+    assert elements[0].source == elements[1].source == Source.YOLOX
 
 
 @pytest.mark.parametrize(
@@ -410,8 +410,8 @@ def test_layoutelements_from_list_no_elements():
 
 def test_textregions_from_list_no_elements():
     back = TextRegions.from_list(regions=[])
-    assert back.sources.size == 0
-    assert back.source is None
+    assert back.text_sources.size == 0
+    assert back.text_source is None
     assert back.element_coords.size == 0
 
 
@@ -419,20 +419,20 @@ def test_layoutelements_concatenate():
     layout1 = LayoutElements(
         element_coords=np.array([[0, 0, 1, 1], [1, 1, 2, 2]]),
         texts=np.array(["a", "two"]),
-        source="yolox",
+        source=Source.YOLOX,
         element_class_ids=np.array([0, 1]),
         element_class_id_map={0: "type0", 1: "type1"},
     )
     layout2 = LayoutElements(
         element_coords=np.array([[10, 10, 2, 2], [20, 20, 1, 1]]),
         texts=np.array(["three", "4"]),
-        sources=np.array(["ocr", "ocr"]),
+        sources=np.array([Source.DETECTRON2_ONNX, Source.DETECTRON2_ONNX]),
         element_class_ids=np.array([0, 1]),
         element_class_id_map={0: "type1", 1: "type2"},
     )
     joint = LayoutElements.concatenate([layout1, layout2])
     assert joint.texts.tolist() == ["a", "two", "three", "4"]
-    assert joint.sources.tolist() == ["yolox", "yolox", "ocr", "ocr"]
+    assert [s.value for s in joint.sources.tolist()] == ["yolox", "yolox", "detectron2_onnx", "detectron2_onnx"]
     assert joint.element_class_ids.tolist() == [0, 1, 1, 2]
     assert joint.element_class_id_map == {0: "type0", 1: "type1", 2: "type2"}
 
@@ -451,8 +451,8 @@ def test_layoutelements_concatenate():
                 ]
             ),
             texts=np.array(["0", "1", "2", "3", "4"]),
-            sources=np.array(["foo", "foo", "foo", "foo", "foo"], dtype="<U3"),
-            source=np.str_("foo"),
+            text_sources=np.array([TextSource.OCR] * 5),
+            text_source=TextSource.OCR,
         ),
         LayoutElements(
             element_coords=np.array(
@@ -465,8 +465,10 @@ def test_layoutelements_concatenate():
                 ]
             ),
             texts=np.array(["0", "1", "2", "3", "4"]),
-            sources=np.array(["foo", "foo", "foo", "foo", "foo"], dtype="<U3"),
-            source=np.str_("foo"),
+            sources=np.array([Source.YOLOX] * 5),
+            source=Source.YOLOX,
+            text_sources=np.array([TextSource.OCR] * 5),
+            text_source=TextSource.OCR,
             element_probs=np.array([0.0, 0.1, 0.2, 0.3, 0.4]),
         ),
     ],
