@@ -257,7 +257,7 @@ class LayoutElement(TextRegion):
         y2: Union[int, float],
         text: Optional[str] = None,
         source: Optional[Source] = None,
-        is_extracted: bool = None,
+        is_extracted: Optional[bool] = None,
         type: Optional[str] = None,
         prob: Optional[float] = None,
         text_as_html: Optional[str] = None,

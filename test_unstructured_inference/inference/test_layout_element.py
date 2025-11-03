@@ -36,9 +36,7 @@ def test_layoutelement_inheritance_works_correctly():
 
     # Check that both properties are preserved
     assert element.source == Source.YOLOX, "LayoutElement should inherit source from TextRegion"
-    assert (
-        element.is_extracted
-    ), "LayoutElement should inherit is_extracted from TextRegion"
+    assert element.is_extracted, "LayoutElement should inherit is_extracted from TextRegion"
 
     # Check that to_dict() works correctly
     d = element.to_dict()

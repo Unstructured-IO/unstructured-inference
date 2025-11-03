@@ -495,9 +495,7 @@ def test_textregions_from_list_collects_sources():
     from unstructured_inference.inference.elements import TextRegion
 
     regions = [
-        TextRegion.from_coords(
-            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=True
-        ),
+        TextRegion.from_coords(0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=True),
         TextRegion.from_coords(
             10,
             10,
@@ -531,9 +529,7 @@ def test_textregions_iter_elements_preserves_source():
     from unstructured_inference.inference.elements import TextRegion
 
     regions = [
-        TextRegion.from_coords(
-            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=True
-        ),
+        TextRegion.from_coords(0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=True),
     ]
     text_regions = TextRegions.from_list(regions)
 
@@ -548,9 +544,7 @@ def test_textregions_slice_preserves_sources():
     from unstructured_inference.inference.elements import TextRegion
 
     regions = [
-        TextRegion.from_coords(
-            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=True
-        ),
+        TextRegion.from_coords(0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=True),
         TextRegion.from_coords(
             10,
             10,
