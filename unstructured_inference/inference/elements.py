@@ -216,16 +216,25 @@ class TextRegions:
     source: Source | None = None
     is_extracted_array: np.ndarray = field(default_factory=lambda: np.array([]))
     is_extracted: bool | None = None
-    _optional_array_attributes: list[str] = field(init=False, default_factory=lambda: ["texts", "sources", "is_extracted_array"])
-    _scalar_to_array_mappings: dict[str, str] = field(init=False, default_factory=lambda: {
-        "source": "sources",
-        "is_extracted": "is_extracted_array",
-    })
+    _optional_array_attributes: list[str] = field(
+        init=False, default_factory=lambda: ["texts", "sources", "is_extracted_array"]
+    )
+    _scalar_to_array_mappings: dict[str, str] = field(
+        init=False,
+        default_factory=lambda: {
+            "source": "sources",
+            "is_extracted": "is_extracted_array",
+        },
+    )
 
     def __post_init__(self):
         element_size = self.element_coords.shape[0]
         for scalar, array in self._scalar_to_array_mappings.items():
-            if getattr(self, scalar) is not None and getattr(self, array).size == 0 and element_size:
+            if (
+                getattr(self, scalar) is not None
+                and getattr(self, array).size == 0
+                and element_size
+            ):
                 setattr(self, array, np.array([getattr(self, scalar)] * element_size))
             elif getattr(self, scalar) is None and getattr(self, array).size > 0:
                 setattr(self, scalar, getattr(self, array)[0])
