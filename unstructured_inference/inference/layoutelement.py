@@ -8,7 +8,7 @@ from pandas import DataFrame
 from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.config import inference_config
-from unstructured_inference.constants import Source, TextSource
+from unstructured_inference.constants import Source
 from unstructured_inference.inference.elements import (
     Rectangle,
     TextRegion,
@@ -31,7 +31,7 @@ class LayoutElements(TextRegions):
         default_factory=lambda: [
             "texts",
             "sources",
-            "text_sources",
+            "is_extracted_array",
             "element_probs",
             "element_class_ids",
             "text_as_html",
@@ -42,7 +42,7 @@ class LayoutElements(TextRegions):
         init=False,
         default_factory=lambda: {
             "source": "sources",
-            "text_source": "text_sources",
+            "is_extracted": "is_extracted_array",
         },
     )
 
@@ -66,7 +66,7 @@ class LayoutElements(TextRegions):
                 == [other.element_class_id_map[idx] for idx in other.element_class_ids]
             )
             and np.array_equal(self.sources[mask], other.sources[mask])
-            and np.array_equal(self.text_sources[mask], other.text_sources[mask])
+            and np.array_equal(self.is_extracted_array[mask], other.is_extracted_array[mask])
             and np.array_equal(self.text_as_html[mask], other.text_as_html[mask])
             and np.array_equal(self.table_as_cells[mask], other.table_as_cells[mask])
         )
@@ -79,7 +79,7 @@ class LayoutElements(TextRegions):
         return LayoutElements(
             element_coords=self.element_coords[indices],
             texts=self.texts[indices],
-            text_sources=self.text_sources[indices],
+            is_extracted_array=self.is_extracted_array[indices],
             sources=self.sources[indices],
             element_probs=self.element_probs[indices],
             element_class_ids=self.element_class_ids[indices],
@@ -91,7 +91,7 @@ class LayoutElements(TextRegions):
     @classmethod
     def concatenate(cls, groups: Iterable[LayoutElements]) -> LayoutElements:
         """concatenate a sequence of LayoutElements in order as one LayoutElements"""
-        coords, texts, probs, class_ids, sources, text_sources = [], [], [], [], [], []
+        coords, texts, probs, class_ids, sources, is_extracted_array = [], [], [], [], [], []
         text_as_html, table_as_cells = [], []
         class_id_reverse_map: dict[str, int] = {}
         for group in groups:
@@ -99,7 +99,7 @@ class LayoutElements(TextRegions):
             texts.append(group.texts)
             probs.append(group.element_probs)
             sources.append(group.sources)
-            text_sources.append(group.text_sources)
+            is_extracted_array.append(group.is_extracted_array)
             text_as_html.append(group.text_as_html)
             table_as_cells.append(group.table_as_cells)
 
@@ -121,7 +121,7 @@ class LayoutElements(TextRegions):
             element_class_ids=np.concatenate(class_ids),
             element_class_id_map={v: k for k, v in class_id_reverse_map.items()},
             sources=np.concatenate(sources),
-            text_sources=np.concatenate(text_sources),
+            is_extracted_array=np.concatenate(is_extracted_array),
             text_as_html=np.concatenate(text_as_html),
             table_as_cells=np.concatenate(table_as_cells),
         )
@@ -135,7 +135,7 @@ class LayoutElements(TextRegions):
             prob,
             class_id,
             source,
-            text_source,
+            is_extracted,
             text_as_html,
             table_as_cells,
         ) in zip(
@@ -144,7 +144,7 @@ class LayoutElements(TextRegions):
             self.element_probs,
             self.element_class_ids,
             self.sources,
-            self.text_sources,
+            self.is_extracted_array,
             self.text_as_html,
             self.table_as_cells,
         ):
@@ -161,7 +161,7 @@ class LayoutElements(TextRegions):
                 ),
                 prob=None if np.isnan(prob) else prob,
                 source=source,
-                text_source=text_source,
+                is_extracted=is_extracted,
                 text_as_html=text_as_html,
                 table_as_cells=table_as_cells,
             )
@@ -174,7 +174,7 @@ class LayoutElements(TextRegions):
         coords = np.empty((len_ele, 4), dtype=float)
         # text and probs can be Nones so use lists first then convert into array to avoid them being
         # filled as nan
-        texts, text_as_html, table_as_cells, sources, text_sources, class_probs = (
+        texts, text_as_html, table_as_cells, sources, is_extracted_array, class_probs = (
             [],
             [],
             [],
@@ -188,7 +188,7 @@ class LayoutElements(TextRegions):
             coords[i] = [element.bbox.x1, element.bbox.y1, element.bbox.x2, element.bbox.y2]
             texts.append(element.text)
             sources.append(element.source)
-            text_sources.append(element.text_source)
+            is_extracted_array.append(element.is_extracted)
             text_as_html.append(element.text_as_html)
             table_as_cells.append(element.table_as_cells)
             class_probs.append(element.prob)
@@ -204,7 +204,7 @@ class LayoutElements(TextRegions):
             element_class_ids=class_ids,
             element_class_id_map=dict(zip(range(len(unique_ids)), unique_ids)),
             sources=np.array(sources),
-            text_sources=np.array(text_sources),
+            is_extracted_array=np.array(is_extracted_array),
             text_as_html=np.array(text_as_html),
             table_as_cells=np.array(table_as_cells),
         )
@@ -227,7 +227,7 @@ class LayoutElement(TextRegion):
             "type": self.type,
             "prob": self.prob,
             "source": self.source,
-            "text_source": self.text_source,
+            "is_extracted": self.is_extracted,
         }
         return out_dict
 
@@ -238,12 +238,12 @@ class LayoutElement(TextRegion):
         type = region.type if hasattr(region, "type") else None
         prob = region.prob if hasattr(region, "prob") else None
         source = region.source if hasattr(region, "source") else None
-        text_source = region.text_source if hasattr(region, "text_source") else None
+        is_extracted = region.is_extracted if hasattr(region, "is_extracted") else None
         return cls(
             bbox=region.bbox,
             text=text,
             source=source,
-            text_source=text_source,
+            is_extracted=is_extracted,
             type=type,
             prob=prob,
         )
@@ -257,7 +257,7 @@ class LayoutElement(TextRegion):
         y2: Union[int, float],
         text: Optional[str] = None,
         source: Optional[Source] = None,
-        text_source: Optional[TextSource] = None,
+        is_extracted: bool = None,
         type: Optional[str] = None,
         prob: Optional[float] = None,
         text_as_html: Optional[str] = None,
@@ -268,7 +268,7 @@ class LayoutElement(TextRegion):
         bbox = Rectangle(x1, y1, x2, y2)
         return cls(
             text=text,
-            text_source=text_source,
+            is_extracted=is_extracted,
             type=type,
             prob=prob,
             source=source,
@@ -427,7 +427,7 @@ def clean_layoutelements(elements: LayoutElements, subregion_threshold: float = 
     final_attrs: dict[str, Any] = {
         "element_class_id_map": elements.element_class_id_map,
     }
-    for attr in ("element_class_ids", "element_probs", "texts", "sources", "text_sources"):
+    for attr in ("element_class_ids", "element_probs", "texts", "sources", "is_extracted_array"):
         if (original_attr := getattr(elements, attr)) is None:
             continue
         final_attrs[attr] = original_attr[sorted_by_area][mask][sorted_by_y1]
@@ -503,7 +503,7 @@ def clean_layoutelements_for_class(
 
     final_coords = np.vstack([target_coords[mask], other_coords[other_mask]])
     final_attrs: dict[str, Any] = {"element_class_id_map": elements.element_class_id_map}
-    for attr in ("element_class_ids", "element_probs", "texts", "sources", "text_sources"):
+    for attr in ("element_class_ids", "element_probs", "texts", "sources", "is_extracted_array"):
         if (original_attr := getattr(elements, attr)) is None:
             continue
         final_attrs[attr] = np.concatenate(
