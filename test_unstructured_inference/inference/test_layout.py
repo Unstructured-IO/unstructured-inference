@@ -34,7 +34,7 @@ def mock_initial_layout():
         6,
         8,
         text="A very repetitive narrative. " * 10,
-        text_source="Mock",
+        is_extracted=True,
     )
 
     title_block = EmbeddedTextRegion.from_coords(
@@ -43,7 +43,7 @@ def mock_initial_layout():
         3,
         4,
         text="A Catchy Title",
-        text_source="Mock",
+        is_extracted=True,
     )
 
     return [text_block, title_block]

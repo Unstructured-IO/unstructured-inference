@@ -5,7 +5,7 @@ from unittest.mock import PropertyMock, patch
 import numpy as np
 import pytest
 
-from unstructured_inference.constants import Source, TextSource
+from unstructured_inference.constants import Source
 from unstructured_inference.inference import elements
 from unstructured_inference.inference.elements import (
     Rectangle,
@@ -410,8 +410,8 @@ def test_layoutelements_from_list_no_elements():
 
 def test_textregions_from_list_no_elements():
     back = TextRegions.from_list(regions=[])
-    assert back.text_sources.size == 0
-    assert back.text_source is None
+    assert back.is_extracted_array.size == 0
+    assert back.is_extracted is None
     assert back.element_coords.size == 0
 
 
@@ -456,8 +456,8 @@ def test_layoutelements_concatenate():
                 ]
             ),
             texts=np.array(["0", "1", "2", "3", "4"]),
-            text_sources=np.array([TextSource.OCR] * 5),
-            text_source=TextSource.OCR,
+            is_extracted_array=np.array([True] * 5),
+            is_extracted=True,
         ),
         LayoutElements(
             element_coords=np.array(
@@ -472,8 +472,8 @@ def test_layoutelements_concatenate():
             texts=np.array(["0", "1", "2", "3", "4"]),
             sources=np.array([Source.YOLOX] * 5),
             source=Source.YOLOX,
-            text_sources=np.array([TextSource.OCR] * 5),
-            text_source=TextSource.OCR,
+            is_extracted_array=np.array([] * 5),
+            is_extracted=True,
             element_probs=np.array([0.0, 0.1, 0.2, 0.3, 0.4]),
         ),
     ],
@@ -496,7 +496,7 @@ def test_textregions_from_list_collects_sources():
 
     regions = [
         TextRegion.from_coords(
-            0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR
+            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=True
         ),
         TextRegion.from_coords(
             10,
@@ -505,7 +505,7 @@ def test_textregions_from_list_collects_sources():
             20,
             text="second",
             source=Source.DETECTRON2_ONNX,
-            text_source=TextSource.EXTRACTED,
+            is_extracted=True,
         ),
     ]
 
@@ -532,7 +532,7 @@ def test_textregions_iter_elements_preserves_source():
 
     regions = [
         TextRegion.from_coords(
-            0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR
+            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=True
         ),
     ]
     text_regions = TextRegions.from_list(regions)
@@ -549,7 +549,7 @@ def test_textregions_slice_preserves_sources():
 
     regions = [
         TextRegion.from_coords(
-            0, 0, 10, 10, text="first", source=Source.YOLOX, text_source=TextSource.OCR
+            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=True
         ),
         TextRegion.from_coords(
             10,
@@ -558,7 +558,7 @@ def test_textregions_slice_preserves_sources():
             20,
             text="second",
             source=Source.DETECTRON2_ONNX,
-            text_source=TextSource.EXTRACTED,
+            is_extracted=True,
         ),
     ]
     text_regions = TextRegions.from_list(regions)
@@ -587,8 +587,8 @@ def test_textregions_from_coords_accepts_source():
     """Test that TextRegion.from_coords() accepts source parameter"""
     # This should fail because from_coords() doesn't accept source parameter
     region = TextRegion.from_coords(
-        0, 0, 10, 10, text="test", source=Source.YOLOX, text_source=TextSource.OCR
+        0, 0, 10, 10, text="test", source=Source.YOLOX, is_extracted=True
     )
 
     assert region.source == Source.YOLOX
-    assert region.text_source == TextSource.OCR
+    assert region.is_extracted
