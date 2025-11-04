@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import numpy as np
 
-from unstructured_inference.constants import Source
+from unstructured_inference.constants import IsExtracted, Source
 from unstructured_inference.math import safe_division
 
 
@@ -185,7 +185,7 @@ class TextRegion:
     bbox: Rectangle
     text: Optional[str] = None
     source: Optional[Source] = None
-    is_extracted: Optional[bool] = None
+    is_extracted: Optional[IsExtracted] = None
 
     def __str__(self) -> str:
         return str(self.text)
@@ -199,7 +199,7 @@ class TextRegion:
         y2: Union[int, float],
         text: Optional[str] = None,
         source: Optional[Source] = None,
-        is_extracted: Optional[bool] = None,
+        is_extracted: Optional[IsExtracted] = None,
         **kwargs,
     ) -> TextRegion:
         """Constructs a region from coordinates."""
@@ -215,7 +215,7 @@ class TextRegions:
     sources: np.ndarray = field(default_factory=lambda: np.array([]))
     source: Source | None = None
     is_extracted_array: np.ndarray = field(default_factory=lambda: np.array([]))
-    is_extracted: bool | None = None
+    is_extracted: IsExtracted | None = None
     _optional_array_attributes: list[str] = field(
         init=False, default_factory=lambda: ["texts", "sources", "is_extracted_array"]
     )

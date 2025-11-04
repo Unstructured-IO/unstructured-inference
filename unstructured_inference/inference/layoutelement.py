@@ -8,7 +8,7 @@ from pandas import DataFrame
 from scipy.sparse.csgraph import connected_components
 
 from unstructured_inference.config import inference_config
-from unstructured_inference.constants import Source
+from unstructured_inference.constants import IsExtracted, Source
 from unstructured_inference.inference.elements import (
     Rectangle,
     TextRegion,
@@ -257,7 +257,7 @@ class LayoutElement(TextRegion):
         y2: Union[int, float],
         text: Optional[str] = None,
         source: Optional[Source] = None,
-        is_extracted: Optional[bool] = None,
+        is_extracted: Optional[IsExtracted] = None,
         type: Optional[str] = None,
         prob: Optional[float] = None,
         text_as_html: Optional[str] = None,
