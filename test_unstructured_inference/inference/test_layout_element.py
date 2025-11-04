@@ -1,5 +1,5 @@
 from unstructured_inference.inference.layoutelement import LayoutElement, TextRegion
-from unstructured_inference.constants import Source
+from unstructured_inference.constants import IsExtracted, Source
 
 
 def test_layout_element_to_dict(mock_layout_element):
@@ -28,7 +28,7 @@ def test_layoutelement_inheritance_works_correctly():
 
     # Create a TextRegion with both source and text_source
     region = TextRegion.from_coords(
-        0, 0, 10, 10, text="test", source=Source.YOLOX, is_extracted=True
+        0, 0, 10, 10, text="test", source=Source.YOLOX, is_extracted=IsExtracted.TRUE
     )
 
     # Convert to LayoutElement
@@ -36,12 +36,14 @@ def test_layoutelement_inheritance_works_correctly():
 
     # Check that both properties are preserved
     assert element.source == Source.YOLOX, "LayoutElement should inherit source from TextRegion"
-    assert element.is_extracted, "LayoutElement should inherit is_extracted from TextRegion"
+    assert (
+        element.is_extracted == IsExtracted.TRUE
+    ), "LayoutElement should inherit is_extracted from TextRegion"
 
     # Check that to_dict() works correctly
     d = element.to_dict()
     assert d["source"] == Source.YOLOX
-    assert d["is_extracted"]
+    assert d["is_extracted"] == IsExtracted.TRUE
 
     # Check that we can set source directly on LayoutElement
     element.source = Source.DETECTRON2_ONNX

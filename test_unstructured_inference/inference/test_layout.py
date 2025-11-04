@@ -13,6 +13,7 @@ from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
 )
+from unstructured_inference.constants import IsExtracted
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -34,7 +35,7 @@ def mock_initial_layout():
         6,
         8,
         text="A very repetitive narrative. " * 10,
-        is_extracted=True,
+        is_extracted=IsExtracted.TRUE,
     )
 
     title_block = EmbeddedTextRegion.from_coords(
@@ -43,7 +44,7 @@ def mock_initial_layout():
         3,
         4,
         text="A Catchy Title",
-        is_extracted=True,
+        is_extracted=IsExtracted.TRUE,
     )
 
     return [text_block, title_block]
