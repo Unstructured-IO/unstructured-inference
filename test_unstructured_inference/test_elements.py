@@ -568,6 +568,7 @@ def test_textregions_slice_preserves_sources():
     # This should fail because slice() doesn't handle sources
     assert sliced.sources.size > 0, "Sliced TextRegions should have sources"
     assert sliced.sources[0] == Source.YOLOX
+    assert sliced.is_extracted_array[0] is IsExtracted.TRUE
 
 
 def test_textregions_post_init_handles_sources():
