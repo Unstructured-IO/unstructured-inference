@@ -7,6 +7,12 @@ class Source(Enum):
     DETECTRON2_LP = "detectron2_lp"
 
 
+class IsExtracted(Enum):
+    TRUE = "true"
+    FALSE = "false"
+    PARTIAL = "partial"
+
+
 class ElementType:
     PARAGRAPH = "Paragraph"
     IMAGE = "Image"
