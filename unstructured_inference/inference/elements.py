@@ -250,6 +250,9 @@ class TextRegions:
 
     def slice(self, indices) -> TextRegions:
         """slice text regions based on indices"""
+        # NOTE(alan): I would expect if I try to access a single element, it should return a
+        # TextRegion, not a TextRegions. Currently, you get an error when trying to access a single
+        # element.
         return TextRegions(
             element_coords=self.element_coords[indices],
             texts=self.texts[indices],
