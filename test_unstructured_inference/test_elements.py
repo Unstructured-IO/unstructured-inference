@@ -593,3 +593,31 @@ def test_textregions_from_coords_accepts_source():
 
     assert region.source == Source.YOLOX
     assert region.is_extracted
+
+
+@pytest.mark.skip(reason="Not implemented")
+def test_textregions_allows_for_single_element_access_and_returns_textregion_with_correct_values():
+    """Test that TextRegions allows for single element access and returns a TextRegion with the
+    correct values"""
+
+    regions = [
+        TextRegion.from_coords(
+            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=IsExtracted.TRUE
+        ),
+        TextRegion.from_coords(
+            0,
+            0,
+            20,
+            20,
+            text="second",
+            source=Source.DETECTRON2_ONNX,
+            is_extracted=IsExtracted.PARTIAL,
+        ),
+    ]
+    text_regions = TextRegions.from_list(regions)
+    for i, region in enumerate(regions):
+        sliced = text_regions[i]
+        assert isinstance(sliced, TextRegion)
+        assert sliced.text == region.text
+        assert sliced.source == region.source
+        assert sliced.is_extracted is region.is_extracted

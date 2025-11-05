@@ -1,3 +1,7 @@
+## 1.1.1
+
+* Add NotImplementedError when trying to single index a TextRegions, reflecting the fact that it won't behave correctly at the moment.
+
 ## 1.1.0
 
 * Enhancement: Add `TextSource` to track where the text of an element came from
