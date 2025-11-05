@@ -597,7 +597,8 @@ def test_textregions_from_coords_accepts_source():
 
 @pytest.mark.skip(reason="Not implemented")
 def test_textregions_allows_for_single_element_access_and_returns_textregion_with_correct_values():
-    """Test that TextRegions allows for single element access and returns a TextRegion with the correct values"""
+    """Test that TextRegions allows for single element access and returns a TextRegion with the
+    correct values"""
 
     regions = [
         TextRegion.from_coords(
