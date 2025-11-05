@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import numpy as np
 
-from unstructured_inference.constants import Source
+from unstructured_inference.constants import IsExtracted, Source
 from unstructured_inference.math import safe_division
 
 
@@ -185,6 +185,7 @@ class TextRegion:
     bbox: Rectangle
     text: Optional[str] = None
     source: Optional[Source] = None
+    is_extracted: Optional[IsExtracted] = None
 
     def __str__(self) -> str:
         return str(self.text)
@@ -198,12 +199,13 @@ class TextRegion:
         y2: Union[int, float],
         text: Optional[str] = None,
         source: Optional[Source] = None,
+        is_extracted: Optional[IsExtracted] = None,
         **kwargs,
     ) -> TextRegion:
         """Constructs a region from coordinates."""
         bbox = Rectangle(x1, y1, x2, y2)
 
-        return cls(text=text, source=source, bbox=bbox, **kwargs)
+        return cls(text=text, source=source, is_extracted=is_extracted, bbox=bbox, **kwargs)
 
 
 @dataclass
@@ -212,16 +214,33 @@ class TextRegions:
     texts: np.ndarray = field(default_factory=lambda: np.array([]))
     sources: np.ndarray = field(default_factory=lambda: np.array([]))
     source: Source | None = None
+    is_extracted_array: np.ndarray = field(default_factory=lambda: np.array([]))
+    is_extracted: IsExtracted | None = None
+    _optional_array_attributes: list[str] = field(
+        init=False, default_factory=lambda: ["texts", "sources", "is_extracted_array"]
+    )
+    _scalar_to_array_mappings: dict[str, str] = field(
+        init=False,
+        default_factory=lambda: {
+            "source": "sources",
+            "is_extracted": "is_extracted_array",
+        },
+    )
 
     def __post_init__(self):
-        if self.texts.size == 0 and self.element_coords.size > 0:
-            self.texts = np.array([None] * self.element_coords.shape[0])
-
-        # for backward compatibility; also allow to use one value to set sources for all regions
-        if self.sources.size == 0 and self.element_coords.size > 0:
-            self.sources = np.array([self.source] * self.element_coords.shape[0])
-        elif self.source is None and self.sources.size:
-            self.source = self.sources[0]
+        element_size = self.element_coords.shape[0]
+        for scalar, array in self._scalar_to_array_mappings.items():
+            if (
+                getattr(self, scalar) is not None
+                and getattr(self, array).size == 0
+                and element_size
+            ):
+                setattr(self, array, np.array([getattr(self, scalar)] * element_size))
+            elif getattr(self, scalar) is None and getattr(self, array).size > 0:
+                setattr(self, scalar, getattr(self, array)[0])
+        for attr in self._optional_array_attributes:
+            if getattr(self, attr).size == 0 and element_size:
+                setattr(self, attr, np.array([None] * element_size))
 
         # we convert to float so data type is more consistent (e.g., None will be np.nan)
         self.element_coords = self.element_coords.astype(float)
@@ -231,21 +250,26 @@ class TextRegions:
 
     def slice(self, indices) -> TextRegions:
         """slice text regions based on indices"""
+        # NOTE(alan): I would expect if I try to access a single element, it should return a
+        # TextRegion, not a TextRegions. Currently, you get an error when trying to access a single
+        # element.
         return TextRegions(
             element_coords=self.element_coords[indices],
             texts=self.texts[indices],
             sources=self.sources[indices],
+            is_extracted_array=self.is_extracted_array[indices],
         )
 
     def iter_elements(self):
         """iter text regions as one TextRegion per iteration; this returns a generator and has less
         memory impact than the as_list method"""
-        for (x1, y1, x2, y2), text, source in zip(
+        for (x1, y1, x2, y2), text, source, is_extracted in zip(
             self.element_coords,
             self.texts,
             self.sources,
+            self.is_extracted_array,
         ):
-            yield TextRegion.from_coords(x1, y1, x2, y2, text, source)
+            yield TextRegion.from_coords(x1, y1, x2, y2, text, source, is_extracted)
 
     def as_list(self):
         """return a list of LayoutElement for backward compatibility"""
@@ -254,16 +278,18 @@ class TextRegions:
     @classmethod
     def from_list(cls, regions: list):
         """create TextRegions from a list of TextRegion objects; the objects must have the same
-        source"""
-        coords, texts, sources = [], [], []
+        is_extracted"""
+        coords, texts, sources, is_extracted_array = [], [], [], []
         for region in regions:
             coords.append((region.bbox.x1, region.bbox.y1, region.bbox.x2, region.bbox.y2))
             texts.append(region.text)
             sources.append(region.source)
+            is_extracted_array.append(region.is_extracted)
         return cls(
             element_coords=np.array(coords),
             texts=np.array(texts),
             sources=np.array(sources),
+            is_extracted_array=np.array(is_extracted_array),
         )
 
     def __len__(self):
