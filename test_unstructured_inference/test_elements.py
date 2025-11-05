@@ -600,8 +600,18 @@ def test_textregions_allows_for_single_element_access_and_returns_textregion_wit
     """Test that TextRegions allows for single element access and returns a TextRegion with the correct values"""
 
     regions = [
-        TextRegion.from_coords(0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=IsExtracted.TRUE),
-        TextRegion.from_coords(0, 0, 20, 20, text="second", source=Source.DETECTRON2_ONNX, is_extracted=IsExtracted.PARTIAL),
+        TextRegion.from_coords(
+            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=IsExtracted.TRUE
+        ),
+        TextRegion.from_coords(
+            0,
+            0,
+            20,
+            20,
+            text="second",
+            source=Source.DETECTRON2_ONNX,
+            is_extracted=IsExtracted.PARTIAL,
+        ),
     ]
     text_regions = TextRegions.from_list(regions)
     for i, region in enumerate(regions):
