@@ -253,6 +253,9 @@ class TextRegions:
         # NOTE(alan): I would expect if I try to access a single element, it should return a
         # TextRegion, not a TextRegions. Currently, you get an error when trying to access a single
         # element.
+        if self.element_coords[indices].ndim == 1:
+            # We've indexed a single element. For now this isn't implemented.
+            raise NotImplementedError("Slicing a single element is not implemented")
         return TextRegions(
             element_coords=self.element_coords[indices],
             texts=self.texts[indices],
