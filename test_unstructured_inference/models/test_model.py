@@ -1,4 +1,5 @@
 import json
+import threading
 from typing import Any
 from unittest import mock
 
@@ -38,6 +39,49 @@ def test_get_model(monkeypatch):
     monkeypatch.setattr(models, "models", {})
     with mock.patch.dict(models.model_class_map, {"yolox": MockModel}):
         assert isinstance(models.get_model("yolox"), MockModel)
+
+
+def test_get_model_threaded(monkeypatch):
+    """Test that get_model works correctly when called from multiple threads simultaneously."""
+    monkeypatch.setattr(models, "models", {})
+
+    # Results and exceptions from threads will be stored here
+    results = []
+    exceptions = []
+
+    def get_model_worker(thread_id):
+        """Worker function for each thread."""
+        try:
+            model = models.get_model("yolox")
+            results.append((thread_id, model))
+        except Exception as e:
+            exceptions.append((thread_id, e))
+
+    # Create and start multiple threads
+    num_threads = 10
+    threads = []
+
+    with mock.patch.dict(models.model_class_map, {"yolox": MockModel}):
+        for i in range(num_threads):
+            thread = threading.Thread(target=get_model_worker, args=(i,))
+            threads.append(thread)
+            thread.start()
+
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+
+    # Verify no exceptions occurred
+    assert len(exceptions) == 0, f"Exceptions occurred in threads: {exceptions}"
+
+    # Verify all threads got results
+    assert len(results) == num_threads, f"Expected {num_threads} results, got {len(results)}"
+
+    # Verify all results are MockModel instances
+    for thread_id, model in results:
+        assert isinstance(
+            model, MockModel
+        ), f"Thread {thread_id} got unexpected model type: {type(model)}"
 
 
 def test_register_new_model():

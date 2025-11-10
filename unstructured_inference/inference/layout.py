@@ -337,12 +337,15 @@ def process_data_with_model(
     password: Optional[str] = None,
     **kwargs: Any,
 ) -> DocumentLayout:
-    """Process PDF as file-like object `data` into a `DocumentLayout`.
+    """Process PDF or image as file-like object `data` into a `DocumentLayout`.
 
     Uses the model identified by `model_name`.
     """
+    # Note: We use a temp dir, not a temp file,
+    # because the latter fails on Windows
+    # https://github.com/Unstructured-IO/unstructured-inference/pull/376
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        file_path = os.path.join(tmp_dir_path, "document.pdf")
+        file_path = os.path.join(tmp_dir_path, "document")
         with open(file_path, "wb") as f:
             f.write(data.read())
             f.flush()
@@ -365,8 +368,8 @@ def process_file_with_model(
     password: Optional[str] = None,
     **kwargs: Any,
 ) -> DocumentLayout:
-    """Processes pdf file with name filename into a DocumentLayout by using a model identified by
-    model_name."""
+    """Processes pdf or image file with name filename into a DocumentLayout by using
+    a model identified by model_name."""
 
     model = get_model(model_name, **kwargs)
     if isinstance(model, UnstructuredObjectDetectionModel):

@@ -5,20 +5,17 @@ from unittest.mock import PropertyMock, patch
 import numpy as np
 import pytest
 
-from unstructured_inference.constants import ElementType
+from unstructured_inference.constants import IsExtracted, Source
 from unstructured_inference.inference import elements
 from unstructured_inference.inference.elements import (
-    ImageTextRegion,
     Rectangle,
     TextRegion,
     TextRegions,
 )
 from unstructured_inference.inference.layoutelement import (
-    LayoutElement,
     LayoutElements,
     clean_layoutelements,
     clean_layoutelements_for_class,
-    merge_inferred_layout_with_extracted_layout,
     partition_groups_from_regions,
     separate,
 )
@@ -61,7 +58,7 @@ def test_layoutelements():
         element_coords=coords,
         element_class_ids=element_class_ids,
         element_class_id_map=class_map,
-        source="yolox",
+        source=Source.YOLOX,
     )
 
 
@@ -297,40 +294,6 @@ def test_separate(rect1, rect2):
     # assert not rect1.intersects(rect2) #TODO: fix this test
 
 
-def test_merge_inferred_layout_with_extracted_layout():
-    inferred_layout = [
-        LayoutElement.from_coords(453, 322, 1258, 408, text=None, type=ElementType.SECTION_HEADER),
-        LayoutElement.from_coords(387, 477, 1320, 537, text=None, type=ElementType.TEXT),
-    ]
-
-    extracted_layout = [
-        TextRegion.from_coords(438, 318, 1272, 407, text="Example Section Header"),
-        TextRegion.from_coords(377, 469, 1335, 535, text="Example Title"),
-    ]
-
-    extracted_layout_with_full_page_image = [
-        ImageTextRegion.from_coords(0, 0, 1700, 2200, text="Example Section Header"),
-    ]
-
-    merged_layout = merge_inferred_layout_with_extracted_layout(
-        inferred_layout=inferred_layout,
-        extracted_layout=extracted_layout,
-        page_image_size=(1700, 2200),
-    )
-    assert merged_layout[0].type == ElementType.SECTION_HEADER
-    assert merged_layout[0].text == "Example Section Header"
-    assert merged_layout[1].type == ElementType.TEXT
-    assert merged_layout[1].text == "Example Title"
-
-    # case: extracted layout with a full page image
-    merged_layout = merge_inferred_layout_with_extracted_layout(
-        inferred_layout=inferred_layout,
-        extracted_layout=extracted_layout_with_full_page_image,
-        page_image_size=(1700, 2200),
-    )
-    assert merged_layout == inferred_layout
-
-
 def test_clean_layoutelements(test_layoutelements):
     elements = clean_layoutelements(test_layoutelements).as_list()
     assert len(elements) == 2
@@ -346,7 +309,7 @@ def test_clean_layoutelements(test_layoutelements):
         elements[1].bbox.x2,
         elements[1].bbox.x2,
     ) == (2, 2, 3, 3)
-    assert elements[0].source == elements[1].source == "yolox"
+    assert elements[0].source == elements[1].source == Source.YOLOX
 
 
 @pytest.mark.parametrize(
@@ -447,8 +410,8 @@ def test_layoutelements_from_list_no_elements():
 
 def test_textregions_from_list_no_elements():
     back = TextRegions.from_list(regions=[])
-    assert back.sources.size == 0
-    assert back.source is None
+    assert back.is_extracted_array.size == 0
+    assert back.is_extracted is None
     assert back.element_coords.size == 0
 
 
@@ -456,20 +419,25 @@ def test_layoutelements_concatenate():
     layout1 = LayoutElements(
         element_coords=np.array([[0, 0, 1, 1], [1, 1, 2, 2]]),
         texts=np.array(["a", "two"]),
-        source="yolox",
+        source=Source.YOLOX,
         element_class_ids=np.array([0, 1]),
         element_class_id_map={0: "type0", 1: "type1"},
     )
     layout2 = LayoutElements(
         element_coords=np.array([[10, 10, 2, 2], [20, 20, 1, 1]]),
         texts=np.array(["three", "4"]),
-        sources=np.array(["ocr", "ocr"]),
+        sources=np.array([Source.DETECTRON2_ONNX, Source.DETECTRON2_ONNX]),
         element_class_ids=np.array([0, 1]),
         element_class_id_map={0: "type1", 1: "type2"},
     )
     joint = LayoutElements.concatenate([layout1, layout2])
     assert joint.texts.tolist() == ["a", "two", "three", "4"]
-    assert joint.sources.tolist() == ["yolox", "yolox", "ocr", "ocr"]
+    assert [s.value for s in joint.sources.tolist()] == [
+        "yolox",
+        "yolox",
+        "detectron2_onnx",
+        "detectron2_onnx",
+    ]
     assert joint.element_class_ids.tolist() == [0, 1, 1, 2]
     assert joint.element_class_id_map == {0: "type0", 1: "type1", 2: "type2"}
 
@@ -488,8 +456,8 @@ def test_layoutelements_concatenate():
                 ]
             ),
             texts=np.array(["0", "1", "2", "3", "4"]),
-            sources=np.array(["foo", "foo", "foo", "foo", "foo"], dtype="<U3"),
-            source=np.str_("foo"),
+            is_extracted_array=np.array([IsExtracted.TRUE] * 5),
+            is_extracted=IsExtracted.TRUE,
         ),
         LayoutElements(
             element_coords=np.array(
@@ -502,8 +470,10 @@ def test_layoutelements_concatenate():
                 ]
             ),
             texts=np.array(["0", "1", "2", "3", "4"]),
-            sources=np.array(["foo", "foo", "foo", "foo", "foo"], dtype="<U3"),
-            source=np.str_("foo"),
+            sources=np.array([Source.YOLOX] * 5),
+            source=Source.YOLOX,
+            is_extracted_array=np.array([] * 5),
+            is_extracted=IsExtracted.TRUE,
             element_probs=np.array([0.0, 0.1, 0.2, 0.3, 0.4]),
         ),
     ],
@@ -518,3 +488,136 @@ def test_textregions_support_numpy_slicing(test_elements):
     )
     if isinstance(test_elements, LayoutElements):
         np.testing.assert_almost_equal(test_elements[1:4].element_probs, np.array([0.1, 0.2, 0.3]))
+
+
+def test_textregions_from_list_collects_sources():
+    """Test that TextRegions.from_list() collects both source and text_source from regions"""
+    from unstructured_inference.inference.elements import TextRegion
+
+    regions = [
+        TextRegion.from_coords(
+            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=IsExtracted.TRUE
+        ),
+        TextRegion.from_coords(
+            10,
+            10,
+            20,
+            20,
+            text="second",
+            source=Source.DETECTRON2_ONNX,
+            is_extracted=IsExtracted.TRUE,
+        ),
+    ]
+
+    text_regions = TextRegions.from_list(regions)
+
+    # This should fail because from_list() doesn't collect sources
+    assert text_regions.sources.size > 0, "sources array should not be empty"
+    assert text_regions.sources[0] == Source.YOLOX
+    assert text_regions.sources[1] == Source.DETECTRON2_ONNX
+
+
+def test_textregions_has_sources_field():
+    """Test that TextRegions has a sources field"""
+    text_regions = TextRegions(element_coords=np.array([[0, 0, 10, 10]]))
+
+    # This should fail because TextRegions doesn't have a sources field
+    assert hasattr(text_regions, "sources"), "TextRegions should have a sources field"
+    assert hasattr(text_regions, "source"), "TextRegions should have a source field"
+
+
+def test_textregions_iter_elements_preserves_source():
+    """Test that TextRegions.iter_elements() preserves source property"""
+    from unstructured_inference.inference.elements import TextRegion
+
+    regions = [
+        TextRegion.from_coords(
+            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=IsExtracted.TRUE
+        ),
+    ]
+    text_regions = TextRegions.from_list(regions)
+
+    elements = list(text_regions.iter_elements())
+
+    # This should fail because iter_elements() doesn't pass source to TextRegion.from_coords()
+    assert elements[0].source == Source.YOLOX, "iter_elements() should preserve source"
+
+
+def test_textregions_slice_preserves_sources():
+    """Test that TextRegions slicing preserves sources array"""
+    from unstructured_inference.inference.elements import TextRegion
+
+    regions = [
+        TextRegion.from_coords(
+            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=IsExtracted.TRUE
+        ),
+        TextRegion.from_coords(
+            10,
+            10,
+            20,
+            20,
+            text="second",
+            source=Source.DETECTRON2_ONNX,
+            is_extracted=IsExtracted.TRUE,
+        ),
+    ]
+    text_regions = TextRegions.from_list(regions)
+
+    sliced = text_regions[0:1]
+
+    # This should fail because slice() doesn't handle sources
+    assert sliced.sources.size > 0, "Sliced TextRegions should have sources"
+    assert sliced.sources[0] == Source.YOLOX
+    assert sliced.is_extracted_array[0] is IsExtracted.TRUE
+
+
+def test_textregions_post_init_handles_sources():
+    """Test that TextRegions.__post_init__() handles sources array initialization"""
+    # Create with source but no sources array
+    text_regions = TextRegions(
+        element_coords=np.array([[0, 0, 10, 10], [10, 10, 20, 20]]), source=Source.YOLOX
+    )
+
+    # This should fail because __post_init__() doesn't handle sources
+    assert text_regions.sources.size > 0, "sources should be initialized from source"
+    assert text_regions.sources[0] == Source.YOLOX
+    assert text_regions.sources[1] == Source.YOLOX
+
+
+def test_textregions_from_coords_accepts_source():
+    """Test that TextRegion.from_coords() accepts source parameter"""
+    # This should fail because from_coords() doesn't accept source parameter
+    region = TextRegion.from_coords(
+        0, 0, 10, 10, text="test", source=Source.YOLOX, is_extracted=IsExtracted.TRUE
+    )
+
+    assert region.source == Source.YOLOX
+    assert region.is_extracted
+
+
+@pytest.mark.skip(reason="Not implemented")
+def test_textregions_allows_for_single_element_access_and_returns_textregion_with_correct_values():
+    """Test that TextRegions allows for single element access and returns a TextRegion with the
+    correct values"""
+
+    regions = [
+        TextRegion.from_coords(
+            0, 0, 10, 10, text="first", source=Source.YOLOX, is_extracted=IsExtracted.TRUE
+        ),
+        TextRegion.from_coords(
+            0,
+            0,
+            20,
+            20,
+            text="second",
+            source=Source.DETECTRON2_ONNX,
+            is_extracted=IsExtracted.PARTIAL,
+        ),
+    ]
+    text_regions = TextRegions.from_list(regions)
+    for i, region in enumerate(regions):
+        sliced = text_regions[i]
+        assert isinstance(sliced, TextRegion)
+        assert sliced.text == region.text
+        assert sliced.source == region.source
+        assert sliced.is_extracted is region.is_extracted

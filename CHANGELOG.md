@@ -1,3 +1,30 @@
+## 1.1.1
+
+* Add NotImplementedError when trying to single index a TextRegions, reflecting the fact that it won't behave correctly at the moment.
+
+## 1.1.0
+
+* Enhancement: Add `TextSource` to track where the text of an element came from
+* Enhancement: Refactor `__post_init__` of `TextRegions` and `LayoutElement` slightly to automate initialization
+
+## 1.0.10
+
+* Remove merging logic that's no longer used
+
+## 1.0.9
+
+* Make OD model loading thread safe
+
+## 1.0.8
+
+* Enhancement: Optimized `zoom_image` (codeflash)
+* Enhancement: Optimized `cells_to_html` for an 8% speedup in some cases (codeflash)
+* Enhancement: Optimized `outputs_to_objects` for an 88% speedup in some cases (codeflash)
+
+## 1.0.7
+
+* Fix a hardcoded file extension causing confusion in the logs
+
 ## 1.0.6
 
 * Add slicing through indexing for vectorized elements
