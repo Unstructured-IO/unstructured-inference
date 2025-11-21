@@ -109,7 +109,7 @@ class MockLayoutModel:
 
 
 def test_get_page_elements(monkeypatch, mock_final_layout):
-    image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)), mode="RGB")
+    image = Image.fromarray(np.random.randint(12, 14, size=(40, 10, 3)).astype(np.uint8), mode="RGB")
     page = layout.PageLayout(
         number=0,
         image=image,

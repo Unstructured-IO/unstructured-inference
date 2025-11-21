@@ -3,6 +3,7 @@
 * chore(deps): Bump several depedencies to resolve open high CVEs
 * fix: Exclude pip and setuptools pinning based on cursor comment
 * fix: With the newer version of transformers 4.57.1, the type checking became stricter, and mypy correctly flagged that DetrImageProcessor.from_pretrained() expects str | PathLike[Any], not a model object.
+* fix: Update test to explicitly cast numpy array to uint8 for Pillow 12.0.0 compatibility
 
 ## 1.1.1
 
