@@ -1,3 +1,9 @@
+## 1.1.2
+
+* chore(deps): Bump several depedencies to resolve open high CVEs
+* fix: Exclude pip and setuptools pinning based on cursor comment
+* fix: With the newer version of transformers 4.57.1, the type checking became stricter, and mypy correctly flagged that DetrImageProcessor.from_pretrained() expects str | PathLike[Any], not a model object.
+
 ## 1.1.1
 
 * Add NotImplementedError when trying to single index a TextRegions, reflecting the fact that it won't behave correctly at the moment.
