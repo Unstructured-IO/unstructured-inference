@@ -67,7 +67,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
 
     def initialize(
         self,
-        model: Union[str, Path, TableTransformerForObjectDetection],
+        model: Union[str, Path],
         device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         """Loads the donut model using the specified parameters"""
