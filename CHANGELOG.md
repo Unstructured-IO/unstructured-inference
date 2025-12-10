@@ -1,3 +1,7 @@
+## 1.1.3
+
+- Bump fonttools to 4.60.2 to address CVE-2025-66034
+
 ## 1.1.2
 
 * chore(deps): Bump several depedencies to resolve open high CVEs
