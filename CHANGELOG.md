@@ -1,3 +1,7 @@
+## 1.1.4
+
+- Constrain urllib3 to urllib3>=2.6.0 to address CVE-2025-66471 and CVE-2025-66418
+
 ## 1.1.3
 
 - Constrain fonttools to >=4.60.2 to address CVE-2025-66034
