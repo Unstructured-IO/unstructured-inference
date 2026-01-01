@@ -1,3 +1,18 @@
+## 1.1.4
+
+- Constrain urllib3 to urllib3>=2.6.0 to address CVE-2025-66471 and CVE-2025-66418
+
+## 1.1.3
+
+- Constrain fonttools to >=4.60.2 to address CVE-2025-66034
+
+## 1.1.2
+
+* chore(deps): Bump several depedencies to resolve open high CVEs
+* fix: Exclude pip and setuptools pinning based on cursor comment
+* fix: With the newer version of transformers 4.57.1, the type checking became stricter, and mypy correctly flagged that DetrImageProcessor.from_pretrained() expects str | PathLike[Any], not a model object.
+* fix: Update test to explicitly cast numpy array to uint8 for Pillow 12.0.0 compatibility
+
 ## 1.1.1
 
 * Add NotImplementedError when trying to single index a TextRegions, reflecting the fact that it won't behave correctly at the moment.

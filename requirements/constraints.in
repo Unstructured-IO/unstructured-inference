@@ -1,0 +1,5 @@
+# Security: CVE fix for fonttools
+fonttools>=4.60.2
+# Security: CVE fix for urllib3
+urllib3>=2.6.0
+
