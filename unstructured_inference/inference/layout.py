@@ -3,11 +3,11 @@ from __future__ import annotations
 import os
 import tempfile
 from functools import cached_property
-from pathlib import PurePath
+from pathlib import PurePath, Path
 from typing import Any, BinaryIO, Collection, List, Optional, Union, cast
 
 import numpy as np
-import pdf2image
+import pypdfium2 as pdfium
 from PIL import Image, ImageSequence
 
 from unstructured_inference.inference.elements import (
@@ -275,11 +275,11 @@ class PageLayout:
         """Hotloads a page image from a pdf file."""
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            _image_paths = pdf2image.convert_from_path(
+            _image_paths = convert_pdf_to_image(
                 filename,
                 dpi=pdf_image_dpi,
                 output_folder=temp_dir,
-                paths_only=True,
+                path_only=True,
             )
             image_paths = cast(List[str], _image_paths)
             if page_number > len(image_paths):
@@ -402,31 +402,44 @@ def process_file_with_model(
 
 
 def convert_pdf_to_image(
-    filename: str,
-    dpi: int = 200,
+    filename: Optional[str] = None,
+    file: Optional[Union[bytes, BinaryIO]] = None,
+    dpi: Optional[int] = None,
     output_folder: Optional[Union[str, PurePath]] = None,
     path_only: bool = False,
+    first_page: Optional[int] = None,
+    last_page: Optional[int] = None,
     password: Optional[str] = None,
 ) -> Union[List[Image.Image], List[str]]:
-    """Get the image renderings of the pdf pages using pdf2image"""
-
-    if path_only and not output_folder:
-        raise ValueError("output_folder must be specified if path_only is true")
-
-    if output_folder is not None:
-        images = pdf2image.convert_from_path(
-            filename,
-            dpi=dpi,
-            output_folder=output_folder,
-            paths_only=path_only,
-            userpw=password or "",
-        )
+    """
+    Centralized function to render PDF pages using pypdfium.
+    """
+    if filename is None and file is None:
+       raise ValueError("Either filename or file must be provided")
+    pdf = pdfium.PdfDocument(filename or file, password=password)
+    try:
+        images: dict[int, Image.Image] = {}
+        scale = (dpi or 200) / 72
+        for i, page in enumerate(pdf, start=1):
+            if first_page is not None and i < first_page:
+                continue
+            if last_page is not None and i > last_page:
+                break
+            bitmap = page.render(scale=scale)
+            try:
+                images[i] = bitmap.to_pil()
+            finally:
+                bitmap.close()
+    finally:
+        pdf.close()
+    if not path_only:
+        return list(images.values())
     else:
-        images = pdf2image.convert_from_path(
-            filename,
-            dpi=dpi,
-            paths_only=path_only,
-            userpw=password or "",
-        )
-
-    return images
+        # Save images to output_folder
+        filenames: list[str] = []
+        assert Path(output_folder).exists() and Path(output_folder).is_dir()
+        for i, image in images.items():
+            fn: str = os.path.join(str(output_folder), f"page_{i}.png")
+            image.save(fn)
+            filenames.append(fn)
+        return filenames
