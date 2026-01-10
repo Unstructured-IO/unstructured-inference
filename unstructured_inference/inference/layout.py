@@ -60,8 +60,8 @@ class DocumentLayout:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             _image_paths = convert_pdf_to_image(
-                filename,
-                pdf_image_dpi,
+                filename=filename,
+                dpi=pdf_image_dpi,
                 output_folder=temp_dir,
                 path_only=True,
                 password=password,
@@ -276,7 +276,7 @@ class PageLayout:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             _image_paths = convert_pdf_to_image(
-                filename,
+                filename=filename,
                 dpi=pdf_image_dpi,
                 output_folder=temp_dir,
                 path_only=True,
