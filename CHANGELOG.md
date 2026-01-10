@@ -1,3 +1,7 @@
+## 1.1.5
+
+- Render PDF to image using PyPDFium instead of pdf2image, due to much improved performance for certain docs
+
 ## 1.1.4
 
 - Constrain urllib3 to urllib3>=2.6.0 to address CVE-2025-66471 and CVE-2025-66418
