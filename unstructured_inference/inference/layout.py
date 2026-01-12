@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 from functools import cached_property
-from pathlib import PurePath, Path
+from pathlib import Path, PurePath
 from typing import Any, BinaryIO, Collection, List, Optional, Union, cast
 
 import numpy as np
@@ -415,7 +415,7 @@ def convert_pdf_to_image(
     Centralized function to render PDF pages using pypdfium.
     """
     if filename is None and file is None:
-       raise ValueError("Either filename or file must be provided")
+        raise ValueError("Either filename or file must be provided")
     pdf = pdfium.PdfDocument(filename or file, password=password)
     try:
         images: dict[int, Image.Image] = {}
@@ -437,7 +437,8 @@ def convert_pdf_to_image(
     else:
         # Save images to output_folder
         filenames: list[str] = []
-        assert Path(output_folder).exists() and Path(output_folder).is_dir()
+        assert Path(output_folder).exists()
+        assert Path(output_folder).is_dir()
         for i, image in images.items():
             fn: str = os.path.join(str(output_folder), f"page_{i}.png")
             image.save(fn)
