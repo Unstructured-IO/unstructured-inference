@@ -421,7 +421,7 @@ def convert_pdf_to_image(
         images: dict[int, Image.Image] = {}
         if dpi is None:
             dpi = int(os.environ.get("PDF_RENDER_DPI", 400))
-        scale = int(round((dpi or 400) / 72.0, 0))
+        scale = dpi / 72.0
         for i, page in enumerate(pdf, start=1):
             if first_page is not None and i < first_page:
                 continue
