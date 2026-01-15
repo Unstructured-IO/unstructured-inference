@@ -419,30 +419,38 @@ def convert_pdf_to_image(
     pdf = pdfium.PdfDocument(filename or file, password=password)
     try:
         images: dict[int, Image.Image] = {}
-        scale = (dpi or 200) / 72
+        if dpi is None:
+            dpi = os.environ.get("PDF_RENDER_DPI", 400)
+        scale = int(round((dpi or 400) / 72.0, 0))
         for i, page in enumerate(pdf, start=1):
             if first_page is not None and i < first_page:
                 continue
             if last_page is not None and i > last_page:
                 break
-            bitmap = page.render(scale=scale)
+            bitmap = page.render(
+                scale=scale,
+                no_smoothtext=False,
+                no_smoothimage=False,
+                no_smoothpath=False,
+                optimize_mode="print",
+            )
             try:
                 images[i] = bitmap.to_pil()
             finally:
                 bitmap.close()
+        if not output_folder:
+            if path_only:
+                raise ValueError("output_folder must be specified if path_only is true")
+            return list(images.values())
+        else:
+            # Save images to output_folder
+            filenames: list[str] = []
+            assert Path(output_folder).exists()
+            assert Path(output_folder).is_dir()
+            for i, image in images.items():
+                fn: str = os.path.join(str(output_folder), f"page_{i}.png")
+                image.save(fn, format="PNG", compress_level=1, optimize=False)
+                filenames.append(fn)
+            return filenames if path_only else list[Image.Image](images.values())
     finally:
         pdf.close()
-    if not output_folder:
-        if path_only:
-            raise ValueError("output_folder must be specified if path_only is true")
-        return list(images.values())
-    else:
-        # Save images to output_folder
-        filenames: list[str] = []
-        assert Path(output_folder).exists()
-        assert Path(output_folder).is_dir()
-        for i, image in images.items():
-            fn: str = os.path.join(str(output_folder), f"page_{i}.png")
-            image.save(fn)
-            filenames.append(fn)
-        return filenames if path_only else list[Image.Image](images.values())
