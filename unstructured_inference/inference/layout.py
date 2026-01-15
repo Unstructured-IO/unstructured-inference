@@ -414,6 +414,8 @@ def convert_pdf_to_image(
     """
     Centralized function to render PDF pages using pypdfium.
     """
+    if path_only and not output_folder:
+        raise ValueError("output_folder must be specified if path_only is true")
     if filename is None and file is None:
         raise ValueError("Either filename or file must be provided")
     pdf = pdfium.PdfDocument(filename or file, password=password)
@@ -439,8 +441,6 @@ def convert_pdf_to_image(
             finally:
                 bitmap.close()
         if not output_folder:
-            if path_only:
-                raise ValueError("output_folder must be specified if path_only is true")
             return list(images.values())
         else:
             # Save images to output_folder
