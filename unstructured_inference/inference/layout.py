@@ -451,6 +451,10 @@ def convert_pdf_to_image(
                 fn: str = os.path.join(str(output_folder), f"page_{i}.png")
                 image.save(fn, format="PNG", compress_level=1, optimize=False)
                 filenames.append(fn)
-            return filenames if path_only else list[Image.Image](images.values())
+            if path_only:
+                return filenames
+            images_values: list[Image.Image] = list(images.values())
+            return images_values
+
     finally:
         pdf.close()
