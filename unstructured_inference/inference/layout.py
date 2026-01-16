@@ -3,11 +3,11 @@ from __future__ import annotations
 import os
 import tempfile
 from functools import cached_property
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from typing import Any, BinaryIO, Collection, List, Optional, Union, cast
 
 import numpy as np
-import pdf2image
+import pypdfium2 as pdfium
 from PIL import Image, ImageSequence
 
 from unstructured_inference.inference.elements import (
@@ -60,8 +60,8 @@ class DocumentLayout:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             _image_paths = convert_pdf_to_image(
-                filename,
-                pdf_image_dpi,
+                filename=filename,
+                dpi=pdf_image_dpi,
                 output_folder=temp_dir,
                 path_only=True,
                 password=password,
@@ -275,11 +275,11 @@ class PageLayout:
         """Hotloads a page image from a pdf file."""
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            _image_paths = pdf2image.convert_from_path(
-                filename,
+            _image_paths = convert_pdf_to_image(
+                filename=filename,
                 dpi=pdf_image_dpi,
                 output_folder=temp_dir,
-                paths_only=True,
+                path_only=True,
             )
             image_paths = cast(List[str], _image_paths)
             if page_number > len(image_paths):
@@ -402,31 +402,62 @@ def process_file_with_model(
 
 
 def convert_pdf_to_image(
-    filename: str,
-    dpi: int = 200,
+    filename: Optional[str] = None,
+    file: Optional[Union[bytes, BinaryIO]] = None,
+    dpi: Optional[int] = None,
     output_folder: Optional[Union[str, PurePath]] = None,
     path_only: bool = False,
+    first_page: Optional[int] = None,
+    last_page: Optional[int] = None,
     password: Optional[str] = None,
 ) -> Union[List[Image.Image], List[str]]:
-    """Get the image renderings of the pdf pages using pdf2image"""
-
+    """
+    Centralized function to render PDF pages using pypdfium.
+    """
     if path_only and not output_folder:
         raise ValueError("output_folder must be specified if path_only is true")
+    if filename is None and file is None:
+        raise ValueError("Either filename or file must be provided")
+    pdf = pdfium.PdfDocument(filename or file, password=password)
+    try:
+        images: dict[int, Image.Image] = {}
+        if dpi is None:
+            dpi = int(os.environ.get("PDF_RENDER_DPI", 400))
+        scale = dpi / 72.0
+        for i, page in enumerate(pdf, start=1):
+            try:
+                if first_page is not None and i < first_page:
+                    continue
+                if last_page is not None and i > last_page:
+                    break
+                bitmap = page.render(
+                    scale=scale,
+                    no_smoothtext=False,
+                    no_smoothimage=False,
+                    no_smoothpath=False,
+                    optimize_mode="print",
+                )
+                try:
+                    images[i] = bitmap.to_pil()
+                finally:
+                    bitmap.close()
+            finally:
+                page.close()
+        if not output_folder:
+            return list(images.values())
+        else:
+            # Save images to output_folder
+            filenames: list[str] = []
+            assert Path(output_folder).exists()
+            assert Path(output_folder).is_dir()
+            for i, image in images.items():
+                fn: str = os.path.join(str(output_folder), f"page_{i}.png")
+                image.save(fn, format="PNG", compress_level=1, optimize=False)
+                filenames.append(fn)
+            if path_only:
+                return filenames
+            images_values: list[Image.Image] = list(images.values())
+            return images_values
 
-    if output_folder is not None:
-        images = pdf2image.convert_from_path(
-            filename,
-            dpi=dpi,
-            output_folder=output_folder,
-            paths_only=path_only,
-            userpw=password or "",
-        )
-    else:
-        images = pdf2image.convert_from_path(
-            filename,
-            dpi=dpi,
-            paths_only=path_only,
-            userpw=password or "",
-        )
-
-    return images
+    finally:
+        pdf.close()
