@@ -430,14 +430,14 @@ def convert_pdf_to_image(
                     continue
                 if last_page is not None and i > last_page:
                     break
+                bitmap = page.render(
+                    scale=scale,
+                    no_smoothtext=False,
+                    no_smoothimage=False,
+                    no_smoothpath=False,
+                    optimize_mode="print",
+                )
                 try:
-                    bitmap = page.render(
-                        scale=scale,
-                        no_smoothtext=False,
-                        no_smoothimage=False,
-                        no_smoothpath=False,
-                        optimize_mode="print",
-                    )
                     images[i] = bitmap.to_pil()
                 finally:
                     bitmap.close()
