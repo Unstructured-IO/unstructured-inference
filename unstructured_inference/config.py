@@ -116,5 +116,10 @@ class InferenceConfig:
         """configuration for DetrImageProcessor to scale images"""
         return self._get_int("IMG_PROCESSOR_SHORTEST_EDGE", 800)
 
+    @property
+    def PDF_RENDER_DPI(self) -> int:
+        """DPI to render PDF pages to images"""
+        return self._get_int("PDF_RENDER_DPI", 350)
+
 
 inference_config = InferenceConfig()

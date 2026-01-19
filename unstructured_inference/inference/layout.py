@@ -10,6 +10,7 @@ import numpy as np
 import pypdfium2 as pdfium
 from PIL import Image, ImageSequence
 
+from unstructured_inference.config import inference_config
 from unstructured_inference.inference.elements import (
     TextRegion,
 )
@@ -422,7 +423,7 @@ def convert_pdf_to_image(
     try:
         images: dict[int, Image.Image] = {}
         if dpi is None:
-            dpi = int(os.environ.get("PDF_RENDER_DPI", 400))
+            dpi = inference_config.PDF_RENDER_DPI
         scale = dpi / 72.0
         for i, page in enumerate(pdf, start=1):
             try:

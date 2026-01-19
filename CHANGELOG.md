@@ -1,3 +1,7 @@
+## 1.1.6
+
+- Use inference_config to set default rendering DPI
+
 ## 1.1.5
 
 - Render PDF to image using PyPDFium instead of pdf2image, due to much improved performance for certain docs
