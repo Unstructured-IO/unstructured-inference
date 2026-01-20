@@ -2,7 +2,7 @@
 python-multipart
 huggingface-hub
 numpy
-opencv-python>=4.12
+opencv-python>=4.13.0.90
 onnx
 onnxruntime>=1.18.0
 matplotlib
