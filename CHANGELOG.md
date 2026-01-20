@@ -1,3 +1,7 @@
+## 1.1.7
+
+- Update OpenCV-Python to 4.13.0.90 to squash ffmpeg vulnerability CVE-2023-6605
+
 ## 1.1.6
 
 - Use inference_config to set default rendering DPI
