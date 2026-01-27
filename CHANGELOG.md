@@ -1,3 +1,7 @@
+## 1.1.7
+
+- put `pdfium` call behind a thread lock
+
 ## 1.1.6
 
 - Use inference_config to set default rendering DPI
