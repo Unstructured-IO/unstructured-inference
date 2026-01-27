@@ -1,3 +1,7 @@
+## 1.1.8
+
+- Fix: Remove `device_map` parameter from TableTransformerForObjectDetection to prevent meta tensor errors during multi-threaded table detection
+
 ## 1.1.7
 
 - Update OpenCV-Python to 4.13.0.90 to squash ffmpeg vulnerability CVE-2023-6605

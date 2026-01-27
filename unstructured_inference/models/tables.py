@@ -72,7 +72,7 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
     ):
         """Loads the donut model using the specified parameters"""
         self.device = device
-        self.feature_extractor = DetrImageProcessor.from_pretrained(model, device_map=self.device)
+        self.feature_extractor = DetrImageProcessor.from_pretrained(model)
         # value not set in the configuration and needed for newer models
         # https://huggingface.co/microsoft/table-transformer-structure-recognition-v1.1-all/discussions/1
         self.feature_extractor.size["shortest_edge"] = inference_config.IMG_PROCESSOR_SHORTEST_EDGE
@@ -82,10 +82,8 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             logger.info("Loading the table structure model ...")
             cached_current_verbosity = logging.get_verbosity()
             logging.set_verbosity_error()
-            self.model = TableTransformerForObjectDetection.from_pretrained(
-                model,
-                device_map=self.device,
-            )
+            self.model = TableTransformerForObjectDetection.from_pretrained(model)
+            self.model.to(self.device)
             logging.set_verbosity(cached_current_verbosity)
             self.model.eval()
 
