@@ -39,9 +39,9 @@ install-dev: install-test
 ## pip-compile:             compiles all base/dev/test requirements
 .PHONY: pip-compile
 pip-compile:
-	pip-compile --upgrade requirements/base.in
-	pip-compile --upgrade requirements/test.in
-	pip-compile --upgrade requirements/dev.in
+	uv pip compile --python-version 3.10 requirements/base.in -o requirements/base.txt --no-emit-package pip --no-emit-package setuptools
+	uv pip compile --python-version 3.10 requirements/test.in -o requirements/test.txt --no-emit-package pip --no-emit-package setuptools
+	uv pip compile --python-version 3.10 requirements/dev.in -o requirements/dev.txt --no-emit-package pip --no-emit-package setuptools
 
 #################
 # Test and Lint #

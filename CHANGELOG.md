@@ -1,6 +1,10 @@
-## 1.1.7
+## 1.1.8
 
 - put `pdfium` call behind a thread lock
+
+## 1.1.7
+
+- Update OpenCV-Python to 4.13.0.90 to squash ffmpeg vulnerability CVE-2023-6605
 
 ## 1.1.6
 
