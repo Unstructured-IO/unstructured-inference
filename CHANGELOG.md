@@ -1,6 +1,10 @@
+## 1.1.9
+
+- Fix: Remove manual pypdfium2 close() calls to prevent finalization AssertionError during concurrent PDF processing. Let pypdfium2 finalizers handle resource cleanup.
+
 ## 1.1.8
 
-- Fix: Remove `device_map` parameter from TableTransformerForObjectDetection to prevent meta tensor errors during multi-threaded table detection
+- Fix: Remove `device_map` parameter from TableTransformerForObjectDetection to prevent meta tensor errors during multi-threaded table detection. Added device normalization and explicit dtype specification for robustness.
 
 ## 1.1.7
 

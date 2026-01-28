@@ -426,24 +426,21 @@ def convert_pdf_to_image(
             dpi = inference_config.PDF_RENDER_DPI
         scale = dpi / 72.0
         for i, page in enumerate(pdf, start=1):
-            try:
-                if first_page is not None and i < first_page:
-                    continue
-                if last_page is not None and i > last_page:
-                    break
-                bitmap = page.render(
-                    scale=scale,
-                    no_smoothtext=False,
-                    no_smoothimage=False,
-                    no_smoothpath=False,
-                    optimize_mode="print",
-                )
-                try:
-                    images[i] = bitmap.to_pil()
-                finally:
-                    bitmap.close()
-            finally:
-                page.close()
+            if first_page is not None and i < first_page:
+                continue
+            if last_page is not None and i > last_page:
+                break
+            bitmap = page.render(
+                scale=scale,
+                no_smoothtext=False,
+                no_smoothimage=False,
+                no_smoothpath=False,
+                optimize_mode="print",
+            )
+            # Convert to PIL immediately, then let pypdfium2 finalizers handle cleanup
+            images[i] = bitmap.to_pil()
+            # No manual close - prevents finalization race with parent PDF close
+
         if not output_folder:
             return list(images.values())
         else:
