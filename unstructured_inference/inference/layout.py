@@ -429,13 +429,15 @@ def convert_pdf_to_image(
             if dpi is None:
                 dpi = inference_config.PDF_RENDER_DPI
             scale = dpi / 72.0
-            for i, page in enumerate(pdf, start=1):
+            # iterate over length instead of pdf iterator itself to prevent finalization racing
+            # condition where pdf is closed and interpretor attempts to finalize the iterator
+            for i in range(len(pdf)):
                 try:
-                    if first_page is not None and i < first_page:
+                    if first_page is not None and i + 1 < first_page:
                         continue
-                    if last_page is not None and i > last_page:
+                    if last_page is not None and i + 1 > last_page:
                         break
-                    bitmap = page.render(
+                    bitmap = page[i].render(
                         scale=scale,
                         no_smoothtext=False,
                         no_smoothimage=False,
@@ -443,7 +445,7 @@ def convert_pdf_to_image(
                         optimize_mode="print",
                     )
                     try:
-                        images[i] = bitmap.to_pil()
+                        images[i + 1] = bitmap.to_pil()
                     finally:
                         bitmap.close()
                 finally:

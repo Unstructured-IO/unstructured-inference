@@ -1,3 +1,7 @@
+## 1.1.9
+
+- fix potential finalization racing condition in `convert_pdf_to_image` function
+
 ## 1.1.8
 
 - put `pdfium` call behind a thread lock
