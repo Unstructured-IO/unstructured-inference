@@ -1,5 +1,6 @@
 import json
 import threading
+import time
 from typing import Any
 from unittest import mock
 
@@ -82,6 +83,84 @@ def test_get_model_threaded(monkeypatch):
         assert isinstance(
             model, MockModel
         ), f"Thread {thread_id} got unexpected model type: {type(model)}"
+
+
+def test_get_model_concurrent_different_models(monkeypatch):
+    """Test that different models can load in parallel without serialization."""
+    monkeypatch.setattr(models, "models", {})
+
+    # Track initialization timing
+    init_events = []
+    init_lock = threading.Lock()
+
+    class SlowMockModel(MockModel):
+        def __init__(self):
+            super().__init__()
+            self.model_name = None
+
+        def initialize(self, *args, **kwargs):
+            with init_lock:
+                init_events.append((self.model_name, "start"))
+            time.sleep(0.1)  # Simulate slow loading
+            with init_lock:
+                init_events.append((self.model_name, "end"))
+            return super().initialize(*args, **kwargs)
+
+    # Store model names in instances
+    def create_model_with_name(name):
+        def factory():
+            model = SlowMockModel()
+            model.model_name = name
+            return model
+
+        return factory
+
+    results = []
+
+    def worker(model_name):
+        models.get_model(model_name)  # Load the model
+        results.append(model_name)
+
+    # Load 2 different models concurrently
+    threads = []
+    mock_config = {"input_shape": (640, 640)}
+    with mock.patch.dict(
+        models.model_class_map,
+        {
+            "yolox": create_model_with_name("yolox"),
+            "detectron2": create_model_with_name("detectron2"),
+        },
+    ), mock.patch.dict(models.model_config_map, {"yolox": mock_config, "detectron2": mock_config}):
+        for model_name in ["yolox", "detectron2"]:
+            thread = threading.Thread(target=worker, args=(model_name,))
+            threads.append(thread)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+    # Both models should load successfully
+    assert len(results) == 2
+
+    # Verify parallel execution (both start before either ends)
+    assert len(init_events) == 4, f"Expected 4 events (2 starts + 2 ends), got {len(init_events)}"
+
+    # True parallelism means both models start before either finishes
+    # Find when the first model finishes
+    first_end_idx = next(
+        (i for i, (_, event_type) in enumerate(init_events) if event_type == "end"), None
+    )
+    assert first_end_idx is not None, "No 'end' event found"
+
+    # Count how many models started before the first one finished
+    starts_before_first_end = sum(
+        1 for _, event_type in init_events[:first_end_idx] if event_type == "start"
+    )
+    assert starts_before_first_end == 2, (
+        f"Expected both models to start before either finishes (parallel execution), "
+        f"but only {starts_before_first_end} started before first completion. "
+        f"Events: {init_events}"
+    )
 
 
 def test_register_new_model():

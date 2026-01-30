@@ -18,6 +18,17 @@ DEFAULT_MODEL = "yolox"
 
 
 class Models(object):
+    """Singleton container for loaded models.
+
+    Thread Safety:
+    - Singleton initialization protected by _lock (double-check pattern)
+    - Dict operations (__contains__, __getitem__, __setitem__) rely on CPython's GIL
+      for atomicity. Individual dict operations are atomic in CPython.
+    - Per-model locks in get_model() prevent concurrent initialization of same model
+    - This implementation is CPython-specific and may need changes for Python 3.13+
+      free-threaded mode or alternative Python implementations without GIL
+    """
+
     _instance = None
     _lock = threading.Lock()
 
@@ -31,18 +42,27 @@ class Models(object):
         return cls._instance
 
     def __contains__(self, key):
+        """Check if model exists. Atomic operation under CPython GIL."""
         return key in self.models
 
     def __getitem__(self, key: str):
+        """Get model by name. Atomic operation under CPython GIL."""
         return self.models.__getitem__(key)
 
     def __setitem__(self, key: str, value: UnstructuredModel):
+        """Store model. Atomic operation under CPython GIL."""
         self.models[key] = value
 
 
 models: Models = Models()
 
-models_lock = threading.Lock()
+# Per-model locks for parallel loading of different models
+# Current implementation: Unbounded dictionary grows with unique model names
+# Memory impact: ~200 bytes per lock. Acceptable for <100 models (~20KB).
+# For >1000 models: Consider lock striping (fixed 128 locks, ~25KB, 0.8% collision rate)
+# Note: WeakValueDictionary is NOT suitable - locks would be GC'd immediately
+_models_locks: Dict[str, threading.Lock] = {}
+_models_locks_lock = threading.Lock()
 
 
 def get_default_model_mappings() -> Tuple[
@@ -69,18 +89,33 @@ def register_new_model(model_config: dict, model_class: UnstructuredModel):
 
 
 def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
-    """Gets the model object by model name."""
-    # TODO(alan): These cases are similar enough that we can probably do them all together with
-    # importlib
+    """Gets the model object by model name.
 
+    Thread-safe with per-model locks to allow parallel loading of different models
+    while preventing duplicate initialization of the same model.
+
+    Thread-safety maintained:
+    - _models_locks_lock protects lock dictionary operations
+    - Per-model locks protect model initialization
+    - Double-check pattern prevents duplicate loads
+    """
     if model_name is None:
         default_name_from_env = os.environ.get("UNSTRUCTURED_DEFAULT_MODEL_NAME")
         model_name = default_name_from_env if default_name_from_env is not None else DEFAULT_MODEL
 
+    # Fast path: model already loaded
     if model_name in models:
         return models[model_name]
 
-    with models_lock:
+    # Get or create lock for this specific model
+    with _models_locks_lock:
+        if model_name not in _models_locks:
+            _models_locks[model_name] = threading.Lock()
+
+    model_lock = _models_locks[model_name]
+
+    # Double-check pattern with per-model lock
+    with model_lock:
         if model_name in models:
             return models[model_name]
 

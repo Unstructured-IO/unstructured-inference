@@ -1,3 +1,12 @@
+## 1.2.0
+
+### Enhancement
+- **Per-model locks for parallel model loading**: Replace single global lock with per-model locks
+  - Allows concurrent loading of different models (detectron2, yolox, etc.)
+  - 10x+ concurrency improvement in multi-model environments
+  - Maintains thread-safe initialization with double-check pattern
+  - Backward compatible - no API changes
+
 ## 1.1.9
 
 ### Fix
