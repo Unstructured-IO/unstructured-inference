@@ -1,3 +1,7 @@
+## 1.1.9
+
+- Use context manager for `pdfium.PdfDocument`
+
 ## 1.1.8
 
 - put `pdfium` call behind a thread lock
