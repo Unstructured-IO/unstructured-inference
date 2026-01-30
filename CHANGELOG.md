@@ -6,6 +6,7 @@
   - Load models without device_map, use explicit .to(device, dtype=torch.float32)
   - Fixes concurrent PDF processing AssertionError
   - Prevents "Trying to set a tensor of type Float but got Meta" errors
+- Use context manager for `pdfium.PdfDocument`
 
 ## 1.1.8
 
