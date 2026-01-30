@@ -7,6 +7,10 @@
   - Maintains thread-safe initialization with double-check pattern
   - Backward compatible - no API changes
 
+## 1.1.9
+
+- Use context manager for `pdfium.PdfDocument`
+
 ## 1.1.8
 
 - put `pdfium` call behind a thread lock

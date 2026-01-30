@@ -423,8 +423,7 @@ def convert_pdf_to_image(
     if filename is None and file is None:
         raise ValueError("Either filename or file must be provided")
     with _pdfium_lock:
-        pdf = pdfium.PdfDocument(filename or file, password=password)
-        try:
+        with pdfium.PdfDocument(filename or file, password=password) as pdf:
             images: dict[int, Image.Image] = {}
             if dpi is None:
                 dpi = inference_config.PDF_RENDER_DPI
@@ -448,21 +447,19 @@ def convert_pdf_to_image(
                         bitmap.close()
                 finally:
                     page.close()
-            if not output_folder:
-                return list(images.values())
-            else:
-                # Save images to output_folder
-                filenames: list[str] = []
-                assert Path(output_folder).exists()
-                assert Path(output_folder).is_dir()
-                for i, image in images.items():
-                    fn: str = os.path.join(str(output_folder), f"page_{i}.png")
-                    image.save(fn, format="PNG", compress_level=1, optimize=False)
-                    filenames.append(fn)
-                if path_only:
-                    return filenames
-                images_values: list[Image.Image] = list(images.values())
-                return images_values
 
-        finally:
-            pdf.close()
+    if not output_folder:
+        return list(images.values())
+    else:
+        # Save images to output_folder
+        filenames: list[str] = []
+        assert Path(output_folder).exists()
+        assert Path(output_folder).is_dir()
+        for i, image in images.items():
+            fn: str = os.path.join(str(output_folder), f"page_{i}.png")
+            image.save(fn, format="PNG", compress_level=1, optimize=False)
+            filenames.append(fn)
+        if path_only:
+            return filenames
+        images_values: list[Image.Image] = list(images.values())
+        return images_values

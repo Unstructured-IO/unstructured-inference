@@ -14,5 +14,5 @@ accelerate
 rapidfuzz
 pandas
 scipy
-pypdfium2
+pypdfium2>=5.0.0
 pdfminer-six
