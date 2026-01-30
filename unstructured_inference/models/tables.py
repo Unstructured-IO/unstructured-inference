@@ -81,7 +81,11 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         if device.startswith("cuda") and ":" not in device:
-            device = f"cuda:{torch.cuda.current_device()}"
+            if torch.cuda.is_available():
+                device = f"cuda:{torch.cuda.current_device()}"
+            else:
+                logger.warning("CUDA device requested but not available, falling back to CPU")
+                device = "cpu"
 
         self.device = device
 
@@ -101,7 +105,9 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
             self.model = TableTransformerForObjectDetection.from_pretrained(model)
 
             # Explicit device placement with dtype
-            self.model.to(self.device, dtype=torch.float32)
+            # NOTE: While nn.Module.to() modifies in-place, capturing return value is
+            # recommended best practice per PyTorch docs for consistency and clarity
+            self.model = self.model.to(self.device, dtype=torch.float32)
 
             logging.set_verbosity(cached_current_verbosity)
             self.model.eval()
