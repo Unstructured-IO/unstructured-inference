@@ -112,12 +112,13 @@ def test_get_model_concurrent_different_models(monkeypatch):
             model = SlowMockModel()
             model.model_name = name
             return model
+
         return factory
 
     results = []
 
     def worker(model_name):
-        model = models.get_model(model_name)
+        models.get_model(model_name)  # Load the model
         results.append(model_name)
 
     # Load 2 different models concurrently
@@ -125,11 +126,11 @@ def test_get_model_concurrent_different_models(monkeypatch):
     mock_config = {"input_shape": (640, 640)}
     with mock.patch.dict(
         models.model_class_map,
-        {"yolox": create_model_with_name("yolox"), "detectron2": create_model_with_name("detectron2")}
-    ), mock.patch.dict(
-        models.model_config_map,
-        {"yolox": mock_config, "detectron2": mock_config}
-    ):
+        {
+            "yolox": create_model_with_name("yolox"),
+            "detectron2": create_model_with_name("detectron2"),
+        },
+    ), mock.patch.dict(models.model_config_map, {"yolox": mock_config, "detectron2": mock_config}):
         for model_name in ["yolox", "detectron2"]:
             thread = threading.Thread(target=worker, args=(model_name,))
             threads.append(thread)
@@ -146,11 +147,15 @@ def test_get_model_concurrent_different_models(monkeypatch):
 
     # True parallelism means both models start before either finishes
     # Find when the first model finishes
-    first_end_idx = next((i for i, (_, event_type) in enumerate(init_events) if event_type == "end"), None)
+    first_end_idx = next(
+        (i for i, (_, event_type) in enumerate(init_events) if event_type == "end"), None
+    )
     assert first_end_idx is not None, "No 'end' event found"
 
     # Count how many models started before the first one finished
-    starts_before_first_end = sum(1 for _, event_type in init_events[:first_end_idx] if event_type == "start")
+    starts_before_first_end = sum(
+        1 for _, event_type in init_events[:first_end_idx] if event_type == "start"
+    )
     assert starts_before_first_end == 2, (
         f"Expected both models to start before either finishes (parallel execution), "
         f"but only {starts_before_first_end} started before first completion. "

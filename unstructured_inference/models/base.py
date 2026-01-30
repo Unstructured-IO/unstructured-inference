@@ -28,6 +28,7 @@ class Models(object):
     - This implementation is CPython-specific and may need changes for Python 3.13+
       free-threaded mode or alternative Python implementations without GIL
     """
+
     _instance = None
     _lock = threading.Lock()
 
