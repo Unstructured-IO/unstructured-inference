@@ -142,7 +142,20 @@ def test_get_model_concurrent_different_models(monkeypatch):
     assert len(results) == 2
 
     # Verify parallel execution (both start before either ends)
-    assert len(init_events) == 4  # 2 starts + 2 ends
+    assert len(init_events) == 4, f"Expected 4 events (2 starts + 2 ends), got {len(init_events)}"
+
+    # True parallelism means both models start before either finishes
+    # Find when the first model finishes
+    first_end_idx = next((i for i, (_, event_type) in enumerate(init_events) if event_type == "end"), None)
+    assert first_end_idx is not None, "No 'end' event found"
+
+    # Count how many models started before the first one finished
+    starts_before_first_end = sum(1 for _, event_type in init_events[:first_end_idx] if event_type == "start")
+    assert starts_before_first_end == 2, (
+        f"Expected both models to start before either finishes (parallel execution), "
+        f"but only {starts_before_first_end} started before first completion. "
+        f"Events: {init_events}"
+    )
 
 
 def test_register_new_model():

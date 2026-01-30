@@ -18,6 +18,16 @@ DEFAULT_MODEL = "yolox"
 
 
 class Models(object):
+    """Singleton container for loaded models.
+
+    Thread Safety:
+    - Singleton initialization protected by _lock (double-check pattern)
+    - Dict operations (__contains__, __getitem__, __setitem__) rely on CPython's GIL
+      for atomicity. Individual dict operations are atomic in CPython.
+    - Per-model locks in get_model() prevent concurrent initialization of same model
+    - This implementation is CPython-specific and may need changes for Python 3.13+
+      free-threaded mode or alternative Python implementations without GIL
+    """
     _instance = None
     _lock = threading.Lock()
 
@@ -31,18 +41,25 @@ class Models(object):
         return cls._instance
 
     def __contains__(self, key):
+        """Check if model exists. Atomic operation under CPython GIL."""
         return key in self.models
 
     def __getitem__(self, key: str):
+        """Get model by name. Atomic operation under CPython GIL."""
         return self.models.__getitem__(key)
 
     def __setitem__(self, key: str, value: UnstructuredModel):
+        """Store model. Atomic operation under CPython GIL."""
         self.models[key] = value
 
 
 models: Models = Models()
 
 # Per-model locks for parallel loading of different models
+# Current implementation: Unbounded dictionary grows with unique model names
+# Memory impact: ~200 bytes per lock. Acceptable for <100 models (~20KB).
+# For >1000 models: Consider lock striping (fixed 128 locks, ~25KB, 0.8% collision rate)
+# Note: WeakValueDictionary is NOT suitable - locks would be GC'd immediately
 _models_locks: Dict[str, threading.Lock] = {}
 _models_locks_lock = threading.Lock()
 
