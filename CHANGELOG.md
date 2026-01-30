@@ -1,3 +1,12 @@
+## 1.1.9
+
+### Fix
+- **TableTransformer device_map fix**: Remove device_map parameter to prevent meta tensor errors
+  - Device normalization (cuda -> cuda:0) for consistent caching
+  - Load models without device_map, use explicit .to(device, dtype=torch.float32)
+  - Fixes concurrent PDF processing AssertionError
+  - Prevents "Trying to set a tensor of type Float but got Meta" errors
+
 ## 1.1.8
 
 - put `pdfium` call behind a thread lock

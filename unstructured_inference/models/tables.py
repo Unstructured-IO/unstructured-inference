@@ -70,24 +70,42 @@ class UnstructuredTableTransformerModel(UnstructuredModel):
         model: Union[str, Path],
         device: Optional[str] = "cuda" if torch.cuda.is_available() else "cpu",
     ):
-        """Loads the donut model using the specified parameters"""
+        """Loads the table transformer model using the specified parameters.
+
+        Device placement strategy:
+        - Normalize device names (cuda -> cuda:0) for consistent caching
+        - Load models WITHOUT device_map to avoid meta tensor errors
+        - Use explicit .to(device, dtype=torch.float32) for proper placement
+        """
+        # Device normalization for consistent caching
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        if device.startswith("cuda") and ":" not in device:
+            device = f"cuda:{torch.cuda.current_device()}"
+
         self.device = device
-        self.feature_extractor = DetrImageProcessor.from_pretrained(model, device_map=self.device)
+
+        # Load feature extractor WITHOUT device_map
+        self.feature_extractor = DetrImageProcessor.from_pretrained(model)
         # value not set in the configuration and needed for newer models
         # https://huggingface.co/microsoft/table-transformer-structure-recognition-v1.1-all/discussions/1
         self.feature_extractor.size["shortest_edge"] = inference_config.IMG_PROCESSOR_SHORTEST_EDGE
         self.feature_extractor.size["longest_edge"] = inference_config.IMG_PROCESSOR_LONGEST_EDGE
 
         try:
-            logger.info("Loading the table structure model ...")
+            logger.info(f"Loading table structure model to {self.device}...")
             cached_current_verbosity = logging.get_verbosity()
             logging.set_verbosity_error()
-            self.model = TableTransformerForObjectDetection.from_pretrained(
-                model,
-                device_map=self.device,
-            )
+
+            # Load model WITHOUT device_map (prevents meta tensor errors)
+            self.model = TableTransformerForObjectDetection.from_pretrained(model)
+
+            # Explicit device placement with dtype
+            self.model.to(self.device, dtype=torch.float32)
+
             logging.set_verbosity(cached_current_verbosity)
             self.model.eval()
+            logger.info(f"Table model successfully loaded to {self.device}")
 
         except EnvironmentError:
             logger.critical("Failed to initialize the model.")
