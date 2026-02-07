@@ -30,12 +30,12 @@ export CI ?= false
 ## test:                    runs all unittests (excluding slow)
 .PHONY: test
 test:
-	uv run --frozen --no-sync pytest -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	CI=$(CI) uv run --frozen --no-sync pytest -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 ## test-slow:               runs all unittests (including slow)
 .PHONY: test-slow
 test-slow:
-	uv run --frozen --no-sync pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	CI=$(CI) uv run --frozen --no-sync pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 ## check:                   runs all linters and checks
 .PHONY: check
@@ -91,7 +91,7 @@ DOCKER_IMAGE ?= unstructured-inference:dev
 
 .PHONY: docker-build
 docker-build:
-	DOCKER_IMAGE_NAME=${DOCKER_IMAGE} ./scripts/docker-build.sh
+	DOCKER_IMAGE=${DOCKER_IMAGE} ./scripts/docker-build.sh
 
 .PHONY: docker-test
 docker-test: docker-build
@@ -100,23 +100,3 @@ docker-test: docker-build
 	-v ${CURRENT_DIR}/sample-docs:/home/sample-docs \
 	$(DOCKER_IMAGE) \
 	bash -c "pytest $(if $(TEST_NAME),-k $(TEST_NAME),) test_unstructured_inference"
-
-###########
-# Compat  #
-###########
-# Deprecated aliases - remove after one release cycle.
-
-.PHONY: install-base
-install-base: install
-
-.PHONY: install-ci
-install-ci: install
-
-.PHONY: install-dev
-install-dev: install
-
-.PHONY: install-test
-install-test: install
-
-.PHONY: pip-compile
-pip-compile: lock

@@ -56,7 +56,6 @@ test = [
     "coverage>=7.13.3",
     "httpx>=0.28.1",
     "pdf2image>=1.16.2",
-    "huggingface-hub>=1.4.1",
 ]
 dev = [
     "jupyter>=1.1.1",
@@ -112,7 +111,6 @@ ignore = [
     "COM812",
     "PT011",
     "PT012",
-    "SIM117",
 ]
 
 [tool.ruff.lint.per-file-ignores]

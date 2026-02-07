@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-DOCKER_IMAGE="${DOCKER_IMAGE_NAME:-unstructured-inference:dev}"
+DOCKER_IMAGE="${DOCKER_IMAGE:-unstructured-inference:dev}"
 
 DOCKER_BUILD_CMD=(docker buildx build --load -f Dockerfile \
   --build-arg BUILDKIT_INLINE_CACHE=1 \

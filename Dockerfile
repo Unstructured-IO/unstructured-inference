@@ -6,10 +6,9 @@ ENV HOME=/home/
 WORKDIR ${HOME}
 RUN mkdir ${HOME}/.ssh && chmod go-rwx ${HOME}/.ssh \
   && ssh-keyscan -t rsa github.com >> /home/.ssh/known_hosts
-ENV PYTHONPATH="${PYTHONPATH}:${HOME}"
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.6.2 /uv /uvx /usr/local/bin/
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
 FROM base AS deps
 # Copy project files needed for dependency resolution
@@ -23,5 +22,6 @@ ENV PATH="/home/.venv/bin:${PATH}"
 
 FROM deps AS code
 COPY unstructured_inference unstructured_inference
+RUN uv sync --frozen --all-groups
 
 CMD ["/bin/bash"]
