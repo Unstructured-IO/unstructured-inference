@@ -30,12 +30,12 @@ export CI ?= false
 ## test:                    runs all unittests (excluding slow)
 .PHONY: test
 test:
-	CI=$(CI) uv run --frozen --no-sync pytest -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	CI=$(CI) uv run --frozen --no-sync pytest -n auto -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 ## test-slow:               runs all unittests (including slow)
 .PHONY: test-slow
 test-slow:
-	CI=$(CI) uv run --frozen --no-sync pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	CI=$(CI) uv run --frozen --no-sync pytest -n auto test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 ## check:                   runs all linters and checks
 .PHONY: check

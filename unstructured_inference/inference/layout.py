@@ -422,31 +422,30 @@ def convert_pdf_to_image(
         raise ValueError("output_folder must be specified if path_only is true")
     if filename is None and file is None:
         raise ValueError("Either filename or file must be provided")
-    with _pdfium_lock:
-        with pdfium.PdfDocument(filename or file, password=password) as pdf:
-            images: dict[int, Image.Image] = {}
-            if dpi is None:
-                dpi = inference_config.PDF_RENDER_DPI
-            scale = dpi / 72.0
-            for i, page in enumerate(pdf, start=1):
+    with _pdfium_lock, pdfium.PdfDocument(filename or file, password=password) as pdf:
+        images: dict[int, Image.Image] = {}
+        if dpi is None:
+            dpi = inference_config.PDF_RENDER_DPI
+        scale = dpi / 72.0
+        for i, page in enumerate(pdf, start=1):
+            try:
+                if first_page is not None and i < first_page:
+                    continue
+                if last_page is not None and i > last_page:
+                    break
+                bitmap = page.render(
+                    scale=scale,
+                    no_smoothtext=False,
+                    no_smoothimage=False,
+                    no_smoothpath=False,
+                    optimize_mode="print",
+                )
                 try:
-                    if first_page is not None and i < first_page:
-                        continue
-                    if last_page is not None and i > last_page:
-                        break
-                    bitmap = page.render(
-                        scale=scale,
-                        no_smoothtext=False,
-                        no_smoothimage=False,
-                        no_smoothpath=False,
-                        optimize_mode="print",
-                    )
-                    try:
-                        images[i] = bitmap.to_pil()
-                    finally:
-                        bitmap.close()
+                    images[i] = bitmap.to_pil()
                 finally:
-                    page.close()
+                    bitmap.close()
+            finally:
+                page.close()
 
     if not output_folder:
         return list(images.values())
