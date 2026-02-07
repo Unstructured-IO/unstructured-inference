@@ -14,7 +14,7 @@ from unstructured_inference.inference.layout import (
 )
 
 # Download the required resources (run this once)
-nltk.download('punkt')
+nltk.download("punkt")
 
 
 def validate_performance(
@@ -22,8 +22,11 @@ def validate_performance(
     validation_mode,
     is_image_file=False,
 ):
-    print(f">>> Start performance comparison - filename: {f_name} - validation_mode: {validation_mode}"
-          f" - is_image_file: {is_image_file}")
+    print(
+        f">>> Start performance comparison - filename: {f_name}"
+        f" - validation_mode: {validation_mode}"
+        f" - is_image_file: {is_image_file}"
+    )
 
     now_dt = datetime.utcnow()
     now_str = now_dt.strftime("%Y_%m_%d-%H_%M_%S")
@@ -125,7 +128,9 @@ def validate_performance(
 
 def compare_processed_text(individual_mode_full_text, entire_mode_full_text, delimiter=" "):
     # Calculate similarity ratio
-    similarity_ratio = SequenceMatcher(None, individual_mode_full_text, entire_mode_full_text).ratio()
+    similarity_ratio = SequenceMatcher(
+        None, individual_mode_full_text, entire_mode_full_text
+    ).ratio()
 
     print(f"similarity_ratio: {similarity_ratio}")
 
@@ -192,7 +197,7 @@ def run():
         validate_performance(f_name, validation_mode, is_image_file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cur_dir = os.getcwd()
     base_dir = os.path.join(cur_dir, os.pardir, os.pardir)
     example_docs_dir = os.path.join(base_dir, "sample-docs")

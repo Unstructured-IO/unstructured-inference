@@ -31,13 +31,17 @@ def test_show_plot_with_pil_image(mock_pil_image):
     mock_fig = MagicMock()
     mock_ax = MagicMock()
 
-    with patch(
-        "matplotlib.pyplot.subplots",
-        return_value=(mock_fig, mock_ax),
-    ) as mock_subplots, patch("matplotlib.pyplot.show") as mock_show, patch.object(
-        mock_ax,
-        "imshow",
-    ) as mock_imshow:
+    with (
+        patch(
+            "matplotlib.pyplot.subplots",
+            return_value=(mock_fig, mock_ax),
+        ) as mock_subplots,
+        patch("matplotlib.pyplot.show") as mock_show,
+        patch.object(
+            mock_ax,
+            "imshow",
+        ) as mock_imshow,
+    ):
         show_plot(mock_pil_image, desired_width=100)
 
     mock_subplots.assert_called()
@@ -49,13 +53,17 @@ def test_show_plot_with_numpy_image(mock_numpy_image):
     mock_fig = MagicMock()
     mock_ax = MagicMock()
 
-    with patch(
-        "matplotlib.pyplot.subplots",
-        return_value=(mock_fig, mock_ax),
-    ) as mock_subplots, patch("matplotlib.pyplot.show") as mock_show, patch.object(
-        mock_ax,
-        "imshow",
-    ) as mock_imshow:
+    with (
+        patch(
+            "matplotlib.pyplot.subplots",
+            return_value=(mock_fig, mock_ax),
+        ) as mock_subplots,
+        patch("matplotlib.pyplot.show") as mock_show,
+        patch.object(
+            mock_ax,
+            "imshow",
+        ) as mock_imshow,
+    ):
         show_plot(mock_numpy_image)
 
     mock_subplots.assert_called()

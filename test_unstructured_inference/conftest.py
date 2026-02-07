@@ -10,27 +10,27 @@ from unstructured_inference.inference.elements import (
 from unstructured_inference.inference.layoutelement import LayoutElement
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_pil_image():
     return Image.new("RGB", (50, 50))
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_numpy_image():
     return np.zeros((50, 50, 3), np.uint8)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_rectangle():
     return Rectangle(100, 100, 300, 300)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_text_region():
     return TextRegion.from_coords(100, 100, 300, 300, text="Sample text")
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_layout_element():
     return LayoutElement.from_coords(
         100,
@@ -43,7 +43,7 @@ def mock_layout_element():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_embedded_text_regions():
     return [
         EmbeddedTextRegion.from_coords(
@@ -120,7 +120,7 @@ def mock_embedded_text_regions():
 
 
 # TODO(alan): Make a better test layout
-@pytest.fixture()
+@pytest.fixture
 def mock_layout(mock_embedded_text_regions):
     return [
         LayoutElement(text=r.text, type="UncategorizedText", bbox=r.bbox)
@@ -128,7 +128,7 @@ def mock_layout(mock_embedded_text_regions):
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def example_table_cells():
     cells = [
         {"cell text": "Disability Category", "row_nums": [0, 1], "column_nums": [0]},

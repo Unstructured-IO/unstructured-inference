@@ -1,3 +1,13 @@
+## 1.3.0
+
+### Enhancement
+- Migrate project to native uv with hatchling build backend
+- Consolidate all configuration into pyproject.toml
+- Replace pip/requirements workflow with uv sync/lock
+
+### Breaking
+- Drop support for Python 3.10 and 3.11; require Python >=3.12, <3.13
+
 ## 1.2.0
 
 ### Enhancement

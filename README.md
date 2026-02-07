@@ -13,11 +13,15 @@
 The `unstructured-inference` repo contains hosted model inference code for layout parsing models. 
 These models are invoked via API as part of the partitioning bricks in the `unstructured` package.
 
+**Requires Python 3.12+.**
+
 ## Installation
 
 ### Package
 
-Run `pip install unstructured-inference`.
+```shell
+pip install unstructured-inference
+```
 
 ### Detectron2
 
@@ -34,10 +38,18 @@ Windows is not officially supported by Detectron2, but some users are able to in
 See discussion [here](https://layout-parser.github.io/tutorials/installation#for-windows-users) for 
 tips on installing Detectron2 on Windows.
 
-### Repository
+### Development Setup
 
-To install the repository for development, clone the repo and run `make install` to install dependencies.
-Run `make help` for a full list of install options.
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
+
+```shell
+# Clone and install all dependencies (including dev/test/lint groups)
+git clone https://github.com/Unstructured-IO/unstructured-inference.git
+cd unstructured-inference
+make install
+```
+
+Run `make help` for a full list of available targets.
 
 ## Getting Started
 

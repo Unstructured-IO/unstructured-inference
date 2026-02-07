@@ -37,7 +37,7 @@ def rand_rect(size=10):
     return elements.Rectangle(x1, y1, x1 + size, y1 + size)
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_layoutelements():
     coords = np.array(
         [
@@ -165,13 +165,16 @@ def test_rectangle_area(monkeypatch):
     for _ in range(1000):
         width = randint(0, 20)
         height = randint(0, 20)
-        with patch(
-            "unstructured_inference.inference.elements.Rectangle.height",
-            new_callable=PropertyMock,
-        ) as mockheight, patch(
-            "unstructured_inference.inference.elements.Rectangle.width",
-            new_callable=PropertyMock,
-        ) as mockwidth:
+        with (
+            patch(
+                "unstructured_inference.inference.elements.Rectangle.height",
+                new_callable=PropertyMock,
+            ) as mockheight,
+            patch(
+                "unstructured_inference.inference.elements.Rectangle.width",
+                new_callable=PropertyMock,
+            ) as mockwidth,
+        ):
             rect = elements.Rectangle(0, 0, 0, 0)
             mockheight.return_value = height
             mockwidth.return_value = width

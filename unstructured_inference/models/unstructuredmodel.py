@@ -153,17 +153,15 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
                 target_elements.remove(contained)
         # Then check if remaining elements intersect with targets
         other_elements = filter(
-            lambda e: not any(
-                e.bbox.is_almost_subregion_of(target.bbox) for target in target_elements
+            lambda e: (
+                not any(e.bbox.is_almost_subregion_of(target.bbox) for target in target_elements)
             ),
             other_elements,
         )  # type:ignore
 
         final_elements = list(other_elements)
         final_elements.extend(target_elements)
-        # Note(benjamin): could use bisect.insort,
-        # but need to add < operator for
-        # LayoutElement in python <3.10
+        # Note(benjamin): could use bisect.insort if < operator is added to LayoutElement
         final_elements.sort(key=lambda e: e.bbox.y1)
         return final_elements
 

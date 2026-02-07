@@ -4,7 +4,7 @@ from unstructured_inference.inference.layoutelement import table_cells_to_datafr
 from unstructured_inference.models.eval import compare_contents_as_df, default_tokenizer
 
 
-@pytest.fixture()
+@pytest.fixture
 def actual_cells():
     return [
         {
@@ -81,7 +81,7 @@ def actual_cells():
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def pred_cells():
     return [
         {"column_nums": [0], "row_nums": [2], "column header": False, "cell text": "Blind"},
@@ -158,12 +158,12 @@ def pred_cells():
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def actual_df(actual_cells):
     return table_cells_to_dataframe(actual_cells).fillna("")
 
 
-@pytest.fixture()
+@pytest.fixture
 def pred_df(pred_cells):
     return table_cells_to_dataframe(pred_cells).fillna("")
 

@@ -80,9 +80,9 @@ def test_get_model_threaded(monkeypatch):
 
     # Verify all results are MockModel instances
     for thread_id, model in results:
-        assert isinstance(
-            model, MockModel
-        ), f"Thread {thread_id} got unexpected model type: {type(model)}"
+        assert isinstance(model, MockModel), (
+            f"Thread {thread_id} got unexpected model type: {type(model)}"
+        )
 
 
 def test_get_model_concurrent_different_models(monkeypatch):
@@ -124,13 +124,16 @@ def test_get_model_concurrent_different_models(monkeypatch):
     # Load 2 different models concurrently
     threads = []
     mock_config = {"input_shape": (640, 640)}
-    with mock.patch.dict(
-        models.model_class_map,
-        {
-            "yolox": create_model_with_name("yolox"),
-            "detectron2": create_model_with_name("detectron2"),
-        },
-    ), mock.patch.dict(models.model_config_map, {"yolox": mock_config, "detectron2": mock_config}):
+    with (
+        mock.patch.dict(
+            models.model_class_map,
+            {
+                "yolox": create_model_with_name("yolox"),
+                "detectron2": create_model_with_name("detectron2"),
+            },
+        ),
+        mock.patch.dict(models.model_config_map, {"yolox": mock_config, "detectron2": mock_config}),
+    ):
         for model_name in ["yolox", "detectron2"]:
             thread = threading.Thread(target=worker, args=(model_name,))
             threads.append(thread)
@@ -192,10 +195,13 @@ def test_raises_uninitialized():
 def test_model_initializes_once():
     from unstructured_inference.inference import layout
 
-    with mock.patch.dict(models.model_class_map, {"yolox": MockModel}), mock.patch.object(
-        models,
-        "models",
-        {},
+    with (
+        mock.patch.dict(models.model_class_map, {"yolox": MockModel}),
+        mock.patch.object(
+            models,
+            "models",
+            {},
+        ),
     ):
         doc = layout.DocumentLayout.from_file("sample-docs/loremipsum.pdf")
         doc.pages[0].detection_model.initializer.assert_called_once()
@@ -292,10 +298,13 @@ def test_env_variables_override_default_model(monkeypatch):
     # When an environment variable specifies a different default model and we call get_model with no
     # args, we should get back the model the env var calls for
     monkeypatch.setattr(models, "models", {})
-    with mock.patch.dict(
-        models.os.environ,
-        {"UNSTRUCTURED_DEFAULT_MODEL_NAME": "yolox"},
-    ), mock.patch.dict(models.model_class_map, {"yolox": MockModel}):
+    with (
+        mock.patch.dict(
+            models.os.environ,
+            {"UNSTRUCTURED_DEFAULT_MODEL_NAME": "yolox"},
+        ),
+        mock.patch.dict(models.model_class_map, {"yolox": MockModel}),
+    ):
         model = models.get_model()
     assert isinstance(model, MockModel)
 
@@ -305,16 +314,23 @@ def test_env_variables_override_initialization_params(monkeypatch):
     # should see that the model was initialized with those params
     monkeypatch.setattr(models, "models", {})
     fake_label_map = {"1": "label1", "2": "label2"}
-    with mock.patch.dict(
-        models.os.environ,
-        {"UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH": "fake_json.json"},
-    ), mock.patch.object(models, "DEFAULT_MODEL", "fake"), mock.patch.dict(
-        models.model_class_map,
-        {"fake": mock.MagicMock()},
-    ), mock.patch(
-        "builtins.open",
-        mock.mock_open(
-            read_data='{"model_path": "fakepath", "label_map": ' + json.dumps(fake_label_map) + "}",
+    with (
+        mock.patch.dict(
+            models.os.environ,
+            {"UNSTRUCTURED_DEFAULT_MODEL_INITIALIZE_PARAMS_JSON_PATH": "fake_json.json"},
+        ),
+        mock.patch.object(models, "DEFAULT_MODEL", "fake"),
+        mock.patch.dict(
+            models.model_class_map,
+            {"fake": mock.MagicMock()},
+        ),
+        mock.patch(
+            "builtins.open",
+            mock.mock_open(
+                read_data='{"model_path": "fakepath", "label_map": '
+                + json.dumps(fake_label_map)
+                + "}",
+            ),
         ),
     ):
         model = models.get_model()
