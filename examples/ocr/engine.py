@@ -13,8 +13,8 @@ from unstructured_inference.inference.elements import Rectangle, TextRegion
 
 
 def remove_non_printable(s):
-    dst_str = re.sub(r'[^\x20-\x7E]', ' ', s)
-    return ' '.join(dst_str.split())
+    dst_str = re.sub(r"[^\x20-\x7E]", " ", s)
+    return " ".join(dst_str.split())
 
 
 def run_ocr_with_layout_detection(
@@ -33,7 +33,7 @@ def run_ocr_with_layout_detection(
         page_num_str = f"page{page_num}"
 
         page = layout.PageLayout(
-            number=i+1,
+            number=i + 1,
             image=image,
             layout=None,
             detection_model=detection_model,
@@ -63,16 +63,21 @@ def run_ocr_with_layout_detection(
             # OCR'ing entire page (new approach to implement)
             text_extraction_start_time = time.time()
 
-            ocr_data = pytesseract.image_to_data(image, lang='eng', output_type=Output.DICT)
-            boxes = ocr_data['level']
+            ocr_data = pytesseract.image_to_data(image, lang="eng", output_type=Output.DICT)
+            boxes = ocr_data["level"]
             extracted_text_list = []
             for k in range(len(boxes)):
-                (x, y, w, h) = ocr_data['left'][k], ocr_data['top'][k], ocr_data['width'][k], ocr_data['height'][k]
-                extracted_text = ocr_data['text'][k]
+                (x, y, w, h) = (
+                    ocr_data["left"][k],
+                    ocr_data["top"][k],
+                    ocr_data["width"][k],
+                    ocr_data["height"][k],
+                )
+                extracted_text = ocr_data["text"][k]
                 if not extracted_text:
                     continue
 
-                extracted_region = Rectangle(x1=x, y1=y, x2=x+w, y2=y+h)
+                extracted_region = Rectangle(x1=x, y1=y, x2=x + w, y2=y + h)
 
                 extracted_is_subregion_of_inferred = False
                 for inferred_region in inferred_layout:
@@ -107,7 +112,8 @@ def run_ocr_with_layout_detection(
                 pt2 = [int(el.x2), int(el.y2)]
                 cv2.rectangle(
                     img=cv_img,
-                    pt1=pt1, pt2=pt2,
+                    pt1=pt1,
+                    pt2=pt2,
                     color=(0, 0, 255),
                     thickness=4,
                     lineType=None,
@@ -117,8 +123,10 @@ def run_ocr_with_layout_detection(
             cv2.imwrite(f_path, cv_img)
 
         if printable:
-            print(f"page: {i + 1} - n_layout_elements: {len(inferred_layout)} - "
-                  f"text_extraction_infer_time: {text_extraction_infer_time}")
+            print(
+                f"page: {i + 1} - n_layout_elements: {len(inferred_layout)} - "
+                f"text_extraction_infer_time: {text_extraction_infer_time}"
+            )
 
     return total_text_extraction_infer_time, total_extracted_text
 

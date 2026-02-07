@@ -8,12 +8,12 @@ import pytest
 from PIL import Image
 
 import unstructured_inference.models.base as models
+from unstructured_inference.constants import IsExtracted
 from unstructured_inference.inference import elements, layout, layoutelement
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
 )
-from unstructured_inference.constants import IsExtracted
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredElementExtractionModel,
     UnstructuredObjectDetectionModel,
@@ -22,12 +22,12 @@ from unstructured_inference.models.unstructuredmodel import (
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_image():
     return Image.new("1", (1, 1))
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_initial_layout():
     text_block = EmbeddedTextRegion.from_coords(
         2,
@@ -50,7 +50,7 @@ def mock_initial_layout():
     return [text_block, title_block]
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_final_layout():
     text_block = layoutelement.LayoutElement.from_coords(
         2,
@@ -148,17 +148,25 @@ def test_process_data_with_model(monkeypatch, mock_final_layout, model_name):
         else:
             return isinstance(obj, cls)
 
-    with patch("builtins.open", mock_open(read_data=b"000000")), patch(
-        "unstructured_inference.inference.layout.UnstructuredObjectDetectionModel",
-        MockLayoutModel,
-    ), open("") as fp:
+    with (
+        patch("builtins.open", mock_open(read_data=b"000000")),
+        patch(
+            "unstructured_inference.inference.layout.UnstructuredObjectDetectionModel",
+            MockLayoutModel,
+        ),
+        open("") as fp,
+    ):
         assert layout.process_data_with_model(fp, model_name=model_name)
 
 
 def test_process_data_with_model_raises_on_invalid_model_name():
-    with patch("builtins.open", mock_open(read_data=b"000000")), pytest.raises(
-        models.UnknownModelException,
-    ), open("") as fp:
+    with (
+        patch("builtins.open", mock_open(read_data=b"000000")),
+        pytest.raises(
+            models.UnknownModelException,
+        ),
+        open("") as fp,
+    ):
         layout.process_data_with_model(fp, model_name="fake")
 
 
@@ -305,17 +313,20 @@ def test_from_file(monkeypatch, mock_final_layout):
             assert page.image is None
 
 
-@pytest.mark.slow()
+@pytest.mark.slow
 def test_from_file_with_password(monkeypatch, mock_final_layout):
 
     doc = layout.DocumentLayout.from_file("sample-docs/password.pdf", password="password")
     assert doc
 
     monkeypatch.setattr(layout, "get_model", lambda x: MockLayoutModel(mock_final_layout))
-    with patch(
-        "unstructured_inference.inference.layout.UnstructuredObjectDetectionModel",
-        MockLayoutModel,
-    ), open("sample-docs/password.pdf", mode="rb") as fp:
+    with (
+        patch(
+            "unstructured_inference.inference.layout.UnstructuredObjectDetectionModel",
+            MockLayoutModel,
+        ),
+        open("sample-docs/password.pdf", mode="rb") as fp,
+    ):
         doc = layout.process_data_with_model(fp, model_name="fake", password="password")
         assert doc
 
@@ -437,10 +448,13 @@ def test_layout_order(mock_image):
     with tempfile.TemporaryDirectory() as tmpdir:
         mock_image_path = os.path.join(tmpdir, "mock.jpg")
         mock_image.save(mock_image_path)
-        with patch.object(layout, "get_model", lambda: MockDetectionModel()), patch.object(
-            layout,
-            "convert_pdf_to_image",
-            lambda *args, **kwargs: ([mock_image_path]),
+        with (
+            patch.object(layout, "get_model", lambda: MockDetectionModel()),
+            patch.object(
+                layout,
+                "convert_pdf_to_image",
+                lambda *args, **kwargs: ([mock_image_path]),
+            ),
         ):
             doc = layout.DocumentLayout.from_file("sample-docs/layout-parser-paper.pdf")
             page = doc.pages[0]
@@ -506,13 +520,16 @@ def test_from_image(
     detection_model_called,
     element_extraction_model_called,
 ):
-    with patch.object(
-        layout.PageLayout,
-        "get_elements_using_image_extraction",
-    ) as mock_image_extraction, patch.object(
-        layout.PageLayout,
-        "get_elements_with_detection_model",
-    ) as mock_detection:
+    with (
+        patch.object(
+            layout.PageLayout,
+            "get_elements_using_image_extraction",
+        ) as mock_image_extraction,
+        patch.object(
+            layout.PageLayout,
+            "get_elements_with_detection_model",
+        ) as mock_detection,
+    ):
         layout.PageLayout.from_image(
             mock_image,
             image_path=None,

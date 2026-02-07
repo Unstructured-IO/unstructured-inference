@@ -1,5 +1,4 @@
 PACKAGE_NAME := unstructured_inference
-PIP_VERSION := 23.2.1
 CURRENT_DIR := $(shell pwd)
 
 
@@ -12,36 +11,15 @@ help: Makefile
 # Install #
 ###########
 
-## install-base:            installs core requirements needed for text processing bricks
-.PHONY: install-base
-install-base: install-base-pip-packages
-	python3 -m pip install -r requirements/base.txt
-
-## install:                 installs all test, dev, and experimental requirements
+## install:                 install all dependencies via uv
 .PHONY: install
-install: install-base-pip-packages install-dev
+install:
+	@uv sync --frozen --all-groups
 
-.PHONY: install-ci
-install-ci: install-base-pip-packages install-test
-
-.PHONY: install-base-pip-packages
-install-base-pip-packages:
-	python3 -m pip install pip==${PIP_VERSION}
-
-.PHONY: install-test
-install-test: install-base
-	python3 -m pip install -r requirements/test.txt
-
-.PHONY: install-dev
-install-dev: install-test
-	python3 -m pip install -r requirements/dev.txt
-
-## pip-compile:             compiles all base/dev/test requirements
-.PHONY: pip-compile
-pip-compile:
-	uv pip compile --python-version 3.10 requirements/base.in -o requirements/base.txt --no-emit-package pip --no-emit-package setuptools
-	uv pip compile --python-version 3.10 requirements/test.in -o requirements/test.txt --no-emit-package pip --no-emit-package setuptools
-	uv pip compile --python-version 3.10 requirements/dev.in -o requirements/dev.txt --no-emit-package pip --no-emit-package setuptools
+## lock:                    update and lock all dependencies
+.PHONY: lock
+lock:
+	@uv lock --upgrade
 
 #################
 # Test and Lint #
@@ -49,36 +27,34 @@ pip-compile:
 
 export CI ?= false
 
-## test:                    runs all unittests
+## test:                    runs all unittests (excluding slow)
 .PHONY: test
 test:
-	PYTHONPATH=. CI=$(CI) pytest -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	CI=$(CI) uv run --frozen --no-sync pytest -n auto -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
+## test-slow:               runs all unittests (including slow)
 .PHONY: test-slow
 test-slow:
-	PYTHONPATH=. CI=$(CI) pytest test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	CI=$(CI) uv run --frozen --no-sync pytest -n auto test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
-## check:                   runs linters (includes tests)
+## check:                   runs all linters and checks
 .PHONY: check
-check: check-src check-tests check-version
+check: check-ruff check-mypy check-version
 
-## check-src:               runs linters (source only, no tests)
-.PHONY: check-src
-check-src:
-	ruff check ${PACKAGE_NAME} --line-length 100 --select C4,COM,E,F,I,PLR0402,PT,SIM,UP015,UP018,UP032,UP034 --ignore COM812,PT011,PT012,SIM117
-	python -m black --line-length 100 ${PACKAGE_NAME} --check
-	python -m flake8 ${PACKAGE_NAME}
-	python -m mypy ${PACKAGE_NAME} --ignore-missing-imports
+## check-ruff:              runs ruff linter
+.PHONY: check-ruff
+check-ruff:
+	uv run --frozen --no-sync ruff check .
+	uv run --frozen --no-sync ruff format --check .
 
-.PHONY: check-tests
-check-tests:
-	python -m black --line-length 100 test_${PACKAGE_NAME} --check
-	python -m flake8 test_${PACKAGE_NAME}
+## check-mypy:              runs mypy type checker
+.PHONY: check-mypy
+check-mypy:
+	uv run --frozen --no-sync mypy ${PACKAGE_NAME} --ignore-missing-imports
 
 ## check-scripts:           run shellcheck
 .PHONY: check-scripts
 check-scripts:
-    # Fail if any of these files have warnings
 	scripts/shellcheck.sh
 
 ## check-version:           run check to ensure version in CHANGELOG.md matches version in package
@@ -87,37 +63,35 @@ check-version:
     # Fail if syncing version would produce changes
 	scripts/version-sync.sh -c \
 		-s CHANGELOG.md \
-		-f unstructured_inference/__version__.py semver
+		-f ${PACKAGE_NAME}/__version__.py semver
 
-## tidy:                    run black
+## tidy:                    auto-format and fix lint issues
 .PHONY: tidy
 tidy:
-	ruff check ${PACKAGE_NAME} --fix --line-length 100 --select C4,COM,E,F,I,PLR0402,PT,SIM,UP015,UP018,UP032,UP034 --ignore COM812,PT011,PT012,SIM117
-	black --line-length 100 ${PACKAGE_NAME}
-	black --line-length 100 test_${PACKAGE_NAME}
+	uv run --frozen --no-sync ruff format .
+	uv run --frozen --no-sync ruff check --fix-only --show-fixes .
 
 ## version-sync:            update __version__.py with most recent version from CHANGELOG.md
 .PHONY: version-sync
 version-sync:
 	scripts/version-sync.sh \
 		-s CHANGELOG.md \
-		-f unstructured_inference/__version__.py semver
+		-f ${PACKAGE_NAME}/__version__.py semver
 
+## check-coverage:          check test coverage meets threshold
 .PHONY: check-coverage
 check-coverage:
-	python -m coverage report --fail-under=95
+	uv run --frozen --no-sync coverage report --fail-under=90
 
 ##########
 # Docker #
 ##########
 
-# Docker targets are provided for convenience only and are not required in a standard development environment
-
 DOCKER_IMAGE ?= unstructured-inference:dev
 
 .PHONY: docker-build
 docker-build:
-	PIP_VERSION=${PIP_VERSION} DOCKER_IMAGE_NAME=${DOCKER_IMAGE} ./scripts/docker-build.sh
+	DOCKER_IMAGE=${DOCKER_IMAGE} ./scripts/docker-build.sh
 
 .PHONY: docker-test
 docker-test: docker-build

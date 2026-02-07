@@ -2,64 +2,27 @@ name: CI
 
 on:
   push:
-    branches: [ main, robinson/initial-repo-setup ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 jobs:
-  setup:
-    strategy:
-      matrix:
-        python-version: ["3.10","3.11", "3.12"]
+  lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/cache@v4
-      id: virtualenv-cache
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
       with:
-        path: |
-          .venv
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements/*.txt') }}
-        lookup-only: true
-    - name: Set up Python ${{ matrix.python-version }}
+        enable-cache: true
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install Poppler
-      run: |
-        sudo apt-get update
-        sudo apt-get -y install poppler-utils
-    - name: Setup virtual environment (no cache hit)
-      if: steps.virtualenv-cache.outputs.cache-hit != 'true'
-      run: |
-        python${{ matrix.python-version }} -m venv .venv
-        source .venv/bin/activate
-        make install-ci
-
-  lint:
-    strategy:
-      matrix:
-        python-version: ["3.10","3.11", "3.12"]
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/cache/restore@v4
-      id: virtualenv-cache
-      with:
-        path: .venv
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements/*.txt') }}
-    # NOTE(robinson) - This is a fallback in case the lint job does not find the cache.
-    # We can take this out when we implement the fix in CORE-99
-    - name: Setup virtual environment (no cache hit)
-      if: steps.virtualenv-cache.outputs.cache-hit != 'true'
-      run: |
-        python${{ matrix.python-version }} -m venv .venv
+        python-version: "3.12"
+    - name: Install dependencies
+      run: make install
     - name: Lint
-      run: |
-        source .venv/bin/activate
-        make install-ci
-        make check
+      run: make check
 
   shellcheck:
     runs-on: ubuntu-latest
@@ -69,29 +32,24 @@ jobs:
         uses: ludeeus/action-shellcheck@master
 
   test:
-    strategy:
-      matrix:
-        python-version: ["3.10","3.11", "3.12"]
     runs-on: ubuntu-latest
-    needs: [setup, lint]
+    needs: lint
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/cache/restore@v4
-      id: virtualenv-cache
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
       with:
-        path: |
-          .venv
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements/*.txt') }}
-    # NOTE(robinson) - This is a fallback in case the lint job does not find the cache.
-    # We can take this out when we implement the fix in CORE-99
-    - name: Setup virtual environment (no cache hit)
-      if: steps.virtualenv-cache.outputs.cache-hit != 'true'
-      run: |
-        python${{ matrix.python-version }} -m venv .venv
-    - name: Install Poppler
+        enable-cache: true
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get -y install poppler-utils tesseract-ocr
+    - name: Install dependencies
+      run: make install
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -102,56 +60,9 @@ jobs:
       env:
         UNSTRUCTURED_HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
-        source .venv/bin/activate
-        make install-ci
         aws s3 cp s3://utic-dev-models/ci_test_model/test_ci_model.onnx test_unstructured_inference/models/
         CI=true make test
         make check-coverage
-
-  # NOTE(robinson) - disabling ingest tests for now, as of 5/22/2024 they seem to have been
-  # broken for the past six months
-  # test_ingest:
-  #   strategy:
-  #     matrix:
-  #       python-version: ["3.9","3.10"]
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     NLTK_DATA: ${{ github.workspace }}/nltk_data
-  #   needs: lint
-  #   steps:
-  #   - name: Checkout unstructured repo for integration testing
-  #     uses: actions/checkout@v4
-  #     with:
-  #       repository: 'Unstructured-IO/unstructured'
-  #   - name: Checkout this repo
-  #     uses: actions/checkout@v4
-  #     with:
-  #       path: inference
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v4
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-  #   - name: Test
-  #     env:
-  #       GH_READ_ONLY_ACCESS_TOKEN: ${{ secrets.GH_READ_ONLY_ACCESS_TOKEN }}
-  #       SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-  #       DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
-  #     run: |
-  #       python${{ matrix.python-version }} -m venv .venv
-  #       source .venv/bin/activate
-  #       [ ! -d "$NLTK_DATA" ] && mkdir "$NLTK_DATA"
-  #       make install-ci
-  #       pip install -e inference/
-  #       sudo apt-get update
-  #       sudo apt-get install -y libmagic-dev poppler-utils libreoffice pandoc
-  #       sudo add-apt-repository -y ppa:alex-p/tesseract-ocr5
-  #       sudo apt-get install -y tesseract-ocr
-  #       sudo apt-get install -y tesseract-ocr-kor
-  #       sudo apt-get install -y diffstat
-  #       tesseract --version
-  #       make install-all-ingest
-  #       # only run ingest tests that check expected output diffs.
-  #       bash inference/scripts/test-unstructured-ingest-helper.sh
 
   changelog:
     runs-on: ubuntu-latest

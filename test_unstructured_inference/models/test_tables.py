@@ -20,7 +20,7 @@ from unstructured_inference.models.tables import (
 skip_outside_ci = os.getenv("CI", "").lower() in {"", "false", "f", "0"}
 
 
-@pytest.fixture()
+@pytest.fixture
 def table_transformer():
     tables.load_agent()
     return tables.tables_agent
@@ -30,12 +30,12 @@ def test_load_agent(table_transformer):
     assert hasattr(table_transformer, "model")
 
 
-@pytest.fixture()
+@pytest.fixture
 def example_image():
     return Image.open("./sample-docs/table-multi-row-column-cells.png").convert("RGB")
 
 
-@pytest.fixture()
+@pytest.fixture
 def mocked_ocr_tokens():
     return [
         {
@@ -1768,7 +1768,7 @@ def test_fill_cells(input_cells, expected_cells):
 def test_padded_results_has_right_dimensions(table_transformer, example_image):
     str_class_name2idx = tables.get_class_map("structure")
     # a simpler mapping so we keep all structure in the returned objs below for test
-    str_class_idx2name = {v: "table cell" for v in str_class_name2idx.values()}
+    str_class_idx2name = dict.fromkeys(str_class_name2idx.values(), "table cell")
     # pad size is no more than 10% of the original image so we can setup test below easier
     pad = int(min(example_image.size) / 10)
 
