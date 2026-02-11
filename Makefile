@@ -99,4 +99,4 @@ docker-test: docker-build
 	-v ${CURRENT_DIR}/test_unstructured_inference:/home/test_unstructured_inference \
 	-v ${CURRENT_DIR}/sample-docs:/home/sample-docs \
 	$(DOCKER_IMAGE) \
-	bash -c "pytest $(if $(TEST_NAME),-k $(TEST_NAME),) test_unstructured_inference"
+	bash -c "pytest -n auto $(if $(TEST_NAME),-k $(TEST_NAME),) test_unstructured_inference"

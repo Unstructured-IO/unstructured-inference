@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: opensource-linux-8core
     steps:
     - uses: actions/checkout@v4
     - name: Install uv
@@ -25,14 +25,14 @@ jobs:
       run: make check
 
   shellcheck:
-    runs-on: ubuntu-latest
+    runs-on: opensource-linux-8core
     steps:
       - uses: actions/checkout@v4
       - name: ShellCheck
         uses: ludeeus/action-shellcheck@master
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: opensource-linux-8core
     needs: lint
     steps:
     - uses: actions/checkout@v4
@@ -65,7 +65,7 @@ jobs:
         make check-coverage
 
   changelog:
-    runs-on: ubuntu-latest
+    runs-on: opensource-linux-8core
     steps:
     - uses: actions/checkout@v4
     - if: github.ref != 'refs/heads/main'
