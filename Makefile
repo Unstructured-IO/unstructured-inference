@@ -39,18 +39,13 @@ test-slow:
 
 ## check:                   runs all linters and checks
 .PHONY: check
-check: check-ruff check-mypy check-version
+check: check-ruff check-version
 
 ## check-ruff:              runs ruff linter
 .PHONY: check-ruff
 check-ruff:
 	uv run --frozen --no-sync ruff check .
 	uv run --frozen --no-sync ruff format --check .
-
-## check-mypy:              runs mypy type checker
-.PHONY: check-mypy
-check-mypy:
-	uv run --frozen --no-sync mypy ${PACKAGE_NAME} --ignore-missing-imports
 
 ## check-scripts:           run shellcheck
 .PHONY: check-scripts

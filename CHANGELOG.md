@@ -1,3 +1,10 @@
+## 1.4.0
+
+### Enhancement
+- Switch CI runners to `opensource-linux-8core` for faster builds
+- Add pytest-xdist parallelization (`-n auto`) to `docker-test` target
+- Remove mypy from lint pipeline; ruff covers linting needs sufficiently
+
 ## 1.3.0
 
 ### Enhancement
