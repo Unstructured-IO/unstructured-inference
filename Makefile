@@ -16,6 +16,11 @@ help: Makefile
 install:
 	@uv sync --frozen --all-groups
 
+## install-lint:            install only lint dependencies (no project deps)
+.PHONY: install-lint
+install-lint:
+	@uv sync --frozen --only-group lint
+
 ## lock:                    update and lock all dependencies
 .PHONY: lock
 lock:

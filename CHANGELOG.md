@@ -4,6 +4,7 @@
 - Switch CI runners to `opensource-linux-8core` for faster builds
 - Add pytest-xdist parallelization (`-n auto`) to `docker-test` target
 - Remove mypy from lint pipeline; ruff covers linting needs sufficiently
+- Add `install-lint` target; CI lint job no longer downloads full project dependencies
 
 ## 1.3.0
 
