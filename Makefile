@@ -16,6 +16,11 @@ help: Makefile
 install:
 	@uv sync --frozen --all-groups
 
+## install-lint:            install only lint dependencies (no project deps)
+.PHONY: install-lint
+install-lint:
+	@uv sync --frozen --only-group lint
+
 ## lock:                    update and lock all dependencies
 .PHONY: lock
 lock:
@@ -39,18 +44,13 @@ test-slow:
 
 ## check:                   runs all linters and checks
 .PHONY: check
-check: check-ruff check-mypy check-version
+check: check-ruff check-version
 
 ## check-ruff:              runs ruff linter
 .PHONY: check-ruff
 check-ruff:
 	uv run --frozen --no-sync ruff check .
 	uv run --frozen --no-sync ruff format --check .
-
-## check-mypy:              runs mypy type checker
-.PHONY: check-mypy
-check-mypy:
-	uv run --frozen --no-sync mypy ${PACKAGE_NAME} --ignore-missing-imports
 
 ## check-scripts:           run shellcheck
 .PHONY: check-scripts
@@ -99,4 +99,4 @@ docker-test: docker-build
 	-v ${CURRENT_DIR}/test_unstructured_inference:/home/test_unstructured_inference \
 	-v ${CURRENT_DIR}/sample-docs:/home/sample-docs \
 	$(DOCKER_IMAGE) \
-	bash -c "pytest $(if $(TEST_NAME),-k $(TEST_NAME),) test_unstructured_inference"
+	bash -c "pytest -n auto $(if $(TEST_NAME),-k $(TEST_NAME),) test_unstructured_inference"

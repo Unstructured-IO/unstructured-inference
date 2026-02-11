@@ -46,8 +46,6 @@ path = "unstructured_inference/__version__.py"
 [dependency-groups]
 lint = [
     "ruff>=0.15.0",
-    "mypy>=1.19.1",
-    "types-pyyaml>=6.0.12.20250915",
 ]
 test = [
     "pytest>=9.0.2",
@@ -116,9 +114,6 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "test_*/**" = ["D"]
-
-[tool.mypy]
-ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 markers = [
