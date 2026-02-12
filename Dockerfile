@@ -15,13 +15,13 @@ FROM base AS deps
 COPY pyproject.toml uv.lock .python-version ./
 COPY unstructured_inference/__version__.py unstructured_inference/__version__.py
 
-RUN uv sync --frozen --all-groups --no-install-project
+RUN uv sync --locked --all-groups --no-install-project
 
 # Ensure venv binaries are on PATH so pytest/etc. are directly accessible
 ENV PATH="/home/.venv/bin:${PATH}"
 
 FROM deps AS code
 COPY unstructured_inference unstructured_inference
-RUN uv sync --frozen --all-groups
+RUN uv sync --locked --all-groups
 
 CMD ["/bin/bash"]

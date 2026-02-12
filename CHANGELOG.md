@@ -1,3 +1,11 @@
+## 1.5.0
+
+### Enhancement
+- Automate PyPI and Azure Artifacts publishing via GitHub release workflow
+- Replace `--frozen` with `--locked` across Makefile and Dockerfile for stricter lockfile validation
+- Add `release` dependency group with `twine` for Azure Artifacts upload
+- Constrain pillow to >=12.1.1 to address CVE for out-of-bounds write when loading PSD images
+
 ## 1.4.0
 
 ### Enhancement

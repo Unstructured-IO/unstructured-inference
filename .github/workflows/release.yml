@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install release dependencies
+      run: uv sync --locked --group release
+
+    - name: Build package
+      run: uv build
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+    - name: Publish to Azure Artifacts
+      if: always()
+      continue-on-error: true
+      run: |
+        uv run --no-sync twine upload \
+          --repository-url "${{ secrets.AZURE_ARTIFACTS_FEED }}" \
+          --username "${{ secrets.AZURE_ARTIFACTS_USERNAME }}" \
+          --password "${{ secrets.AZURE_ARTIFACTS_PAT }}" \
+          dist/*

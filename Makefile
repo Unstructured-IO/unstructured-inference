@@ -14,12 +14,12 @@ help: Makefile
 ## install:                 install all dependencies via uv
 .PHONY: install
 install:
-	@uv sync --frozen --all-groups
+	@uv sync --locked --all-groups
 
 ## install-lint:            install only lint dependencies (no project deps)
 .PHONY: install-lint
 install-lint:
-	@uv sync --frozen --only-group lint
+	@uv sync --locked --only-group lint
 
 ## lock:                    update and lock all dependencies
 .PHONY: lock
@@ -35,12 +35,12 @@ export CI ?= false
 ## test:                    runs all unittests (excluding slow)
 .PHONY: test
 test:
-	CI=$(CI) uv run --frozen --no-sync pytest -n auto -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	CI=$(CI) uv run --locked --no-sync pytest -n auto -m "not slow" test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 ## test-slow:               runs all unittests (including slow)
 .PHONY: test-slow
 test-slow:
-	CI=$(CI) uv run --frozen --no-sync pytest -n auto test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
+	CI=$(CI) uv run --locked --no-sync pytest -n auto test_${PACKAGE_NAME} --cov=${PACKAGE_NAME} --cov-report term-missing
 
 ## check:                   runs all linters and checks
 .PHONY: check
@@ -49,8 +49,8 @@ check: check-ruff check-version
 ## check-ruff:              runs ruff linter
 .PHONY: check-ruff
 check-ruff:
-	uv run --frozen --no-sync ruff check .
-	uv run --frozen --no-sync ruff format --check .
+	uv run --locked --no-sync ruff check .
+	uv run --locked --no-sync ruff format --check .
 
 ## check-scripts:           run shellcheck
 .PHONY: check-scripts
@@ -68,8 +68,8 @@ check-version:
 ## tidy:                    auto-format and fix lint issues
 .PHONY: tidy
 tidy:
-	uv run --frozen --no-sync ruff format .
-	uv run --frozen --no-sync ruff check --fix-only --show-fixes .
+	uv run --locked --no-sync ruff format .
+	uv run --locked --no-sync ruff check --fix-only --show-fixes .
 
 ## version-sync:            update __version__.py with most recent version from CHANGELOG.md
 .PHONY: version-sync
@@ -81,7 +81,7 @@ version-sync:
 ## check-coverage:          check test coverage meets threshold
 .PHONY: check-coverage
 check-coverage:
-	uv run --frozen --no-sync coverage report --fail-under=90
+	uv run --locked --no-sync coverage report --fail-under=90
 
 ##########
 # Docker #
