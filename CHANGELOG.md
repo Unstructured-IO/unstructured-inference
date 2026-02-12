@@ -1,3 +1,8 @@
+## 1.5.1
+
+### Fix
+- Add `id-token: write` permission to release workflow for PyPI attestations
+
 ## 1.5.0
 
 ### Enhancement
