@@ -61,7 +61,7 @@ dev = [
     "ipython>=9.10.0",
 ]
 release = [
-    "twine",
+    "twine>=6.2.0",
 ]
 
 [build-system]
