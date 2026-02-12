@@ -60,6 +60,9 @@ dev = [
     "jupyter>=1.1.1",
     "ipython>=9.10.0",
 ]
+release = [
+    "twine>=6.2.0",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -71,6 +74,8 @@ constraint-dependencies = [
     "fonttools>=4.60.2",
     # Security: CVE fix for urllib3
     "urllib3>=2.6.0",
+    # Security: CVE fix for Pillow (out-of-bounds write loading PSD images)
+    "pillow>=12.1.1",
 ]
 
 [tool.hatch.build.targets.wheel]
