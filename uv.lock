@@ -2512,7 +2512,7 @@ dev = [
     { name = "jupyter", specifier = ">=1.1.1" },
 ]
 lint = [{ name = "ruff", specifier = ">=0.15.0" }]
-release = [{ name = "twine" }]
+release = [{ name = "twine", specifier = ">=6.2.0" }]
 test = [
     { name = "coverage", specifier = ">=7.13.3" },
     { name = "httpx", specifier = ">=0.28.1" },
