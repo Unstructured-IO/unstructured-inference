@@ -1,3 +1,8 @@
+## 1.5.2
+
+### Fix
+- Switch to PyPI trusted publishing (OIDC) and remove API token auth
+
 ## 1.5.1
 
 ### Fix
