@@ -422,8 +422,13 @@ def convert_pdf_to_image(
         raise ValueError("output_folder must be specified if path_only is true")
     if filename is None and file is None:
         raise ValueError("Either filename or file must be provided")
+    if output_folder:
+        assert Path(output_folder).exists()
+        assert Path(output_folder).is_dir()
+
     with _pdfium_lock, pdfium.PdfDocument(filename or file, password=password) as pdf:
         images: dict[int, Image.Image] = {}
+        filenames: list[str] = []
         if dpi is None:
             dpi = inference_config.PDF_RENDER_DPI
         scale = dpi / 72.0
@@ -441,24 +446,22 @@ def convert_pdf_to_image(
                     optimize_mode="print",
                 )
                 try:
-                    images[i] = bitmap.to_pil()
+                    pil_image = bitmap.to_pil()
                 finally:
                     bitmap.close()
+                if output_folder:
+                    fn: str = os.path.join(str(output_folder), f"page_{i}.png")
+                    pil_image.save(fn, format="PNG", compress_level=1, optimize=False)
+                    filenames.append(fn)
+                    if not path_only:
+                        images[i] = pil_image
+                else:
+                    images[i] = pil_image
             finally:
                 page.close()
 
-    if not output_folder:
+    if output_folder and path_only:
+        return filenames
+    if output_folder:
         return list(images.values())
-    else:
-        # Save images to output_folder
-        filenames: list[str] = []
-        assert Path(output_folder).exists()
-        assert Path(output_folder).is_dir()
-        for i, image in images.items():
-            fn: str = os.path.join(str(output_folder), f"page_{i}.png")
-            image.save(fn, format="PNG", compress_level=1, optimize=False)
-            filenames.append(fn)
-        if path_only:
-            return filenames
-        images_values: list[Image.Image] = list(images.values())
-        return images_values
+    return list(images.values())
