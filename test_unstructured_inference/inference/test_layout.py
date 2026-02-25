@@ -591,6 +591,25 @@ def test_exposed_pdf_image_dpi(pdf_image_dpi, expected, monkeypatch):
         assert mock_from_image.call_args[0][0].height == expected
 
 
+def test_convert_pdf_to_image_no_output_folder():
+    result = layout.convert_pdf_to_image(filename="sample-docs/loremipsum.pdf", dpi=72)
+    assert len(result) == 1
+    assert isinstance(result[0], Image.Image)
+
+
+def test_convert_pdf_to_image_output_folder_returns_images(tmp_path):
+    result = layout.convert_pdf_to_image(
+        filename="sample-docs/loremipsum.pdf",
+        dpi=72,
+        output_folder=tmp_path,
+        path_only=False,
+    )
+    assert len(result) == 1
+    assert isinstance(result[0], Image.Image)
+    saved = list(tmp_path.glob("*.png"))
+    assert len(saved) == 1
+
+
 @pytest.mark.parametrize(
     ("filename", "img_num", "should_complete"),
     [
