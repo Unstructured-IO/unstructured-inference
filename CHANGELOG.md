@@ -1,3 +1,8 @@
+## 1.5.3
+
+### Enhancement
+- Disable ONNX Runtime CPU memory arena to reduce idle memory usage
+
 ## 1.5.2
 
 ### Fix
