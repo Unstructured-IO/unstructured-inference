@@ -80,8 +80,12 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         ]
         providers = [provider for provider in ordered_providers if provider in available_providers]
 
+        sess_options = onnxruntime.SessionOptions()
+        sess_options.enable_cpu_mem_arena = False
+
         self.model = onnxruntime.InferenceSession(
             model_path,
+            sess_options=sess_options,
             providers=providers,
         )
 
