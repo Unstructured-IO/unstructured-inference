@@ -150,9 +150,9 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 def preprocess(img, input_size, swap=(2, 0, 1)):
     """Preprocess image data before YoloX inference."""
     if len(img.shape) == 3:
-        padded_img = np.ones((input_size[0], input_size[1], 3), dtype=np.uint8) * 114
+        padded_img = np.full((input_size[0], input_size[1], 3), 114, dtype=np.uint8)
     else:
-        padded_img = np.ones(input_size, dtype=np.uint8) * 114
+        padded_img = np.full(input_size, 114, dtype=np.uint8)
 
     r = min(input_size[0] / img.shape[0], input_size[1] / img.shape[1])
     resized_img = cv2.resize(
