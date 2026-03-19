@@ -1,3 +1,8 @@
+## 1.6.1
+
+### Enhancement
+- Free intermediate arrays (`origin_img`, `img`, `ort_inputs`, `output`) and PIL pixel buffer at dead points during YoloX `image_processing()` to reduce peak memory during inference
+
 ## 1.6.0
 
 ### Fix
