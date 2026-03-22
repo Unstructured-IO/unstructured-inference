@@ -137,7 +137,7 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
 
         model: UnstructuredModel = model_class_map[model_name]()
 
-        model.initialize(**initialize_params)
+        model.initialize(**dict(initialize_params))
         models[model_name] = model
     return model
 
