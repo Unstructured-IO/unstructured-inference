@@ -107,13 +107,17 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         # TODO (benjamin): check other shapes for inference
         input_shape = (1024, 768)
         origin_img = np.array(image)
+        image.close()
         img, ratio = preprocess(origin_img, input_shape)
+        del origin_img  # Free full-size image array before ONNX inference
         session = self.model
 
         ort_inputs = {session.get_inputs()[0].name: img[None, :, :, :]}
         output = session.run(None, ort_inputs)
+        del img, ort_inputs  # Free preprocessed inputs after inference
         # TODO(benjamin): check for p6
         predictions = demo_postprocess(output[0], input_shape, p6=False)[0]
+        del output
 
         boxes = predictions[:, :4]
         scores = predictions[:, 4:5] * predictions[:, 5:]
