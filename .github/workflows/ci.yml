@@ -13,7 +13,7 @@ jobs:
   lint:
     runs-on: opensource-linux-8core
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Install uv
       uses: astral-sh/setup-uv@v5
       with:
@@ -30,7 +30,7 @@ jobs:
   shellcheck:
     runs-on: opensource-linux-8core
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: ShellCheck
         uses: ludeeus/action-shellcheck@master
 
@@ -38,7 +38,7 @@ jobs:
     runs-on: opensource-linux-8core
     needs: lint
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Install uv
       uses: astral-sh/setup-uv@v5
       with:
@@ -70,7 +70,7 @@ jobs:
   changelog:
     runs-on: opensource-linux-8core
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - if: github.ref != 'refs/heads/main'
       uses: dorny/paths-filter@v2
       id: changes
