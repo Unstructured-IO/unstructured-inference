@@ -1,3 +1,8 @@
+## 1.5.3
+
+### Enhancement
+- Disable ONNX Runtime memory pattern and CPU memory arena on YoloX and Detectron2 sessions to reduce idle memory after inference
+
 ## 1.5.2
 
 ### Fix
