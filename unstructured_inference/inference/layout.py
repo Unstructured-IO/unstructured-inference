@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import atexit
+import multiprocessing
 import os
 import tempfile
+from concurrent.futures import ProcessPoolExecutor
 from functools import cached_property
-from pathlib import Path, PurePath
-from threading import Lock
+from pathlib import PurePath
 from typing import Any, BinaryIO, Collection, List, Optional, Union, cast
 
 import numpy as np
-import pypdfium2 as pdfium
 from PIL import Image, ImageSequence
 
 from unstructured_inference.config import inference_config
@@ -24,7 +25,62 @@ from unstructured_inference.models.unstructuredmodel import (
 )
 from unstructured_inference.visualize import draw_bbox
 
-_pdfium_lock = Lock()
+_PDF_RENDER_POOL_SIZE = int(
+    os.environ.get("PDF_RENDER_POOL_SIZE", max(1, (os.cpu_count() or 2) // 2)),
+)
+
+_render_pool: Optional[ProcessPoolExecutor] = None
+
+
+def _get_render_pool() -> ProcessPoolExecutor:
+    global _render_pool
+    if _render_pool is None:
+        _render_pool = ProcessPoolExecutor(
+            max_workers=_PDF_RENDER_POOL_SIZE,
+            mp_context=multiprocessing.get_context("spawn"),
+        )
+        atexit.register(_render_pool.shutdown, wait=False)
+    return _render_pool
+
+
+def _render_pdf_worker(
+    filename: Optional[str],
+    file_bytes: Optional[bytes],
+    dpi: int,
+    output_folder: str,
+    first_page: Optional[int],
+    last_page: Optional[int],
+    password: Optional[str],
+) -> list[str]:
+    """Render PDF pages to PNGs in a worker process. Returns list of file paths."""
+    import pypdfium2 as pdfium
+
+    with pdfium.PdfDocument(filename or file_bytes, password=password) as pdf:
+        scale = dpi / 72.0
+        paths: list[str] = []
+        for i, page in enumerate(pdf, start=1):
+            try:
+                if first_page is not None and i < first_page:
+                    continue
+                if last_page is not None and i > last_page:
+                    break
+                bitmap = page.render(
+                    scale=scale,
+                    no_smoothtext=False,
+                    no_smoothimage=False,
+                    no_smoothpath=False,
+                    optimize_mode="print",
+                )
+                try:
+                    img = bitmap.to_pil()
+                finally:
+                    bitmap.close()
+                fn = os.path.join(output_folder, f"page_{i}.png")
+                img.save(fn, format="PNG", compress_level=1, optimize=False)
+                paths.append(fn)
+            finally:
+                page.close()
+        return paths
 
 
 class DocumentLayout:
@@ -415,50 +471,57 @@ def convert_pdf_to_image(
     last_page: Optional[int] = None,
     password: Optional[str] = None,
 ) -> Union[List[Image.Image], List[str]]:
-    """
-    Centralized function to render PDF pages using pypdfium.
+    """Render PDF pages using pypdfium2 in a worker process.
+
+    Each call is dispatched to a process pool so multiple PDFs can render
+    concurrently without the global-interpreter-lock or pdfium thread-safety
+    limitations.
     """
     if path_only and not output_folder:
         raise ValueError("output_folder must be specified if path_only is true")
     if filename is None and file is None:
         raise ValueError("Either filename or file must be provided")
-    with _pdfium_lock, pdfium.PdfDocument(filename or file, password=password) as pdf:
-        images: dict[int, Image.Image] = {}
-        if dpi is None:
-            dpi = inference_config.PDF_RENDER_DPI
-        scale = dpi / 72.0
-        for i, page in enumerate(pdf, start=1):
-            try:
-                if first_page is not None and i < first_page:
-                    continue
-                if last_page is not None and i > last_page:
-                    break
-                bitmap = page.render(
-                    scale=scale,
-                    no_smoothtext=False,
-                    no_smoothimage=False,
-                    no_smoothpath=False,
-                    optimize_mode="print",
-                )
-                try:
-                    images[i] = bitmap.to_pil()
-                finally:
-                    bitmap.close()
-            finally:
-                page.close()
 
-    if not output_folder:
-        return list(images.values())
+    if dpi is None:
+        dpi = inference_config.PDF_RENDER_DPI
+
+    # BinaryIO can't cross process boundaries — read to bytes first
+    file_bytes: Optional[bytes] = None
+    if file is not None:
+        file_bytes = file if isinstance(file, bytes) else file.read()
+
+    # If caller doesn't provide an output folder, use a temp dir for IPC
+    tmp_dir: Optional[str] = None
+    if output_folder is None:
+        tmp_dir = tempfile.mkdtemp()
+        render_folder = tmp_dir
     else:
-        # Save images to output_folder
-        filenames: list[str] = []
-        assert Path(output_folder).exists()
-        assert Path(output_folder).is_dir()
-        for i, image in images.items():
-            fn: str = os.path.join(str(output_folder), f"page_{i}.png")
-            image.save(fn, format="PNG", compress_level=1, optimize=False)
-            filenames.append(fn)
+        render_folder = str(output_folder)
+
+    try:
+        pool = _get_render_pool()
+        paths = pool.submit(
+            _render_pdf_worker,
+            filename,
+            file_bytes,
+            dpi,
+            render_folder,
+            first_page,
+            last_page,
+            password,
+        ).result()
+
         if path_only:
-            return filenames
-        images_values: list[Image.Image] = list(images.values())
-        return images_values
+            return paths
+
+        # Load rendered PNGs back into PIL images
+        images = []
+        for p in paths:
+            with Image.open(p) as img:
+                images.append(img.copy())
+        return images
+    finally:
+        if tmp_dir is not None:
+            import shutil
+
+            shutil.rmtree(tmp_dir, ignore_errors=True)
