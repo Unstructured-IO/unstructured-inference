@@ -1,3 +1,7 @@
+## 1.5.3
+
+- Store routing in LayoutElement
+
 ## 1.5.2
 
 ### Fix
