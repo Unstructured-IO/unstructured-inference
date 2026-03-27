@@ -610,6 +610,44 @@ def test_convert_pdf_to_image_output_folder_returns_images(tmp_path):
     assert len(saved) == 1
 
 
+def test_convert_pdf_to_image_path_only(tmp_path):
+    result = layout.convert_pdf_to_image(
+        filename="sample-docs/loremipsum.pdf",
+        dpi=72,
+        output_folder=tmp_path,
+        path_only=True,
+    )
+    assert len(result) == 1
+    assert all(isinstance(p, str) for p in result)
+    for p in result:
+        assert os.path.exists(p)
+        assert p.endswith(".png")
+    saved = sorted(tmp_path.glob("*.png"))
+    assert [str(s) for s in saved] == sorted(result)
+
+
+def test_convert_pdf_to_image_save_not_under_pdfium_lock(tmp_path):
+    """Verify that PIL save (disk I/O) is NOT performed while holding _pdfium_lock."""
+    original_save = Image.Image.save
+    lock_held_during_save = []
+
+    def spy_save(self, *args, **kwargs):
+        lock_held_during_save.append(layout._pdfium_lock.locked())
+        return original_save(self, *args, **kwargs)
+
+    with patch.object(Image.Image, "save", spy_save):
+        layout.convert_pdf_to_image(
+            filename="sample-docs/loremipsum.pdf",
+            dpi=72,
+            output_folder=tmp_path,
+            path_only=True,
+        )
+    assert lock_held_during_save, "save was never called"
+    assert not any(lock_held_during_save), (
+        "pil_image.save() was called while _pdfium_lock was held"
+    )
+
+
 @pytest.mark.parametrize(
     ("filename", "img_num", "should_complete"),
     [
