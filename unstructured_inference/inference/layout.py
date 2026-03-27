@@ -203,9 +203,13 @@ class PageLayout:
         # remote call in the future.
         assert self.image is not None
         inferred_layout: LayoutElements = self.detection_model(self.image)
+        routing = inferred_layout.routing
+        routing_score = inferred_layout.routing_score
         inferred_layout = self.detection_model.deduplicate_detected_elements(
             inferred_layout,
         )
+        inferred_layout.routing = routing
+        inferred_layout.routing_score = routing_score
 
         if inplace:
             self.elements_array = inferred_layout

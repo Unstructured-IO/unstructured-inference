@@ -1,7 +1,13 @@
-## 1.5.3
+## 1.5.4
 
 ### Enhancement
 - Use `np.full()` instead of `np.ones() * scalar` in YoloX preprocessing to avoid a redundant temporary array
+
+## 1.5.3
+
+### Enhancement
+
+- Store routing in LayoutElement
 
 ## 1.5.2
 
