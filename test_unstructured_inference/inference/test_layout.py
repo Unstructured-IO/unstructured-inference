@@ -646,6 +646,69 @@ def test_convert_pdf_to_image_save_not_under_pdfium_lock(tmp_path):
     assert not any(lock_held_during_save), "pil_image.save() was called while _pdfium_lock was held"
 
 
+def test_convert_pdf_to_image_concurrent_saves_not_serialized(tmp_path):
+    """Two concurrent callers must be able to overlap their disk writes.
+
+    Inject a slow save() and verify both threads can save concurrently rather
+    than being serialized behind _pdfium_lock.
+    """
+    import threading
+    import time
+
+    save_delay = 0.3
+    original_save = Image.Image.save
+    concurrent_saves = threading.Event()
+    save_entered = threading.Event()
+
+    def slow_save(self, *args, **kwargs):
+        save_entered.set()
+        # Wait briefly for the other thread's save to also start. If saves are
+        # serialized under the lock this will time out.
+        concurrent_saves.wait(timeout=save_delay)
+        if not concurrent_saves.is_set():
+            # We're the first thread in; the other may not have started yet.
+            # Signal so the other thread can proceed, then do a short sleep
+            # to give it a window to overlap.
+            concurrent_saves.set()
+            time.sleep(0.05)
+        return original_save(self, *args, **kwargs)
+
+    errors: list[str] = []
+
+    def run(folder):
+        try:
+            layout.convert_pdf_to_image(
+                filename="sample-docs/loremipsum.pdf",
+                dpi=72,
+                output_folder=folder,
+                path_only=True,
+            )
+        except Exception as exc:
+            errors.append(str(exc))
+
+    dir_a = tmp_path / "a"
+    dir_b = tmp_path / "b"
+    dir_a.mkdir()
+    dir_b.mkdir()
+
+    with patch.object(Image.Image, "save", slow_save):
+        t1 = threading.Thread(target=run, args=(dir_a,))
+        t2 = threading.Thread(target=run, args=(dir_b,))
+        t1.start()
+        # Wait for t1 to reach its save before starting t2
+        save_entered.wait(timeout=5)
+        t2.start()
+        t1.join(timeout=10)
+        t2.join(timeout=10)
+
+    assert not errors, f"threads raised: {errors}"
+    assert concurrent_saves.is_set(), (
+        "saves were serialized — concurrent_saves event was never set by overlap"
+    )
+    assert list(dir_a.glob("*.png")), "thread A produced no output"
+    assert list(dir_b.glob("*.png")), "thread B produced no output"
+
+
 @pytest.mark.parametrize(
     ("filename", "img_num", "should_complete"),
     [
