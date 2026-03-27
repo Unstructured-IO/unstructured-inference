@@ -26,6 +26,8 @@ class LayoutElements(TextRegions):
     element_class_id_map: dict[int, str] = field(default_factory=dict)
     text_as_html: np.ndarray = field(default_factory=lambda: np.array([]))
     table_as_cells: np.ndarray = field(default_factory=lambda: np.array([]))
+    routing: str | None = None
+    routing_score: float | None = None
     _optional_array_attributes: list[str] = field(
         init=False,
         default_factory=lambda: [
