@@ -643,9 +643,7 @@ def test_convert_pdf_to_image_save_not_under_pdfium_lock(tmp_path):
             path_only=True,
         )
     assert lock_held_during_save, "save was never called"
-    assert not any(lock_held_during_save), (
-        "pil_image.save() was called while _pdfium_lock was held"
-    )
+    assert not any(lock_held_during_save), "pil_image.save() was called while _pdfium_lock was held"
 
 
 @pytest.mark.parametrize(
