@@ -1,9 +1,16 @@
+## 1.5.6
+
+### Enhancement
+- Make ONNX Runtime memory arena configurable via `ONNX_DISABLE_MEMORY_ARENA` env var (default: enabled). Set to `1` to trade ~15% inference latency for ~209 MB idle memory savings per session.
+
+## 1.5.4
+
+### Enhancement
+- Use `np.full()` instead of `np.ones() * scalar` in YoloX preprocessing to avoid a redundant temporary array
+
 ## 1.5.3
 
 - Store routing in LayoutElement
-
-### Enhancement
-- Disable ONNX Runtime memory pattern and CPU memory arena on YoloX and Detectron2 sessions to reduce idle memory after inference
 
 ## 1.5.2
 

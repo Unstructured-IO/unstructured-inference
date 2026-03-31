@@ -3,6 +3,8 @@
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/237e943ac64aa32eb32f875faa93ebb18512d41d/yolox/data/data_augment.py
 # https://github.com/Megvii-BaseDetection/YOLOX/blob/ac379df3c97d1835ebd319afad0c031c36d03f36/yolox/utils/demo_utils.py
 
+import os
+
 import cv2
 import numpy as np
 import onnxruntime
@@ -18,6 +20,11 @@ from unstructured_inference.utils import (
     LazyDict,
     LazyEvaluateInfo,
     download_if_needed_and_get_local_path,
+)
+
+_ONNX_DISABLE_MEMORY_ARENA = os.environ.get("ONNX_DISABLE_MEMORY_ARENA", "").strip().lower() in (
+    "1",
+    "true",
 )
 
 YOLOX_LABEL_MAP = {
@@ -81,8 +88,9 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         providers = [provider for provider in ordered_providers if provider in available_providers]
 
         sess_options = onnxruntime.SessionOptions()
-        sess_options.enable_mem_pattern = False
-        sess_options.enable_cpu_mem_arena = False
+        if _ONNX_DISABLE_MEMORY_ARENA:
+            sess_options.enable_mem_pattern = False
+            sess_options.enable_cpu_mem_arena = False
 
         self.model = onnxruntime.InferenceSession(
             model_path,
@@ -155,9 +163,9 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
 def preprocess(img, input_size, swap=(2, 0, 1)):
     """Preprocess image data before YoloX inference."""
     if len(img.shape) == 3:
-        padded_img = np.ones((input_size[0], input_size[1], 3), dtype=np.uint8) * 114
+        padded_img = np.full((input_size[0], input_size[1], 3), 114, dtype=np.uint8)
     else:
-        padded_img = np.ones(input_size, dtype=np.uint8) * 114
+        padded_img = np.full(input_size, 114, dtype=np.uint8)
 
     r = min(input_size[0] / img.shape[0], input_size[1] / img.shape[1])
     resized_img = cv2.resize(

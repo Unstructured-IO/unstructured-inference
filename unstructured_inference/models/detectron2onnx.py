@@ -21,6 +21,11 @@ from unstructured_inference.utils import (
     download_if_needed_and_get_local_path,
 )
 
+_ONNX_DISABLE_MEMORY_ARENA = os.environ.get("ONNX_DISABLE_MEMORY_ARENA", "").strip().lower() in (
+    "1",
+    "true",
+)
+
 onnxruntime.set_default_logger_severity(logger_onnx.getEffectiveLevel())
 
 DEFAULT_LABEL_MAP: Final[Dict[int, str]] = {
@@ -116,8 +121,9 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
         providers = [provider for provider in ordered_providers if provider in available_providers]
 
         sess_options = onnxruntime.SessionOptions()
-        sess_options.enable_mem_pattern = False
-        sess_options.enable_cpu_mem_arena = False
+        if _ONNX_DISABLE_MEMORY_ARENA:
+            sess_options.enable_mem_pattern = False
+            sess_options.enable_cpu_mem_arena = False
 
         self.model = onnxruntime.InferenceSession(
             model_path,
