@@ -1,7 +1,12 @@
-## 1.5.4
+## 1.5.5
 
 ### Enhancement
 - Lazy page rendering in `convert_pdf_to_image` to reduce peak memory from O(N pages) to O(1 page)
+
+## 1.5.4
+
+### Enhancement
+- Use `np.full()` instead of `np.ones() * scalar` in YoloX preprocessing to avoid a redundant temporary array
 
 ## 1.5.3
 
