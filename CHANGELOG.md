@@ -1,3 +1,8 @@
+## 1.5.5
+
+### Enhancement
+- Lazy page rendering in `convert_pdf_to_image` to reduce peak memory from O(N pages) to O(1 page)
+
 ## 1.5.4
 
 ### Enhancement
