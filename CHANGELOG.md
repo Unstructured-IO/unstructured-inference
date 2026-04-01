@@ -1,3 +1,8 @@
+## 1.6.0
+
+### Fix
+- Relax `huggingface-hub` lower bound from `>=1.4.1` to `>=0.22.0` (the `>=1.4.1` was an artifact of the uv migration and broke compatibility with `transformers<5.0`)
+
 ## 1.5.5
 
 ### Enhancement
