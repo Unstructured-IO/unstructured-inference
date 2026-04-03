@@ -1,3 +1,9 @@
+## 1.6.3
+
+### Security
+
+- **security:** fix(deps): upgrade vulnerable transitive dependencies [security]
+
 ## 1.6.2
 
 ### Enhancement
