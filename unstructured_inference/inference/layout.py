@@ -461,6 +461,11 @@ def convert_pdf_to_image(
                         pil_image = bitmap.to_pil()
                     finally:
                         bitmap.close()
+
+                    rotation = page.get_rotation()
+                    if rotation:
+                        pil_image = pil_image.rotate(rotation, expand=True)
+
                 finally:
                     page.close()
 
