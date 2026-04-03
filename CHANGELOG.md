@@ -1,3 +1,8 @@
+## 1.6.4
+
+### Fix
+- Apply PDF `/Rotate` metadata during page rendering - pypdfium2's `page.render()` ignores the flag, producing sideways images for rotated pages
+
 ## 1.6.3
 
 ### Security
