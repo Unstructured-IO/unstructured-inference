@@ -11,7 +11,6 @@ import numpy as np
 import pypdfium2 as pdfium
 from PIL import Image, ImageSequence
 
-from unstructured_inference.config import inference_config
 from unstructured_inference.inference.elements import (
     TextRegion,
 )
@@ -412,15 +411,17 @@ def process_file_with_model(
 def convert_pdf_to_image(
     filename: Optional[str] = None,
     file: Optional[Union[bytes, BinaryIO]] = None,
-    dpi: Optional[int] = None,
+    dpi: int = 200,
     output_folder: Optional[Union[str, PurePath]] = None,
     path_only: bool = False,
     first_page: Optional[int] = None,
     last_page: Optional[int] = None,
     password: Optional[str] = None,
 ) -> Union[List[Image.Image], List[str]]:
-    """
-    Centralized function to render PDF pages using pypdfium.
+    """Render PDF pages to PIL images or saved PNGs using pypdfium2.
+
+    This is the single source of truth for PDF→image rendering across unstructured
+    and unstructured-inference. Callers should pass their own DPI value explicitly.
     """
     if path_only and not output_folder:
         raise ValueError("output_folder must be specified if path_only is true")
@@ -430,8 +431,6 @@ def convert_pdf_to_image(
         assert Path(output_folder).exists()
         assert Path(output_folder).is_dir()
 
-    if dpi is None:
-        dpi = inference_config.PDF_RENDER_DPI
     scale = dpi / 72.0
 
     with _pdfium_lock:
