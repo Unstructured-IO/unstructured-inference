@@ -1,3 +1,8 @@
+## 1.6.2
+
+### Enhancement
+- Make `dpi` an explicit parameter on `convert_pdf_to_image` (default 200) instead of reading from config internally, enabling unstructured to use this as the single source of truth for PDF rendering
+
 ## 1.6.1
 
 ### Enhancement
