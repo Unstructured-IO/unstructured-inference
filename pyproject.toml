@@ -19,7 +19,7 @@ license = "Apache-2.0"
 keywords = ["NLP", "PDF", "HTML", "CV", "XML", "parsing", "preprocessing"]
 dynamic = ["version"]
 dependencies = [
-    "huggingface-hub>=1.4.1",
+    "huggingface-hub>=0.22.0",
     "numpy>=2.4.2",
     "opencv-python>=4.13.0.90",
     "onnx>=1.20.1",
@@ -127,6 +127,9 @@ markers = [
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]
+
+[tool.codeflash]
+benchmarks-root = "benchmarks"
 
 [tool.coverage.report]
 fail_under = 90

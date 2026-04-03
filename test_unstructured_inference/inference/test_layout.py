@@ -591,6 +591,271 @@ def test_exposed_pdf_image_dpi(pdf_image_dpi, expected, monkeypatch):
         assert mock_from_image.call_args[0][0].height == expected
 
 
+def test_convert_pdf_to_image_no_output_folder():
+    result = layout.convert_pdf_to_image(filename="sample-docs/loremipsum.pdf", dpi=72)
+    assert len(result) == 1
+    assert isinstance(result[0], Image.Image)
+
+
+def test_convert_pdf_to_image_output_folder_returns_images(tmp_path):
+    result = layout.convert_pdf_to_image(
+        filename="sample-docs/loremipsum.pdf",
+        dpi=72,
+        output_folder=tmp_path,
+        path_only=False,
+    )
+    assert len(result) == 1
+    assert isinstance(result[0], Image.Image)
+    saved = list(tmp_path.glob("*.png"))
+    assert len(saved) == 1
+
+
+def test_convert_pdf_to_image_path_only(tmp_path):
+    result = layout.convert_pdf_to_image(
+        filename="sample-docs/loremipsum.pdf",
+        dpi=72,
+        output_folder=tmp_path,
+        path_only=True,
+    )
+    assert len(result) == 1
+    assert all(isinstance(p, str) for p in result)
+    for p in result:
+        assert os.path.exists(p)
+        assert p.endswith(".png")
+    saved = sorted(tmp_path.glob("*.png"))
+    assert [str(s) for s in saved] == sorted(result)
+
+
+def test_convert_pdf_to_image_save_not_under_pdfium_lock(tmp_path):
+    """Verify that PIL save (disk I/O) is NOT performed while holding _pdfium_lock."""
+    original_save = Image.Image.save
+    lock_held_during_save = []
+
+    def spy_save(self, *args, **kwargs):
+        lock_held_during_save.append(layout._pdfium_lock.locked())
+        return original_save(self, *args, **kwargs)
+
+    with patch.object(Image.Image, "save", spy_save):
+        layout.convert_pdf_to_image(
+            filename="sample-docs/loremipsum.pdf",
+            dpi=72,
+            output_folder=tmp_path,
+            path_only=True,
+        )
+    assert lock_held_during_save, "save was never called"
+    assert not any(lock_held_during_save), "pil_image.save() was called while _pdfium_lock was held"
+
+
+def test_convert_pdf_to_image_concurrent_saves_not_serialized(tmp_path):
+    """Two concurrent callers must be able to overlap their disk writes.
+
+    Uses a threading.Barrier to verify both threads are inside save()
+    simultaneously. If saves are serialized under _pdfium_lock, the second
+    thread can never reach save() while the first is there, so the barrier
+    times out and the test fails.
+    """
+    import threading
+
+    original_save = Image.Image.save
+    barrier = threading.Barrier(2, timeout=5)
+    overlap_detected = threading.Event()
+
+    def barrier_save(self, *args, **kwargs):
+        try:
+            barrier.wait()
+            overlap_detected.set()
+        except threading.BrokenBarrierError:
+            pass
+        return original_save(self, *args, **kwargs)
+
+    errors: list[str] = []
+
+    def run(folder):
+        try:
+            layout.convert_pdf_to_image(
+                filename="sample-docs/loremipsum.pdf",
+                dpi=72,
+                output_folder=folder,
+                path_only=True,
+            )
+        except Exception as exc:
+            errors.append(str(exc))
+
+    dir_a = tmp_path / "a"
+    dir_b = tmp_path / "b"
+    dir_a.mkdir()
+    dir_b.mkdir()
+
+    with patch.object(Image.Image, "save", barrier_save):
+        t1 = threading.Thread(target=run, args=(dir_a,))
+        t2 = threading.Thread(target=run, args=(dir_b,))
+        t1.start()
+        t2.start()
+        t1.join(timeout=10)
+        t2.join(timeout=10)
+
+    assert not errors, f"threads raised: {errors}"
+    assert overlap_detected.is_set(), (
+        "saves were serialized under _pdfium_lock — threads could not overlap"
+    )
+    assert list(dir_a.glob("*.png")), "thread A produced no output"
+    assert list(dir_b.glob("*.png")), "thread B produced no output"
+
+
+def test_render_can_proceed_while_other_thread_saves(tmp_path):
+    """Thread B can acquire _pdfium_lock and render while thread A is in save().
+
+    Blocks thread A inside save() (outside the lock), then starts thread B.
+    If B completes entirely while A is still blocked, the lock was not held
+    during save — rendering and saving can overlap across callers.
+    """
+    import threading
+
+    original_save = Image.Image.save
+    a_in_save = threading.Event()
+    b_done = threading.Event()
+
+    dir_a = tmp_path / "a"
+    dir_b = tmp_path / "b"
+    dir_a.mkdir()
+    dir_b.mkdir()
+
+    def gated_save(self, *args, **kwargs):
+        fp = str(args[0]) if args else ""
+        if str(dir_a) in fp:
+            a_in_save.set()
+            b_done.wait(timeout=5)
+        return original_save(self, *args, **kwargs)
+
+    errors: list[str] = []
+
+    def run(folder, done_event=None):
+        try:
+            layout.convert_pdf_to_image(
+                filename="sample-docs/loremipsum.pdf",
+                dpi=72,
+                output_folder=folder,
+                path_only=True,
+            )
+        except Exception as exc:
+            errors.append(str(exc))
+        finally:
+            if done_event:
+                done_event.set()
+
+    with patch.object(Image.Image, "save", gated_save):
+        t_a = threading.Thread(target=run, args=(dir_a,))
+        t_b = threading.Thread(target=run, args=(dir_b, b_done))
+        t_a.start()
+        a_in_save.wait(timeout=5)
+        # A is now blocked in save (outside lock). B should render + save freely.
+        t_b.start()
+        t_b.join(timeout=10)
+        t_a.join(timeout=10)
+
+    assert not errors, f"threads raised: {errors}"
+    assert b_done.is_set(), "Thread B could not complete while A was saving"
+    assert list(dir_a.glob("*.png")), "thread A produced no output"
+    assert list(dir_b.glob("*.png")), "thread B produced no output"
+
+
+def test_multi_page_concurrent_output_complete(tmp_path):
+    """Two threads processing a multi-page PDF both produce correct, complete output."""
+    import threading
+
+    errors: list[str] = []
+
+    def run(folder):
+        try:
+            layout.convert_pdf_to_image(
+                filename="sample-docs/loremipsum_multipage.pdf",
+                dpi=72,
+                output_folder=folder,
+                path_only=True,
+            )
+        except Exception as exc:
+            errors.append(str(exc))
+
+    dir_a = tmp_path / "a"
+    dir_b = tmp_path / "b"
+    dir_a.mkdir()
+    dir_b.mkdir()
+
+    t1 = threading.Thread(target=run, args=(dir_a,))
+    t2 = threading.Thread(target=run, args=(dir_b,))
+    t1.start()
+    t2.start()
+    t1.join(timeout=60)
+    t2.join(timeout=60)
+
+    assert not errors, f"threads raised: {errors}"
+    a_files = sorted(dir_a.glob("*.png"))
+    b_files = sorted(dir_b.glob("*.png"))
+    assert len(a_files) == 10, f"thread A produced {len(a_files)} files, expected 10"
+    assert len(b_files) == 10, f"thread B produced {len(b_files)} files, expected 10"
+    for i in range(1, 11):
+        assert (dir_a / f"page_{i}.png").exists(), f"thread A missing page_{i}.png"
+        assert (dir_b / f"page_{i}.png").exists(), f"thread B missing page_{i}.png"
+
+
+def test_error_in_one_thread_does_not_block_other(tmp_path):
+    """If one thread fails mid-processing, the other still completes."""
+    import threading
+
+    original_save = Image.Image.save
+
+    dir_a = tmp_path / "a"
+    dir_b = tmp_path / "b"
+    dir_a.mkdir()
+    dir_b.mkdir()
+
+    def failing_save(self, *args, **kwargs):
+        fp = str(args[0]) if args else ""
+        if str(dir_a) in fp:
+            raise OSError("simulated disk failure")
+        return original_save(self, *args, **kwargs)
+
+    a_error: list[Exception] = []
+    b_result: list[str] = []
+    b_error: list[Exception] = []
+
+    def run_a():
+        try:
+            layout.convert_pdf_to_image(
+                filename="sample-docs/loremipsum.pdf",
+                dpi=72,
+                output_folder=dir_a,
+                path_only=True,
+            )
+        except Exception as exc:
+            a_error.append(exc)
+
+    def run_b():
+        try:
+            result = layout.convert_pdf_to_image(
+                filename="sample-docs/loremipsum.pdf",
+                dpi=72,
+                output_folder=dir_b,
+                path_only=True,
+            )
+            b_result.extend(result)
+        except Exception as exc:
+            b_error.append(exc)
+
+    with patch.object(Image.Image, "save", failing_save):
+        t_a = threading.Thread(target=run_a)
+        t_b = threading.Thread(target=run_b)
+        t_a.start()
+        t_b.start()
+        t_a.join(timeout=10)
+        t_b.join(timeout=10)
+
+    assert a_error, "Thread A should have failed"
+    assert not b_error, f"Thread B should have succeeded: {b_error}"
+    assert b_result, "Thread B produced no result"
+    assert list(dir_b.glob("*.png")), "Thread B produced no output files"
+
+
 @pytest.mark.parametrize(
     ("filename", "img_num", "should_complete"),
     [

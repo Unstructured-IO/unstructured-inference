@@ -1,7 +1,28 @@
-## 1.5.6
+## 1.6.3
 
 ### Enhancement
 - Make ONNX Runtime memory arena configurable via `ONNX_DISABLE_MEMORY_ARENA` env var (default: enabled). Set to `1` to trade ~15% inference latency for ~209 MB idle memory savings per session.
+
+## 1.6.2
+
+### Enhancement
+- Make `dpi` an explicit parameter on `convert_pdf_to_image` (default 200) instead of reading from config internally, enabling unstructured to use this as the single source of truth for PDF rendering
+
+## 1.6.1
+
+### Enhancement
+- Free intermediate arrays (`origin_img`, `img`, `ort_inputs`, `output`) and PIL pixel buffer at dead points during YoloX `image_processing()` to reduce peak memory during inference
+
+## 1.6.0
+
+### Fix
+- Relax `huggingface-hub` lower bound from `>=1.4.1` to `>=0.22.0` (the `>=1.4.1` was an artifact of the uv migration and broke compatibility with `transformers<5.0`)
+
+## 1.5.5
+
+### Enhancement
+- Lazy page rendering in `convert_pdf_to_image` to reduce peak memory from O(N pages) to O(1 page)
+>>>>>>> upstream/main
 
 ## 1.5.4
 
