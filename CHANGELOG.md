@@ -1,3 +1,8 @@
+## 1.6.3
+
+### Enhancement
+- Make ONNX Runtime memory arena configurable via `ONNX_DISABLE_MEMORY_ARENA` env var (default: enabled). Set to `1` to trade ~15% inference latency for ~209 MB idle memory savings per session.
+
 ## 1.6.2
 
 ### Enhancement
@@ -17,6 +22,7 @@
 
 ### Enhancement
 - Lazy page rendering in `convert_pdf_to_image` to reduce peak memory from O(N pages) to O(1 page)
+>>>>>>> upstream/main
 
 ## 1.5.4
 
