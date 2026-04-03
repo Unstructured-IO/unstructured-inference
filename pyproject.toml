@@ -128,5 +128,8 @@ filterwarnings = [
     "ignore::DeprecationWarning",
 ]
 
+[tool.codeflash]
+benchmarks-root = "benchmarks"
+
 [tool.coverage.report]
 fail_under = 90
