@@ -640,7 +640,9 @@ def test_convert_pdf_to_image_applies_rotation():
     top_half_brightness = arr[: arr.shape[0] // 2].mean()
     bottom_half_brightness = arr[arr.shape[0] // 2 :].mean()
     assert top_half_brightness < bottom_half_brightness, (
-        f"Expected content at top (darker), got top={top_half_brightness:.1f} bottom={bottom_half_brightness:.1f}"
+        f"Expected content at top (darker), got "
+        f"top={top_half_brightness:.1f} "
+        f"bottom={bottom_half_brightness:.1f}"
     )
 
 
