@@ -9,11 +9,11 @@ from typing import Any, BinaryIO, Collection, List, Optional, Union, cast
 import numpy as np
 from PIL import Image, ImageSequence
 
+from unstructured_inference.inference import pdf_image as pdf_image_utils
 from unstructured_inference.inference.elements import (
     TextRegion,
 )
 from unstructured_inference.inference.layoutelement import LayoutElement, LayoutElements
-from unstructured_inference.inference import pdf_image as pdf_image_utils
 from unstructured_inference.logger import logger
 from unstructured_inference.models.base import get_model
 from unstructured_inference.models.unstructuredmodel import (
