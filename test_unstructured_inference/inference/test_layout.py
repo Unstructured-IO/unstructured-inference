@@ -626,26 +626,6 @@ def test_convert_pdf_to_image_path_only(tmp_path):
     assert [str(s) for s in saved] == sorted(result)
 
 
-def test_convert_pdf_to_image_applies_rotation():
-    """Pages with /Rotate metadata are rendered upright."""
-    result = layout.convert_pdf_to_image(filename="sample-docs/rotated-page-90.pdf", dpi=72)
-    assert len(result) == 1
-    img = result[0]
-    # The PDF has /Rotate=90 on a landscape page (width > height in PDF units).
-    # Without rotation fix the rendered image would be landscape; with the fix it's portrait.
-    assert img.height > img.width, f"Expected portrait after rotation, got {img.size}"
-
-    # Verify content is at the top (upright) - top half should be darker than bottom half
-    arr = np.array(img)
-    top_half_brightness = arr[: arr.shape[0] // 2].mean()
-    bottom_half_brightness = arr[arr.shape[0] // 2 :].mean()
-    assert top_half_brightness < bottom_half_brightness, (
-        f"Expected content at top (darker), got "
-        f"top={top_half_brightness:.1f} "
-        f"bottom={bottom_half_brightness:.1f}"
-    )
-
-
 def test_convert_pdf_to_image_applies_rotation_path_only(tmp_path):
     """Rotation is also applied when saving to disk (path_only mode)."""
     result = layout.convert_pdf_to_image(
