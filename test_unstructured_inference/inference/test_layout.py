@@ -626,6 +626,28 @@ def test_convert_pdf_to_image_path_only(tmp_path):
     assert [str(s) for s in saved] == sorted(result)
 
 
+def test_convert_pdf_to_image_applies_rotation_path_only(tmp_path):
+    """Rotation is also applied when saving to disk (path_only mode)."""
+    result = layout.convert_pdf_to_image(
+        filename="sample-docs/rotated-page-90.pdf",
+        dpi=72,
+        output_folder=tmp_path,
+        path_only=True,
+    )
+    assert len(result) == 1
+    saved = Image.open(result[0])
+    assert saved.height > saved.width, f"Expected portrait after rotation, got {saved.size}"
+
+
+def test_convert_pdf_to_image_no_rotation_on_normal_pdf():
+    """Non-rotated PDFs are unchanged."""
+    result = layout.convert_pdf_to_image(filename="sample-docs/loremipsum.pdf", dpi=72)
+    assert len(result) == 1
+    img = result[0]
+    # loremipsum.pdf is a standard portrait page - should stay portrait
+    assert img.height > img.width, f"Expected portrait, got {img.size}"
+
+
 def test_convert_pdf_to_image_save_not_under_pdfium_lock(tmp_path):
     """Verify that PIL save (disk I/O) is NOT performed while holding _pdfium_lock."""
     original_save = Image.Image.save
