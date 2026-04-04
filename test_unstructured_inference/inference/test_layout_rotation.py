@@ -1,60 +1,28 @@
 from __future__ import annotations
 
-from typing import Optional, Union
-
-from PIL import Image
+import numpy as np
 
 from unstructured_inference.inference import pdf_image
 
 
-class _FakeBitmap:
-    def __init__(self, image: Image.Image):
-        self._image = image
-
-    def to_pil(self) -> Image.Image:
-        return self._image.copy()
-
-    def close(self) -> None:
-        return None
-
-
-class _FakePage:
-    def __init__(self, image: Image.Image, rotation: int):
-        self._image = image
-        self._rotation = rotation
-
-    def render(self, **kwargs) -> _FakeBitmap:
-        return _FakeBitmap(self._image)
-
-    def get_rotation(self) -> int:
-        return self._rotation
-
-    def close(self) -> None:
-        return None
-
-
-class _FakePdfDocument:
-    def __init__(self, source: Optional[Union[str, bytes]], password: Optional[str] = None):
-        del source, password
-        self._pages = [_FakePage(Image.new("RGB", (200, 100), color="white"), rotation=90)]
-
-    def __len__(self) -> int:
-        return len(self._pages)
-
-    def __getitem__(self, index: int) -> _FakePage:
-        return self._pages[index]
-
-    def close(self) -> None:
-        return None
-
-
-def test_convert_pdf_to_image_applies_rotation(monkeypatch):
+def test_convert_pdf_to_image_applies_rotation():
     """Pages with /Rotate metadata are rendered upright."""
-    fake_pdfium = type("_FakePdfiumModule", (), {"PdfDocument": _FakePdfDocument})
-    monkeypatch.setattr(pdf_image, "_get_pdfium_module", lambda: fake_pdfium)
-
-    result = pdf_image.convert_pdf_to_image(file=b"%PDF-1.7\n", dpi=72)
-
+    result = pdf_image.convert_pdf_to_image(filename="sample-docs/rotated-page-90.pdf", dpi=72)
     assert len(result) == 1
-    image = result[0]
-    assert image.size == (100, 200), f"Expected portrait after rotation, got {image.size}"
+    img = result[0]
+    # The PDF has /Rotate=90 on a landscape page (width > height in PDF units).
+    # Without rotation fix the rendered image would be landscape; with the fix it's portrait.
+    assert img.height > img.width, f"Expected portrait after rotation, got {img.size}"
+
+    # Fixture contract: rotated-page-90.pdf has visible dark text in the upper half when upright.
+    # Use relative dark-pixel counts to reduce sensitivity to minor renderer differences.
+    gray = np.array(img.convert("L"))
+    split = gray.shape[0] // 2
+    top_dark_pixels = int(np.count_nonzero(gray[:split] < 245))
+    bottom_dark_pixels = int(np.count_nonzero(gray[split:] < 245))
+
+    assert top_dark_pixels > 0, "Expected text pixels in upper half of upright page"
+    assert top_dark_pixels > max(bottom_dark_pixels * 10, 50), (
+        "Expected substantially more dark pixels in upper half for upright orientation; "
+        f"got top={top_dark_pixels}, bottom={bottom_dark_pixels}"
+    )
