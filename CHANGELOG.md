@@ -1,3 +1,9 @@
+## 1.6.5-dev01
+
+### Enhancement
+- Add targeted unittest coverage for PDF page rotation handling in `convert_pdf_to_image`
+- Speed up the targeted rotation unittest by isolating the PDF image conversion surface into a lightweight module and mocking the PDFium rendering path for the timing-critical test
+
 ## 1.6.4
 
 ### Fix
