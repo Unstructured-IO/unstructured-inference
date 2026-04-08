@@ -7,6 +7,7 @@ from threading import Lock
 from typing import BinaryIO, Optional, Union
 
 from PIL import Image
+from PIL.PngImagePlugin import PngInfo
 
 _pdfium_lock = Lock()
 
@@ -76,13 +77,23 @@ def convert_pdf_to_image(
                     rotation = page.get_rotation()
                     if rotation:
                         pil_image = pil_image.rotate(rotation, expand=True)
+                    pil_image.info["pdf_rotation"] = rotation
 
                 finally:
                     page.close()
 
             if output_folder:
                 fn: str = os.path.join(str(output_folder), f"page_{page_num}.png")
-                pil_image.save(fn, format="PNG", compress_level=1, optimize=False)
+
+                png_meta = PngInfo()
+                png_meta.add_text("pdf_rotation", str(rotation))
+                pil_image.save(
+                    fn,
+                    format="PNG",
+                    compress_level=1,
+                    optimize=False,
+                    pnginfo=png_meta,
+                )
                 filenames.append(fn)
                 if not path_only:
                     images[page_num] = pil_image

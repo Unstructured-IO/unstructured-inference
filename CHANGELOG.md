@@ -1,6 +1,7 @@
-## 1.6.5-dev01
+## 1.6.5
 
 ### Enhancement
+- Store `pdf_rotation` in `page.image_metadata` so downstream consumers can check page rotation after the page image is freed
 - Add targeted unittest coverage for PDF page rotation handling in `convert_pdf_to_image`
 - Speed up the targeted rotation unittest by isolating the PDF image conversion surface into a lightweight module and mocking the PDFium rendering path for the timing-critical test
 
