@@ -1,3 +1,8 @@
+## 1.6.5
+
+### Enhancement
+- Store `pdf_rotation` in `page.image_metadata` so downstream consumers can check page rotation after the page image is freed
+
 ## 1.6.5-dev01
 
 ### Enhancement

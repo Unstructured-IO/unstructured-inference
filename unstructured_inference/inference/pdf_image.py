@@ -76,6 +76,7 @@ def convert_pdf_to_image(
                     rotation = page.get_rotation()
                     if rotation:
                         pil_image = pil_image.rotate(rotation, expand=True)
+                    pil_image.info["pdf_rotation"] = rotation
 
                 finally:
                     page.close()
