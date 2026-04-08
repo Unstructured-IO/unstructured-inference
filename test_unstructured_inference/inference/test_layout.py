@@ -272,6 +272,7 @@ def test_from_image_file(monkeypatch, mock_final_layout, filetype, element_extra
         "format": image.format,
         "width": image.width,
         "height": image.height,
+        "pdf_rotation": 0,
     }
 
     doc = layout.DocumentLayout.from_image_file(
@@ -299,6 +300,7 @@ def test_from_file(monkeypatch, mock_final_layout):
             "format": "PPM",
             "width": image.width,
             "height": image.height,
+            "pdf_rotation": 0,
         }
 
         with patch.object(
@@ -311,6 +313,7 @@ def test_from_file(monkeypatch, mock_final_layout):
             assert page.elements[0] == mock_final_layout
             assert page.image_metadata == image_metadata
             assert page.image is None
+
 
 
 @pytest.mark.slow
