@@ -328,7 +328,7 @@ class PageLayout:
             "format": page.image.format if page.image else None,
             "width": page.image.width if page.image else None,
             "height": page.image.height if page.image else None,
-            "pdf_rotation": page.image.info.get("pdf_rotation", 0) if page.image else 0,
+            "pdf_rotation": int(page.image.info.get("pdf_rotation", 0)) if page.image else 0,
         }
         page.image_path = os.path.abspath(image_path) if image_path else None
         page.document_filename = os.path.abspath(document_filename) if document_filename else None

@@ -315,6 +315,19 @@ def test_from_file(monkeypatch, mock_final_layout):
             assert page.image is None
 
 
+def test_from_file_rotated_pdf_stores_rotation_in_metadata(monkeypatch, mock_final_layout):
+    """image_metadata includes pdf_rotation for rotated PDF pages."""
+
+    def mock_get_elements(self, *args, **kwargs):
+        self.elements = [mock_final_layout]
+
+    monkeypatch.setattr(layout.PageLayout, "get_elements_with_detection_model", mock_get_elements)
+
+    doc = layout.DocumentLayout.from_file("sample-docs/rotated-page-90.pdf")
+    page = doc.pages[0]
+    assert page.image_metadata["pdf_rotation"] == 90
+    assert page.image is None
+
 
 @pytest.mark.slow
 def test_from_file_with_password(monkeypatch, mock_final_layout):
