@@ -1,4 +1,4 @@
-## 1.6.5
+## 1.6.6
 
 ### Enhancement
 - Relax the lower bound of the pandas dependency
