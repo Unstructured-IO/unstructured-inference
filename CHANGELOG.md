@@ -1,3 +1,8 @@
+## 1.6.6
+
+### Enhancement
+- Relax the lower bound of the pandas and numpy dependency
+
 ## 1.6.5
 
 ### Enhancement
