@@ -137,6 +137,12 @@ def get_model(model_name: Optional[str] = None) -> UnstructuredModel:
 
         model: UnstructuredModel = model_class_map[model_name]()
 
+        # Normalize to a plain dict via __iter__ + __getitem__. `**` unpacking
+        # calls `.keys()` on the mapping, which LazyDict inherits from
+        # collections.abc.Mapping — but we've seen environments where that
+        # inherited method isn't found at call time, surfacing as
+        # "argument after ** must be a mapping, not LazyDict".
+        initialize_params = {k: initialize_params[k] for k in initialize_params}
         model.initialize(**initialize_params)
         models[model_name] = model
     return model
