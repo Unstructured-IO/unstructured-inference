@@ -182,6 +182,41 @@ def test_register_new_model():
     assert "foo" not in models.model_config_map
 
 
+def test_get_model_with_lazydict_config(monkeypatch):
+    """get_model must unpack a LazyDict config into initialize() without
+    depending on Mapping.keys() — prevents regression of
+    'argument after ** must be a mapping, not LazyDict' in prod.
+    """
+    from unstructured_inference.utils import LazyDict, LazyEvaluateInfo
+
+    monkeypatch.setattr(models, "models", {})
+
+    evaluated = []
+
+    def _fake_download(path):
+        evaluated.append(path)
+        return path
+
+    lazy_config = LazyDict(
+        model_path=LazyEvaluateInfo(_fake_download, "/tmp/weights.onnx"),
+        input_shape=(640, 640),
+    )
+
+    with (
+        mock.patch.dict(models.model_class_map, {"lazy_mock": MockModel}),
+        mock.patch.dict(models.model_config_map, {"lazy_mock": lazy_config}),
+    ):
+        model = models.get_model("lazy_mock")
+
+    assert isinstance(model, MockModel)
+    assert evaluated == ["/tmp/weights.onnx"]
+    model.initializer.assert_called_once_with(
+        model,
+        model_path="/tmp/weights.onnx",
+        input_shape=(640, 640),
+    )
+
+
 def test_raises_invalid_model():
     with pytest.raises(models.UnknownModelException):
         models.get_model("fake_model")

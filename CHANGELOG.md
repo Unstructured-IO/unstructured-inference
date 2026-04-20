@@ -1,3 +1,12 @@
+## 1.6.7
+
+### Fix
+- `get_model` now materializes `LazyDict` model configs into a plain dict before
+  unpacking into `initialize(**...)`. Uses `__iter__` + `__getitem__` to avoid
+  depending on `Mapping.keys()`, which has been observed to fail at `**`
+  unpacking with "argument after ** must be a mapping, not LazyDict" in some
+  deployment environments.
+
 ## 1.6.6
 
 ### Enhancement
