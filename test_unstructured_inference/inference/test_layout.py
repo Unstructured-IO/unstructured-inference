@@ -1,7 +1,7 @@
 import os
 import os.path
 import tempfile
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import numpy as np
 import pytest
@@ -615,50 +615,17 @@ def test_convert_pdf_to_image_no_output_folder():
 
 
 def _install_mock_pdfium(monkeypatch, *, width=720, height=720):
-    class MockBitmap:
-        def to_pil(self):
-            return Image.new("RGB", (1, 1))
-
-        def close(self):
-            pass
-
-    class MockPage:
-        render_called = False
-
-        def get_width(self):
-            return width
-
-        def get_height(self):
-            return height
-
-        def get_rotation(self):
-            return 0
-
-        def render(self, **kwargs):
-            self.render_called = True
-            return MockBitmap()
-
-        def close(self):
-            pass
-
-    page = MockPage()
-
-    class MockPdf:
-        def __len__(self):
-            return 1
-
-        def __getitem__(self, index):
-            return page
-
-        def close(self):
-            pass
-
-    class MockPdfium:
-        @staticmethod
-        def PdfDocument(*args, **kwargs):
-            return MockPdf()
-
-    monkeypatch.setattr(pdf_image, "_get_pdfium_module", lambda: MockPdfium)
+    page = MagicMock()
+    page.get_width.return_value = width
+    page.get_height.return_value = height
+    page.get_rotation.return_value = 0
+    page.render.return_value.to_pil.return_value = Image.new("RGB", (1, 1))
+    pdf = MagicMock()
+    pdf.__len__.return_value = 1
+    pdf.__getitem__.return_value = page
+    pdfium = MagicMock()
+    pdfium.PdfDocument.return_value = pdf
+    monkeypatch.setattr(pdf_image, "_get_pdfium_module", lambda: pdfium)
     return page
 
 
@@ -672,7 +639,7 @@ def test_convert_pdf_to_image_rejects_oversized_page_before_render(monkeypatch):
             pdf_render_max_pixels_per_page=999_999,
         )
 
-    assert not page.render_called
+    page.render.assert_not_called()
 
 
 def test_convert_pdf_to_image_allows_render_guard_to_be_disabled(monkeypatch):
@@ -684,7 +651,7 @@ def test_convert_pdf_to_image_allows_render_guard_to_be_disabled(monkeypatch):
         pdf_render_max_pixels_per_page=0,
     )
 
-    assert page.render_called
+    page.render.assert_called_once()
     assert len(result) == 1
     assert isinstance(result[0], Image.Image)
 
