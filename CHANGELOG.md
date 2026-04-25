@@ -1,3 +1,9 @@
+## 1.6.8
+
+### Fix
+- Reject PDF pages that would render beyond the configured pixel limit before
+  allocating the page bitmap.
+
 ## 1.6.7
 
 ### Fix

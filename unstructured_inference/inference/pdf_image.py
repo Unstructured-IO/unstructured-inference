@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 from functools import lru_cache
 from pathlib import Path, PurePath
@@ -9,7 +10,30 @@ from typing import BinaryIO, Optional, Union
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
+from unstructured_inference.config import inference_config
+from unstructured_inference.constants import PDF_POINTS_PER_INCH
+
 _pdfium_lock = Lock()
+
+
+class PdfRenderTooLargeError(ValueError):
+    pass
+
+
+def _check_pdf_render_max_pixels(page, page_number: int, scale: float, maximum: int) -> None:
+    if maximum <= 0:
+        return
+
+    rendered_width = math.ceil(page.get_width() * scale)
+    rendered_height = math.ceil(page.get_height() * scale)
+    rendered_pixels = rendered_width * rendered_height
+
+    if rendered_pixels > maximum:
+        raise PdfRenderTooLargeError(
+            "PDF page would render to too many pixels for safe processing: "
+            f"page={page_number}, pixels={rendered_pixels}, maximum={maximum}. "
+            "Try splitting the PDF, reducing the page dimensions, or using a lower render DPI.",
+        )
 
 
 @lru_cache(maxsize=1)
@@ -28,6 +52,7 @@ def convert_pdf_to_image(
     first_page: Optional[int] = None,
     last_page: Optional[int] = None,
     password: Optional[str] = None,
+    pdf_render_max_pixels_per_page: Optional[int] = None,
 ) -> Union[list[Image.Image], list[str]]:
     """Render PDF pages to PIL images or saved PNGs using pypdfium2.
 
@@ -42,7 +67,9 @@ def convert_pdf_to_image(
         assert Path(output_folder).exists()
         assert Path(output_folder).is_dir()
 
-    scale = dpi / 72.0
+    scale = dpi / PDF_POINTS_PER_INCH
+    if pdf_render_max_pixels_per_page is None:
+        pdf_render_max_pixels_per_page = inference_config.PDF_RENDER_MAX_PIXELS_PER_PAGE
     pdfium = _get_pdfium_module()
 
     with _pdfium_lock:
@@ -62,6 +89,12 @@ def convert_pdf_to_image(
             with _pdfium_lock:
                 page = pdf[i]
                 try:
+                    _check_pdf_render_max_pixels(
+                        page=page,
+                        page_number=page_num,
+                        scale=scale,
+                        maximum=pdf_render_max_pixels_per_page,
+                    )
                     bitmap = page.render(
                         scale=scale,
                         no_smoothtext=False,

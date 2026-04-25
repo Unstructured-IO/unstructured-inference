@@ -55,6 +55,7 @@ class DocumentLayout:
         filename: str,
         fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
         pdf_image_dpi: int = 200,
+        pdf_render_max_pixels_per_page: Optional[int] = None,
         password: Optional[str] = None,
         **kwargs,
     ) -> DocumentLayout:
@@ -68,6 +69,7 @@ class DocumentLayout:
                 output_folder=temp_dir,
                 path_only=True,
                 password=password,
+                pdf_render_max_pixels_per_page=pdf_render_max_pixels_per_page,
             )
             image_paths = cast(List[str], _image_paths)
             number_of_pages = len(image_paths)
@@ -83,6 +85,7 @@ class DocumentLayout:
                         number=i + 1,
                         document_filename=filename,
                         fixed_layout=fixed_layout,
+                        pdf_render_max_pixels_per_page=pdf_render_max_pixels_per_page,
                         **kwargs,
                     )
                     pages.append(page)
@@ -139,6 +142,7 @@ class PageLayout:
         document_filename: Optional[Union[str, PurePath]] = None,
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
+        pdf_render_max_pixels_per_page: Optional[int] = None,
         password: Optional[str] = None,
     ):
         if detection_model is not None and element_extraction_model is not None:
@@ -153,6 +157,7 @@ class PageLayout:
         self.number = number
         self.detection_model = detection_model
         self.element_extraction_model = element_extraction_model
+        self.pdf_render_max_pixels_per_page = pdf_render_max_pixels_per_page
         self.elements_array: LayoutElements | None = None
         self.password = password
         # NOTE(alan): Dropped LocationlessLayoutElement that was created for chipper - chipper has
@@ -287,6 +292,7 @@ class PageLayout:
                 dpi=pdf_image_dpi,
                 output_folder=temp_dir,
                 path_only=True,
+                pdf_render_max_pixels_per_page=self.pdf_render_max_pixels_per_page,
             )
             image_paths = cast(List[str], _image_paths)
             if page_number > len(image_paths):
@@ -307,6 +313,7 @@ class PageLayout:
         detection_model: Optional[UnstructuredObjectDetectionModel] = None,
         element_extraction_model: Optional[UnstructuredElementExtractionModel] = None,
         fixed_layout: Optional[List[TextRegion]] = None,
+        pdf_render_max_pixels_per_page: Optional[int] = None,
     ):
         """Creates a PageLayout from an already-loaded PIL Image."""
 
@@ -315,6 +322,7 @@ class PageLayout:
             image=image,
             detection_model=detection_model,
             element_extraction_model=element_extraction_model,
+            pdf_render_max_pixels_per_page=pdf_render_max_pixels_per_page,
         )
         # FIXME (yao): refactor the other methods so they all return elements like the third route
         if page.element_extraction_model is not None:
@@ -373,6 +381,7 @@ def process_file_with_model(
     is_image: bool = False,
     fixed_layouts: Optional[List[Optional[List[TextRegion]]]] = None,
     pdf_image_dpi: int = 200,
+    pdf_render_max_pixels_per_page: Optional[int] = None,
     password: Optional[str] = None,
     **kwargs: Any,
 ) -> DocumentLayout:
@@ -402,6 +411,7 @@ def process_file_with_model(
             element_extraction_model=element_extraction_model,
             fixed_layouts=fixed_layouts,
             pdf_image_dpi=pdf_image_dpi,
+            pdf_render_max_pixels_per_page=pdf_render_max_pixels_per_page,
             password=password,
             **kwargs,
         )

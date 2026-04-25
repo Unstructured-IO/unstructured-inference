@@ -9,7 +9,7 @@ from PIL import Image
 
 import unstructured_inference.models.base as models
 from unstructured_inference.constants import IsExtracted
-from unstructured_inference.inference import elements, layout, layoutelement
+from unstructured_inference.inference import elements, layout, layoutelement, pdf_image
 from unstructured_inference.inference.elements import (
     EmbeddedTextRegion,
     ImageTextRegion,
@@ -597,6 +597,7 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             fixed_layouts=None,
             password=None,
             pdf_image_dpi=200,
+            pdf_render_max_pixels_per_page=None,
         )
 
 
@@ -611,6 +612,105 @@ def test_convert_pdf_to_image_no_output_folder():
     result = layout.convert_pdf_to_image(filename="sample-docs/loremipsum.pdf", dpi=72)
     assert len(result) == 1
     assert isinstance(result[0], Image.Image)
+
+
+def _install_mock_pdfium(monkeypatch, *, width=720, height=720):
+    class MockBitmap:
+        def to_pil(self):
+            return Image.new("RGB", (1, 1))
+
+        def close(self):
+            pass
+
+    class MockPage:
+        render_called = False
+
+        def get_width(self):
+            return width
+
+        def get_height(self):
+            return height
+
+        def get_rotation(self):
+            return 0
+
+        def render(self, **kwargs):
+            self.render_called = True
+            return MockBitmap()
+
+        def close(self):
+            pass
+
+    page = MockPage()
+
+    class MockPdf:
+        def __len__(self):
+            return 1
+
+        def __getitem__(self, index):
+            return page
+
+        def close(self):
+            pass
+
+    class MockPdfium:
+        @staticmethod
+        def PdfDocument(*args, **kwargs):
+            return MockPdf()
+
+    monkeypatch.setattr(pdf_image, "_get_pdfium_module", lambda: MockPdfium)
+    return page
+
+
+def test_convert_pdf_to_image_rejects_oversized_page_before_render(monkeypatch):
+    page = _install_mock_pdfium(monkeypatch)
+
+    with pytest.raises(pdf_image.PdfRenderTooLargeError, match="too many pixels"):
+        pdf_image.convert_pdf_to_image(
+            filename="mock.pdf",
+            dpi=100,
+            pdf_render_max_pixels_per_page=999_999,
+        )
+
+    assert not page.render_called
+
+
+def test_convert_pdf_to_image_allows_render_guard_to_be_disabled(monkeypatch):
+    page = _install_mock_pdfium(monkeypatch)
+
+    result = pdf_image.convert_pdf_to_image(
+        filename="mock.pdf",
+        dpi=100,
+        pdf_render_max_pixels_per_page=0,
+    )
+
+    assert page.render_called
+    assert len(result) == 1
+    assert isinstance(result[0], Image.Image)
+
+
+def test_page_hotload_preserves_render_max_pixels_per_page(monkeypatch, tmp_path):
+    image_path = tmp_path / "page_1.png"
+    Image.new("RGB", (1, 1)).save(image_path)
+    calls = []
+
+    def fake_convert_pdf_to_image(**kwargs):
+        calls.append(kwargs)
+        return [str(image_path)]
+
+    monkeypatch.setattr(layout, "convert_pdf_to_image", fake_convert_pdf_to_image)
+    page = layout.PageLayout(
+        number=1,
+        image=Image.new("RGB", (1, 1)),
+        document_filename="mock.pdf",
+        pdf_render_max_pixels_per_page=None,
+    )
+
+    image = page._get_image("mock.pdf", 1, pdf_image_dpi=123)
+
+    assert image.size == (1, 1)
+    assert calls[0]["dpi"] == 123
+    assert calls[0]["pdf_render_max_pixels_per_page"] is None
 
 
 def test_convert_pdf_to_image_output_folder_returns_images(tmp_path):
