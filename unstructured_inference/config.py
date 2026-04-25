@@ -116,5 +116,14 @@ class InferenceConfig:
         """configuration for DetrImageProcessor to scale images"""
         return self._get_int("IMG_PROCESSOR_SHORTEST_EDGE", 800)
 
+    @property
+    def PDF_RENDER_MAX_PIXELS_PER_PAGE(self) -> int:
+        """maximum number of pixels (width * height) a single PDF page may render to
+
+        Pages whose rendered bitmap would exceed this value are rejected before allocation.
+        Set to 0 to disable the guard.
+        """
+        return self._get_int("PDF_RENDER_MAX_PIXELS_PER_PAGE", 1_000_000_000)
+
 
 inference_config = InferenceConfig()
