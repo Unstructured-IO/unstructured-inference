@@ -13,7 +13,7 @@
 The `unstructured-inference` repo contains hosted model inference code for layout parsing models. 
 These models are invoked via API as part of the partitioning bricks in the `unstructured` package.
 
-**Requires Python 3.12+.**
+**Requires Python >=3.11, <3.13.**
 
 ## Installation
 

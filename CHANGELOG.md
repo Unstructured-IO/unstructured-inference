@@ -1,3 +1,8 @@
+## 1.6.9
+
+### Enhancement
+- Restore support for Python 3.11 alongside Python 3.12.
+
 ## 1.6.8
 
 ### Fix
