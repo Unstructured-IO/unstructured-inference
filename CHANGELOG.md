@@ -1,3 +1,8 @@
+## 1.6.10
+
+### Enhancement
+- Add Python 3.13 support.
+
 ## 1.6.9
 
 ### Enhancement
