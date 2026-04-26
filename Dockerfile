@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:experimental
-FROM python:3.12-slim AS base
+ARG PYTHON_VERSION=3.12
+FROM python:${PYTHON_VERSION}-slim AS base
 
 # Set up environment
 ENV HOME=/home/
@@ -12,7 +13,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
 FROM base AS deps
 # Copy project files needed for dependency resolution
-COPY pyproject.toml uv.lock .python-version ./
+COPY pyproject.toml uv.lock ./
 COPY unstructured_inference/__version__.py unstructured_inference/__version__.py
 
 RUN uv sync --locked --all-groups --no-install-project
