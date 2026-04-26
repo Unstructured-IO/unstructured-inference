@@ -1,7 +1,7 @@
 [project]
 name = "unstructured_inference"
 description = "A library for performing inference using trained models."
-requires-python = ">=3.11, <3.13"
+requires-python = ">=3.11, <3.14"
 authors = [{name = "Unstructured Technologies", email = "devops@unstructuredai.io"}]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -13,6 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 readme = "README.md"
