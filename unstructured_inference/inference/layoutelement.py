@@ -26,6 +26,7 @@ class LayoutElements(TextRegions):
     element_class_id_map: dict[int, str] = field(default_factory=dict)
     text_as_html: np.ndarray = field(default_factory=lambda: np.array([]))
     table_as_cells: np.ndarray = field(default_factory=lambda: np.array([]))
+    table_extraction_method: np.ndarray = field(default_factory=lambda: np.array([]))
     routing: str | None = None
     routing_score: float | None = None
     _optional_array_attributes: list[str] = field(
@@ -38,6 +39,7 @@ class LayoutElements(TextRegions):
             "element_class_ids",
             "text_as_html",
             "table_as_cells",
+            "table_extraction_method",
         ],
     )
     _scalar_to_array_mappings: dict[str, str] = field(
@@ -71,6 +73,7 @@ class LayoutElements(TextRegions):
             and np.array_equal(self.is_extracted_array[mask], other.is_extracted_array[mask])
             and np.array_equal(self.text_as_html[mask], other.text_as_html[mask])
             and np.array_equal(self.table_as_cells[mask], other.table_as_cells[mask])
+            and np.array_equal(self.table_extraction_method[mask], other.table_extraction_method[mask])
         )
 
     def __getitem__(self, indices):
@@ -88,13 +91,14 @@ class LayoutElements(TextRegions):
             element_class_id_map=self.element_class_id_map,
             text_as_html=self.text_as_html[indices],
             table_as_cells=self.table_as_cells[indices],
+            table_extraction_method=self.table_extraction_method[indices],
         )
 
     @classmethod
     def concatenate(cls, groups: Iterable[LayoutElements]) -> LayoutElements:
         """concatenate a sequence of LayoutElements in order as one LayoutElements"""
         coords, texts, probs, class_ids, sources, is_extracted_array = [], [], [], [], [], []
-        text_as_html, table_as_cells = [], []
+        text_as_html, table_as_cells, table_extraction_method = [], [], []
         class_id_reverse_map: dict[str, int] = {}
         for group in groups:
             coords.append(group.element_coords)
@@ -104,6 +108,7 @@ class LayoutElements(TextRegions):
             is_extracted_array.append(group.is_extracted_array)
             text_as_html.append(group.text_as_html)
             table_as_cells.append(group.table_as_cells)
+            table_extraction_method.append(group.table_extraction_method)
 
             idx = group.element_class_ids.copy()
             if group.element_class_id_map:
@@ -126,6 +131,7 @@ class LayoutElements(TextRegions):
             is_extracted_array=np.concatenate(is_extracted_array),
             text_as_html=np.concatenate(text_as_html),
             table_as_cells=np.concatenate(table_as_cells),
+            table_extraction_method=np.concatenate(table_extraction_method),
         )
 
     def iter_elements(self):
@@ -140,6 +146,7 @@ class LayoutElements(TextRegions):
             is_extracted,
             text_as_html,
             table_as_cells,
+            table_extraction_method,
         ) in zip(
             self.element_coords,
             self.texts,
@@ -149,6 +156,7 @@ class LayoutElements(TextRegions):
             self.is_extracted_array,
             self.text_as_html,
             self.table_as_cells,
+            self.table_extraction_method,
         ):
             yield LayoutElement.from_coords(
                 x1,
@@ -166,6 +174,7 @@ class LayoutElements(TextRegions):
                 is_extracted=is_extracted,
                 text_as_html=text_as_html,
                 table_as_cells=table_as_cells,
+                table_extraction_method=table_extraction_method,
             )
 
     @classmethod
@@ -176,7 +185,8 @@ class LayoutElements(TextRegions):
         coords = np.empty((len_ele, 4), dtype=float)
         # text and probs can be Nones so use lists first then convert into array to avoid them being
         # filled as nan
-        texts, text_as_html, table_as_cells, sources, is_extracted_array, class_probs = (
+        texts, text_as_html, table_as_cells, table_extraction_method, sources, is_extracted_array, class_probs = (
+            [],
             [],
             [],
             [],
@@ -193,6 +203,7 @@ class LayoutElements(TextRegions):
             is_extracted_array.append(element.is_extracted)
             text_as_html.append(element.text_as_html)
             table_as_cells.append(element.table_as_cells)
+            table_extraction_method.append(getattr(element, "table_extraction_method", None))
             class_probs.append(element.prob)
             class_types[i] = element.type or "None"
 
@@ -209,6 +220,7 @@ class LayoutElements(TextRegions):
             is_extracted_array=np.array(is_extracted_array),
             text_as_html=np.array(text_as_html),
             table_as_cells=np.array(table_as_cells),
+            table_extraction_method=np.array(table_extraction_method),
         )
 
 
@@ -220,6 +232,7 @@ class LayoutElement(TextRegion):
     parent: Optional[LayoutElement] = None
     text_as_html: Optional[str] = None
     table_as_cells: Optional[str] = None
+    table_extraction_method: Optional[str] = None
 
     def to_dict(self) -> dict:
         """Converts the class instance to dictionary form."""
