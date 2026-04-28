@@ -452,7 +452,7 @@ def clean_layoutelements(elements: LayoutElements, subregion_threshold: float = 
     final_attrs: dict[str, Any] = {
         "element_class_id_map": elements.element_class_id_map,
     }
-    for attr in ("element_class_ids", "element_probs", "texts", "sources", "is_extracted_array"):
+    for attr in ("element_class_ids", "element_probs", "texts", "sources", "is_extracted_array", "text_as_html", "table_as_cells", "table_extraction_method"):
         if (original_attr := getattr(elements, attr)) is None:
             continue
         final_attrs[attr] = original_attr[sorted_by_area][mask][sorted_by_y1]
@@ -528,7 +528,7 @@ def clean_layoutelements_for_class(
 
     final_coords = np.vstack([target_coords[mask], other_coords[other_mask]])
     final_attrs: dict[str, Any] = {"element_class_id_map": elements.element_class_id_map}
-    for attr in ("element_class_ids", "element_probs", "texts", "sources", "is_extracted_array"):
+    for attr in ("element_class_ids", "element_probs", "texts", "sources", "is_extracted_array", "text_as_html", "table_as_cells", "table_extraction_method"):
         if (original_attr := getattr(elements, attr)) is None:
             continue
         final_attrs[attr] = np.concatenate(
