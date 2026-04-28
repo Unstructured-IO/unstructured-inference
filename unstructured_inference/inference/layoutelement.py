@@ -73,7 +73,9 @@ class LayoutElements(TextRegions):
             and np.array_equal(self.is_extracted_array[mask], other.is_extracted_array[mask])
             and np.array_equal(self.text_as_html[mask], other.text_as_html[mask])
             and np.array_equal(self.table_as_cells[mask], other.table_as_cells[mask])
-            and np.array_equal(self.table_extraction_method[mask], other.table_extraction_method[mask])
+            and np.array_equal(
+                self.table_extraction_method[mask], other.table_extraction_method[mask]
+            )
         )
 
     def __getitem__(self, indices):
@@ -185,7 +187,15 @@ class LayoutElements(TextRegions):
         coords = np.empty((len_ele, 4), dtype=float)
         # text and probs can be Nones so use lists first then convert into array to avoid them being
         # filled as nan
-        texts, text_as_html, table_as_cells, table_extraction_method, sources, is_extracted_array, class_probs = (
+        (
+            texts,
+            text_as_html,
+            table_as_cells,
+            table_extraction_method,
+            sources,
+            is_extracted_array,
+            class_probs,
+        ) = (
             [],
             [],
             [],
