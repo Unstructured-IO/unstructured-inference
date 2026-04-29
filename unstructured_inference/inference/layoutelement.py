@@ -551,8 +551,9 @@ def clean_layoutelements_for_class(
     ):
         if (original_attr := getattr(elements, attr)) is None:
             continue
+        sorted_attr = original_attr[sorted_by_area]
         final_attrs[attr] = np.concatenate(
-            (original_attr[target_indices][mask], original_attr[~target_indices][other_mask]),
+            (sorted_attr[target_indices][mask], sorted_attr[~target_indices][other_mask]),
         )
     final_elements = LayoutElements(element_coords=final_coords, **final_attrs)
     return final_elements
