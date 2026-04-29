@@ -1,3 +1,8 @@
+## 1.6.11
+
+### Enhancement
+- Add `table_extraction_method` field to `LayoutElements` and `LayoutElement` to track which algorithm produced a table (grid, tatr, vlm).
+
 ## 1.6.10
 
 ### Enhancement
