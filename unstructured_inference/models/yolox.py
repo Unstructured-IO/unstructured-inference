@@ -6,11 +6,11 @@
 import cv2
 import numpy as np
 import onnxruntime
-from onnxruntime.capi import _pybind_state as C
 from PIL import Image as PILImage
 
 from unstructured_inference.constants import ElementType, Source
 from unstructured_inference.inference.layoutelement import LayoutElements
+from unstructured_inference.logger import logger
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
 )
@@ -72,13 +72,18 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         """Start inference session for YoloX model."""
         self.model_path = model_path
 
-        available_providers = C.get_available_providers()
+        available_providers = onnxruntime.get_available_providers()
         ordered_providers = [
             "TensorrtExecutionProvider",
             "CUDAExecutionProvider",
             "CPUExecutionProvider",
         ]
         providers = [provider for provider in ordered_providers if provider in available_providers]
+        logger.info("Available ONNX runtime providers: %r", providers)
+        if "CUDAExecutionProvider" not in providers:
+            logger.info("If you expected to see CUDAExecutionProvider and it is not there, "
+                        "you may need to install the appropriate version of onnxruntime-gpu "
+                        "for your CUDA toolkit.")
 
         self.model = onnxruntime.InferenceSession(
             model_path,
