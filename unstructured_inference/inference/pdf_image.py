@@ -7,6 +7,8 @@ from pathlib import Path, PurePath
 from threading import Lock
 from typing import BinaryIO, Optional, Union
 
+from pdfminer.high_level import extract_pages
+from pdfminer.layout import LTChar, LTContainer
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
@@ -45,8 +47,6 @@ def _get_pdfium_module():
 
 def _iter_ltchars(obj):
     """Yield every ``LTChar`` reachable from a pdfminer layout object."""
-    from pdfminer.layout import LTChar, LTContainer
-
     if isinstance(obj, LTChar):
         yield obj
     elif isinstance(obj, LTContainer):
@@ -117,8 +117,6 @@ def _estimate_rotation_corrections(
     if not rotated_page_indices:
         return {}
     try:
-        from pdfminer.high_level import extract_pages
-
         wanted = sorted(rotated_page_indices)
         source = _as_pdfminer_source(filename, file)
         corrections = {}
