@@ -37,6 +37,8 @@ dependencies = [
     "pandas>=1.5.0",
     "scipy>=1.17.0",
     "pypdfium2>=5.0.0",
+    # Used to read per-character matrices for PDF page text-orientation correction
+    "pdfminer.six>=20231228",
 ]
 
 [project.urls]

@@ -273,6 +273,7 @@ def test_from_image_file(monkeypatch, mock_final_layout, filetype, element_extra
         "width": image.width,
         "height": image.height,
         "pdf_rotation": 0,
+        "pdf_rotation_correction": 0,
     }
 
     doc = layout.DocumentLayout.from_image_file(
@@ -301,6 +302,7 @@ def test_from_file(monkeypatch, mock_final_layout):
             "width": image.width,
             "height": image.height,
             "pdf_rotation": 0,
+            "pdf_rotation_correction": 0,
         }
 
         with patch.object(
