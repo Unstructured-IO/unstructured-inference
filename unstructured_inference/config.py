@@ -117,6 +117,16 @@ class InferenceConfig:
         return self._get_int("IMG_PROCESSOR_SHORTEST_EDGE", 800)
 
     @property
+    def PDF_ROTATION_DOMINANT_ANGLE_THRESHOLD(self) -> float:
+        """minimum share of characters that must agree on a single 90-degree orientation
+        before a rotated page's rendered image is re-oriented to make text upright
+
+        Only consulted for pages with a non-zero ``/Rotate``. The fraction is intentionally
+        high so that pages without a clear dominant text direction are left untouched.
+        """
+        return self._get_float("PDF_ROTATION_DOMINANT_ANGLE_THRESHOLD", 0.95)
+
+    @property
     def PDF_RENDER_MAX_PIXELS_PER_PAGE(self) -> int:
         """maximum number of pixels (width * height) a single PDF page may render to
 

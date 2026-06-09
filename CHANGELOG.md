@@ -1,3 +1,8 @@
+## 1.6.12
+
+### Fixes
+- **Render rotated PDF pages consistently with extracted text**: `convert_pdf_to_image` no longer re-applies the page `/Rotate` on top of pypdfium2's render (which already produces the display frame), so the rendered image stays in the same coordinate frame as pdfminer's extracted text. For pages with a non-zero `/Rotate`, the dominant text orientation is detected and, when a single 90-degree orientation clearly dominates (configurable via `PDF_ROTATION_DOMINANT_ANGLE_THRESHOLD`), the image is rotated so its text is upright. The applied correction is exposed as `pdf_rotation_correction` in the page image metadata so downstream consumers can keep extracted coordinates aligned.
+
 ## 1.6.11
 
 ### Enhancement
