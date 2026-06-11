@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import math
 import os
 from functools import lru_cache
@@ -166,6 +167,13 @@ def convert_pdf_to_image(
 
     with _pdfium_lock:
         pdf = pdfium.PdfDocument(filename or file, password=password)
+        # Initialize the form-fill environment so AcroForm/XFA field values
+        # (e.g. text typed into fillable fields) are painted into the rendered
+        # image. Without this, pdfium silently drops widget annotation content
+        # even though may_draw_forms defaults to True on page.render().
+        # Fall back to page rendering without form appearances when form env init fails.
+        with contextlib.suppress(pdfium.PdfiumError):
+            pdf.init_forms()
         n_pages = len(pdf)
 
         # Pre-scan page rotations so the (heavier) text-orientation pass only runs on the

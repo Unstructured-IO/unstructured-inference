@@ -1,3 +1,8 @@
+## 1.6.13
+
+### Fixes
+- **Render filled PDF form fields**: `convert_pdf_to_image` now calls `init_forms()` so AcroForm/XFA field values (text typed into fillable fields) are painted into the rendered page image instead of being silently dropped.
+
 ## 1.6.12
 
 ### Fixes
