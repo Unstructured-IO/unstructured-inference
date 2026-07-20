@@ -155,7 +155,7 @@ def test_get_page_elements_with_detection_model_returning_a_list(
     result = page.get_elements_with_detection_model(inplace=False)
 
     assert isinstance(result, layoutelement.LayoutElements)
-    assert [element.text for element in result.as_list()] == expected_texts
+    assert result.texts.tolist() == expected_texts
 
 
 class MockPool:
