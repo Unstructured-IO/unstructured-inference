@@ -317,6 +317,17 @@ def test_from_file(monkeypatch, mock_final_layout):
             assert page.image is None
 
 
+@pytest.mark.parametrize("fixed_layouts", [[[]], [[], [], []]])
+def test_from_file_rejects_fixed_layout_count_mismatch(monkeypatch, fixed_layouts):
+    monkeypatch.setattr(layout, "convert_pdf_to_image", lambda **kwargs: ["a.png", "b.png"])
+
+    with pytest.raises(
+        ValueError,
+        match=rf"received {len(fixed_layouts)} entries for 2 pages",
+    ):
+        layout.DocumentLayout.from_file("fake-file.pdf", fixed_layouts=fixed_layouts)
+
+
 def test_from_file_rotated_pdf_stores_rotation_in_metadata(monkeypatch, mock_final_layout):
     """image_metadata includes pdf_rotation for rotated PDF pages."""
 
