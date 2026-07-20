@@ -323,7 +323,7 @@ def test_from_file_rejects_fixed_layout_count_mismatch(monkeypatch, fixed_layout
 
     with pytest.raises(
         ValueError,
-        match=rf"received {len(fixed_layouts)} entries for 2 pages",
+        match=f"received {len(fixed_layouts)} entries; PDF has 2 pages",
     ):
         layout.DocumentLayout.from_file("fake-file.pdf", fixed_layouts=fixed_layouts)
 

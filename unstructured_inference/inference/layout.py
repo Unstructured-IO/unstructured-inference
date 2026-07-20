@@ -79,7 +79,7 @@ class DocumentLayout:
             elif len(fixed_layouts) != number_of_pages:
                 raise ValueError(
                     "fixed_layouts must contain one entry per PDF page: "
-                    f"received {len(fixed_layouts)} entries for {number_of_pages} pages",
+                    f"received {len(fixed_layouts)} entries; PDF has {number_of_pages} pages",
                 )
             for i, (image_path, fixed_layout) in enumerate(zip(image_paths, fixed_layouts)):
                 # NOTE(robinson) - In the future, maybe we detect the page number and default
