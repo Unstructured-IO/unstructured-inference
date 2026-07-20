@@ -122,6 +122,42 @@ def test_get_page_elements(monkeypatch, mock_final_layout):
     assert elements == page.elements_array
 
 
+class ListPredictingDetectionModel(UnstructuredObjectDetectionModel):
+    def __init__(self, predictions):
+        super().__init__()
+        self.predictions = predictions
+
+    def initialize(self, *args, **kwargs):
+        pass
+
+    def predict(self, x):
+        return self.predictions
+
+
+@pytest.mark.parametrize(
+    ("predictions", "expected_texts"),
+    [
+        ([layoutelement.LayoutElement.from_coords(0, 0, 1, 1, text="detected")], ["detected"]),
+        ([], []),
+    ],
+)
+def test_get_page_elements_with_detection_model_returning_a_list(
+    mock_image,
+    predictions,
+    expected_texts,
+):
+    page = layout.PageLayout(
+        number=1,
+        image=mock_image,
+        detection_model=ListPredictingDetectionModel(predictions),
+    )
+
+    result = page.get_elements_with_detection_model(inplace=False)
+
+    assert isinstance(result, layoutelement.LayoutElements)
+    assert [element.text for element in result.as_list()] == expected_texts
+
+
 class MockPool:
     def map(self, f, xs):
         return [f(x) for x in xs]

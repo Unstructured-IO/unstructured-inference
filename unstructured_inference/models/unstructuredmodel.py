@@ -61,7 +61,10 @@ class UnstructuredObjectDetectionModel(UnstructuredModel):
 
     def __call__(self, x: Image) -> LayoutElements:
         """Inference using function call interface."""
-        return super().__call__(x)
+        predictions = super().__call__(x)
+        if isinstance(predictions, LayoutElements):
+            return predictions
+        return LayoutElements.from_list(predictions)
 
     @staticmethod
     def enhance_regions(
