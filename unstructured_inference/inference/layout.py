@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import tempfile
 from functools import cached_property
 from pathlib import PurePath
@@ -24,6 +25,8 @@ from unstructured_inference.visualize import draw_bbox
 
 convert_pdf_to_image = pdf_image_utils.convert_pdf_to_image
 _pdfium_lock = pdf_image_utils._pdfium_lock
+
+_FILE_COPY_CHUNK_SIZE = 1024 * 1024
 
 
 class DocumentLayout:
@@ -366,7 +369,7 @@ def process_data_with_model(
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         file_path = os.path.join(tmp_dir_path, "document")
         with open(file_path, "wb") as f:
-            f.write(data.read())
+            shutil.copyfileobj(data, f, length=_FILE_COPY_CHUNK_SIZE)
             f.flush()
         layout = process_file_with_model(
             file_path,
