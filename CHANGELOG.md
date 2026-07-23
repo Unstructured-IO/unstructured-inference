@@ -1,3 +1,8 @@
+## 1.6.14
+
+### Fixes
+- **Bound model input copy memory**: `process_data_with_model` now copies inputs into its temporary file in 1 MiB chunks instead of reading the complete input into one `bytes` allocation.
+
 ## 1.6.13
 
 ### Fixes
