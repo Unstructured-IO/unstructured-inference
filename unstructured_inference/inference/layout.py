@@ -76,6 +76,11 @@ class DocumentLayout:
             pages: List[PageLayout] = []
             if fixed_layouts is None:
                 fixed_layouts = [None for _ in range(0, number_of_pages)]
+            elif len(fixed_layouts) != number_of_pages:
+                raise ValueError(
+                    "fixed_layouts must contain one entry per PDF page: "
+                    f"entry count is {len(fixed_layouts)}, page count is {number_of_pages}",
+                )
             for i, (image_path, fixed_layout) in enumerate(zip(image_paths, fixed_layouts)):
                 # NOTE(robinson) - In the future, maybe we detect the page number and default
                 # to the index if it is not detected

@@ -1,3 +1,8 @@
+## 1.6.14
+
+### Fixes
+- **Reject fixed-layout page-count mismatches**: fixed layouts supplied to `DocumentLayout.from_file` must now match the PDF page count, avoiding silent truncation when the two sequences differ.
+
 ## 1.6.13
 
 ### Fixes
