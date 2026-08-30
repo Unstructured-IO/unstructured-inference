@@ -6,6 +6,7 @@ from PIL import Image
 
 import unstructured_inference.models.base as models
 import unstructured_inference.models.detectron2onnx as detectron2
+from unstructured_inference.inference.layoutelement import LayoutElements
 
 
 class MockDetectron2ONNXLayoutModel:
@@ -50,7 +51,7 @@ def test_unstructured_detectron_model():
     model.model = 1
     with patch.object(detectron2.UnstructuredDetectronONNXModel, "predict", return_value=[]):
         result = model(None)
-    assert isinstance(result, list)
+    assert isinstance(result, LayoutElements)
     assert len(result) == 0
 
 
@@ -67,8 +68,9 @@ def test_inference():
             image = Image.open(fp)
             image.load()
         elements = model(image)
+        assert isinstance(elements, LayoutElements)
         assert len(elements) == 1
-        element = elements[0]
+        element = elements.as_list()[0]
         (x1, y1), _, (x2, y2), _ = element.bbox.coordinates
         assert hasattr(
             element,

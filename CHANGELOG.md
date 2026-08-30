@@ -1,3 +1,8 @@
+## 1.6.14
+
+### Fixes
+- **Normalize object-detection model results**: the object-detection boundary now converts legacy list results to `LayoutElements`, so page-layout routing works consistently across built-in detection models.
+
 ## 1.6.13
 
 ### Fixes
