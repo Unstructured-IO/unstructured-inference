@@ -10,7 +10,7 @@ from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
 from unstructured_inference.constants import Source
-from unstructured_inference.inference.layoutelement import LayoutElement
+from unstructured_inference.inference.layoutelement import LayoutElement, LayoutElements
 from unstructured_inference.logger import logger, logger_onnx
 from unstructured_inference.models.unstructuredmodel import (
     UnstructuredObjectDetectionModel,
@@ -88,7 +88,7 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
             logger_onnx.debug(
                 "Ignoring runtime error from onnx (likely due to encountering blank page).",
             )
-            return []
+            return LayoutElements.from_list([])
         input_w, input_h = image.size
         regions = self.postprocess(bboxes, labels, confidence_scores, input_w, input_h)
 
@@ -174,4 +174,4 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
                 regions.append(region)
 
         regions.sort(key=lambda element: element.bbox.y1)
-        return cast(List[LayoutElement], regions)
+        return LayoutElements.from_list(cast(List[LayoutElement], regions))
