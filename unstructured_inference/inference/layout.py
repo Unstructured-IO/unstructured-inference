@@ -104,29 +104,32 @@ class DocumentLayout:
         logger.info(f"Reading image file: {filename} ...")
         try:
             image = Image.open(filename)
-            format = image.format
-            images: list[Image.Image] = []
-            for i, im in enumerate(ImageSequence.Iterator(image)):
-                im = im.convert("RGB")
-                im.format = format
-                images.append(im)
         except Exception as e:
             if os.path.isdir(filename) or os.path.isfile(filename):
                 raise e
             else:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
         pages = []
-        for i, image in enumerate(images):  # type: ignore
-            page = PageLayout.from_image(
-                image,
-                image_path=filename,
-                number=i,
-                detection_model=detection_model,
-                element_extraction_model=element_extraction_model,
-                fixed_layout=fixed_layout,
-                **kwargs,
-            )
-            pages.append(page)
+        with image:
+            format = image.format
+            for i, frame in enumerate(ImageSequence.Iterator(image)):
+                # Decode and infer one frame at a time. Retaining every RGB frame
+                # makes compressed multi-page TIFFs consume document-sized memory.
+                rgb_image = frame.convert("RGB")
+                try:
+                    rgb_image.format = format
+                    page = PageLayout.from_image(
+                        rgb_image,
+                        image_path=filename,
+                        number=i,
+                        detection_model=detection_model,
+                        element_extraction_model=element_extraction_model,
+                        fixed_layout=fixed_layout,
+                        **kwargs,
+                    )
+                    pages.append(page)
+                finally:
+                    rgb_image.close()
         return cls.from_pages(pages)
 
 
