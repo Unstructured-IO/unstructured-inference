@@ -380,14 +380,65 @@ def partition_groups_from_regions(regions: TextRegions) -> List[TextRegions]:
     padded_coords[:, 2] += h_pad
     padded_coords[:, 3] += v_pad
 
-    intersection_mtx = coords_intersections(padded_coords)
+    group_nums = _intersection_component_labels(padded_coords)
+    # Sort once instead of scanning every region again for each component. Stable
+    # sorting preserves the input order within each group.
+    indices = np.argsort(group_nums, kind="stable")
+    boundaries = np.flatnonzero(np.diff(group_nums[indices])) + 1
+    return [regions.slice(group) for group in np.split(indices, boundaries)]
 
-    group_count, group_nums = connected_components(intersection_mtx)
-    groups: List[TextRegions] = []
-    for group in range(group_count):
-        groups.append(regions.slice(np.where(group_nums == group)[0]))
 
-    return groups
+def _intersection_component_labels(coords: np.ndarray) -> np.ndarray:
+    """Find rectangle components without retaining the all-pairs intersection graph."""
+    n = len(coords)
+    if n <= 256:
+        return connected_components(coords_intersections(coords))[1]
+
+    parents = np.arange(n)
+
+    def roots(indices: np.ndarray) -> np.ndarray:
+        result = parents[indices]
+        while np.any(result != parents[result]):
+            result = parents[result]
+        parents[indices] = result
+        return result
+
+    def join(current: int, neighbors: np.ndarray) -> None:
+        if not len(neighbors):
+            return
+        component_roots = np.unique(roots(np.append(neighbors, current)))
+        parents[component_roots] = component_roots[0]
+
+    if np.isfinite(coords).all() and np.all(coords[:, :2] <= coords[:, 2:]):
+        # Sweep the axis with less relative coverage, so wide text lines are
+        # compared only with other lines at similar heights.
+        spans = np.maximum(coords[:, 2:].max(axis=0) - coords[:, :2].min(axis=0), 1)
+        axis = int(np.argmin(np.sum(coords[:, 2:] - coords[:, :2], axis=0) / spans))
+        other = 1 - axis
+        active = np.empty(0, dtype=int)
+        for current in np.argsort(coords[:, axis], kind="stable"):
+            active = active[coords[active, axis + 2] >= coords[current, axis]]
+            neighbors = active[
+                (coords[active, other] <= coords[current, other + 2])
+                & (coords[current, other] <= coords[active, other + 2])
+            ]
+            join(current, neighbors)
+            active = np.append(active, current)
+    else:
+        # Keep the existing comparison semantics for NaNs and inverted boxes.
+        # One row at a time still bounds temporary storage by the region count.
+        for current in range(n):
+            previous = coords[:current]
+            overlaps = ~(
+                (previous[:, 0] > coords[current, 2])
+                | (previous[:, 1] > coords[current, 3])
+                | (coords[current, 0] > previous[:, 2])
+                | (coords[current, 1] > previous[:, 3])
+            )
+            join(current, np.flatnonzero(overlaps))
+
+    # scipy numbers components by their first input member.
+    return np.unique(roots(np.arange(n)), return_inverse=True)[1]
 
 
 def intersection_areas_between_coords(
