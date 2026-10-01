@@ -1,3 +1,8 @@
+## 1.6.15
+
+### Fixes
+- Process multi-frame images one frame at a time and close each converted frame after inference.
+
 ## 1.6.14
 
 ### Performance
