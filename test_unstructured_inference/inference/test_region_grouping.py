@@ -54,3 +54,17 @@ def test_large_sparse_groups_preserve_input_order_without_dense_graph(monkeypatc
     for index in order:
         expected.setdefault(index // 2, []).append(str(index))
     assert [group.texts.tolist() for group in groups] == list(expected.values())
+
+
+def test_reversed_touching_chain_preserves_component_and_region_order():
+    count = 2048
+    x = np.arange(count, dtype=float)[::-1]
+    coords = np.column_stack((x, np.zeros(count), x + 1, np.ones(count)))
+    regions = TextRegions(element_coords=coords, texts=x.astype(str))
+
+    np.testing.assert_array_equal(_intersection_component_labels(coords), np.zeros(count))
+    groups = partition_groups_from_regions(regions)
+
+    assert len(groups) == 1
+    np.testing.assert_array_equal(groups[0].element_coords, regions.element_coords)
+    np.testing.assert_array_equal(groups[0].texts, regions.texts)

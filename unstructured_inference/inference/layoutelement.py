@@ -399,6 +399,7 @@ def _intersection_component_labels(coords: np.ndarray) -> np.ndarray:
     def roots(indices: np.ndarray) -> np.ndarray:
         result = parents[indices]
         while np.any(result != parents[result]):
+            parents[result] = parents[parents[result]]
             result = parents[result]
         parents[indices] = result
         return result
