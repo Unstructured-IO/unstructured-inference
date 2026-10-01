@@ -1,6 +1,7 @@
 import os
 import os.path
 import tempfile
+from io import BytesIO
 from unittest.mock import MagicMock, mock_open, patch
 
 import numpy as np
@@ -157,6 +158,43 @@ def test_process_data_with_model(monkeypatch, mock_final_layout, model_name):
         open("") as fp,
     ):
         assert layout.process_data_with_model(fp, model_name=model_name)
+
+
+def test_process_data_with_model_copies_input_in_bounded_chunks(monkeypatch):
+    class RecordingBytesIO(BytesIO):
+        def __init__(self, value: bytes):
+            super().__init__(value)
+            self.read_sizes: list[int] = []
+
+        def read(self, size: int = -1) -> bytes:
+            self.read_sizes.append(size)
+            return super().read(size)
+
+    data = b"sample content" * 200_000
+    source = RecordingBytesIO(data)
+    expected_layout = layout.DocumentLayout.from_pages([])
+
+    def fake_process_file_with_model(filename, model_name, password=None, **kwargs):
+        with open(filename, "rb") as copied_file:
+            assert copied_file.read() == data
+        assert model_name == "test-model"
+        assert password == "test-password"
+        assert kwargs == {"is_image": True}
+        return expected_layout
+
+    monkeypatch.setattr(layout, "process_file_with_model", fake_process_file_with_model)
+
+    result = layout.process_data_with_model(
+        source,
+        model_name="test-model",
+        password="test-password",
+        is_image=True,
+    )
+
+    assert result is expected_layout
+    assert source.read_sizes
+    assert -1 not in source.read_sizes
+    assert max(source.read_sizes) == layout._FILE_COPY_CHUNK_SIZE
 
 
 def test_process_data_with_model_raises_on_invalid_model_name():
