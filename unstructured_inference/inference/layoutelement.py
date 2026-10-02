@@ -381,8 +381,7 @@ def partition_groups_from_regions(regions: TextRegions) -> List[TextRegions]:
     padded_coords[:, 3] += v_pad
 
     group_nums = _intersection_component_labels(padded_coords)
-    # Sort once instead of scanning every region again for each component. Stable
-    # sorting preserves the input order within each group.
+    # A stable sort by label orders groups by label and keeps input order within each group.
     indices = np.argsort(group_nums, kind="stable")
     boundaries = np.flatnonzero(np.diff(group_nums[indices])) + 1
     return [regions.slice(group) for group in np.split(indices, boundaries)]
@@ -426,8 +425,8 @@ def _intersection_component_labels(coords: np.ndarray) -> np.ndarray:
             join(current, neighbors)
             active = np.append(active, current)
     else:
-        # Keep the existing comparison semantics for NaNs and inverted boxes.
-        # One row at a time still bounds temporary storage by the region count.
+        # Compare row by row with the coords_intersections rules, which define how NaNs
+        # and inverted boxes intersect, keeping temporary storage linear in the region count.
         for current in range(n):
             previous = coords[:current]
             overlaps = ~(
