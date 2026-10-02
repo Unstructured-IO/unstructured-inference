@@ -16,7 +16,7 @@ from unstructured_inference.models.unstructuredmodel import UnstructuredObjectDe
 
 
 def _dense_cleanup_reference(elements, threshold):
-    """Historical all-pairs algorithm, retained as an output-compatibility oracle."""
+    """All-pairs containment cleanup, used as an output-compatibility oracle."""
     if len(elements) < 2:
         return elements
     order = np.argsort(-elements.areas)

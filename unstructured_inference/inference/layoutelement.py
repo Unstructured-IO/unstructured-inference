@@ -424,8 +424,8 @@ def clean_layoutelements(elements: LayoutElements, subregion_threshold: float = 
     current_candidate = 0
     while n_candidates > 1:
         plus_one = current_candidate + 1
-        # Only this candidate's comparisons are consumed before choosing the next candidate.
-        # Divide by the compared regions' areas, as in the all-pairs containment calculation.
+        # Compare one candidate against every smaller region; containment is measured
+        # against each compared region's own area.
         compared_areas = areas[plus_one:]
         intersection = intersection_areas_between_coords(
             sorted_coords[current_candidate : current_candidate + 1], sorted_coords[plus_one:]

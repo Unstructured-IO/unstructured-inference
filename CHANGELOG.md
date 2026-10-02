@@ -1,4 +1,4 @@
-## 1.6.14
+## 1.6.17
 
 ### Performance
 - Bound layout cleanup comparisons to one candidate row instead of allocating all-pairs intersection arrays. Preserve the existing containment decisions, output order, and element attributes.
