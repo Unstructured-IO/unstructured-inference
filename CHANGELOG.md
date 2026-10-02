@@ -1,3 +1,8 @@
+## 1.6.16
+
+### Enhancements
+- Bound region grouping memory by finding rectangle components without retaining an all-pairs intersection graph. Preserve group membership and input order, including touching rectangles and invalid-coordinate comparison semantics.
+
 ## 1.6.13
 
 ### Fixes
