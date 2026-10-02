@@ -424,16 +424,14 @@ def clean_layoutelements(elements: LayoutElements, subregion_threshold: float = 
     current_candidate = 0
     while n_candidates > 1:
         plus_one = current_candidate + 1
-        # Compare one candidate against every smaller region; containment is measured
+        # Compare one candidate against every later, no-larger region; containment is measured
         # against each compared region's own area.
         compared_areas = areas[plus_one:]
         intersection = intersection_areas_between_coords(
             sorted_coords[current_candidate : current_candidate + 1], sorted_coords[plus_one:]
         )[0]
-        is_almost_subregion_of = (
-            intersection / np.maximum(compared_areas, EPSILON_AREA) > subregion_threshold
-        ) & (compared_areas <= compared_areas.T)
-        remove = np.where(is_almost_subregion_of)[0] + current_candidate + 1
+        contained = intersection / np.maximum(compared_areas, EPSILON_AREA) > subregion_threshold
+        remove = np.where(contained)[0] + current_candidate + 1
 
         if not remove.sum():
             break
