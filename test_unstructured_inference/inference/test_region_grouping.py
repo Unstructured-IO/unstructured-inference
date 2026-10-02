@@ -68,3 +68,10 @@ def test_reversed_touching_chain_preserves_component_and_region_order():
     assert len(groups) == 1
     np.testing.assert_array_equal(groups[0].element_coords, regions.element_coords)
     np.testing.assert_array_equal(groups[0].texts, regions.texts)
+
+
+def test_components_tolerate_coordinates_near_float_limits():
+    coords = np.array([[-1e308, 0, -1e308, 0]] * 129 + [[1e308, 0, 1e308, 0]] * 128)
+    with np.errstate(all="raise"):
+        labels = _intersection_component_labels(coords)
+    np.testing.assert_array_equal(labels, connected_components(coords_intersections(coords))[1])

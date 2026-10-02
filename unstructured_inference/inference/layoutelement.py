@@ -412,8 +412,10 @@ def _intersection_component_labels(coords: np.ndarray) -> np.ndarray:
     if np.isfinite(coords).all() and np.all(coords[:, :2] <= coords[:, 2:]):
         # Sweep the axis with less relative coverage, so wide text lines are
         # compared only with other lines at similar heights.
-        spans = np.maximum(coords[:, 2:].max(axis=0) - coords[:, :2].min(axis=0), 1)
-        axis = int(np.argmin(np.sum(coords[:, 2:] - coords[:, :2], axis=0) / spans))
+        # The axis choice only affects speed, so overflow near float limits is harmless.
+        with np.errstate(all="ignore"):
+            spans = np.maximum(coords[:, 2:].max(axis=0) - coords[:, :2].min(axis=0), 1)
+            axis = int(np.argmin(np.sum(coords[:, 2:] - coords[:, :2], axis=0) / spans))
         other = 1 - axis
         active = np.empty(0, dtype=int)
         for current in np.argsort(coords[:, axis], kind="stable"):
