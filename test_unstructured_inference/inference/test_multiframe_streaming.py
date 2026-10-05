@@ -39,7 +39,7 @@ def test_tiff_frames_are_processed_before_decoding_the_next(tmp_path, monkeypatc
 
 
 def test_source_and_frame_close_when_inference_fails(tmp_path, monkeypatch):
-    path = tmp_path / "frames.tiff"
+    path = tmp_path / "image.tiff"
     Image.new("RGB", (10, 10)).save(path)
     opened = []
     converted = []
