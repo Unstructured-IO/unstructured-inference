@@ -470,24 +470,21 @@ def clean_layoutelements(elements: LayoutElements, subregion_threshold: float = 
     sorted_by_area = np.argsort(-elements.areas)
     sorted_coords = elements.element_coords[sorted_by_area]
 
-    # First check if targets contains each other
-    self_intersection = intersection_areas_between_coords(sorted_coords, sorted_coords)
     areas = elements.areas[sorted_by_area]
-    # check from largest to smallest regions to find if it contains any other regions
-    is_almost_subregion_of = (
-        self_intersection / np.maximum(areas, EPSILON_AREA) > subregion_threshold
-    ) & (areas <= areas.T)
 
     n_candidates = len(elements)
     mask = np.ones_like(areas, dtype=bool)
     current_candidate = 0
     while n_candidates > 1:
         plus_one = current_candidate + 1
-        remove = (
-            np.where(is_almost_subregion_of[current_candidate, plus_one:])[0]
-            + current_candidate
-            + 1
-        )
+        # Compare one candidate against every later, no-larger region; containment is measured
+        # against each compared region's own area.
+        compared_areas = areas[plus_one:]
+        intersection = intersection_areas_between_coords(
+            sorted_coords[current_candidate : current_candidate + 1], sorted_coords[plus_one:]
+        )[0]
+        contained = intersection / np.maximum(compared_areas, EPSILON_AREA) > subregion_threshold
+        remove = np.where(contained)[0] + current_candidate + 1
 
         if not remove.sum():
             break

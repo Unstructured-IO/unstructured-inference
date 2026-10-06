@@ -1,7 +1,12 @@
-## 1.6.16
+## 1.6.15
 
 ### Enhancements
 - Bound region grouping memory by finding rectangle components without retaining an all-pairs intersection graph. Preserve group membership and input order, including touching rectangles and invalid-coordinate comparison semantics.
+
+## 1.6.14
+
+### Performance
+- Bound layout cleanup comparisons to one candidate row instead of allocating all-pairs intersection arrays. Preserve the existing containment decisions, output order, and element attributes.
 
 ## 1.6.13
 
