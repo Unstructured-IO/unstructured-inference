@@ -3,6 +3,11 @@
 ### Fixes
 - **Bound multi-frame image decoding memory**: Process each TIFF, GIF or APNG frame through layout inference before decoding the next, and close converted image buffers after each page.
 
+## 1.6.14
+
+### Performance
+- Bound layout cleanup comparisons to one candidate row instead of allocating all-pairs intersection arrays. Preserve the existing containment decisions, output order, and element attributes.
+
 ## 1.6.13
 
 ### Fixes
