@@ -1,7 +1,12 @@
-## 1.6.14
+## 1.6.15
 
 ### Fixes
 - **Bound model input copy memory**: `process_data_with_model` now copies inputs into its temporary file in 1 MiB chunks instead of reading the complete input into one `bytes` allocation.
+
+## 1.6.14
+
+### Performance
+- Bound layout cleanup comparisons to one candidate row instead of allocating all-pairs intersection arrays. Preserve the existing containment decisions, output order, and element attributes.
 
 ## 1.6.13
 
