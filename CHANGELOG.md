@@ -1,7 +1,12 @@
-## 1.6.14
+## 1.6.15
 
 ### Fixes
 - **Reject fixed-layout page-count mismatches**: fixed layouts supplied to `DocumentLayout.from_file` must now match the PDF page count, avoiding silent truncation when the two sequences differ.
+
+## 1.6.14
+
+### Performance
+- Bound layout cleanup comparisons to one candidate row instead of allocating all-pairs intersection arrays. Preserve the existing containment decisions, output order, and element attributes.
 
 ## 1.6.13
 
