@@ -1,3 +1,8 @@
+## 1.6.14
+
+### Enhancements
+- **Reuse pre-rendered PDF pages**: `DocumentLayout.from_file` and `process_file_with_model` accept `image_paths`, page images already rendered from the PDF, so callers that need the page images for other steps no longer pay for a second render.
+
 ## 1.6.13
 
 ### Fixes

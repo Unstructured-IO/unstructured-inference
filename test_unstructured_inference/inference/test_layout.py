@@ -317,6 +317,45 @@ def test_from_file(monkeypatch, mock_final_layout):
             assert page.image is None
 
 
+def test_from_file_with_image_paths_skips_render(monkeypatch, mock_final_layout, tmp_path):
+    def mock_get_elements(self, *args, **kwargs):
+        self.elements = [mock_final_layout]
+
+    def fail_render(*args, **kwargs):
+        raise AssertionError("pdf must not be rendered when image_paths are given")
+
+    monkeypatch.setattr(layout.PageLayout, "get_elements_with_detection_model", mock_get_elements)
+    monkeypatch.setattr(layout, "convert_pdf_to_image", fail_render)
+    image_paths = []
+    for i in range(2):
+        image_path = tmp_path / f"page-{i}.png"
+        Image.open("sample-docs/loremipsum.jpg").save(image_path)
+        image_paths.append(str(image_path))
+
+    doc = layout.DocumentLayout.from_file("fake-file.pdf", image_paths=image_paths)
+
+    assert [page.number for page in doc.pages] == [1, 2]
+    assert all(page.elements == [mock_final_layout] for page in doc.pages)
+
+
+def test_process_file_with_model_forwards_image_paths(monkeypatch, mock_final_layout):
+    received = {}
+
+    def mock_from_file(cls, *args, **kwargs):
+        received.update(kwargs)
+        return layout.DocumentLayout.from_pages([])
+
+    monkeypatch.setattr(layout.DocumentLayout, "from_file", classmethod(mock_from_file))
+    monkeypatch.setattr(layout, "get_model", lambda *a, **k: MockLayoutModel(mock_final_layout))
+    with patch(
+        "unstructured_inference.inference.layout.UnstructuredObjectDetectionModel",
+        MockLayoutModel,
+    ):
+        layout.process_file_with_model("fake.pdf", model_name="fake", image_paths=["a.png"])
+
+    assert received["image_paths"] == ["a.png"]
+
+
 def test_from_file_rotated_pdf_stores_rotation_in_metadata(monkeypatch, mock_final_layout):
     """image_metadata includes pdf_rotation for rotated PDF pages."""
 
@@ -598,6 +637,7 @@ def test_process_file_with_model_routing(monkeypatch, model_type, is_detection_m
             element_extraction_model=element_extraction_model,
             fixed_layouts=None,
             password=None,
+            image_paths=None,
             pdf_image_dpi=200,
             pdf_render_max_pixels_per_page=None,
         )
