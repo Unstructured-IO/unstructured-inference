@@ -1,3 +1,8 @@
+## 1.6.15
+
+### Fixes
+- **Bound multi-frame image decoding memory**: Process each TIFF, GIF or APNG frame through layout inference before decoding the next, and close converted image buffers after each page.
+
 ## 1.6.14
 
 ### Performance
