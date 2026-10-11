@@ -1,3 +1,8 @@
+## 1.6.15
+
+### Fixes
+- `LayoutElements.concatenate` no longer relabels the elements of a group that has no `element_class_id_map`: they keep type `None`, the same as `iter_elements` gives them, instead of taking another group's class name.
+
 ## 1.6.14
 
 ### Performance
