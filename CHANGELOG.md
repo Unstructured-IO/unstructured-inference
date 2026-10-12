@@ -1,3 +1,8 @@
+## 1.6.15
+
+### Fixes
+- `align_headers` no longer drops header rows after the first one when the detected column header starts below the first table row. A header over rows 1 and 2 used to mark rows 0 and 1 only.
+
 ## 1.6.14
 
 ### Performance
