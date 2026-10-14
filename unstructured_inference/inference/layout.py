@@ -57,21 +57,27 @@ class DocumentLayout:
         pdf_image_dpi: int = 200,
         pdf_render_max_pixels_per_page: Optional[int] = None,
         password: Optional[str] = None,
+        image_paths: Optional[List[str]] = None,
         **kwargs,
     ) -> DocumentLayout:
-        """Creates a DocumentLayout from a pdf file."""
+        """Creates a DocumentLayout from a pdf file.
+
+        `image_paths` are page images already rendered from `filename` at `pdf_image_dpi`. When
+        given, the pdf is not rendered again.
+        """
         logger.info(f"Reading PDF for file: {filename} ...")
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            _image_paths = convert_pdf_to_image(
-                filename=filename,
-                dpi=pdf_image_dpi,
-                output_folder=temp_dir,
-                path_only=True,
-                password=password,
-                pdf_render_max_pixels_per_page=pdf_render_max_pixels_per_page,
-            )
-            image_paths = cast(List[str], _image_paths)
+            if image_paths is None:
+                _image_paths = convert_pdf_to_image(
+                    filename=filename,
+                    dpi=pdf_image_dpi,
+                    output_folder=temp_dir,
+                    path_only=True,
+                    password=password,
+                    pdf_render_max_pixels_per_page=pdf_render_max_pixels_per_page,
+                )
+                image_paths = cast(List[str], _image_paths)
             number_of_pages = len(image_paths)
             pages: List[PageLayout] = []
             if fixed_layouts is None:
@@ -386,10 +392,12 @@ def process_file_with_model(
     pdf_image_dpi: int = 200,
     pdf_render_max_pixels_per_page: Optional[int] = None,
     password: Optional[str] = None,
+    image_paths: Optional[List[str]] = None,
     **kwargs: Any,
 ) -> DocumentLayout:
     """Processes pdf or image file with name filename into a DocumentLayout by using
-    a model identified by model_name."""
+    a model identified by model_name. `image_paths` are pre-rendered pdf page images that
+    spare a second render of the pdf."""
 
     model = get_model(model_name, **kwargs)
     if isinstance(model, UnstructuredObjectDetectionModel):
@@ -416,6 +424,7 @@ def process_file_with_model(
             pdf_image_dpi=pdf_image_dpi,
             pdf_render_max_pixels_per_page=pdf_render_max_pixels_per_page,
             password=password,
+            image_paths=image_paths,
             **kwargs,
         )
     )
