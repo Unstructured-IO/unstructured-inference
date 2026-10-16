@@ -272,3 +272,31 @@ def test_structure_to_cells_complete_parity(monkeypatch, with_spanning_cell):
         patch.setattr(postprocess, "slot_into_containers", reference_slot_into_containers)
         baseline = structure_to_cells(deepcopy(structure), deepcopy(tokens))
     assert candidate == baseline
+
+
+@pytest.mark.parametrize("collection", [list, tuple])
+def test_native_assignment_does_not_sort(monkeypatch, collection):
+    def unexpected_sort(*args, **kwargs):
+        raise AssertionError("native assignment must select without sorting")
+
+    monkeypatch.setattr(postprocess, "sorted", unexpected_sort, raising=False)
+    assert postprocess.slot_into_containers(
+        collection([box([0.0, 0.0, 2.0, 2.0]), box([0, 0, 4, 4])]),
+        [box([1, 1, 3, 3])],
+    ) == ([[], [0]], [[1]], [1.0])
+
+
+def test_foreign_scalars_keep_keyed_sort(monkeypatch):
+    calls = []
+
+    def record_sort(*args, **kwargs):
+        calls.append(kwargs)
+        return sorted(*args, **kwargs)
+
+    monkeypatch.setattr(postprocess, "sorted", record_sort, raising=False)
+    assert postprocess.slot_into_containers(
+        [box([0, 0, 4, 4])],
+        [box(np.array([1, 1, 3, 3], dtype=np.float32))],
+    ) == ([[0]], [[0]], [1.0])
+    assert len(calls) == 1
+    assert calls[0]["reverse"] is True
