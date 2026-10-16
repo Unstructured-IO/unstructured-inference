@@ -149,6 +149,18 @@ def nms_by_containment(container_objects, package_objects, overlap_threshold=0.5
     return final_objects
 
 
+def _has_builtin_bbox(obj):
+    """Check streaming-selection eligibility without rejecting other scalar types."""
+    if type(obj) is not dict:
+        return False
+    bbox = obj.get("bbox", ())
+    if bbox is None:
+        return True
+    if type(bbox) not in (list, tuple) or len(bbox) < 4:
+        return False
+    return all(type(bbox[i]) in (int, float) for i in range(4))
+
+
 def slot_into_containers(
     container_objects,
     package_objects,
@@ -156,45 +168,52 @@ def slot_into_containers(
     forced_assignment=False,
 ):
     """
-    Slot a collection of objects into the container they occupy most (the container which holds the
-    largest fraction of the object).
+    Slot objects into the container holding the largest fraction of each object.
+    Equal scores retain the first container in input order.
     """
     best_match_scores = []
-
     container_assignments = [[] for container in container_objects]
     package_assignments = [[] for package in package_objects]
 
     if len(container_objects) == 0 or len(package_objects) == 0:
         return container_assignments, package_assignments, best_match_scores
 
-    match_scores = defaultdict(dict)
+    builtin_containers = type(container_objects) in (list, tuple) and all(
+        _has_builtin_bbox(obj) for obj in container_objects
+    )
     for package_num, package in enumerate(package_objects):
-        match_scores = []
         package_rect = Rect(package["bbox"])
         package_area = package_rect.get_area()
+        # Native scores share one denominator: they are ordered numbers, or only zeros/NaNs
+        # when area overflows. Foreign scalars can mix finite scores and NaNs through
+        # promotion/overflow, where Python's keyed sort can differ from a streaming maximum.
+        compat_scores = None if builtin_containers and _has_builtin_bbox(package) else []
+        best_container_num = None
+        best_score = None
         for container_num, container in enumerate(container_objects):
             container_rect = Rect(container["bbox"])
             intersect_area = container_rect.intersect(Rect(package["bbox"])).get_area()
 
             if package_area > 0:
                 overlap_fraction = intersect_area / package_area
+                if compat_scores is not None:
+                    compat_scores.append((container_num, overlap_fraction))
+                elif best_container_num is None or best_score < overlap_fraction:
+                    best_container_num = container_num
+                    best_score = overlap_fraction
 
-                match_scores.append(
-                    {
-                        "container": container,
-                        "container_num": container_num,
-                        "score": overlap_fraction,
-                    },
-                )
+        if compat_scores:
+            best_container_num, best_score = sorted(
+                compat_scores,
+                key=lambda item: item[1],
+                reverse=True,
+            )[0]
 
-        if len(match_scores) > 0:
-            sorted_match_scores = sort_objects_by_score(match_scores)
-
-            best_match_score = sorted_match_scores[0]
-            best_match_scores.append(best_match_score["score"])
-            if forced_assignment or best_match_score["score"] >= overlap_threshold:
-                container_assignments[best_match_score["container_num"]].append(package_num)
-                package_assignments[package_num].append(best_match_score["container_num"])
+        if best_container_num is not None:
+            best_match_scores.append(best_score)
+            if forced_assignment or best_score >= overlap_threshold:
+                container_assignments[best_container_num].append(package_num)
+                package_assignments[package_num].append(best_container_num)
 
     return container_assignments, package_assignments, best_match_scores
 
