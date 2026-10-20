@@ -61,3 +61,36 @@ def test_source_and_frame_close_when_inference_fails(tmp_path, monkeypatch):
     assert opened[0].fp is None
     with pytest.raises(ValueError, match="closed image"):
         converted[0].getpixel((0, 0))
+
+
+def test_corrupt_later_tiff_frame_raises_after_earlier_inference(tmp_path, monkeypatch):
+    path = tmp_path / "corrupt.tiff"
+    frames = [Image.new("RGB", (20, 10), color) for color in ("red", "blue")]
+    frames[0].save(path, save_all=True, append_images=frames[1:], compression="raw")
+    with Image.open(path) as source:
+        source.seek(1)
+        offset = source.tag_v2[273][0]
+    with path.open("r+b") as file:
+        file.truncate(offset + 1)
+    opened = []
+    inferred = []
+    original_open = Image.open
+    original_from_image = layout.PageLayout.from_image.__func__
+
+    def open_image(*args, **kwargs):
+        image = original_open(*args, **kwargs)
+        opened.append(image)
+        return image
+
+    def infer(cls, image, **kwargs):
+        inferred.append((kwargs["number"], image))
+        return original_from_image(cls, image, **kwargs)
+
+    monkeypatch.setattr(Image, "open", open_image)
+    monkeypatch.setattr(layout.PageLayout, "from_image", classmethod(infer))
+    with pytest.raises(OSError):
+        layout.DocumentLayout.from_image_file(str(path), fixed_layout=[])
+    assert [number for number, _ in inferred] == [0]
+    assert opened[0].fp is None
+    with pytest.raises(ValueError, match="closed image"):
+        inferred[0][1].getpixel((0, 0))

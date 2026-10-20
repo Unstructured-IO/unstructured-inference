@@ -1,7 +1,7 @@
 ## 1.6.15
 
 ### Fixes
-- Process multi-frame images one frame at a time and close each converted frame after inference.
+- Process multi-frame images one frame at a time and close each converted frame after inference. Corrupt later frames raise after earlier frames have been inferred, without returning a partial layout.
 
 ## 1.6.14
 

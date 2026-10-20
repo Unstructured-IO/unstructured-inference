@@ -100,7 +100,11 @@ class DocumentLayout:
         fixed_layout: Optional[List[TextRegion]] = None,
         **kwargs,
     ) -> DocumentLayout:
-        """Creates a DocumentLayout from an image file."""
+        """Creates a DocumentLayout from an image file.
+
+        Frames are decoded immediately before inference. A corrupt later frame
+        raises after earlier frames have been inferred; no partial layout is returned.
+        """
         logger.info(f"Reading image file: {filename} ...")
         try:
             image = Image.open(filename)
