@@ -1,3 +1,8 @@
+## 1.6.15
+
+### Fixes
+- **Bump locked `certifi` to 2026.10.19**, which removes the emSign ECC Root CA - G3 root after eight eMudhra intermediate CA private keys were compromised. `requests` and `httpx` trust certifi's bundle and do not check revocation, so with the older bundle they accepted certificates chaining to that root. Docker images built from the lockfile pick it up; `certifi>=2026.10.19` is now recorded in `constraint-dependencies` so future relocks cannot fall below it. That constraint applies only to this repo's lockfile, so for pip installs upgrade `certifi` in your own environment.
+
 ## 1.6.14
 
 ### Performance
