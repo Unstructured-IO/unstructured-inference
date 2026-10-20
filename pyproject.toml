@@ -80,6 +80,8 @@ constraint-dependencies = [
     "urllib3>=2.6.0",
     # Security: CVE fix for Pillow (out-of-bounds write loading PSD images)
     "pillow>=12.1.1",
+    # Security: certifi >=2026.10.19 removes emSign ECC Root CA - G3 (eMudhra intermediate CA key compromise)
+    "certifi>=2026.10.19",
 ]
 
 [tool.hatch.build.targets.wheel]
