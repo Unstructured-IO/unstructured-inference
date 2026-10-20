@@ -21,6 +21,9 @@ def test_tiff_frames_are_processed_before_decoding_the_next(tmp_path, monkeypatc
 
     def from_image(cls, image, **kwargs):
         assert len(converted) == len(processed) + 1
+        for earlier in converted[:-1]:
+            with pytest.raises(ValueError, match="closed image"):
+                earlier.getpixel((0, 0))
         processed.append(np.array(image))
         return original_from_image(cls, image, **kwargs)
 
