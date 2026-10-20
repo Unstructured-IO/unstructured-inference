@@ -24,6 +24,7 @@ resolution-markers = [
 
 [manifest]
 constraints = [
+    { name = "certifi", specifier = ">=2026.10.19" },
     { name = "fonttools", specifier = ">=4.60.2" },
     { name = "pillow", specifier = ">=12.1.1" },
     { name = "urllib3", specifier = ">=2.6.0" },
