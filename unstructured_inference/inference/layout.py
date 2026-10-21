@@ -103,33 +103,49 @@ class DocumentLayout:
         fixed_layout: Optional[List[TextRegion]] = None,
         **kwargs,
     ) -> DocumentLayout:
-        """Creates a DocumentLayout from an image file."""
+        """Creates a DocumentLayout from an image file.
+
+        Frames are decoded immediately before inference. A corrupt later frame
+        raises after earlier frames have been inferred; no partial layout is returned.
+        """
         logger.info(f"Reading image file: {filename} ...")
         try:
             image = Image.open(filename)
-            format = image.format
-            images: list[Image.Image] = []
-            for i, im in enumerate(ImageSequence.Iterator(image)):
-                im = im.convert("RGB")
-                im.format = format
-                images.append(im)
         except Exception as e:
             if os.path.isdir(filename) or os.path.isfile(filename):
                 raise e
             else:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
+
+        def infer(rgb_image: Image.Image, number: int, format: Optional[str]) -> PageLayout:
+            try:
+                rgb_image.format = format
+                return PageLayout.from_image(
+                    rgb_image,
+                    image_path=filename,
+                    number=number,
+                    detection_model=detection_model,
+                    element_extraction_model=element_extraction_model,
+                    fixed_layout=fixed_layout,
+                    **kwargs,
+                )
+            finally:
+                rgb_image.close()
+
         pages = []
-        for i, image in enumerate(images):  # type: ignore
-            page = PageLayout.from_image(
-                image,
-                image_path=filename,
-                number=i,
-                detection_model=detection_model,
-                element_extraction_model=element_extraction_model,
-                fixed_layout=fixed_layout,
-                **kwargs,
-            )
-            pages.append(page)
+        with image:
+            format = image.format
+            if not getattr(image, "is_animated", False):
+                # A single frame needs no decoder after conversion, so the source bitmap is
+                # released before inference rather than held alongside its RGB copy.
+                rgb_image = image.convert("RGB")
+                image.close()
+                pages.append(infer(rgb_image, 0, format))
+            else:
+                for i, frame in enumerate(ImageSequence.Iterator(image)):
+                    # Decode and infer one frame at a time. Retaining every RGB frame
+                    # makes compressed multi-page TIFFs consume document-sized memory.
+                    pages.append(infer(frame.convert("RGB"), i, format))
         return cls.from_pages(pages)
 
 
