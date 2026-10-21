@@ -97,3 +97,35 @@ def test_corrupt_later_tiff_frame_raises_after_earlier_inference(tmp_path, monke
     assert opened[0].fp is None
     with pytest.raises(ValueError, match="closed image"):
         inferred[0][1].getpixel((0, 0))
+
+
+@pytest.mark.parametrize(("suffix", "save_format"), [(".png", "PNG"), (".jpg", "JPEG")])
+def test_single_frame_source_is_released_before_inference(
+    tmp_path, monkeypatch, suffix, save_format
+):
+    path = tmp_path / f"page{suffix}"
+    expected = Image.new("RGB", (32, 16), "red")
+    expected.save(path, format=save_format)
+    opened = []
+    seen = []
+    original_open = Image.open
+    original_from_image = layout.PageLayout.from_image.__func__
+
+    def open_image(*args, **kwargs):
+        image = original_open(*args, **kwargs)
+        opened.append(image)
+        return image
+
+    def from_image(cls, image, **kwargs):
+        (source,) = opened
+        with pytest.raises(ValueError, match="closed image"):
+            source.getpixel((0, 0))
+        seen.append(np.array(image))
+        return original_from_image(cls, image, **kwargs)
+
+    monkeypatch.setattr(Image, "open", open_image)
+    monkeypatch.setattr(layout.PageLayout, "from_image", classmethod(from_image))
+    document = layout.DocumentLayout.from_image_file(str(path), fixed_layout=[])
+    assert [page.number for page in document.pages] == [0]
+    assert document.pages[0].image_metadata["format"] == save_format
+    assert seen[0].shape == (16, 32, 3)
