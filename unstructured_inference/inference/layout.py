@@ -113,6 +113,7 @@ class DocumentLayout:
                 raise e
             else:
                 raise FileNotFoundError(f'File "{filename}" not found!') from e
+
         def infer(rgb_image: Image.Image, number: int, format: Optional[str]) -> PageLayout:
             try:
                 rgb_image.format = format
