@@ -1,12 +1,18 @@
-## 1.6.16
+## 1.6.17
 
 ### Fixes
 - **Reject fixed-layout page-count mismatches**: fixed layouts supplied to `DocumentLayout.from_file` must now match the PDF page count, avoiding silent truncation when the two sequences differ.
+
+## 1.6.16
+
+### Enhancements
+- Bound region grouping memory by finding rectangle components without retaining an all-pairs intersection graph. Preserve group membership and input order, including touching rectangles and invalid-coordinate comparison semantics.
 
 ## 1.6.15
 
 ### Fixes
 - **Bump locked `certifi` to 2026.10.19**, which removes the emSign ECC Root CA - G3 root after eight eMudhra intermediate CA private keys were compromised. `requests` and `httpx` trust certifi's bundle and do not check revocation, so with the older bundle they accepted certificates chaining to that root. Docker images built from the lockfile pick it up; `certifi>=2026.10.19` is now recorded in `constraint-dependencies` so future relocks cannot fall below it. That constraint applies only to this repo's lockfile, so for pip installs upgrade `certifi` in your own environment.
+- **Bound model input copy memory**: `process_data_with_model` copies inputs into its temporary file in 1 MiB chunks instead of reading the complete input into one `bytes` allocation.
 
 ## 1.6.14
 
