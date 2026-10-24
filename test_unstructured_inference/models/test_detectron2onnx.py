@@ -45,6 +45,14 @@ def test_load_model(model_path, label_map):
     assert label_map == model.label_map
 
 
+def test_load_model_disables_only_memory_pattern():
+    with patch.object(detectron2.onnxruntime, "InferenceSession", return_value=True) as session:
+        detectron2.UnstructuredDetectronONNXModel().initialize(model_path="asdf", label_map={})
+    sess_options = session.call_args.kwargs["sess_options"]
+    assert sess_options.enable_mem_pattern is False
+    assert sess_options.enable_cpu_mem_arena is True
+
+
 def test_unstructured_detectron_model():
     model = detectron2.UnstructuredDetectronONNXModel()
     model.model = 1

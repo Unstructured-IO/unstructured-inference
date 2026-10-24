@@ -1,8 +1,10 @@
 import os
+from unittest.mock import patch
 
 import pytest
 
 from unstructured_inference.inference.layout import process_file_with_model
+from unstructured_inference.models import yolox
 
 
 @pytest.mark.slow
@@ -98,3 +100,11 @@ def test_layout_yolox_local_parsing_empty_pdf_soft():
     # NOTE(benjamin) The example sent to the test contains 0 detections
     text_elements_page_1 = [el for el in document_layout.pages[0].elements if el.type != "Image"]
     assert len(text_elements_page_1) == 0
+
+
+def test_initialize_disables_only_memory_pattern():
+    with patch.object(yolox.onnxruntime, "InferenceSession", return_value=True) as session:
+        yolox.UnstructuredYoloXModel().initialize(model_path="asdf", label_map={})
+    sess_options = session.call_args.kwargs["sess_options"]
+    assert sess_options.enable_mem_pattern is False
+    assert sess_options.enable_cpu_mem_arena is True

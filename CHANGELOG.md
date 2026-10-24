@@ -1,3 +1,8 @@
+## 1.6.17
+
+### Enhancement
+- Disable the ONNX Runtime memory pattern on YoloX and Detectron2 sessions, keeping the CPU memory arena. A 16-page YoloX run's peak RSS drops from about 1010 MiB to 892 MiB with identical output and no slower inference.
+
 ## 1.6.16
 
 ### Enhancements
