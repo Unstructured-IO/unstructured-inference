@@ -225,10 +225,43 @@ def remove_objects_without_content(page_spans, objects):
     Remove any objects (these can be rows, columns, supercells, etc.) that don't
     have any text associated with them.
     """
-    for obj in objects[:]:
-        object_text, _ = extract_text_inside_bbox(page_spans, obj["bbox"])
-        if len(object_text.strip()) == 0:
-            objects.remove(obj)
+    span_subsets = _span_subsets_inside_bboxes(page_spans, [obj["bbox"] for obj in objects])
+    objects[:] = [
+        obj
+        for obj, span_subset in zip(objects, span_subsets)
+        if extract_text_from_spans(span_subset, remove_integer_superscripts=True).strip()
+    ]
+
+
+def _span_subsets_inside_bboxes(spans, bboxes, threshold=0.5):
+    """Equivalent to get_bbox_span_subset(spans, bbox, threshold) for each bbox, but scores
+    every span-bbox pair with numpy in chunks rather than one Rect pair at a time."""
+    if not bboxes:
+        return []
+    span_coords = np.array([span["bbox"][:4] for span in spans], dtype=float).reshape(-1, 4)
+    bbox_coords = np.array([bbox[:4] for bbox in bboxes], dtype=float)
+    span_areas = (span_coords[:, 2] - span_coords[:, 0]) * (span_coords[:, 3] - span_coords[:, 1])
+    # overlaps() rejects spans without area before comparing them.
+    scored_spans = np.flatnonzero(span_areas > 0)
+    scored_coords = span_coords[scored_spans]
+    scored_areas = span_areas[scored_spans]
+
+    subsets = []
+    chunk_size = max(1, _SLOT_CHUNK_ELEMENTS // max(1, len(scored_spans)))
+    for start in range(0, len(bbox_coords), chunk_size):
+        chunk = bbox_coords[start : start + chunk_size, None, :]
+        widths = np.minimum(chunk[..., 2], scored_coords[:, 2]) - np.maximum(
+            chunk[..., 0], scored_coords[:, 0]
+        )
+        heights = np.minimum(chunk[..., 3], scored_coords[:, 3]) - np.maximum(
+            chunk[..., 1], scored_coords[:, 1]
+        )
+        intersect_areas = np.where((widths >= 0) & (heights >= 0), widths * heights, 0.0)
+        inside = intersect_areas / scored_areas >= threshold
+        subsets.extend(
+            [spans[span_num] for span_num in scored_spans[row].tolist()] for row in inside
+        )
+    return subsets
 
 
 def extract_text_inside_bbox(spans, bbox):
