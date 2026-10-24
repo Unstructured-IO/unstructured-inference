@@ -5,6 +5,11 @@ Copyright (C) 2021 Microsoft Corporation
 
 from collections import defaultdict
 
+import numpy as np
+
+# Upper bound on package-container pairs scored at once by slot_into_containers.
+_SLOT_CHUNK_ELEMENTS = 1 << 20
+
 
 class Rect:
     def __init__(self, bbox=None):
@@ -167,34 +172,43 @@ def slot_into_containers(
     if len(container_objects) == 0 or len(package_objects) == 0:
         return container_assignments, package_assignments, best_match_scores
 
-    match_scores = defaultdict(dict)
-    for package_num, package in enumerate(package_objects):
-        match_scores = []
-        package_rect = Rect(package["bbox"])
-        package_area = package_rect.get_area()
-        for container_num, container in enumerate(container_objects):
-            container_rect = Rect(container["bbox"])
-            intersect_area = container_rect.intersect(Rect(package["bbox"])).get_area()
+    containers = np.array([container["bbox"][:4] for container in container_objects], dtype=float)
+    packages = np.array([package["bbox"][:4] for package in package_objects], dtype=float)
 
-            if package_area > 0:
-                overlap_fraction = intersect_area / package_area
+    # Rect.intersect replaces a zero-area container with the package itself, so such a
+    # container holds its whole package.
+    zero_area_containers = ~(
+        (containers[:, 2] - containers[:, 0]) * (containers[:, 3] - containers[:, 1]) > 0
+    )
+    package_areas = (packages[:, 2] - packages[:, 0]) * (packages[:, 3] - packages[:, 1])
+    # Packages without area match no container and get no score.
+    scored_packages = np.flatnonzero(package_areas > 0)
 
-                match_scores.append(
-                    {
-                        "container": container,
-                        "container_num": container_num,
-                        "score": overlap_fraction,
-                    },
-                )
+    # Score packages in chunks so temporary storage stays linear in the container count.
+    chunk_size = max(1, _SLOT_CHUNK_ELEMENTS // len(containers))
+    for start in range(0, len(scored_packages), chunk_size):
+        package_nums = scored_packages[start : start + chunk_size]
+        chunk = packages[package_nums, None, :]
+        widths = np.minimum(chunk[..., 2], containers[:, 2]) - np.maximum(
+            chunk[..., 0], containers[:, 0]
+        )
+        heights = np.minimum(chunk[..., 3], containers[:, 3]) - np.maximum(
+            chunk[..., 1], containers[:, 1]
+        )
+        intersect_areas = np.where((widths >= 0) & (heights >= 0), widths * heights, 0.0)
+        overlap_fractions = intersect_areas / package_areas[package_nums, None]
+        overlap_fractions[:, zero_area_containers] = 1.0
 
-        if len(match_scores) > 0:
-            sorted_match_scores = sort_objects_by_score(match_scores)
-
-            best_match_score = sorted_match_scores[0]
-            best_match_scores.append(best_match_score["score"])
-            if forced_assignment or best_match_score["score"] >= overlap_threshold:
-                container_assignments[best_match_score["container_num"]].append(package_num)
-                package_assignments[package_num].append(best_match_score["container_num"])
+        # argmax keeps the first best container, matching a stable descending sort by score.
+        best_containers = overlap_fractions.argmax(axis=1)
+        best_scores = overlap_fractions[np.arange(len(package_nums)), best_containers]
+        for package_num, container_num, score in zip(
+            package_nums.tolist(), best_containers.tolist(), best_scores.tolist()
+        ):
+            best_match_scores.append(score)
+            if forced_assignment or score >= overlap_threshold:
+                container_assignments[container_num].append(package_num)
+                package_assignments[package_num].append(container_num)
 
     return container_assignments, package_assignments, best_match_scores
 
@@ -211,10 +225,43 @@ def remove_objects_without_content(page_spans, objects):
     Remove any objects (these can be rows, columns, supercells, etc.) that don't
     have any text associated with them.
     """
-    for obj in objects[:]:
-        object_text, _ = extract_text_inside_bbox(page_spans, obj["bbox"])
-        if len(object_text.strip()) == 0:
-            objects.remove(obj)
+    span_subsets = _span_subsets_inside_bboxes(page_spans, [obj["bbox"] for obj in objects])
+    objects[:] = [
+        obj
+        for obj, span_subset in zip(objects, span_subsets)
+        if extract_text_from_spans(span_subset, remove_integer_superscripts=True).strip()
+    ]
+
+
+def _span_subsets_inside_bboxes(spans, bboxes, threshold=0.5):
+    """Equivalent to get_bbox_span_subset(spans, bbox, threshold) for each bbox, but scores
+    every span-bbox pair with numpy in chunks rather than one Rect pair at a time."""
+    if not bboxes:
+        return []
+    span_coords = np.array([span["bbox"][:4] for span in spans], dtype=float).reshape(-1, 4)
+    bbox_coords = np.array([bbox[:4] for bbox in bboxes], dtype=float)
+    span_areas = (span_coords[:, 2] - span_coords[:, 0]) * (span_coords[:, 3] - span_coords[:, 1])
+    # overlaps() rejects spans without area before comparing them.
+    scored_spans = np.flatnonzero(span_areas > 0)
+    scored_coords = span_coords[scored_spans]
+    scored_areas = span_areas[scored_spans]
+
+    subsets = []
+    chunk_size = max(1, _SLOT_CHUNK_ELEMENTS // max(1, len(scored_spans)))
+    for start in range(0, len(bbox_coords), chunk_size):
+        chunk = bbox_coords[start : start + chunk_size, None, :]
+        widths = np.minimum(chunk[..., 2], scored_coords[:, 2]) - np.maximum(
+            chunk[..., 0], scored_coords[:, 0]
+        )
+        heights = np.minimum(chunk[..., 3], scored_coords[:, 3]) - np.maximum(
+            chunk[..., 1], scored_coords[:, 1]
+        )
+        intersect_areas = np.where((widths >= 0) & (heights >= 0), widths * heights, 0.0)
+        inside = intersect_areas / scored_areas >= threshold
+        subsets.extend(
+            [spans[span_num] for span_num in scored_spans[row].tolist()] for row in inside
+        )
+    return subsets
 
 
 def extract_text_inside_bbox(spans, bbox):

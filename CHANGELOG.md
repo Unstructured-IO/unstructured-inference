@@ -1,3 +1,9 @@
+## 1.6.17
+
+### Performance
+- Score table tokens against cells with chunked numpy arrays in `slot_into_containers` instead of building a `Rect` and dict for every token-cell pair. `structure_to_cells` on a 120x12 table with 8,000 tokens drops from 11.9s to 0.15s. Preserve assignments, scores, first-container tie breaking, and the zero-area container and token semantics.
+- Score every table row and column against all tokens at once in `remove_objects_without_content`, instead of one `Rect` pair at a time. `objects_to_structures` on the same table drops from 1.7s to 0.07s. Keep the removed objects, the in-place list update, and the superscript marking of spans.
+
 ## 1.6.16
 
 ### Enhancements
