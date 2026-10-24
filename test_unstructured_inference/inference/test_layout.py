@@ -720,6 +720,42 @@ def test_page_hotload_preserves_render_max_pixels_per_page(monkeypatch, tmp_path
     assert calls[0]["pdf_render_max_pixels_per_page"] is None
 
 
+@pytest.mark.parametrize("page_number", [1, 3, 10])
+def test_page_hotload_renders_only_requested_page(monkeypatch, page_number):
+    calls = []
+
+    def recording_convert_pdf_to_image(**kwargs):
+        calls.append(kwargs)
+        return pdf_image.convert_pdf_to_image(**kwargs)
+
+    monkeypatch.setattr(layout, "convert_pdf_to_image", recording_convert_pdf_to_image)
+    filename = "sample-docs/loremipsum_multipage.pdf"
+    page = layout.PageLayout(number=page_number, image=None)
+
+    image = page._get_image(filename, page_number)
+
+    assert (calls[0]["first_page"], calls[0]["last_page"]) == (page_number, page_number)
+    expected = pdf_image.convert_pdf_to_image(filename=filename, dpi=200)[page_number - 1]
+    assert image.tobytes() == expected.tobytes()
+
+
+@pytest.mark.parametrize("page_number", [0, -1, -9])
+def test_page_hotload_indexes_from_end_for_page_numbers_below_one(page_number):
+    filename = "sample-docs/loremipsum_multipage.pdf"
+    page = layout.PageLayout(number=1, image=None)
+
+    image = page._get_image(filename, page_number)
+
+    expected = pdf_image.convert_pdf_to_image(filename=filename, dpi=200)[page_number - 1]
+    assert image.tobytes() == expected.tobytes()
+
+
+def test_page_hotload_raises_for_page_past_end():
+    page = layout.PageLayout(number=1, image=None)
+    with pytest.raises(ValueError, match="Page number 11 is greater than the number of pages"):
+        page._get_image("sample-docs/loremipsum_multipage.pdf", 11)
+
+
 def test_convert_pdf_to_image_output_folder_returns_images(tmp_path):
     result = layout.convert_pdf_to_image(
         filename="sample-docs/loremipsum.pdf",

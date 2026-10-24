@@ -1,3 +1,8 @@
+## 1.6.17
+
+### Performance
+- `PageLayout._get_image`, which `annotate()` uses to hotload a page from the PDF, now renders only the requested page instead of every page in the document. Getting one page of a 400-page PDF drops from 16-20s to under 0.1s, and the temporary PNGs from about 165 MiB to one page. Page numbers below 1 still index from the end of the document, and a page past the end still raises `ValueError`.
+
 ## 1.6.16
 
 ### Enhancements

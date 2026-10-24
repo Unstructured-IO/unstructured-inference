@@ -289,6 +289,14 @@ class PageLayout:
     def _get_image(self, filename, page_number, pdf_image_dpi: int = 200) -> Image.Image:
         """Hotloads a page image from a pdf file."""
 
+        # Render only the requested page. Page numbers below 1 index from the end of the
+        # document, so those still need every page.
+        if page_number >= 1:
+            page_range = {"first_page": page_number, "last_page": page_number}
+            page_index = 0
+        else:
+            page_range = {}
+            page_index = page_number - 1
         with tempfile.TemporaryDirectory() as temp_dir:
             _image_paths = convert_pdf_to_image(
                 filename=filename,
@@ -296,14 +304,15 @@ class PageLayout:
                 output_folder=temp_dir,
                 path_only=True,
                 pdf_render_max_pixels_per_page=self.pdf_render_max_pixels_per_page,
+                **page_range,
             )
             image_paths = cast(List[str], _image_paths)
-            if page_number > len(image_paths):
+            if page_number >= 1 and not image_paths:
                 raise ValueError(
                     f"Page number {page_number} is greater than the number of pages in the PDF.",
                 )
 
-            with Image.open(image_paths[page_number - 1]) as image:
+            with Image.open(image_paths[page_index]) as image:
                 return image.copy()
 
     @classmethod
