@@ -80,8 +80,14 @@ class UnstructuredYoloXModel(UnstructuredObjectDetectionModel):
         ]
         providers = [provider for provider in ordered_providers if provider in available_providers]
 
+        sess_options = onnxruntime.SessionOptions()
+        # Planning buffers from the first run's allocations keeps ~120 MiB more resident
+        # memory per session without speeding up later runs.
+        sess_options.enable_mem_pattern = False
+
         self.model = onnxruntime.InferenceSession(
             model_path,
+            sess_options=sess_options,
             providers=providers,
         )
 
