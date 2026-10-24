@@ -1,3 +1,8 @@
+## 1.6.17
+
+### Performance
+- Import `onnxruntime.quantization` only when a quantized Detectron2 model has to be created, and `matplotlib.pyplot` only when `show_plot` is called. Importing the layout and model modules no longer loads `onnx` or `matplotlib`, which cuts import-time RSS from 367 MiB to 149 MiB and a 16-page YOLOX run's peak RSS from 1013 MiB to 792 MiB.
+
 ## 1.6.16
 
 ### Enhancements

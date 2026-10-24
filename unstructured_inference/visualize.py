@@ -4,7 +4,6 @@
 import typing
 from typing import Optional, Union
 
-import matplotlib.pyplot as plt
 import numpy as np
 from PIL import ImageFont
 from PIL.Image import Image
@@ -61,6 +60,9 @@ def show_plot(
     Returns:
     - None: The function displays the image using matplotlib but does not return any value.
     """
+    # Imported here so that importing this module for draw_bbox does not load matplotlib.
+    import matplotlib.pyplot as plt
+
     if isinstance(image, Image):
         image_width, image_height = image.size
     elif isinstance(image, np.ndarray):

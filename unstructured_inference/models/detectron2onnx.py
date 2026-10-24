@@ -6,7 +6,6 @@ import numpy as np
 import onnxruntime
 from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
 from onnxruntime.capi import _pybind_state as C
-from onnxruntime.quantization import QuantType, quantize_dynamic
 from PIL import Image
 
 from unstructured_inference.constants import Source
@@ -102,6 +101,9 @@ class UnstructuredDetectronONNXModel(UnstructuredObjectDetectionModel):
     ):
         """Loads the detectron2 model using the specified parameters"""
         if not os.path.exists(model_path) and "detectron2_quantized" in model_path:
+            # Imported here because onnxruntime.quantization loads all of onnx.
+            from onnxruntime.quantization import QuantType, quantize_dynamic
+
             logger.info("Quantized model don't currently exists, quantizing now...")
             os.mkdir("".join(os.path.split(model_path)[:-1]))
             source_path = MODEL_TYPES["detectron2_onnx"]["model_path"]
