@@ -1,8 +1,12 @@
+## 1.6.17
+
+### Enhancements
+- Process multi-frame images one frame at a time and close each converted frame after inference. Corrupt later frames raise after earlier frames have been inferred, without returning a partial layout.
+
 ## 1.6.16
 
 ### Enhancements
 - Bound region grouping memory by finding rectangle components without retaining an all-pairs intersection graph. Preserve group membership and input order, including touching rectangles and invalid-coordinate comparison semantics.
-- Process multi-frame images one frame at a time and close each converted frame after inference. Corrupt later frames raise after earlier frames have been inferred, without returning a partial layout.
 
 ## 1.6.15
 
