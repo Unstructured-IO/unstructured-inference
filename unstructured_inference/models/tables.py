@@ -484,7 +484,7 @@ def align_headers(headers, rows):
 
     header_rect = Rect()
     if header_row_nums[0] > 0:
-        header_row_nums = list(range(header_row_nums[0] + 1)) + header_row_nums
+        header_row_nums = list(range(header_row_nums[0])) + header_row_nums
 
     last_row_num = -1
     for row_num in header_row_nums:

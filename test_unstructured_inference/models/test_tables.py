@@ -1917,3 +1917,20 @@ def test_model_init_is_thread_safe():
         thread.join()
 
     assert tables.tables_agent.model is not None
+
+
+@pytest.mark.parametrize(
+    ("header_bbox", "expected"),
+    [
+        ([0, 0, 100, 20], [True, True, False, False]),
+        ([0, 10, 100, 30], [True, True, True, False]),
+        ([0, 20, 100, 30], [True, True, True, False]),
+    ],
+)
+def test_align_headers_keeps_every_header_row_below_the_first_row(header_bbox, expected):
+    rows = [{"bbox": [0, y, 100, y + 10]} for y in (0, 10, 20, 30)]
+
+    headers = tables.align_headers([{"bbox": header_bbox}], rows)
+
+    assert [row["column header"] for row in rows] == expected
+    assert headers == [{"bbox": [0, 0, 100, 10 * expected.count(True)]}]
