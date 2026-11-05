@@ -445,6 +445,23 @@ def test_layoutelements_concatenate():
     assert joint.element_class_id_map == {0: "type0", 1: "type1", 2: "type2"}
 
 
+def test_layoutelements_concatenate_group_without_class_id_map():
+    mapped = LayoutElements(
+        element_coords=np.array([[0, 0, 1, 1], [2, 2, 3, 3]]),
+        element_class_ids=np.array([0, 1]),
+        element_class_id_map={0: "Table", 1: "Title"},
+    )
+    unmapped = LayoutElements(
+        element_coords=np.array([[4, 4, 5, 5]]),
+        element_class_ids=np.array([1]),
+    )
+    assert [e.type for e in unmapped.iter_elements()] == [None]
+
+    joint = LayoutElements.concatenate([mapped, unmapped])
+    assert [e.type for e in joint.iter_elements()] == ["Table", "Title", None]
+    assert joint == LayoutElements.concatenate([mapped, unmapped])
+
+
 @pytest.mark.parametrize(
     "test_elements",
     [

@@ -101,7 +101,7 @@ class LayoutElements(TextRegions):
         """concatenate a sequence of LayoutElements in order as one LayoutElements"""
         coords, texts, probs, class_ids, sources, is_extracted_array = [], [], [], [], [], []
         text_as_html, table_as_cells, table_extraction_method = [], [], []
-        class_id_reverse_map: dict[str, int] = {}
+        class_id_reverse_map: dict[str | None, int] = {}
         for group in groups:
             coords.append(group.element_coords)
             texts.append(group.texts)
@@ -121,6 +121,12 @@ class LayoutElements(TextRegions):
                     new_id = len(class_id_reverse_map)
                     class_id_reverse_map[class_name] = new_id
                     idx[group.element_class_ids == class_id] = new_id
+            elif idx.size:
+                # a group without a map has no class names; `iter_elements` gives its elements
+                # type None, so keep that instead of letting its raw ids name another group's class
+                if None not in class_id_reverse_map:
+                    class_id_reverse_map[None] = len(class_id_reverse_map)
+                idx = np.full(idx.shape, class_id_reverse_map[None])
             class_ids.append(idx)
 
         return cls(
