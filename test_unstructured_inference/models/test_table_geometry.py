@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 from unstructured_inference.models import table_postprocess as pp
+from unstructured_inference.models.tables import compute_confidence_score
 
 
 def objects(boxes):
@@ -35,9 +36,12 @@ def test_geometry_matches_scalar_with_chunking(monkeypatch, threshold, forced, c
     containers.extend(containers[:2])  # Equal-score containers retain their original order.
     packages = random_boxes(31)
     monkeypatch.setattr(pp, "_MAX_GEOMETRY_PAIRS", 39)  # Exercise many package chunks.
-    assert pp.slot_into_containers(containers, packages, threshold, forced) == (
-        pp._slot_into_containers_scalar(containers, packages, threshold, forced)
-    )
+    actual_assignment = pp.slot_into_containers(containers, packages, threshold, forced)
+    expected_assignment = pp._slot_into_containers_scalar(containers, packages, threshold, forced)
+    assert actual_assignment == expected_assignment
+    actual_scores, expected_scores = actual_assignment[2], expected_assignment[2]
+    assert [type(score) for score in actual_scores] == [type(score) for score in expected_scores]
+    assert compute_confidence_score(actual_scores) == compute_confidence_score(expected_scores)
     expected = pp._get_bbox_span_subset_scalar(packages, containers[0]["bbox"], threshold)
     actual = pp.get_bbox_span_subset(packages, containers[0]["bbox"], threshold)
     assert len(actual) == len(expected)
@@ -155,3 +159,26 @@ def test_span_iterables(wrap):
     actual = pp.get_bbox_span_subset(wrap(spans), [0, 0, 2, 2])
     assert len(actual) == 1
     assert actual[0] is spans[0]
+
+
+@pytest.mark.parametrize("container_type", [float, np.float64])
+@pytest.mark.parametrize("package_type", [float, np.float64])
+def test_score_types_preserve_confidence_accumulation(container_type, package_type):
+    containers = objects([[container_type(v) for v in [0, 0, 0.9, 1]]])
+    packages = objects([[package_type(v) for v in [0, 0, 1, 1]] for _ in range(7)])
+    actual = pp.slot_into_containers(containers, packages)[2]
+    expected = pp._slot_into_containers_scalar(containers, packages)[2]
+    assert compute_confidence_score(actual) == compute_confidence_score(expected)
+    assert [type(score) for score in actual] == [type(score) for score in expected]
+
+
+def test_mixed_score_types_follow_winning_intersection():
+    containers = objects([[0, 0, 0.9, 1], [np.float64(v) for v in [2, 2, 2.9, 3]]])
+    packages = objects(
+        [[0, 0, 1, 1], [2, 2, 3, 3], [4, 4, 5, 5], [np.float64(v) for v in [4, 4, 5, 5]]]
+    )
+    actual = pp.slot_into_containers(containers, packages)[2]
+    expected = pp._slot_into_containers_scalar(containers, packages)[2]
+    assert actual == expected
+    assert [type(score) for score in actual] == [type(score) for score in expected]
+    assert compute_confidence_score(actual) == compute_confidence_score(expected)

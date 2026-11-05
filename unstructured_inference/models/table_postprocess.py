@@ -218,9 +218,14 @@ def slot_into_containers(
         overlaps = widths * heights / areas[:, None]
         # argmax chooses the first equal score, as the scalar path's stable sort does.
         best = np.argmax(overlaps, axis=1)
-        scores = overlaps[np.arange(len(chunk)), best].tolist()
-        best_match_scores.extend(scores)
-        for package_index, (container_index, score) in enumerate(zip(best.tolist(), scores), start):
+        for package_index, container_index in enumerate(best.tolist(), start):
+            # Preserve scalar types as well as values: Python float and NumPy float64
+            # scores accumulate differently in downstream confidence calculations.
+            package_rect = Rect(package_objects[package_index]["bbox"])
+            package_area = package_rect.get_area()
+            intersection = Rect(container_objects[container_index]["bbox"]).intersect(package_rect)
+            score = intersection.get_area() / package_area
+            best_match_scores.append(score)
             if forced_assignment or score >= overlap_threshold:
                 container_assignments[container_index].append(package_index)
                 package_assignments[package_index].append(container_index)
