@@ -5,6 +5,34 @@ Copyright (C) 2021 Microsoft Corporation
 
 from collections import defaultdict
 
+import numpy as np
+
+# Bound the temporary package-by-container arrays, independently of table density.
+_MAX_GEOMETRY_PAIRS = 131_072
+
+
+def _positive_boxes(objects):
+    """Return safe float64 coordinates, or retain scalar Rect semantics via fallback.
+
+    Empty/reversed rectangles have special behavior in Rect.intersect. Restrict
+    the fast path to Python numbers or NumPy float64 coordinates and positive,
+    representable areas. Lower-precision NumPy arithmetic retains its scalar
+    path. The coordinate bound also keeps integer area arithmetic exact.
+    """
+    coordinates = [obj["bbox"] for obj in objects]
+    if not all(
+        len(box) == 4
+        and all(type(value) in (int, float, np.float64) and abs(value) < 2**24 for value in box)
+        for box in coordinates
+    ):
+        return None
+    boxes = np.asarray(coordinates, dtype=np.float64).reshape(-1, 4)
+    if not np.all(boxes[:, 2:] > boxes[:, :2]):
+        return None
+    if not np.all((boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1]) > 0):
+        return None
+    return boxes
+
 
 class Rect:
     def __init__(self, bbox=None):
@@ -155,6 +183,61 @@ def slot_into_containers(
     overlap_threshold=0.5,
     forced_assignment=False,
 ):
+    """Assign each package to its greatest-overlap container, keeping first-index ties."""
+    container_count = len(container_objects)
+    if not container_count or len(package_objects) == 0:
+        return [[] for _ in container_objects], [[] for _ in package_objects], []
+    if container_count > _MAX_GEOMETRY_PAIRS:
+        return _slot_into_containers_scalar(
+            container_objects, package_objects, overlap_threshold, forced_assignment
+        )
+    containers = _positive_boxes(container_objects)
+    packages = _positive_boxes(package_objects)
+    if containers is None or packages is None:
+        return _slot_into_containers_scalar(
+            container_objects, package_objects, overlap_threshold, forced_assignment
+        )
+
+    container_assignments = [[] for _ in container_objects]
+    package_assignments = [[] for _ in package_objects]
+    best_match_scores = []
+    chunk_size = max(1, _MAX_GEOMETRY_PAIRS // container_count)
+    for start in range(0, len(packages), chunk_size):
+        chunk = packages[start : start + chunk_size]
+        widths = np.maximum(
+            0,
+            np.minimum(chunk[:, None, 2], containers[None, :, 2])
+            - np.maximum(chunk[:, None, 0], containers[None, :, 0]),
+        )
+        heights = np.maximum(
+            0,
+            np.minimum(chunk[:, None, 3], containers[None, :, 3])
+            - np.maximum(chunk[:, None, 1], containers[None, :, 1]),
+        )
+        areas = (chunk[:, 2] - chunk[:, 0]) * (chunk[:, 3] - chunk[:, 1])
+        overlaps = widths * heights / areas[:, None]
+        # argmax chooses the first equal score, as the scalar path's stable sort does.
+        best = np.argmax(overlaps, axis=1)
+        for package_index, container_index in enumerate(best.tolist(), start):
+            # Preserve scalar types as well as values: Python float and NumPy float64
+            # scores accumulate differently in downstream confidence calculations.
+            package_rect = Rect(package_objects[package_index]["bbox"])
+            package_area = package_rect.get_area()
+            intersection = Rect(container_objects[container_index]["bbox"]).intersect(package_rect)
+            score = intersection.get_area() / package_area
+            best_match_scores.append(score)
+            if forced_assignment or score >= overlap_threshold:
+                container_assignments[container_index].append(package_index)
+                package_assignments[package_index].append(container_index)
+    return container_assignments, package_assignments, best_match_scores
+
+
+def _slot_into_containers_scalar(
+    container_objects,
+    package_objects,
+    overlap_threshold=0.5,
+    forced_assignment=False,
+):
     """
     Slot a collection of objects into the container they occupy most (the container which holds the
     largest fraction of the object).
@@ -228,6 +311,28 @@ def extract_text_inside_bbox(spans, bbox):
 
 
 def get_bbox_span_subset(spans, bbox, threshold=0.5):
+    """Return overlapping spans in input order, preserving their object identity."""
+    if not isinstance(spans, list):
+        spans = list(spans)
+    if not spans:
+        return []
+    packages = _positive_boxes(spans)
+    container = _positive_boxes([{"bbox": bbox}])
+    if packages is None or container is None:
+        return _get_bbox_span_subset_scalar(spans, bbox, threshold)
+    widths = np.maximum(
+        0, np.minimum(packages[:, 2], container[0, 2]) - np.maximum(packages[:, 0], container[0, 0])
+    )
+    heights = np.maximum(
+        0, np.minimum(packages[:, 3], container[0, 3]) - np.maximum(packages[:, 1], container[0, 1])
+    )
+    fractions = (
+        widths * heights / ((packages[:, 2] - packages[:, 0]) * (packages[:, 3] - packages[:, 1]))
+    )
+    return [spans[index] for index in np.flatnonzero(fractions >= threshold)]
+
+
+def _get_bbox_span_subset_scalar(spans, bbox, threshold=0.5):
     """
     Reduce the set of spans to those that fall within a bounding box.
 

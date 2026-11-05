@@ -1,3 +1,8 @@
+## 1.6.18
+
+### Performance
+- Accelerate table token assignment and text selection while preserving overlap thresholds, tie-breaking, and token order. Bound pairwise temporary arrays and retain scalar handling for unusual rectangles.
+
 ## 1.6.17
 
 ### Enhancements
