@@ -15,12 +15,14 @@ def _positive_boxes(objects):
     """Return safe float64 coordinates, or retain scalar Rect semantics via fallback.
 
     Empty/reversed rectangles have special behavior in Rect.intersect. Restrict
-    the fast path to ordinary numeric coordinates and positive, representable
-    areas. The coordinate bound also keeps integer area arithmetic exact.
+    the fast path to Python numbers or NumPy float64 coordinates and positive,
+    representable areas. Lower-precision NumPy arithmetic retains its scalar
+    path. The coordinate bound also keeps integer area arithmetic exact.
     """
     coordinates = [obj["bbox"] for obj in objects]
     if not all(
-        len(box) == 4 and all(type(value) in (int, float) and abs(value) < 2**24 for value in box)
+        len(box) == 4
+        and all(type(value) in (int, float, np.float64) and abs(value) < 2**24 for value in box)
         for box in coordinates
     ):
         return None
@@ -183,7 +185,7 @@ def slot_into_containers(
 ):
     """Assign each package to its greatest-overlap container, keeping first-index ties."""
     container_count = len(container_objects)
-    if not container_count or not package_objects:
+    if not container_count or len(package_objects) == 0:
         return [[] for _ in container_objects], [[] for _ in package_objects], []
     if container_count > _MAX_GEOMETRY_PAIRS:
         return _slot_into_containers_scalar(
@@ -214,7 +216,7 @@ def slot_into_containers(
         )
         areas = (chunk[:, 2] - chunk[:, 0]) * (chunk[:, 3] - chunk[:, 1])
         overlaps = widths * heights / areas[:, None]
-        # argmax chooses the first equal score, as the original stable sort does.
+        # argmax chooses the first equal score, as the scalar path's stable sort does.
         best = np.argmax(overlaps, axis=1)
         scores = overlaps[np.arange(len(chunk)), best].tolist()
         best_match_scores.extend(scores)
@@ -305,6 +307,8 @@ def extract_text_inside_bbox(spans, bbox):
 
 def get_bbox_span_subset(spans, bbox, threshold=0.5):
     """Return overlapping spans in input order, preserving their object identity."""
+    if not isinstance(spans, list):
+        spans = list(spans)
     if not spans:
         return []
     packages = _positive_boxes(spans)

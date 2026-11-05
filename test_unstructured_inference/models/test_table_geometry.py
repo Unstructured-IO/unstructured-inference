@@ -15,14 +15,20 @@ def objects(boxes):
 
 @pytest.mark.parametrize("threshold", [0, 0.5, np.nextafter(0.5, 1), 1, 1.1])
 @pytest.mark.parametrize("forced", [False, True])
-def test_geometry_matches_scalar_with_chunking(monkeypatch, threshold, forced):
+@pytest.mark.parametrize("coordinate_type", [float, np.float64])
+def test_geometry_matches_scalar_with_chunking(monkeypatch, threshold, forced, coordinate_type):
     rng = random.Random(20261105)
 
     def random_boxes(count):
         result = []
         for _ in range(count):
             x, y = rng.uniform(-500, 500), rng.uniform(-500, 500)
-            result.append([x, y, x + rng.uniform(0.01, 500), y + rng.uniform(0.01, 500)])
+            result.append(
+                [
+                    coordinate_type(value)
+                    for value in [x, y, x + rng.uniform(0.01, 500), y + rng.uniform(0.01, 500)]
+                ],
+            )
         return objects(result)
 
     containers = random_boxes(11)
@@ -104,3 +110,48 @@ def test_container_count_over_pair_limit(monkeypatch):
     containers = objects([[0, 0, 1, 1], [0, 0, 1, 1]])
     packages = objects([[0, 0, 1, 1]])
     assert pp.slot_into_containers(containers, packages) == ([[0], []], [[0]], [1.0])
+
+
+def test_float64_coordinates_use_fast_path(mocker):
+    containers = objects([[0, 0, 10, 10], [0, 0, 10, 10]])
+    packages = objects(np.array([[1, 1, 2, 2], [3, 3, 4, 4]], dtype=np.float64))
+    expected = pp._slot_into_containers_scalar(containers, packages)
+    expected_subset = pp._get_bbox_span_subset_scalar(packages, containers[0]["bbox"])
+    assignment_fallback = mocker.patch.object(
+        pp,
+        "_slot_into_containers_scalar",
+        side_effect=AssertionError("unexpected scalar fallback"),
+    )
+    subset_fallback = mocker.patch.object(
+        pp,
+        "_get_bbox_span_subset_scalar",
+        side_effect=AssertionError("unexpected scalar fallback"),
+    )
+    assert pp.slot_into_containers(containers, packages) == expected
+    actual_subset = pp.get_bbox_span_subset(packages, containers[0]["bbox"])
+    assert all(actual is expected for actual, expected in zip(actual_subset, expected_subset))
+    assert len(actual_subset) == len(expected_subset)
+    assignment_fallback.assert_not_called()
+    subset_fallback.assert_not_called()
+
+
+@pytest.mark.parametrize("count", [0, 1, 2])
+def test_numpy_object_collections(count):
+    containers = np.array(objects([[0, 0, 10, 10]]), dtype=object)
+    packages = np.array(objects([[1, 1, 2, 2], [3, 3, 4, 4]])[:count], dtype=object)
+    assert pp.slot_into_containers(containers, packages) == pp._slot_into_containers_scalar(
+        containers,
+        packages,
+    )
+    actual = pp.get_bbox_span_subset(packages, containers[0]["bbox"])
+    expected = pp._get_bbox_span_subset_scalar(packages, containers[0]["bbox"])
+    assert len(actual) == len(expected)
+    assert all(a is b for a, b in zip(actual, expected))
+
+
+@pytest.mark.parametrize("wrap", [tuple, iter])
+def test_span_iterables(wrap):
+    spans = objects([[0, 0, 1, 1], [3, 3, 4, 4]])
+    actual = pp.get_bbox_span_subset(wrap(spans), [0, 0, 2, 2])
+    assert len(actual) == 1
+    assert actual[0] is spans[0]
