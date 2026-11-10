@@ -71,6 +71,9 @@ class DocumentLayout:
         logger.info(f"Reading PDF for file: {filename} ...")
 
         with tempfile.TemporaryDirectory() as temp_dir:
+            # Caller-supplied pages outlive this call, so pages keep their paths; pages rendered
+            # into temp_dir are deleted on return and keep none.
+            keep_image_paths = image_paths is not None
             if image_paths is None:
                 _image_paths = convert_pdf_to_image(
                     filename=filename,
@@ -91,6 +94,7 @@ class DocumentLayout:
                 with Image.open(image_path) as image:
                     page = PageLayout.from_image(
                         image,
+                        image_path=image_path if keep_image_paths else None,
                         number=i + 1,
                         document_filename=filename,
                         fixed_layout=fixed_layout,

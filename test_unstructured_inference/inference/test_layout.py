@@ -353,6 +353,7 @@ def test_from_file(monkeypatch, mock_final_layout):
             assert page.elements[0] == mock_final_layout
             assert page.image_metadata == image_metadata
             assert page.image is None
+            assert page.image_path is None
 
 
 def test_from_file_with_image_paths_skips_render(monkeypatch, mock_final_layout, tmp_path):
@@ -374,6 +375,7 @@ def test_from_file_with_image_paths_skips_render(monkeypatch, mock_final_layout,
 
     assert [page.number for page in doc.pages] == [1, 2]
     assert all(page.elements == [mock_final_layout] for page in doc.pages)
+    assert [page.image_path for page in doc.pages] == [os.path.abspath(p) for p in image_paths]
 
 
 def test_process_file_with_model_forwards_image_paths(monkeypatch, mock_final_layout):
