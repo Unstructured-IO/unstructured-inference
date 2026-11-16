@@ -1,3 +1,8 @@
+## 1.6.19
+
+### Fixes
+- Continue layout deduplication after disjoint candidates so later nested regions are removed, including class-specific cleanup.
+
 ## 1.6.18
 
 ### Performance
