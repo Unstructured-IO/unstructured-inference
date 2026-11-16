@@ -5,6 +5,7 @@ import pytest
 from PIL import Image
 
 from unstructured_inference.inference import layoutelement
+from unstructured_inference.inference.layout import PageLayout
 from unstructured_inference.inference.layoutelement import (
     EPSILON_AREA,
     LayoutElements,
@@ -114,8 +115,6 @@ def test_large_connected_group_does_not_allocate_all_pairs(monkeypatch):
 
 
 def test_detection_model_pipeline_preserves_connected_regions_and_routing(monkeypatch):
-    from unstructured_inference.inference.layout import PageLayout
-
     count = 2000
     x = np.arange(count, dtype=float)
     regions = _elements(np.column_stack((x, np.zeros(count), x + 1, np.ones(count))))
