@@ -486,9 +486,6 @@ def clean_layoutelements(elements: LayoutElements, subregion_threshold: float = 
         contained = intersection / np.maximum(compared_areas, EPSILON_AREA) > subregion_threshold
         remove = np.where(contained)[0] + current_candidate + 1
 
-        if not remove.sum():
-            break
-
         mask[remove] = 0
         n_candidates -= len(remove) + 1
         remaining_candidates = np.where(mask[plus_one:])[0]
@@ -560,9 +557,6 @@ def clean_layoutelements_for_class(
             + current_candidate
             + 1
         )
-
-        if not remove.sum():
-            break
 
         mask[remove] = 0
         n_candidates -= len(remove) + 1

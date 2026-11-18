@@ -33,8 +33,6 @@ def _dense_cleanup_reference(elements, threshold):
     while count > 1:
         next_index = current + 1
         remove = np.flatnonzero(contained[current, next_index:]) + next_index
-        if not remove.sum():
-            break
         mask[remove] = False
         count -= len(remove) + 1
         remaining = np.flatnonzero(mask[next_index:])
@@ -111,7 +109,7 @@ def test_large_connected_group_does_not_allocate_all_pairs(monkeypatch):
     monkeypatch.setattr(layoutelement, "intersection_areas_between_coords", bounded_intersections)
     output = clean_layoutelements(regions)
 
-    assert calls == [(1, count - 1)]
+    assert calls == [(1, remaining) for remaining in range(count - 1, 0, -1)]
     assert len(output) == count
     assert set(output.texts) == set(regions.texts)
 
