@@ -1,5 +1,8 @@
 ## 1.6.18
 
+### Enhancements
+- Support Python 3.14 (default Python in Ubuntu 26.04 LTS): relax `requires-python` to `<3.15`, add the 3.14 classifier and test it in CI.
+
 ### Performance
 - Accelerate table token assignment and text selection while preserving overlap thresholds, tie-breaking, and token order. Bound pairwise temporary arrays and retain scalar handling for unusual rectangles.
 
