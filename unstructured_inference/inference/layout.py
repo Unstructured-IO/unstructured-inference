@@ -66,7 +66,8 @@ class DocumentLayout:
         """Creates a DocumentLayout from a pdf file.
 
         `image_paths` are page images already rendered from `filename` at `pdf_image_dpi`. When
-        given, the pdf is not rendered again.
+        given, the pdf is not rendered again. Each page keeps its path and reads the image from
+        it in later page operations, so the files must exist for as long as the pages are used.
         """
         logger.info(f"Reading PDF for file: {filename} ...")
 
